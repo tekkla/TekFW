@@ -243,6 +243,7 @@ try {
 	/* @var $app \Core\Lib\Amvc\App */
 	$app = $app_creator->create($app_name);
 
+
 	// Run methods are for apps which have to do work before the
 	// the controller and action is called. So call them - if exists.
 	if (method_exists($app, 'run')) {
