@@ -48,12 +48,6 @@ final class Request
 	private $is_ajax = false;
 
 	/**
-	 * Status flag smf
-	 * @var bool
-	 */
-	private $is_smf = false;
-
-	/**
 	 * Requested app
 	 * @var string
 	 */
@@ -122,18 +116,18 @@ final class Request
 		'**' => '.++',
 		'' => '[^/\.]++'
 	];
+
 	private $match = false;
 
 	// ---------------------------------------------------------------------------
 	// ROUTE HANDLING
 	// ---------------------------------------------------------------------------
 
-
 	/**
 	 * Add multiple routes at once from array in the following format:
 	 *
 	 * $routes = [
-	 * [$method, $route, $target, $name)
+	 * 	[$method, $route, $target, $name)
 	 * );
 	 *
 	 * @param array $routes
@@ -142,14 +136,16 @@ final class Request
 	 */
 	public function addRoutes($routes)
 	{
-		if (!is_array($routes) && !$routes instanceof \Traversable)
+		if (!is_array($routes) && !$routes instanceof \Traversable) {
 			Throw new \InvalidArgumentException('Routes should be an array or an instance of Traversable');
+		}
 
-		foreach ( $routes as $route )
+		foreach ( $routes as $route ) {
 			call_user_func_array([
 				$this,
 				'mapRoute'
 			], $route);
+		}
 	}
 
 	/**
@@ -172,11 +168,12 @@ final class Request
 	 */
 	public function mapRoute($route)
 	{
-		if (!isset($route['target']))
+		if (!isset($route['target'])) {
 			Throw new \InvalidArgumentException('A route needs a target', 6004, $route);
-
+		}
+		
 			// Is this a named route?
-		if (isset($route['name']))
+		if (isset($route['name'])) 
 		{
 			if (array_key_exists($route['name'], $this->named_routes))
 			{
@@ -188,8 +185,9 @@ final class Request
 					'route' => $route['route']
 				];
 
-				if (isset($route['access']))
+				if (isset($route['access'])) {
 					$named_route['access'] = $route['access'];
+				}
 
 				$this->named_routes[$route['name']] = $named_route;
 			}
@@ -231,16 +229,18 @@ final class Request
 	public function getRouteUrl($route_name, $params = [])
 	{
 		// Check if named route exists
-		if (!isset($this->named_routes[$route_name]))
+		if (!isset($this->named_routes[$route_name])){
 			Throw new \InvalidArgumentException('Route "' . $route_name . '" does not exist.', 6000);
-
-			// Replace named parameters
+		}
+		
+		// Replace named parameters
 		$route = $this->named_routes[$route_name];
 
 		// Accesscheck set?
-		if (isset($route['access']) && !$this->di['core.sec.security']->checkAccess($route['access']))
+		if (isset($route['access']) && !$this->security->checkAccess($route['access'])) {
 			return null;
-
+		}
+		
 		$url = $route['route'];
 
 		if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route['route'], $matches, PREG_SET_ORDER))
@@ -249,15 +249,19 @@ final class Request
 			{
 				list($block, $pre, $type, $param, $optional) = $match;
 
-				if ($pre)
+				if ($pre) {
 					$block = substr($block, 1);
+				}
 
-				if (isset($params[$param]))
+				if (isset($params[$param])){
 					$url = str_replace($block, $params[$param], $url);
-				elseif ($optional)
+				}
+				elseif ($optional){
 					$url = str_replace($pre . $block, '', $url);
-				else
+				}
+				else {
 					Throw new \InvalidArgumentException('Parameter missing.', 6001);
+				}
 			}
 		}
 
@@ -276,13 +280,15 @@ final class Request
 		$match = false;
 
 		// set Request Url if it isn't passed as parameter
-		if ($request_url === null)
+		if ($request_url === null) {
 			$request_url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+		}
 
 			// Strip query string (?a=b) from Request Url
-		if (( $strpos = strpos($request_url, '?') ) !== false)
+		if (( $strpos = strpos($request_url, '?') ) !== false){
 			$request_url = substr($request_url, 0, $strpos);
-
+		}
+		
 			// Framework ajax.js adds automatically an /ajax flag @ the end of the requested URI.
 			// Here we check for this flag, remembers if it's present and then remove the flag
 			// so the following URI processing runs without flaw.
@@ -294,8 +300,9 @@ final class Request
 		}
 
 		// set Request Method if it isn't passed as a parameter
-		if ($request_method === null)
+		if ($request_method === null){
 			$request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
+		}
 
 		foreach ( $this->routes as $handler )
 		{
@@ -321,14 +328,17 @@ final class Request
 			}
 
 			// Method did not match, continue to next route.
-			if (!$method_match)
+			if (!$method_match){
 				continue;
+			}
 
 				// Check for a wildcard (matches all)
-			if ($_route === '*')
+			if ($_route === '*'){
 				$match = true;
-			elseif (isset($_route[0]) && $_route[0] === '@')
+			}
+			elseif (isset($_route[0]) && $_route[0] === '@'){
 				$match = preg_match('`' . substr($_route, 1) . '`u', $request_url, $params);
+			}
 			else
 			{
 				$route = null;
@@ -340,8 +350,9 @@ final class Request
 				// Find the longest non-regex substring and match it against the URI
 				while ( true )
 				{
-					if (!isset($_route[$i]))
+					if (!isset($_route[$i])){
 						break;
+					}
 					elseif (false === $regex)
 					{
 						$c = $n;
@@ -353,9 +364,10 @@ final class Request
 							$regex = $n === '?' || $n === '+' || $n === '*' || $n === '{';
 						}
 
-						if (false === $regex && $c !== '/' && ( !isset($request_url[$j]) || $c !== $request_url[$j] ))
+						if (false === $regex && $c !== '/' && ( !isset($request_url[$j]) || $c !== $request_url[$j] )){
 							continue 2;
-
+						}
+						
 						$j++;
 					}
 					$route .= $_route[$i++];
@@ -369,9 +381,11 @@ final class Request
 			{
 				if ($params)
 				{
-					foreach ( $params as $key => $value )
-						if ($key == '0' . $key)
+					foreach ( $params as $key => $value ){
+						if ($key == '0' . $key) {
 							unset($params[$key]);
+						}
+					}
 				}
 
 				$this->match = [
@@ -385,18 +399,21 @@ final class Request
 				// Map target results to request properties
 				foreach ( $target as $key => $val )
 				{
-					if (property_exists($this, $key))
+					if (property_exists($this, $key)){
 						$this->{$key} = $this->camelizeString($val);
+					}
 				}
 
 				// When no target ctrl defined in route but provided by parameter
 				// we use the parameter as requested ctrl
-				if (!$this->ctrl && isset($params['ctrl']))
+				if (!$this->ctrl && isset($params['ctrl'])){
 					$this->ctrl = $this->camelizeString($params['ctrl']);
-
+				}
+				
 					// Same for action as for ctrl
-				if (!$this->action && isset($params['action']))
+				if (!$this->action && isset($params['action'])){
 					$this->action = $this->camelizeString($params['action']);
+				}
 
 				$this->params = $params;
 
@@ -413,7 +430,7 @@ final class Request
 
 		$this->match = false;
 
-		Throw new \RuntimeException('No matching route found.', 6001);
+		#Throw new \RuntimeException('No matching route found.', 6001);
 
 		return $this;
 	}
@@ -431,11 +448,13 @@ final class Request
 			{
 				list($block, $pre, $type, $param, $optional) = $match;
 
-				if (isset($match_types[$type]))
+				if (isset($match_types[$type])) {
 					$type = $match_types[$type];
+				}
 
-				if ($pre === '.')
+				if ($pre === '.') {
 					$pre = '\.';
+				}
 
 					// Older versions of PCRE require the 'P' in (?P<name)
 				$pattern = '(?:' . ( $pre !== '' ? $pre : null ) . '(' . ( $param !== '' ? "?P<$param>" : null ) . $type . '))' . ( $optional !== '' ? '?' : null );
@@ -554,11 +573,13 @@ final class Request
 
 	/**
 	 * Returns either the requested or 'Index' (default) as action name
+	 * @todo Requesthandler should not set a default action!
 	 */
 	public function getAction()
 	{
-		if (!isset($this->action))
+		if (!isset($this->action)) {
 			$this->action = 'Index';
+		}
 
 		return $this->action;
 	}
