@@ -243,8 +243,11 @@ try {
 	/* @var $app \Core\Lib\Amvc\App */
 	$app = $app_creator->create($app_name);
 
-	// Run methods are for apps which have to do work before the
-	// the controller and action is called. So call them - if exists.
+	/**
+	 * Each app cna have it's own start procedure. This procedure is used to init
+	 * apps with more than the app creator does. To use this feature the app needs
+	 * a run() method in it's main file
+	 */
 	if (method_exists($app, 'run')) {
 		$app->run();
 	}
