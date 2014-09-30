@@ -235,10 +235,10 @@ try {
 
 	// Still no app name? End here with an exception
 	if (! $app_name) {
-		Throw new InvalidArgumentException('No app name to start app found.');
+		Throw new \RuntimeException('No app name found. Noting to do for me :(');
 	}
 
-	// Start with factoring this requested app
+	// Start with factoring the requested app
 
 	/* @var $app \Core\Lib\Amvc\App */
 	$app = $app_creator->create($app_name);
