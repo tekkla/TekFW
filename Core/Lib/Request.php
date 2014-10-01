@@ -438,7 +438,8 @@ final class Request
 			$match_types = $this->match_types;
 			
 			foreach ($matches as $match) {
-				list ($block, $pre, $type, $param, $optional) = $match;
+				
+			    list ($block, $pre, $type, $param, $optional) = $match;
 				
 				if (isset($match_types[$type])) {
 					$type = $match_types[$type];
@@ -722,11 +723,18 @@ final class Request
 		return isset($this->post->{$app_name}) && isset($this->post->{$app_name}->{$model_name});
 	}
 
+	/**
+	 * Clears the post storage
+	 */
 	public function clearPost()
 	{
 		$this->post = new \stdClass();
 	}
 
+	/**
+	 * Returns all request related data in one array
+	 * @return array
+	 */
 	public function getStatus()
 	{
 		return [
