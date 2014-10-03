@@ -3,6 +3,7 @@ namespace Core\Lib\Error;
 
 /**
  * Class for TekFW errors handling
+ * 
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -11,173 +12,176 @@ namespace Core\Lib\Error;
  */
 class Error
 {
-	private $redirectUrl = false;
-	private $codes = [
-		0 => 'General',
-		1000 => 'ParameterValue',
-		2000 => 'File',
-		3000 => 'Db',
-		4000 => 'Config',
-		5000 => 'Object',
-		6000 => 'Request'
-	];
-	private $params = [];
 
-	/**
-	 * Error handler object
-	 * @var ErrorAbstract
-	 */
-	private $error_handler;
+    private $redirectUrl = false;
 
-	/**
-	 *
-	 * @var User;
-	 */
-	private $user;
+    private $codes = [
+        0 => 'General',
+        1000 => 'ParameterValue',
+        2000 => 'File',
+        3000 => 'Db',
+        4000 => 'Config',
+        5000 => 'Object',
+        6000 => 'Request'
+    ];
 
-	private $error;
+    private $params = [];
 
-	/**
-	 * Constructor
-	 * @param string $message
-	 * @param number $code
-	 * @param Error $previous
-	 * @param string $trace
-	 */
-	public function __construct()
-	{
-		// Get error handler group code from sent $code parameter
-		$code = floor($code / 1000) * 1000;
+    /**
+     * Error handler object
+     * 
+     * @var ErrorAbstract
+     */
+    private $error_handler;
 
-		foreach ( $this->codes as $error_code => $handler_name )
-		{
-			if ($error_code= $code)
-				break;
-		}
+    /**
+     *
+     * @var User;
+     */
+    private $user;
 
-		$handler_class = '\Core\Lib\Errors\\' . $handler_name . 'Error';
+    private $error;
 
-		$this->error_handler = new $handler_class();
-		$this->error_handlerprocess();
-	}
+    /**
+     * Constructor
+     * 
+     * @param string $message
+     * @param number $code
+     * @param Error $previous
+     * @param string $trace
+     */
+    public function __construct()
+    {
+        // Get error handler group code from sent $code parameter
+        $code = floor($code / 1000) * 1000;
+        
+        foreach ($this->codes as $error_code => $handler_name) {
+            if ($error_code = $code)
+                break;
+        }
+        
+        $handler_class = '\Core\Lib\Errors\\' . $handler_name . 'Error';
+        
+        $this->error_handler = new $handler_class();
+        $this->error_handlerprocess();
+    }
 
-	public function setError(\Exception $e)
-	{
-		$this->error = $e;
-	}
+    public function setError(\Exception $e)
+    {
+        $this->error = $e;
+    }
 
-	/**
-	 * (non-PHPdoc)
-	 * @see Exception::__toString()
-	 */
-	public function __toString()
-	{
-		return $this->getComplete();
-	}
+    /**
+     * (non-PHPdoc)
+     * 
+     * @see Exception::__toString()
+     */
+    public function __toString()
+    {
+        return $this->getComplete();
+    }
 
-	/**
-	 * Returns a Bootstrap formatted error message
-	 * @return string
-	 */
-	public function getComplete($admin=true)
-	{
-		$message = '<hTekFW error code: ' . $this->getCode() . '</h';
-
-		$message .= $this->getMessage();
-
-		// Append more informations for admin users
-		if ($admin)
-		{
-			$message .= '
+    /**
+     * Returns a Bootstrap formatted error message
+     * 
+     * @return string
+     */
+    public function getComplete($admin = true)
+    {
+        $message = '<hTekFW error code: ' . $this->getCode() . '</h';
+        
+        $message .= $this->getMessage();
+        
+        // Append more informations for admin users
+        if ($admin) {
+            $message .= '
 			<hSource</h
 			<In file: ' . $this->getFile() . ' (Line: ' . $this->getLine() . ')</
 			<hTrace</h
 			<pr' . $this->getTraceAsString() . '</pr';
-		}
+        }
+        
+        if ($this->error_handlerinBox())
+            $message = '<div style="border: 2px solid darkred; background-color: #eee; padding: 5px; border-radius: 5px; margin: 10px; color: #222;' . $message . '</di';
+        
+        return $message;
+    }
 
-		if ($this->error_handlerinBox())
-			$message = '<div style="border: 2px solid darkred; background-color: #eee; padding: 5px; border-radius: 5px; margin: 10px; color: #222;' . $message . '</di';
+    /**
+     * Returns the redirect url value
+     */
+    public function getRedirect()
+    {
+        return $this->error_handlergetRedirect();
+    }
 
-		return $message;
-	}
+    /**
+     * Checks for set redirect url
+     * 
+     * @return boolean
+     */
+    public function isRedirect()
+    {
+        return $this->error_handlerisRedirect();
+    }
 
-	/**
-	 * Returns the redirect url value
-	 */
-	public function getRedirect()
-	{
-		return $this->error_handlergetRedirect();
-	}
+    /**
+     * Returns the fatal state of the error handler
+     * 
+     * @return boolean
+     */
+    public function isFatal()
+    {
+        return $this->error_handlerisFatal();
+    }
 
-	/**
-	 * Checks for set redirect url
-	 * @return boolean
-	 */
-	public function isRedirect()
-	{
-		return $this->error_handlerisRedirect();
-	}
+    public function getAdminMessage()
+    {
+        return $this->error_handlergetAdminMessage();
+    }
 
-	/**
-	 * Returns the fatal state of the error handler
-	 * @return boolean
-	 */
-	public function isFatal()
-	{
-		return $this->error_handlerisFatal();
-	}
+    public function getUserMessage()
+    {
+        return $this->error_handlergetUseRMessage();
+    }
 
-	public function getAdminMessage()
-	{
-		return $this->error_handlergetAdminMessage();
-	}
+    public function logError()
+    {
+        return $this->error_handlerlogError();
+    }
 
-	public function getUserMessage()
-	{
-		return $this->error_handlergetUseRMessage();
-	}
+    public function getLogMessage()
+    {
+        return $this->error_handlergetLogMessage();
+    }
 
-	public function logError()
-	{
-		return $this->error_handlerlogError();
-	}
+    public function endHere()
+    {}
 
-	public function getLogMessage()
-	{
-		return $this->error_handlergetLogMessage();
-	}
-
-	public function endHere()
-	{
-	}
-
-	public function handle()
-	{
-
-		echo $this->getAdminMessage() . ' [' . $this->getFile() . '(' . $this->getLine() . ')]';
-		return;
-
-		// Write error to log?
-		if ($this->logError())
-			error_log($this->getLogMessage());
-
-		// Ajax request errors will end with an alert(error_message)
-		if ($this->request->isAjax())
-		{
-			// Echo processed ajax
-			echo $this->di['core.content.ajax']->process();
-
-			// And finally stop execution
-			exit();
-		}
-
-		if ($this->isFatal())
-		{
-			// Falling through here means we have a really big error. Usually we will never come this far
-			// but reaching this point causes stopping all further actions.
-			$this->sendHttpStatus(500);
-
-			$html = '
+    public function handle()
+    {
+        echo $this->getAdminMessage() . ' [' . $this->getFile() . '(' . $this->getLine() . ')]';
+        return;
+        
+        // Write error to log?
+        if ($this->logError())
+            error_log($this->getLogMessage());
+            
+            // Ajax request errors will end with an alert(error_message)
+        if ($this->request->isAjax()) {
+            // Echo processed ajax
+            echo $this->di['core.content.ajax']->process();
+            
+            // And finally stop execution
+            exit();
+        }
+        
+        if ($this->isFatal()) {
+            // Falling through here means we have a really big error. Usually we will never come this far
+            // but reaching this point causes stopping all further actions.
+            $this->sendHttpStatus(500);
+            
+            $html = '
 			<html>
 
 			<head>
@@ -197,16 +201,16 @@ class Error
 			</body>
 
 			</html>';
-
-			die($html);
-		}
-
-		// Create error message
-		$this->di['core.content.message']->danger($this->getMessage());
-
-		// If error has a redirection, the error message will be sent as
-		// a message before redirecting to the redirect url
-		if ($this->isRedirect())
-			header("Location: " . $this->getRedirect());
-	}
+            
+            die($html);
+        }
+        
+        // Create error message
+        $this->di['core.content.message']->danger($this->getMessage());
+        
+        // If error has a redirection, the error message will be sent as
+        // a message before redirecting to the redirect url
+        if ($this->isRedirect())
+            header("Location: " . $this->getRedirect());
+    }
 }

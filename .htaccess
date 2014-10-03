@@ -22,15 +22,7 @@
 	# Do not rewrite urls to js tools like cke
 	RewriteRule ^Core/Tools/ - [NC,L]
 
-	# Attach ajax parameter when /ajax is in url
-	RewriteCond %{REQUEST_URI} ^ajax
-	RewriteRule ^/(.*)$ index.php?web=$1;ajax=1 [NC,L]
-
-	# Default rule for WebExt urls
-	RewriteRule ^/(.*)$ index.php?web=$1 [NC,L]
-
 	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteCond %{REQUEST_FILENAME} !-d
-	RewriteRule . index.php	
+	RewriteRule . index.php [L]
 	
 </IfModule>

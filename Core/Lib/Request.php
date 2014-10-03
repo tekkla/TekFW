@@ -11,24 +11,24 @@ use Core\Lib\Data\Data;
  * @license MIT
  * @package TekFW
  * @subpackage Lib
- *            
+ *
  *             ------------------------------------------------------------------------
  *             Routing based on AltoRouter
  *             https://github.com/dannyvankooten/AltoRouter
- *            
+ *
  *             Copyright 2012-2013 Danny van Kooten hi@dannyvankooten.com
  *             License MIT License
- *            
+ *
  *             Permission is hereby granted, free of charge, to any person obtaining a
  *             copy of this software and associated documentation files (the "Software"),
  *             to deal in the Software without restriction, including without limitation
  *             the rights to use, copy, modify, merge, publish, distribute, sublicense,
  *             and/or sell copies of the Software, and to permit persons to whom the
- *            
+ *
  *             Software is furnished to do so, subject to the following conditions:
  *             The above copyright notice and this permission notice shall be included
  *             in all copies or substantial portions of the Software.
- *            
+ *
  *             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  *             OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  *             FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -119,7 +119,7 @@ final class Request
 	 * @var array
 	 */
 	private $named_routes = [];
-	
+
 	// PCRE matchtypes
 	private $match_types = [
 		'i' => '[0-9]++',
@@ -131,11 +131,11 @@ final class Request
 	];
 
 	private $match = false;
-	
+
 	// ---------------------------------------------------------------------------
 	// ROUTE HANDLING
 	// ---------------------------------------------------------------------------
-	
+
 	/**
 	 * Add multiple routes at once from array in the following format:
 	 *
@@ -152,7 +152,7 @@ final class Request
 		if (! is_array($routes) && ! $routes instanceof \Traversable) {
 			Throw new \InvalidArgumentException('Routes should be an array or an instance of Traversable');
 		}
-		
+
 		foreach ($routes as $route) {
 			call_user_func_array([
 				$this,
@@ -186,7 +186,7 @@ final class Request
 		if (! isset($route['target'])) {
 			Throw new \InvalidArgumentException('A route needs a target', 6004, $route);
 		}
-		
+
 		// Is this a named route?
 		if (isset($route['name'])) {
 			if (array_key_exists($route['name'], $this->named_routes)) {
@@ -195,36 +195,36 @@ final class Request
 				$named_route = [
 					'route' => $route['route']
 				];
-				
+
 				if (isset($route['access'])) {
 					$named_route['access'] = $route['access'];
 				}
-				
+
 				$this->named_routes[$route['name']] = $named_route;
 			}
 		}
-		
+
 		// Prepare route definition
 		$route_definition = [];
-		
+
 		// Check for set route method
 		$route_definition[0] = isset($route['method']) ? $route['method'] : 'GET';
-		
+
 		// Extend route with basepath
 		$route_definition[1] = $route['route'];
-		
+
 		// Set target
 		$route_definition[2] = $route['target'];
-		
+
 		// Name set?
 		$route_definition[3] = isset($route['name']) ? $route['name'] : '';
-		
+
 		// Access set?
 		$route_definition[4] = isset($route['access']) ? $route['access'] : [];
-		
+
 		// Stor new route
 		$this->routes[] = $route_definition;
-		
+
 		return $this;
 	}
 
@@ -244,25 +244,25 @@ final class Request
 		if (! isset($this->named_routes[$route_name])) {
 			Throw new \InvalidArgumentException('Route "' . $route_name . '" does not exist.', 6000);
 		}
-		
+
 		// Replace named parameters
 		$route = $this->named_routes[$route_name];
-		
+
 		// Accesscheck set?
 		if (isset($route['access']) && ! $this->security->checkAccess($route['access'])) {
 			return null;
 		}
-		
+
 		$url = $route['route'];
-		
+
 		if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route['route'], $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
 				list ($block, $pre, $type, $param, $optional) = $match;
-				
+
 				if ($pre) {
 					$block = substr($block, 1);
 				}
-				
+
 				if (isset($params[$param])) {
 					$url = str_replace($block, $params[$param], $url);
 				} elseif ($optional) {
@@ -272,7 +272,7 @@ final class Request
 				}
 			}
 		}
-		
+
 		return BASEURL . $url;
 	}
 
@@ -285,19 +285,20 @@ final class Request
 	 */
 	public function processRequest($request_url = null, $request_method = null)
 	{
+
 		$params = [];
 		$match = false;
-		
+
 		// set Request Url if it isn't passed as parameter
 		if ($request_url === null) {
 			$request_url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 		}
-		
+
 		// Strip query string (?a=b) from Request Url
 		if (($strpos = strpos($request_url, '?')) !== false) {
 			$request_url = substr($request_url, 0, $strpos);
 		}
-		
+
 		// Framework ajax.js adds automatically an /ajax flag @ the end of the requested URI.
 		// Here we check for this flag, remembers if it's present and then remove the flag
 		// so the following URI processing runs without flaw.
@@ -306,24 +307,24 @@ final class Request
 			$request_url = str_replace('/ajax', '', $request_url);
 			$this->is_ajax = true;
 		}
-		
+
 		// set Request Method if it isn't passed as a parameter
 		if ($request_method === null) {
 			$request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 		}
-		
+
 		foreach ($this->routes as $handler) {
-			
+
 			list ($method, $_route, $target, $name, $access) = $handler;
-			
+
 			// Method seems to match. First to do is a possible access check
 			// If check fails, the rest of our routes will be checked
 			// if (isset($access) && !allowedTo($access))
 			// continue;
-			
+
 			$methods = explode('|', $method);
 			$method_match = false;
-			
+
 			// Check if request method matches. If not, abandon early. (CHEAP)
 			foreach ($methods as $method) {
 				if (strcasecmp($request_method, $method) === 0) {
@@ -331,12 +332,12 @@ final class Request
 					break;
 				}
 			}
-			
+
 			// Method did not match, continue to next route.
 			if (! $method_match) {
 				continue;
 			}
-			
+
 			// Check for a wildcard (matches all)
 			if ($_route === '*') {
 				$match = true;
@@ -348,7 +349,7 @@ final class Request
 				$j = 0;
 				$n = isset($_route[0]) ? $_route[0] : null;
 				$i = 0;
-				
+
 				// Find the longest non-regex substring and match it against the URI
 				while (true) {
 					if (! isset($_route[$i])) {
@@ -356,25 +357,25 @@ final class Request
 					} elseif (false === $regex) {
 						$c = $n;
 						$regex = $c === '[' || $c === '(' || $c === '.';
-						
+
 						if (false === $regex && false !== isset($_route[$i + 1])) {
 							$n = $_route[$i + 1];
 							$regex = $n === '?' || $n === '+' || $n === '*' || $n === '{';
 						}
-						
+
 						if (false === $regex && $c !== '/' && (! isset($request_url[$j]) || $c !== $request_url[$j])) {
 							continue 2;
 						}
-						
+
 						$j ++;
 					}
 					$route .= $_route[$i ++];
 				}
-				
+
 				$regex = $this->compileRoute($route);
 				$match = preg_match($regex, $request_url, $params);
 			}
-			
+
 			if ($match == true || $match > 0) {
 				if ($params) {
 					foreach ($params as $key => $value) {
@@ -383,49 +384,49 @@ final class Request
 						}
 					}
 				}
-				
+
 				$this->match = [
 					'target' => $target,
 					'params' => $params,
 					'name' => $name
 				];
-				
+
 				$this->name = $name;
-				
+
 				// Map target results to request properties
 				foreach ($target as $key => $val) {
 					if (property_exists($this, $key)) {
 						$this->{$key} = $this->camelizeString($val);
 					}
 				}
-				
+
 				// When no target ctrl defined in route but provided by parameter
 				// we use the parameter as requested ctrl
 				if (! $this->ctrl && isset($params['ctrl'])) {
 					$this->ctrl = $this->camelizeString($params['ctrl']);
 				}
-				
+
 				// Same for action as for ctrl
 				if (! $this->action && isset($params['action'])) {
 					$this->action = $this->camelizeString($params['action']);
 				}
-				
+
 				$this->params = $params;
-				
+
 				// Finally try to process possible posted data
 				if (! empty($_POST)) {
 					$this->post = new Data($_POST['app']);
 					$this->post_raw = $_POST;
 				}
-				
+
 				return $this;
 			}
 		}
-		
+
 		$this->match = false;
-		
+
 		// Throw new \RuntimeException('No matching route found.', 6001);
-		
+
 		return $this;
 	}
 
@@ -436,26 +437,26 @@ final class Request
 	{
 		if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
 			$match_types = $this->match_types;
-			
+
 			foreach ($matches as $match) {
-				
+
 			    list ($block, $pre, $type, $param, $optional) = $match;
-				
+
 				if (isset($match_types[$type])) {
 					$type = $match_types[$type];
 				}
-				
+
 				if ($pre === '.') {
 					$pre = '\.';
 				}
-				
+
 				// Older versions of PCRE require the 'P' in (?P<name)
 				$pattern = '(?:' . ($pre !== '' ? $pre : null) . '(' . ($param !== '' ? "?P<$param>" : null) . $type . '))' . ($optional !== '' ? '?' : null);
-				
+
 				$route = str_replace($block, $pattern, $route);
 			}
 		}
-		
+
 		return "`^$route$`u";
 	}
 
@@ -489,7 +490,7 @@ final class Request
 			$this->is_ajax = true;
 			return $this;
 		}
-		
+
 		return $this->is_ajax;
 	}
 
@@ -630,14 +631,14 @@ final class Request
 	{
 		if ($arg2 === null && is_array($arg1)) {
 			$arg1 = $this->convertObjectToArray($arg1);
-			
+
 			foreach ($arg1 as $key => $val)
 				$this->params[$key] = $val;
 		}
-		
+
 		if ($arg2 !== null)
 			$this->params[$arg1] = $this->convertObjectToArray($arg2);
-		
+
 		return $this;
 	}
 
@@ -651,7 +652,7 @@ final class Request
 		if (isset($key)) {
 			return isset($this->params[$key]) ? $this->params[$key] : false;
 		}
-		
+
 		return $this->params;
 	}
 
@@ -669,16 +670,16 @@ final class Request
 	{
 		if (! $this->isPost())
 			return false;
-			
+
 			// Use values provided by request for missing app and model name
 		if (! $app_name || ! $model_name) {
 			$app_name = $this->getApp();
 			$model_name = $this->getCtrl();
 		}
-		
+
 		$app_name = $this->uncamelizeString($app_name);
 		$model_name = $this->uncamelizeString($model_name);
-		
+
 		if (isset($this->post->{$app_name}->{$model_name}))
 			return $this->post->{$app_name}->{$model_name};
 		else
@@ -716,10 +717,10 @@ final class Request
 			$app_name = $this->getApp();
 			$model_name = $this->getCtrl();
 		}
-		
+
 		$app_name = $this->uncamelizeString($app_name);
 		$model_name = $this->uncamelizeString($model_name);
-		
+
 		return isset($this->post->{$app_name}) && isset($this->post->{$app_name}->{$model_name});
 	}
 

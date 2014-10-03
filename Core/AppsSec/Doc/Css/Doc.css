@@ -38,7 +38,8 @@ h1[id] {
 	display: block;
 }
 
-#app-doc-sidebar .nav>.active>a,#app-doc-sidebar .nav>.active:hover>a,#app-doc-sidebar .nav>.active:focus>a {
+#app-doc-sidebar .nav>.active>a,#app-doc-sidebar .nav>.active:hover>a,#app-doc-sidebar .nav>.active:focus>a
+	{
 	padding-left: 25px;
 	font-weight: 700;
 	color: #563d7c;

@@ -1,11 +1,11 @@
 <?php
-
 namespace Core\AppsSec\Doc\Controller;
 
 use Core\Lib\Amvc\Controller;
 
 /**
  * Description
+ * 
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Global
@@ -15,10 +15,10 @@ use Core\Lib\Amvc\Controller;
 class MainController extends Controller
 {
 
-	public function Index()
-	{
-		$this->setVar('content', 'start');
-		
-		$this->setVar('menu', $this->model->createMenu($this->request->getParam('page')));
-	}
+    public function Index()
+    {
+        $this->setVar('content', 'start');
+        
+        $this->setVar('menu', $this->model->createMenu($this->request->getParam('page')));
+    }
 }

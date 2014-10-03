@@ -12,6 +12,7 @@ use Core\Lib\Content\LinktreeElement;
 /**
  * Controllers parent class.
  * Each app controller has to be a child of this class.
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -21,56 +22,67 @@ use Core\Lib\Content\LinktreeElement;
  */
 class Controller extends MvcAbstract
 {
+
 	/**
 	 * Type of class
+	 *
 	 * @var String
 	 */
 	protected $type = 'Controller';
 
 	/**
 	 * Signals that the corresponding view will be rendered
+	 *
 	 * @var Boolean
 	 */
 	protected $render = true;
 
 	/**
 	 * Action to render
+	 *
 	 * @var String
 	 */
 	private $action = 'Index';
 
 	/**
 	 * Storage for access rights
+	 *
 	 * @var array
 	 */
 	protected $access = [];
 
 	/**
 	 * Storage for events
+	 *
 	 * @var array
 	 */
 	protected $events = [];
 
 	/**
 	 * The View object
+	 *
 	 * @var View
 	 */
 	public $view = false;
 
 	/**
 	 * Storage for parameter
+	 *
 	 * @var Data
 	 */
 	private $param = [];
 
 	/**
-	 * Stores the controller bound Model object. Is false when controller has no model.
+	 * Stores the controller bound Model object.
+	 * Is false when controller has no model.
+	 *
 	 * @var Model
 	 */
 	public $model;
 
 	/**
 	 * Falg to signal that this controller is in ajax mode
+	 *
 	 * @var bool
 	 */
 	private $is_ajax = false;
@@ -109,22 +121,11 @@ class Controller extends MvcAbstract
 	 * Hidden constructor.
 	 * Runs the onLoad eventmethod and inits the internal view and model.
 	 */
-	final public function __construct(
-		$name,
-		App $app,
-		Request $request,
-		Security $security,
-		Message $message,
-		Page $page,
-		Url $url
-	)
+	final public function __construct($name, App $app, Request $request, Security $security, Message $message, Page $page, Url $url)
 	{
 		// Store name
 		$this->name = $name;
-
-		// Inject app object
 		$this->app = $app;
-
 		$this->request = $request;
 		$this->security = $security;
 		$this->message = $message;
@@ -152,32 +153,41 @@ class Controller extends MvcAbstract
 	}
 
 	/**
-	 * Runs the requested controller action.
+	 * Runs the requested controller action.´
 	 *
-	 * @param string $action
-	 * @param string $param
-	 * @return boolean unknown void
+	 * This is THE run method for each controller in each app. When used to resolve
+	 * requests, no action or parameter need to be set. Both will be autodiscovered
+	 * by requesting the needed data from the requesthandler. The method can also be
+	 * used to get a partial result when using a controller from within a controller.
+	 * In this case you should provide the action an parameters needed to get the
+	 * wanted result.
+	 *
+	 * @param string $action Optional action to run
+	 * @param string $param Parameter to use
+	 * @return boolean bool|string
 	 * @todo Controller access is deactivated
 	 */
-	final public function run($action = '', $param = array())
+	final public function run($action, $param = [])
 	{
-		// Argument checks and name conversions.
-		// If no func is set as arg, use the request action.
-		$this->action = empty($action) ? $this->request->getAction() : $action;
+		$this->action = $action;
 
 		// If accesscheck failed => stop here and return false!
-#		if ($this->checkControllerAccess() == false)
-#			return false;
+		/**
+		 *
+		 * @todo Does not work now. Important!!!
+		 */
+		if ($this->checkControllerAccess() == false) {
+			return true;
+		}
 
-			// We can set the controllers parameter by hand and will have automatic all
-			// parameters set by the request handler. If param are set manually, possible dublicates
-			// will overwrite controller param copied from request handler.
+		// Try to autodiscover params on empty param args
+		if (! empty($param)) {
+			$this->param = $param;
+		}
 
-		// Copy request param to controller param.
-		$this->param = empty($param) ? $this->request->getAllParams() : $param;
-
-		// Init return var with boolean false as default value. This default prevents from running the views render()
-		// method when the controller action is stopped manually by using return.
+		// Init return var with boolean false as default value. This default
+		// prevents from running the views render() method when the controller
+		// action is stopped manually by using return.
 		$return = false;
 
 		// run possible before event handler
@@ -195,8 +205,9 @@ class Controller extends MvcAbstract
 		}
 
 		// Render the view and return the result
-		if ($this->render === true)
-		{
+		if ($this->render === true) {
+
+			// Create view instance if not alredy done
 			if (! $this->view instanceof View) {
 				$this->view = $this->app->getView($this->name);
 			}
@@ -206,6 +217,7 @@ class Controller extends MvcAbstract
 			$this->view->render($this->action, $this->param);
 			$content = ob_get_clean();
 
+			// Run possible onEmpty event of app on no render result
 			if (empty($content) && method_exists($this->app, 'onEmpty')) {
 				$content = $this->app->onEmpty();
 			}
@@ -216,13 +228,20 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Ajax method to send the result of an action a ajax html command.
+	 * This works similiar to the run() method and even uses it. The difference
+	 * is that the renderesult is packed into an ajax command object. The ajax
+	 * command can be controlled by setting the wanted parameters via $this->ajax->...
+	 *
 	 * @param string $action Name of the action to call
 	 * @param array $param Array of parameter to be used in action call
-	 * @param string $selector Optional jQuery selector to html() the result. Can be overridden by setAjaxTarget() method
+	 * @param string $selector Optional jQuery selector to html() the result.
+	 *        Can be overridden by setAjaxTarget() method
 	 */
-	final public function ajax($action = '', $param = array(), $selector = '')
+	final public function ajax($action = 'Index', $param = [], $selector = '')
 	{
 		$this->is_ajax = true;
+
+		$this->ajax = $this->di['core.content.ajax'];
 
 		if ($selector) {
 			$this->ajax->setSelector($selector);
@@ -230,8 +249,7 @@ class Controller extends MvcAbstract
 
 		$content = $this->run($action, $param);
 
-		if ($content)
-		{
+		if ($content) {
 			$this->ajax->setArgs($content);
 			$this->ajax->add();
 		}
@@ -240,11 +258,14 @@ class Controller extends MvcAbstract
 	}
 
 	/**
-	 * Redirects from one action to another while resetting data of attached model and clearing all post data from the request handler.
+	 * Redirects from one action to another
+	 * When redirecting is used the attached models data will be reset and all
+	 * post data from the request handler.
+	 *
 	 * @param string $action
 	 * @param array $param
 	 */
-	final protected function redirect($action, $param = array())
+	final protected function redirect($action, $param = [])
 	{
 		// Clean data
 		$this->cleanUp();
@@ -255,6 +276,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Method to cleanup data in controllers model and the request handler
+	 *
 	 * @param bool $model Flag to clean model data (default: true)
 	 * @param string $post Flag to clean post data (default: true)
 	 */
@@ -265,7 +287,7 @@ class Controller extends MvcAbstract
 			$this->model->reset(true);
 		}
 
-			// Reset post data
+		// Reset post data
 		if ($post) {
 			$this->request->clearPost();
 		}
@@ -273,20 +295,20 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Event handler
+	 *
 	 * @param string $event
 	 * @return \Core\Lib\Amvc\Controller
 	 */
 	private function runEvent($event)
 	{
-		if (!empty($this->events[$this->action][$event]))
-		{
-			if (!is_array($this->events[$this->action][$event])) {
+		if (! empty($this->events[$this->action][$event])) {
+			if (! is_array($this->events[$this->action][$event])) {
 				$this->events[$this->action][$event] = array(
 					$this->events[$this->action][$event]
 				);
 			}
 
-			foreach ( $this->events[$this->action][$event] as $event_func ) {
+			foreach ($this->events[$this->action][$event] as $event_func) {
 				$this->di->invokeMethod($this, $event_func, $this->request->getAllParams());
 			}
 		}
@@ -296,6 +318,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Loads the associated viewobject
+	 *
 	 * @param string $app Name of the views app
 	 * @param string $view Name of the view
 	 */
@@ -307,21 +330,21 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Does an urlredirect but cares about what kind (ajax?) of request was send.
+	 *
 	 * @param Url|string $url
 	 */
 	final protected function doRefresh($url)
 	{
-		if ($this->request->isAjax())
-		{
+		if ($this->request->isAjax()) {
 			$this->ajax->refresh($url);
 			$this->firephp('Ajax refresh command set: ' . $url);
-		}
-		else
+		} else
 			$this->redirectExit($url);
 	}
 
 	/**
 	 * Simple interface function for SMFs allowedTo() function
+	 *
 	 * @param string|array $perm
 	 * @return boolean
 	 */
@@ -335,6 +358,7 @@ class Controller extends MvcAbstract
 	 * This accesscheck works on serveral levels.
 	 * Level 0 - App: Tries to check access on possible app wide access function
 	 * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
+	 *
 	 * @param boolean $smf Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
 	 * @param bool $force Set this to true if you want to force a brutal stop
 	 * @return boolean
@@ -347,28 +371,23 @@ class Controller extends MvcAbstract
 		}
 
 		// ACL set?
-		if (isset($this->access))
-		{
+		if (isset($this->access)) {
 			$perm = [];
 
 			// Global access for all actions?
-			if (isset($this->access['*']))
-			{
-				if (!is_array($this->access['*'])) {
+			if (isset($this->access['*'])) {
+				if (! is_array($this->access['*'])) {
 					$perm[] = $this->access['*'];
-				}
-				else {
+				} else {
 					$perm += $this->access['*'];
 				}
 			}
 
 			// Actions access set?
-			if (isset($this->access[$this->action]))
-			{
-				if (!is_array($this->access[$this->action])) {
+			if (isset($this->access[$this->action])) {
+				if (! is_array($this->access[$this->action])) {
 					$perm[] = $this->access[$this->action];
-				}
-				else {
+				} else {
 					$perm += $this->access[$this->action];
 				}
 			}
@@ -386,6 +405,7 @@ class Controller extends MvcAbstract
 	/**
 	 * Set the name of the actiuon to rander.
 	 * By default this is the current controller action name and do not have to be set manually.
+	 *
 	 * @param string $action
 	 */
 	final protected function setRenderAction($action)
@@ -396,6 +416,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Publish a value to the view
+	 *
 	 * @param string|array $arg1 Name of var or list of vars in an array
 	 * @param mixed $arg2 Optional value to be ste when $arg1 is the name of a var
 	 */
@@ -421,17 +442,13 @@ class Controller extends MvcAbstract
 		];
 
 		// One argument has to be an assoc array
-		if (!isset($arg2) && is_array($arg1))
-		{
-			foreach ( $arg1 as $var => $value ) {
+		if (! isset($arg2) && is_array($arg1)) {
+			foreach ($arg1 as $var => $value) {
 				$this->view->setVar($var, $value);
 			}
-		}
-		elseif (isset($arg2))
-		{
+		} elseif (isset($arg2)) {
 			$this->view->setVar($arg1, $arg2);
-		}
-		else
+		} else
 			Throw new \InvalidArgumentException('The vars to set are not correct.', 1001);
 
 		return $this;
@@ -439,6 +456,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Set the meta title of the html output
+	 *
 	 * @param string $title
 	 */
 	final protected function setPageTitle($title)
@@ -449,6 +467,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Set the meta description of the html output
+	 *
 	 * @param string $description
 	 */
 	final protected function setPageDescription($description)
@@ -459,6 +478,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Shorthand method for adding a flash message.
+	 *
 	 * @param string $message
 	 * @param string $type
 	 */
@@ -473,6 +493,7 @@ class Controller extends MvcAbstract
 	 * Label will be shown as text and URL
 	 * is the link url. Url parameter can be an instance of Url. The url will
 	 * be created automatic by using the url object getUrl() method.
+	 *
 	 * @param string $name
 	 * @param string,Url $url
 	 */
@@ -485,20 +506,25 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Shorthand method for a FormDesigner instance with auto attached model
+	 *
 	 * @return FormDesigner
 	 */
 	final protected function getFormDesigner()
 	{
 		/* @var $form \Core\Helper\FormDesigner */
 		$form = $this->di['core.helper.formdesigner'];
-		$form->attachModel($this->model);
-		$form->setAction($this->url->compile($this->request->getCurrentRoute(),$this->param));
+
+		if (!property_exists($this, 'has_no_model'))
+			$form->attachModel($this->model);
+
+		$form->setAction($this->url->compile($this->request->getCurrentRoute(), $this->param));
 
 		return $form;
 	}
 
 	/**
 	 * Wrapper method for $this->app->getController()
+	 *
 	 * @param string $control->ler_name
 	 * @return Controller
 	 */
@@ -509,6 +535,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Wrapper method for $this->app->getModel()
+	 *
 	 * @param string $model_name
 	 * @return \Core\Lib\Amvc\Model
 	 */
@@ -521,6 +548,7 @@ class Controller extends MvcAbstract
 	 * Adds a paramter to the controllers parameter collection.
 	 * Useful when redirecting to other controller action
 	 * which need additional parameters to function.
+	 *
 	 * @param string $param Paramertername
 	 * @param mixed $value Parametervalue
 	 */
@@ -532,6 +560,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Sets the selector name to where the result is ajaxed.
+	 *
 	 * @param string $target
 	 * @return \Core\Lib\Amvc\Controller
 	 */
@@ -546,12 +575,13 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Redirect function to make sure the browser doesn't come back and repost the form data.
+	 *
 	 * @param string $location Location we redirtect to
 	 * @param bool $refresh Use refresh instead of location
 	 */
 	final protected function redirectExit($location = '', $permanent = false)
 	{
-		if (!$location) {
+		if (! $location) {
 			$location = BASEURL;
 		}
 

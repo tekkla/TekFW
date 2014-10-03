@@ -6,6 +6,7 @@ use Core\Lib\Url;
 
 /**
  * Admin Controller
+ * 
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -13,13 +14,15 @@ use Core\Lib\Url;
 final class AdminController extends Controller
 {
 
-	public function Index()
-	{
-		$this->setVar(array(
-			'config' => Url::factory('admin_app_config', array('app_name' => 'web'))->getUrl(),
-			'loaded_apps' => $this->model->getApplist()
-		));
-
-		$this->addLinktree('TekFW Framework Center');
-	}
+    public function Index()
+    {
+        $this->setVar(array(
+            'config' => Url::factory('admin_app_config', array(
+                'app_name' => 'web'
+            ))->getUrl(),
+            'loaded_apps' => $this->model->getApplist()
+        ));
+        
+        $this->addLinktree('TekFW Framework Center');
+    }
 }

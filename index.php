@@ -22,8 +22,7 @@ $cfg = [];
 // Load Settings.php file
 if (file_exists(dirname(__FILE__) . '/Settings.php')) {
 	require_once dirname(__FILE__) . '/Settings.php';
-}
-else {
+} else {
 	die('Settings file could not be loaded.');
 }
 
@@ -46,7 +45,7 @@ try {
 
 	$di = new DI();
 
-	#== DB ===========================================================
+	// == DB ===========================================================
 
 	$di->mapValue('db.default.dsn', $cfg['db_dsn']);
 	$di->mapValue('db.default.user', $cfg['db_user']);
@@ -70,16 +69,16 @@ try {
 		'db.default.prefix'
 	]);
 
-	#== CONFIG =======================================================
+	// == CONFIG =======================================================
 	$di->mapSingleton('core.cfg', '\Core\Lib\Cfg', 'db.default');
 
-	#== CORE =========================================================
+	// == CORE =========================================================
 	$di->mapSingleton('core.session', '\Core\Lib\Session', 'db.default');
 	$di->mapSingleton('core.request', '\Core\Lib\Request');
 	$di->mapInstance('core.cookie', '\Core\Lib\Cookie');
 	$di->mapInstance('core.error', '\Core\Lib\Error\Error');
 
-	#== UTILITIES ====================================================
+	// == UTILITIES ====================================================
 	$di->mapInstance('core.util.timer', '\Core\Lib\Utilities\Timer');
 	$di->mapInstance('core.util.time', '\Core\Lib\Utilities\Time');
 	$di->mapInstance('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
@@ -87,7 +86,7 @@ try {
 	$di->mapInstance('core.util.debug', '\Core\Lib\Utilities\Debug');
 	$di->mapSingleton('core.util.fire', '\FB');
 
-	#== SECURITY =====================================================
+	// == SECURITY =====================================================
 	$di->mapSingleton('core.sec.security', '\Core\Lib\Security\Security', [
 		'db.default',
 		'core.cfg',
@@ -99,24 +98,25 @@ try {
 	$di->mapInstance('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
 	$di->mapSingleton('core.sec.permissions', '\Core\Lib\Security\Permissions', 'db.default');
 
-	#== AMVC =========================================================
+	// == AMVC =========================================================
 	$di->mapSingleton('core.amvc.creator', '\Core\Lib\Amvc\Creator');
 	$di->mapInstance('core.amvc.app', '\Core\Lib\Amvc\App');
 
-	#== IO ===========================================================
+	// == IO ===========================================================
 	$di->mapInstance('core.io.file', '\Core\Lib\IO\File');
 	$di->mapInstance('core.io.http', '\Core\Lib\IO\Http');
 
-	#== DATA ==========================================================
+	// == DATA ==========================================================
 	$di->mapInstance('core.data.validator', '\Core\Lib\Data\Validator');
 
-	#== CONTENT =======================================================
+	// == CONTENT =======================================================
 	$di->mapSingleton('core.content.page', '\Core\Lib\Content\Page', [
 		'core.request',
 		'core.cfg',
 		'core.content.js',
 		'core.content.css',
 		'core.content.message',
+		'core.content.menu',
 		'core.amvc.creator'
 	]);
 
@@ -129,8 +129,9 @@ try {
 	]);
 	$di->mapInstance('core.content.message', '\Core\Lib\Content\Message');
 	$di->mapInstance('core.content.url', '\Core\Lib\Content\Url', 'core.request');
+	$di->mapSingleton('core.content.menu', '\Core\Lib\Content\Menu');
 
-	#== HELPER ============================================================
+	// == HELPER ============================================================
 	$di->mapInstance('core.helper.formdesigner', '\Core\Helper\FormDesigner');
 
 	// -------------------------------------------------------
@@ -184,7 +185,7 @@ try {
 	// Use app creator to init Core config
 
 	/* @var $app_creator \Core\Lib\Amvc\Creator */
-	$app_creator = $di['core.amvc.creator'] ;
+	$app_creator = $di['core.amvc.creator'];
 	$app_creator->initAppConfig('Core');
 
 	// # Start session by calling instance factory
@@ -228,14 +229,10 @@ try {
 	// Try to use appname provided by request handler.
 	$app_name = $request->getApp();
 
-	// No app by request? Try to get default app from config
+	// No app by request? Try to get default app from config or set Core as
+	// default app
 	if (! $app_name) {
-		$app_name = $config->exists('Core', 'default_app') ? $config->get('Core', 'default_app') : 'default';
-	}
-
-	// Still no app name? End here with an exception
-	if (! $app_name) {
-		Throw new \RuntimeException('No app name found. Noting to do for me :(');
+		$app_name = $config->exists('Core', 'default_app') ? $config->get('Core', 'default_app') : 'Core';
 	}
 
 	// Start with factoring the requested app
@@ -244,9 +241,9 @@ try {
 	$app = $app_creator->create($app_name);
 
 	/**
-	 * Each app cna have it's own start procedure. This procedure is used to init
-	 * apps with more than the app creator does. To use this feature the app needs
-	 * a run() method in it's main file
+	 * Each app can have it's own start procedure. This procedure is used to
+	 * init apps with more than the app creator does. To use this feature the
+	 * app needs run() method in it's main file.
 	 */
 	if (method_exists($app, 'run')) {
 		$app->run();
@@ -255,22 +252,38 @@ try {
 	// Get name of requested controller
 	$controller_name = $request->getCtrl();
 
+	// Set controller name to "Index" when no controller name has been returned
+	// from request handler
+	if (! $controller_name) {
+		$controller_name = 'Index';
+	}
+
 	// Load controller object
 	$controller = $app->getController($controller_name);
+
+	// Which controller action has to be run?
+	$action = $request->getAction();
+
+	// No action => use Index as default
+	if (! $action) {
+		$action = 'Index';
+	}
+
+	// Are there parameters to pass to run method?
+	$param = $request->getParam();
 
 	// Run controller and process result.
 	if ($request->isAjax()) {
 
 		// Result will be processed as ajax command list
-		$controller->ajax();
+		$controller->ajax($action, $param);
 
 		// Run ajax processor
 		$di['core.content.ajax']->process();
-	}
-	else {
+	} else {
 
 		// Run controller and store result
-		$content = $controller->run();
+		$content = $controller->run($action, $param);
 
 		// No content created? Check app for onEmpty() event which maybe gives us content.
 		if (empty($content) && method_exists($app, 'onEmpty')) {
@@ -297,7 +310,21 @@ try {
 // # Error handling
 catch (Exception $e) {
 
-	echo $e->getMessage() . '> ' . $e->getFile() . ' (' . $e->getLine() . ')<br>';
+	if ($e instanceof PDOException) {
+		switch ($e->getCode()) {
+			case 2002:
+				echo 'DB host not found.';
+				break;
+
+			default:
+				echo $e->getMessage();
+		}
+	} else {
+
+		echo $e->getMessage() . '> ' . $e->getFile() . ' (' . $e->getLine() . ')<br>';
+	}
+
+	var_dump($e);
 
 	// $error = $di['core.error'];
 	// $errorsetError($e);

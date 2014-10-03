@@ -4,14 +4,16 @@ namespace Core\AppsSec\Core\View;
 use Core\Lib\Amvc\View;
 
 /**
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ *        
  */
 final class IndexView extends View
 {
-	public function Index()
-	{
-		echo '
+
+    public function Index()
+    {
+        echo '
 		<header class="navbar navbar-static-top">
 			<div class="container">
 				<div class="navbar-header">
@@ -50,6 +52,6 @@ final class IndexView extends View
 		</header>
 		<div id="intro"></div>
 		<div class="container"></div>';
-	}
+    }
 }
 

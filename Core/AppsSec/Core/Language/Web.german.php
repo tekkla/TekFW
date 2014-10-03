@@ -8,9 +8,13 @@ $forum_copyright .= '<b<smalerweitert durch ' . $txt['app_name'] . ' © 2014, Mi
 
 $txt['app_framework_config'] = $txt['app_name'];
 
-/*****************************************************************************/
-/* BASICS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * BASICS
+ * /****************************************************************************
+ */
 
 // States
 $txt['app_on'] = 'An';
@@ -45,9 +49,13 @@ $txt['app_edit'] = 'Bearbeiten';
 $txt['app_access_allow'] = 'Nur gewählten Gruppen anzeigen';
 $txt['app_access_deny'] = 'Vor gewählten Gruppen verstecken';
 
-/*****************************************************************************/
-/* CONFIG
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * CONFIG
+ * /****************************************************************************
+ */
 $txt['app_cfg_headline'] = 'TekFW Framework Einstellungen';
 
 // Inhalte
@@ -92,9 +100,13 @@ $txt['app_cfg_group_url'] = 'Url Behandlung';
 $txt['app_cfg_url_seo'] = 'SEO Konverter';
 $txt['app_cfg_url_seo_desc'] = 'Damit wird vor der Ausgabe der Seite der Content auf URL untersucht und alle nicht durch das Framework generierten URL umgewandelt. Beispielsweise würde aus <stronhttp://www.deinforum.tld/index.php?board=1</stron dann <stronhttp://www.deinforum.tld/board/1</stron';
 
-/*****************************************************************************/
-/* VALIDATORS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * VALIDATORS
+ * /****************************************************************************
+ */
 $txt['app_validator_required'] = 'Dieses Feld muss gesetzt sein.';
 $txt['app_validator_empty'] = 'Dieses Feld darf nicht leer sein';
 $txt['app_validator_textrange'] = 'Der Text darf zwischen %d und %d Zeichen lang sein. Dein Text ist %d Zeichen lang.';
@@ -112,14 +124,22 @@ $txt['app_validator_time24'] = 'Uhrzeit im 24h Format (HH:II) erwartet';
 // Number
 $txt['validator_compare'] = 'Die Vergleichsprüfung schlug fehl. Geprüft wurde: $1 $3 $2';
 
-/*****************************************************************************/
-/* Models
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * Models
+ * /****************************************************************************
+ */
 $txt['app_model_error_field_not_exist'] = 'Die Spalte [%s] existiert nicht im Model [%s].';
 
-/*****************************************************************************/
-/* TIMESTRINGS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * TIMESTRINGS
+ * /****************************************************************************
+ */
 $txt['app_time_year'] = 'Jahr';
 $txt['app_time_years'] = 'Jahre';
 $txt['app_time_month'] = 'Monat';

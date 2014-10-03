@@ -8,9 +8,13 @@ $forum_copyright .= '<b<smalextended by ' . $txt['app_name'] . ' © 2014, Michae
 
 $txt['app_framework_config'] = $txt['app_name'];
 
-/*****************************************************************************/
-/* BASICS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * BASICS
+ * /****************************************************************************
+ */
 
 // States
 $txt['app_on'] = 'On';
@@ -46,9 +50,13 @@ $txt['app_edit'] = 'Edit';
 $txt['app_access_allow'] = 'Allowed to selected groups';
 $txt['app_access_deny'] = 'Denied to selected groups';
 
-/*****************************************************************************/
-/* CONFIG
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * CONFIG
+ * /****************************************************************************
+ */
 $txt['app_cfg_headline'] = 'TekFW Framework Settings';
 
 // Contenthandler
@@ -95,9 +103,13 @@ $txt['app_cfg_group_url'] = 'Url conversion';
 $txt['app_cfg_url_seo'] = 'SEO Converter';
 $txt['app_cfg_url_seo_desc'] = 'Actives SEO url converter which searches for urls in pagecontent right before it is send to the browser. Example: => <stronhttp://www.forum.tld/index.php?board=1</stron will be converted to <stronhttp://www.forum.tld/board/1</stron';
 
-/*****************************************************************************/
-/* VALIDATORS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * VALIDATORS
+ * /****************************************************************************
+ */
 $txt['app_validator_required'] = 'This field has to be set.';
 $txt['app_validator_empty'] = 'This field is not alloed to be empty.';
 $txt['app_validator_textrange'] = 'Strings number of chars has to be between %d and %d. The checked string contains %d chars.';
@@ -115,14 +127,22 @@ $txt['app_validator_time24'] = 'Time in 24h format (HH:II:ss) expected';
 // Number
 $txt['validator_compare'] = 'Comparecheck failed. Checked: $1 $3 $2';
 
-/*****************************************************************************/
-/* Models
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * Models
+ * /****************************************************************************
+ */
 $txt['app_model_error_field_not_exist'] = 'Column [%s] does not exist in model [%s].';
 
-/*****************************************************************************/
-/* TIMESTRINGS
-/*****************************************************************************/
+/**
+ * **************************************************************************
+ */
+/*
+ * TIMESTRINGS
+ * /****************************************************************************
+ */
 $txt['app_time_year'] = 'year';
 $txt['app_time_years'] = 'years';
 $txt['app_time_month'] = 'month';

@@ -2,6 +2,7 @@
 namespace Core\Lib;
 
 use Core\Lib\Amvc\App;
+
 /**
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
@@ -10,201 +11,201 @@ use Core\Lib\Amvc\App;
 class DI implements \ArrayAccess
 {
 
-	private static $map = [];
+    private static $map = [];
 
-	private static $singletons = [];
+    private static $singletons = [];
 
-	public function singleton($class_name, $arguments = null)
-	{
-		if (! isset(self::$singletons[$class_name])) {
-			self::$singletons[$class_name] = $this->instance($class_name, $arguments);
-		}
+    public function instance($class_name, $arguments = null)
+    {
+        // initialized the ReflectionClass
+        $reflection = new \ReflectionClass($class_name);
 
-		return self::$singletons[$class_name];
-	}
+        // creating an instance of the class
+        if ($arguments === null || count($arguments) == 0) {
 
-	public function factory($class_name, $arguments = null)
-	{
-		if ($arguments !== null && ! is_array($arguments)) {
-			$arguments = (array) $arguments;
-		}
+            // Create instance without arguments
+            $obj = new $class_name();
+        } else {
 
-		// Replace text arguments with objects
-		foreach ($arguments as $key => $arg) {
+            if (! is_array($arguments)) {
+                $arguments = (array) $arguments;
+            }
 
-			// Skip strings without di container typical dot
-			if (($arg instanceof App) || strpos($arg, '.') === false) {
-				continue;
-			}
+            // Replace text arguments with objects
+            foreach ($arguments as $key => $arg) {
 
-			$arguments[$key] = $this[$arg];
-		}
+                // Skip strings without di container typical dot
+                if (($arg instanceof App) || strpos($arg, '.') === false) {
+                    continue;
+                }
 
-		// And add this di container as last arguments
-		$arguments[] = $this;
+                $arguments[$key] = $this[$arg];
+            }
 
-		$reflection = new \ReflectionClass($class_name);
+            $obj = $reflection->newInstanceArgs($arguments);
+        }
 
-		// Make sure the class has a factory method
-		if (! $reflection->hasMethod('factory')) {
-			Throw new \RuntimeException($class_name . '::factory() does not exist.');
-		}
+        if (! property_exists($obj, 'di')) {
+            $obj->di = $this;
+        }
 
-		return call_user_func_array($class_name . '::factory', $arguments);
-	}
+        // Inject and return the created instance
+        return $obj;
+    }
 
-	public function instance($class_name, $arguments = null)
-	{
-		// initialized the ReflectionClass
-		$reflection = new \ReflectionClass($class_name);
+    public function mapValue($key, $value)
+    {
+        self::$map[$key] = [
+            'value' => $value,
+            'type' => 'value'
+        ];
+    }
 
-		// creating an instance of the class
-		if ($arguments === null || count($arguments) == 0) {
+    public function mapInstance($key, $value, $arguments = null)
+    {
+        self::$map[$key] = [
+            'value' => $value,
+            'type' => 'instance',
+            'arguments' => $arguments
+        ];
+    }
 
-			// Create instance without arguments
-			$obj = new $class_name();
-		}
-		else {
+    public function mapSingleton($key, $value, $arguments = null)
+    {
+        self::$map[$key] = [
+            'value' => $value,
+            'type' => 'singleton',
+            'arguments' => $arguments
+        ];
+    }
 
-			if (! is_array($arguments)) {
-				$arguments = (array) $arguments;
-			}
+    public function mapFactory($key, $value, $arguments = null)
+    {
+        self::$map[$key] = [
+            'value' => $value,
+            'type' => 'factory',
+            'arguments' => $arguments
+        ];
+    }
 
-			// Replace text arguments with objects
-			foreach ($arguments as $key => $arg) {
+    /**
+     * Executes object method by using Reflection
+     *
+     * @param $obj Object to call parameter injected method
+     * @param $method Name of method to call
+     * @param $param (Optional) Array of parameters to inject into method
+     * @throws MethodNotExistsError
+     * @throws ParameterNotSetError
+     * @return object
+     */
+    public function invokeMethod(&$obj, $method, $param = [])
+    {
+        if (! is_array($param)) {
+            Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
+        }
 
-				// Skip strings without di container typical dot
-				if (($arg instanceof App) || strpos($arg, '.') === false) {
-					continue;
-				}
+        // Look for the method in object. Throw error when missing.
+        if (! method_exists($obj, $method)) {
+            Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
+        }
 
-				$arguments[$key] = $this[$arg];
-			}
+        // Get reflection method
+        $method = new \ReflectionMethod($obj, $method);
 
-			$obj = $reflection->newInstanceArgs($arguments);
-		}
+        // Init empty arguments array
+        $args = [];
 
-		if (! property_exists($obj, 'di')) {
-			$obj->di = $this;
-		}
+        // Get list of parameters from reflection method object
+        $method_parameter = $method->getParameters();
 
-		// Inject and return the created instance
-		return $obj;
-	}
+        // Let's see what arguments are needed and which are optional
+        foreach ($method_parameter as $parameter) {
 
-	public function mapValue($key, $value)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'value'
-		];
-	}
+            // Get current paramobject name
+            $param_name = $parameter->getName();
 
-	public function mapInstance($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'instance',
-			'arguments' => $arguments
-		];
-	}
+            // Parameter is not optional and not set => throw error
+            if (! $parameter->isOptional() && ! isset($param[$param_name])) {
+                Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
+            }
 
-	public function mapSingleton($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'singleton',
-			'arguments' => $arguments
-		];
-	}
+            // If parameter is optional and not set, set argument to null
+            $args[] = $parameter->isOptional() && ! isset($param[$param_name]) ? null : $param[$param_name];
+        }
 
-	public function mapFactory($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'factory',
-			'arguments' => $arguments
-		];
-	}
+        // Return result executed method
+        return $method->invokeArgs($obj, $args);
+    }
 
-	/**
-	 * Executes object method by using Reflection
-	 *
-	 * @param $obj Object to call parameter injected method
-	 * @param $method Name of method to call
-	 * @param $param (Optional) Array of parameters to inject into method
-	 * @throws MethodNotExistsError
-	 * @throws ParameterNotSetError
-	 * @return object
-	 */
-	public function invokeMethod(&$obj, $method, $param = [])
-	{
-		if (! is_array($param)) {
-			Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
-		}
+    public function offsetExists($offset)
+    {
+        return array_key_exists($offset, self::$map);
+    }
 
-		// Look for the method in object. Throw error when missing.
-		if (! method_exists($obj, $method)) {
-			Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
-		}
+    public function offsetGet($offset)
+    {
+        if (! $this->offsetExists($offset)) {
+            Throw new \InvalidArgumentException(sprintf('Service "%s" not mapped', $offset));
+        }
 
-		// Get reflection method
-		$method = new \ReflectionMethod($obj, $method);
+        $type = self::$map[$offset]['type'];
+        $value = self::$map[$offset]['value'];
 
-		// Init empty arguments array
-		$args = [];
+        if ($type == 'value') {
+            return $value;
+        } else {
 
-		// Get list of parameters from reflection method object
-		$method_parameter = $method->getParameters();
+        	$arguments = self::$map[$offset]['arguments'];
 
-		// Let's see what arguments are needed and which are optional
-		foreach ($method_parameter as $parameter) {
+        	switch ($type)
+        	{
+        		case 'singleton':
+        			if (! isset(self::$singletons[$offset])) {
+        				self::$singletons[$offset] = $this->instance($value, $arguments);
+        			}
 
-			// Get current paramobject name
-			$param_name = $parameter->getName();
+        			return self::$singletons[$offset];
 
-			// Parameter is not optional and not set => throw error
-			if (! $parameter->isOptional() && ! isset($param[$param_name])) {
-				Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
-			}
+        		case 'factory':
 
-			// If parameter is optional and not set, set argument to null
-			$args[] = $parameter->isOptional() && ! isset($param[$param_name]) ? null : $param[$param_name];
-		}
+        			// Replace text arguments with objects
+        			foreach ($arguments as $key => $arg) {
 
-		// Return result executed method
-		return $method->invokeArgs($obj, $args);
-	}
+        				// Skip strings without di container typical dot
+        				if (($arg instanceof App) || strpos($arg, '.') === false) {
+        					continue;
+        				}
 
-	public function offsetExists($offset)
-	{
-		return array_key_exists($offset, self::$map);
-	}
+        				$arguments[$key] = $this[$arg];
+        			}
 
-	public function offsetGet($offset)
-	{
-		if (! $this->offsetExists($offset)) {
-			Throw new \InvalidArgumentException(sprintf('Service "%s" not mapped', $offset));
-		}
+        			// And add this di container as last arguments
+        			$arguments[] = $this;
 
-		if (self::$map[$offset]['type'] == 'value') {
-			return self::$map[$offset]['value'];
-		}
-		else {
-			$method = self::$map[$offset]['type'];
-			return $this->$method(self::$map[$offset]['value'], self::$map[$offset]['arguments']);
-		}
-	}
+        			$reflection = new \ReflectionClass($value);
 
-	public function offsetSet($offset, $value)
-	{
-		self::$map[$offset] = $value;
-	}
+        			// Make sure the class has a factory method
+        			if (! $reflection->hasMethod('factory')) {
+        				Throw new \RuntimeException($value . '::factory() does not exist.');
+        			}
 
-	public function offsetUnset($offset)
-	{
-		if ($this->offsetExists($offset)) {
-			unset(self::$map[$offset]);
-		}
-	}
+        			return call_user_func_array($value . '::factory', $arguments);
+
+        		default:
+        			return $this->instance($value, $arguments);
+        	}
+        }
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        self::$map[$offset] = $value;
+    }
+
+    public function offsetUnset($offset)
+    {
+        if ($this->offsetExists($offset)) {
+            unset(self::$map[$offset]);
+        }
+    }
 }
