@@ -57,60 +57,60 @@ try {
 	]);
 	$di->mapValue('db.default.prefix', $cfg['db_prefix']);
 
-	$di->mapSingleton('db.default.pdo', '\PDO', [
+	$di->mapService('db.default.pdo', '\PDO', [
 		'db.default.dsn',
 		'db.default.user',
 		'db.default.pass',
 		'db.default.options'
 	]);
 
-	$di->mapInstance('db.default', '\Core\Lib\Data\Database', [
+	$di->mapFactory('db.default', '\Core\Lib\Data\Database', [
 		'db.default.pdo',
 		'db.default.prefix'
 	]);
 
 	// == CONFIG =======================================================
-	$di->mapSingleton('core.cfg', '\Core\Lib\Cfg', 'db.default');
+	$di->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
 
 	// == CORE =========================================================
-	$di->mapSingleton('core.session', '\Core\Lib\Session', 'db.default');
-	$di->mapSingleton('core.request', '\Core\Lib\Request');
-	$di->mapInstance('core.cookie', '\Core\Lib\Cookie');
-	$di->mapInstance('core.error', '\Core\Lib\Error\Error');
+	$di->mapService('core.session', '\Core\Lib\Session', 'db.default');
+	$di->mapService('core.request', '\Core\Lib\Request');
+	$di->mapFactory('core.cookie', '\Core\Lib\Cookie');
+	$di->mapFactory('core.error', '\Core\Lib\Error\Error');
 
 	// == UTILITIES ====================================================
-	$di->mapInstance('core.util.timer', '\Core\Lib\Utilities\Timer');
-	$di->mapInstance('core.util.time', '\Core\Lib\Utilities\Time');
-	$di->mapInstance('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
-	$di->mapInstance('core.util.date', '\Core\Lib\Utilities\Date');
-	$di->mapInstance('core.util.debug', '\Core\Lib\Utilities\Debug');
-	$di->mapSingleton('core.util.fire', '\FB');
+	$di->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
+	$di->mapFactory('core.util.time', '\Core\Lib\Utilities\Time');
+	$di->mapFactory('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
+	$di->mapFactory('core.util.date', '\Core\Lib\Utilities\Date');
+	$di->mapFactory('core.util.debug', '\Core\Lib\Utilities\Debug');
+	$di->mapService('core.util.fire', '\FB');
 
 	// == SECURITY =====================================================
-	$di->mapSingleton('core.sec.security', '\Core\Lib\Security\Security', [
+	$di->mapService('core.sec.security', '\Core\Lib\Security\Security', [
 		'db.default',
 		'core.cfg',
 		'core.session',
 		'core.cookie',
 		'core.sec.user'
 	]);
-	$di->mapSingleton('core.sec.user', '\Core\Lib\Security\User', 'db.default');
-	$di->mapInstance('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
-	$di->mapSingleton('core.sec.permissions', '\Core\Lib\Security\Permissions', 'db.default');
+	$di->mapService('core.sec.user', '\Core\Lib\Security\User', 'db.default');
+	$di->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
+	$di->mapService('core.sec.permissions', '\Core\Lib\Security\Permissions', 'db.default');
 
 	// == AMVC =========================================================
-	$di->mapSingleton('core.amvc.creator', '\Core\Lib\Amvc\Creator');
-	$di->mapInstance('core.amvc.app', '\Core\Lib\Amvc\App');
+	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator');
+	$di->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
 	// == IO ===========================================================
-	$di->mapInstance('core.io.file', '\Core\Lib\IO\File');
-	$di->mapInstance('core.io.http', '\Core\Lib\IO\Http');
+	$di->mapFactory('core.io.file', '\Core\Lib\IO\File');
+	$di->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
 	// == DATA ==========================================================
-	$di->mapInstance('core.data.validator', '\Core\Lib\Data\Validator');
+	$di->mapFactory('core.data.validator', '\Core\Lib\Data\Validator');
 
 	// == CONTENT =======================================================
-	$di->mapSingleton('core.content.page', '\Core\Lib\Content\Page', [
+	$di->mapService('core.content.page', '\Core\Lib\Content\Page', [
 		'core.request',
 		'core.cfg',
 		'core.content.js',
@@ -120,19 +120,19 @@ try {
 		'core.amvc.creator'
 	]);
 
-	$di->mapSingleton('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.request');
-	$di->mapInstance('core.content.ajaxcmd', '\Core\Lib\Content\AjaxCommand');
-	$di->mapInstance('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
-	$di->mapInstance('core.content.js', '\Core\Lib\Content\Javascript', [
+	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.request');
+	$di->mapFactory('core.content.ajaxcmd', '\Core\Lib\Content\AjaxCommand');
+	$di->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
+	$di->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
 		'core.cfg',
 		'core.request'
 	]);
-	$di->mapInstance('core.content.message', '\Core\Lib\Content\Message');
-	$di->mapInstance('core.content.url', '\Core\Lib\Content\Url', 'core.request');
-	$di->mapSingleton('core.content.menu', '\Core\Lib\Content\Menu');
+	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message');
+	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.request');
+	$di->mapService('core.content.menu', '\Core\Lib\Content\Menu');
 
 	// == HELPER ============================================================
-	$di->mapInstance('core.helper.formdesigner', '\Core\Helper\FormDesigner');
+	$di->mapFactory('core.helper.formdesigner', '\Core\Helper\FormDesigner');
 
 	// -------------------------------------------------------
 	// Config
@@ -208,15 +208,6 @@ try {
 	/* @var $request \Core\Lib\Request */
 	$request = $di['core.request'];
 
-	// Init css and js only for full page loads
-	if (! $request->isAjax()) {
-		// Init basic CSS
-		$di['core.content.css']->init();
-
-		// Init basic javascripts
-		$di['core.content.js']->init();
-	}
-
 	// Run request handler
 	$request->processRequest();
 
@@ -282,6 +273,9 @@ try {
 		$di['core.content.ajax']->process();
 	} else {
 
+		$di['core.content.js']->init();
+		$di['core.content.css']->init();
+
 		// Run controller and store result
 		$content = $controller->run($action, $param);
 
@@ -324,7 +318,7 @@ catch (Exception $e) {
 		echo $e->getMessage() . '> ' . $e->getFile() . ' (' . $e->getLine() . ')<br>';
 	}
 
-	var_dump($e);
+	echo '<pre>', $e->xdebug_message, '</pre>';
 
 	// $error = $di['core.error'];
 	// $errorsetError($e);
