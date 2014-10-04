@@ -186,7 +186,8 @@ class App
 		// Create classname to create
 		$class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
 
-		// By default each MVC component constructor needs at least a name and this app object as argument
+		// By default each MVC component constructor needs at least a name and
+		// this app object as argument
 		$args = [
 			$name,
 			$this
@@ -195,9 +196,7 @@ class App
 		// Add additional arguments
 		if (isset($arguments)) {
 			if (! is_array($arguments)) {
-				$arguments = [
-					$arguments
-				];
+				$arguments = (array) $arguments;
 			}
 
 			foreach ($arguments as $arg) {
@@ -205,6 +204,8 @@ class App
 			}
 		}
 
+		// Create component be using di instance factory to get sure the
+		// di services the container itself is injected properly
 		$component = $this->di->instance($class, $args);
 
 		return $component;
@@ -255,7 +256,8 @@ class App
 			'core.sec.security',
 			'core.content.message',
 			'core.content.page',
-			'core.content.url'
+			'core.content.url',
+			'core.content.menu'
 		];
 
 		return $this->MVCFactory($name, 'Controller', $args);
