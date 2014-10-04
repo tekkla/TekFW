@@ -226,8 +226,9 @@ class Security
 	public function logout()
 	{
 		// Clean up session
-		$this->session->set('logged_in', false);
+		$this->session->set('autologin_failed', true);
 		$this->session->set('id_user', 0);
+		$this->session->set('logged_in', false);
 
 		// Calling logout means to revoke autologin cookies
 		$this->cookie->remove($this->cookie_name . 'U');
@@ -250,6 +251,9 @@ class Security
 			// Remove fragments/all of autologin cookies
 			$this->cookie->remove($cookie_user);
 			$this->cookie->remove($cookie_token);
+
+			// Remove the flag which forces the log off
+			$this->session->remove('autologin_failed');
 
 			return false;
 		}
@@ -373,7 +377,7 @@ class Security
 	 */
 	public function checkAccess($perms = [], $force = false)
 	{
-		return true;
+		#return true;
 
 		// We are optimistic and empty permissions means granting access
 		if (! $perms) {
