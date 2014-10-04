@@ -135,16 +135,48 @@ class Page
 
 <head>
 	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>' . $this->title . '</title>';
 
-        echo $this->css->compile();
-        echo $this->js->compile(false);
+    if ($this->description) {
+    	echo '<meta name="description" content=">' . $this->description . '">';
+    }
 
-        echo '
+       echo $this->css->compile();
+
+       echo $this->js->compile(false);
+
+echo '
 </head>
 
 <body>
+	<header class="navbar navbar-static-top">
+		<div class="container">
+			<div class="navbar-header">
+				<button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target=".main-menu-collapse">
+					<span class="sr-onlyToggle navigation"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a href="/" class="navbar-brand">', $this->cfg->get('Core', 'sitename'), '</a>
+			</div>
+			<nav class="collapse navbar-collapse main-menu-collapse" role="navigation">
+				<ul class="nav navbar-nav">';
 
+        			$menu_items = $this->menu->compile();
+
+        			foreach ($menu_items as $menu_item) {
+        				echo '
+        				<li>
+							<a href="' , $menu_item->getUrl() ,'">', $menu_item->getText() , '</a>
+						</li>';
+        			}
+        			echo '
+				</ul>
+			</nav>
+		</div>
+	</header>
 	<div class="container">
 		<div id="message">';
 
@@ -202,9 +234,9 @@ class Page
         echo '
 	</div>';
 
-        echo $this->js->compile(true);
+    echo $this->js->compile(true);
 
-        echo '
+    echo '
 </body>
 
 </html>';
