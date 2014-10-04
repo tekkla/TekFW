@@ -70,10 +70,10 @@ class Menu
 		$storage = $menu_item->isRoot() ? 'root_items' : 'menu_items';
 
 		// Store menu item
-		$this->$storage[$menu_item->getName()] = $menu_item;
+		$this->{$storage}[$menu_item->getName()] = $menu_item;
 
 		// And return a reference to the stored items
-		return $this->$storage[$menu_item->getName()];
+		return $this->{$storage}[$menu_item->getName()];
 	}
 
 	/**
@@ -86,13 +86,12 @@ class Menu
 
 			$parent = $menu_item->getParent();
 
-			if ($parent)
+			if ($parent){
 				$this->root_items[$parent]->addChild($menu_item);
-
-
+			}
 		}
 
-		var_dump($this->root_items);
+		return $this->root_items;
 	}
 }
 
