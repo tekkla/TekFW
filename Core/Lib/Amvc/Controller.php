@@ -8,6 +8,7 @@ use Core\Lib\Content\Page;
 use Core\Lib\Content\Url;
 use Core\Lib\Content\Message;
 use Core\Lib\Content\LinktreeElement;
+use Core\Lib\Content\Menu;
 
 /**
  * Controllers parent class.
@@ -113,15 +114,21 @@ class Controller extends MvcAbstract
 
 	/**
 	 *
-	 * @var url
+	 * @var Url
 	 */
 	protected $url;
+
+	/**
+	 *
+	 * @var Menu
+	 */
+	protected $menu;
 
 	/**
 	 * Hidden constructor.
 	 * Runs the onLoad eventmethod and inits the internal view and model.
 	 */
-	final public function __construct($name, App $app, Request $request, Security $security, Message $message, Page $page, Url $url)
+	final public function __construct($name, App $app, Request $request, Security $security, Message $message, Page $page, Url $url, Menu $menu)
 	{
 		// Store name
 		$this->name = $name;
@@ -131,6 +138,7 @@ class Controller extends MvcAbstract
 		$this->message = $message;
 		$this->page = $page;
 		$this->url = $url;
+		$this->menu = $menu;
 
 		// Model to bind?
 		$this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
