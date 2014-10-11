@@ -5,6 +5,7 @@ use Core\Lib\Cfg;
 use Core\Lib\Request;
 use Core\Lib\Content\Css;
 use Core\Lib\Content\Javascript;
+use Core\Lib\Content\Menu;
 
 /**
  * Parent class for all apps
@@ -79,7 +80,13 @@ class App
 	 */
 	protected $js;
 
-	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js)
+	/**
+	 *
+	 * @var Menu
+	 */
+	protected $menu;
+
+	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js, Menu $menu)
 	{
 		// Setting properties
 		$this->name = $app_name;
@@ -87,6 +94,7 @@ class App
 		$this->request = $request;
 		$this->css = $css;
 		$this->js = $js;
+		$this->menu = $menu;
 
 		// Try to load settings from settings file
 		$settings_file = $this->getPath() . '/Settings.php';
@@ -236,7 +244,7 @@ class App
 			$name = $this->getComponentsName();
 		}
 
-		return $this->MVCFactory($name, 'Model', $db_container);
+		return $this->MVCFactory($name, 'Model', [$db_container, 'core.cfg']);
 	}
 
 	/**
@@ -491,13 +499,9 @@ class App
 	 */
 	private final function initRoutes()
 	{
-		// routes already initiated? Do nothing if so.
-		if (self::$init_stages[$this->name]['routes'] == true) {
-			return;
-		}
+		if (!in_array('routes', $this->settings)){
 
-		// No routes set? Set at least index as default route
-		if (! isset($this->settings['routes'])) {
+			// No routes set? Set at least index as default route
 			$this->settings['routes'] = [
 				[
 					'name' => $this->name . '_index',
@@ -509,11 +513,25 @@ class App
 			return;
 		}
 
+		// routes already initiated? Do nothing if so.
+		if (self::$init_stages[$this->name]['routes'] == true) {
+			return;
+		}
+
+		$routes_file = $this->cfg('dir_app') . '/Routes.php';
+
+		if (!file_exists($routes_file)) {
+			Throw new \RuntimeException('Routefile for app "' . $this->name . '" is missing');
+		}
+
+		// Load routes file
+		$routes = include($routes_file);
+
 		// Get uncamelized app name
 		$app_name = $this->uncamelizeString($this->name);
 
 		// Add routes to request handler
-		foreach ($this->settings['routes'] as $route) {
+		foreach ($routes as $route) {
 			// Create route string
 			$route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
 
