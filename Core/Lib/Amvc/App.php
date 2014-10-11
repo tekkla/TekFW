@@ -510,6 +510,9 @@ class App
 					'action' => 'Index'
 				]
 			];
+
+			self::$init_stages[$this->name]['routes'] = true;
+
 			return;
 		}
 
