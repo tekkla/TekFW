@@ -86,6 +86,16 @@ class App
 	 */
 	protected $menu;
 
+	/**
+	 * Constructor
+	 *
+	 * @param string $app_name
+	 * @param Cfg $cfg
+	 * @param Request $request
+	 * @param Css $css
+	 * @param Javascript $js
+	 * @param Menu $menu
+	 */
 	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js, Menu $menu)
 	{
 		// Setting properties
@@ -99,26 +109,14 @@ class App
 		// Try to load settings from settings file
 		$settings_file = $this->getPath() . '/Settings.php';
 
+		// Is there a settingsfile to include?
 		if (file_exists($settings_file)) {
+
+			// Include it
 			$this->settings = include ($settings_file);
 
-			// We need to check for all three settinggroups and add them if they are not set in loaded settings
-			// to make the later app process easier to handle.
-			$groups = [
-				'flags',
-				'config',
-				'routes'
-			];
-
-			foreach ($groups as $group) {
-				// Add emptys group when group is missing in loaded settings
-				if (! array_key_exists($group, $this->settings)) {
-					$this->settings[$group] = [];
-				}
-			}
-
 			// Is this a secured app?
-			if (in_array('secure', $this->settings['flags'])) {
+			if (in_array('secure', $this->settings)) {
 				$this->secure = true;
 			}
 		}
