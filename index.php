@@ -116,7 +116,7 @@ try {
 		'core.content.js',
 		'core.content.css',
 		'core.content.message',
-		'core.content.menu',
+		'core.content.nav',
 		'core.amvc.creator'
 	]);
 
@@ -129,7 +129,8 @@ try {
 	]);
 	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message');
 	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.request');
-	$di->mapService('core.content.menu', '\Core\Lib\Content\Menu');
+	$di->mapService('core.content.nav', '\Core\Lib\Content\Menu');
+	$di->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
 
 	// == HELPER ============================================================
 	$di->mapFactory('core.helper.formdesigner', '\Core\Helper\FormDesigner');
