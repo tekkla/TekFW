@@ -19,8 +19,8 @@ use Core\Lib\Content\Menu;
  */
 class App
 {
-	use \Core\Lib\Traits\StringTrait;
-	use \Core\Lib\Traits\TextTrait;
+	use\Core\Lib\Traits\StringTrait;
+	use\Core\Lib\Traits\TextTrait;
 
 	/**
 	 * List of appnames which are already initialized
@@ -50,11 +50,14 @@ class App
 	 *
 	 * @var array
 	 */
-	private $settings = [
-		'flags' => [],
-		'config' => [],
-		'routes' => []
-	];
+	private $settings = [];
+
+	/**
+	 * Stores app path
+	 *
+	 * @var string
+	 */
+	private $path = '';
 
 	/**
 	 *
@@ -106,10 +109,13 @@ class App
 		$this->js = $js;
 		$this->menu = $menu;
 
-		// Try to load settings from settings file
-		$settings_file = $this->getPath() . '/Settings.php';
+		// Set path property which is used on including additional app files like settings, routes, config etc
+		$this->path = BASEDIR . '\\' . $this->getNamespace();
 
-		// Is there a settingsfile to include?
+		// Try to load settings from settings file
+		$settings_file = $this->path . '/Settings.php';
+
+		// Is there a settingsfile to load?
 		if (file_exists($settings_file)) {
 
 			// Include it
@@ -122,13 +128,13 @@ class App
 		}
 
 		// Set default init stages which are used to prevent initiation of app parts when not needed and
-		// to prevent multiple inititations when dealing with multiple app instances
+		// to prevent multiple initiations when dealing with multiple app instances
 		if (! isset(self::$init_stages[$this->name])) {
 			self::$init_stages[$this->name] = [
 				'config' => false,
 				'routes' => false,
 				'paths' => false,
-				'hooks' => false,
+				'perms' =>false,
 				'lang' => false,
 				'css' => false,
 				'js' => false
@@ -151,22 +157,83 @@ class App
 
 		// Run init methods
 		$this->initRoutes();
+		$this->initPermissions();
+		$this->initLanguage();
 	}
 
-	public function addPermissions()
+	/**
+	 * Checks app settings for permissions to load, checks for existing permissions
+	 * file and adds permissions to core permission service. Throws runtimeexception
+	 * when permissions are set to be loaded but no permissions file is found.
+	 *
+	 * @throws \RuntimeException
+	 */
+	private function initPermissions()
 	{
-		if (isset($this->settings['permissions'])) {
-			// We need the uncamelized name of app
-			$name = $this->uncamelizeString($this->name);
-			$this->di['core.sec.permissions']->addPermission($name, $this->settings['permissions']);
+		// Do we have permissions do add?
+		if (in_array('permissions', $this->settings)) {
+
+			// Include permission file
+			$permissions_file = $this->path . '/Permissions.php';
+
+			// Should we throw an exception due to missing permissions file?
+			if (! file_exists($permissions_file)) {
+				Throw new \RuntimeException('The permission file for app "' . $this->name . '" is missing. Add Permission.php to your app root folder or remove permission flag in your app settings file.');
+			}
+
+			// Include permission file
+			$permissions = include ($permissions_file);
+
+			// Any permissions found?
+			if (! empty($permissions)) {
+
+				// We need the uncamelized name of app
+				$name = $this->uncamelizeString($this->name);
+
+				// Add permissions to permission service
+				$this->di['core.sec.permissions']->addPermission($name, $permissions);
+			}
+
+			self::$init_stages[$this->name]['permissions'] = true;
 		}
 	}
 
 	/**
-	 * Hidden method to factory mvc components like models, views or controllers
+	 * Inits the language file according to the current language the site/user uses
+	 *
+	 * @throws \RuntimeException
+	 */
+	private function initLanguage()
+	{
+		// Init only once
+		if (self::$init_stages[$this->name]['lang']) {
+			return;
+		}
+
+		// Do we have permissions do add?
+		if (in_array('language', $this->settings)) {
+
+			// Check
+			if (!$this->cfg->exists($this->name, 'dir_language')) {
+				Throw new \RuntimeException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
+			}
+
+
+			// Include permission file
+			$language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
+
+			$this->di['core.content.lang']->loadLanguageFile($this->name, $language_file);
+
+			self::$init_stages[$this->name]['language'] = true;
+		}
+	}
+
+	/**
+	 * Hidden method to factory mvc components like models, views or controllers.
 	 *
 	 * @param string $name Components name
 	 * @param string $type Components type
+	 *
 	 * @return Model|View|Controller
 	 */
 	private function MVCFactory($name, $type, $arguments = null)
@@ -212,9 +279,7 @@ class App
 
 		// Create component be using di instance factory to get sure the
 		// di services the container itself is injected properly
-		$component = $this->di->instance($class, $args);
-
-		return $component;
+		return $this->di->instance($class, $args);
 	}
 
 	/**
@@ -234,6 +299,7 @@ class App
 	 *
 	 * @param string $name The models name
 	 * @param string $db_container Name of the db container to use with this model
+	 *
 	 * @return Model
 	 */
 	public function getModel($name = '', $db_container = 'db.default')
@@ -242,13 +308,17 @@ class App
 			$name = $this->getComponentsName();
 		}
 
-		return $this->MVCFactory($name, 'Model', [$db_container, 'core.cfg']);
+		return $this->MVCFactory($name, 'Model', [
+			$db_container,
+			'core.cfg'
+		]);
 	}
 
 	/**
 	 * Creates an app related controller object.
 	 *
 	 * @param string $name The controllers name
+	 *
 	 * @return Controller
 	 */
 	public function getController($name)
@@ -292,8 +362,10 @@ class App
 	 *
 	 * @param string $key
 	 * @param string $val
-	 * @throws Error
+	 *
 	 * @return void boolean \Core\Lib\Cfg
+	 *
+	 * @throws \InvalidArgumentException
 	 */
 	public function cfg($key = null, $val = null)
 	{
@@ -326,10 +398,23 @@ class App
 		$this->cfg->set($this->name, 'app', $this->name);
 
 		// Try to get default values for not set configs
-		if (isset($this->settings['config'])) {
+		if (in_array('config', $this->settings)) {
+
+			// Path to config file
+			$config_file = $this->path . '/Config.php';
+
+			// Check config file exists
+			if (! file_exists($config_file)) {
+				Throw new \RuntimeException('Config file for app "' . $this->name . '" is missing.');
+			}
+
+			// Load routes file
+			$config = include ($config_file);
+
 			// Check the loaded config against the keys of the default config
 			// and set the default value if no cfg value is found
-			foreach ($this->settings['config'] as $key => $cfg_def) {
+			foreach ($config as $key => $cfg_def) {
+
 				// When there is no config set but a default value defined for the app,
 				// the default value will be used then
 				if (! $this->cfg->exists($this->name, $key) && isset($cfg_def['default'])) {
@@ -351,11 +436,12 @@ class App
 
 	/**
 	 * Returns the path of app
+	 *
+	 * @return string
 	 */
 	public function getPath()
 	{
-		// Define app dir to look for subdirs
-		return BASEDIR . '\\' . $this->getNamespace();
+		return $this->path;
 	}
 
 	/**
@@ -366,7 +452,7 @@ class App
 	public function getAppType()
 	{
 		// Normal app or secure app?
-		return isset($this->settings['flags']['secure']) ? 'appssec' : 'apps';
+		return in_array('secure', $this->settings) ? 'appssec' : 'apps';
 	}
 
 	/**
@@ -375,19 +461,21 @@ class App
 	private final function initPaths()
 	{
 		// Get directory path of app
-		$dir = $this->getPath();
+		$dir = $this->path;
 
 		// Get dir handle
 		$handle = opendir($dir);
 
 		// Read dir
 		while (($file = readdir($handle)) !== false) {
+
 			// No '.' or '..'
 			if ('.' == $file || '..' == $file || strpos($file, '.') === 0) {
 				continue;
 			}
 
 			if (is_dir($dir . '/' . $file)) {
+
 				// Is dir and not in the excludelist? Continue if it is so.
 				if (isset($this->exlude_dirs) && in_array($file, $this->exclude_dirs)) {
 					continue;
@@ -415,10 +503,8 @@ class App
 	}
 
 	/**
-	 * Initiates apps css
-	 * Each app can have it's own css file.
-	 * If the public property $css is set and true,
-	 * at this point the app init is trying to add this css file.
+	 * Initiates apps css. Each app can have it's own css file. The css file needs to be placed in an Css folder within
+	 * the apps folder. App settings need a css flag, otherwise the css file won't be loaded.
 	 *
 	 * @return \Core\Lib\Amvc\App
 	 */
@@ -429,17 +515,19 @@ class App
 			return;
 		}
 
-		$css_loaded = false;
-
 		// Css flag set that indicates app has a css file?
-		if (in_array('css', $this->settings['flags'])) {
-			if (file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
-				$this->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
-				$css_loaded = 'app';
+		if (in_array('css', $this->settings)) {
+
+			// Check for existance of apps css file
+			if (!file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
+				Throw new \RuntimeException('App "' . $this->name . '" css file does not exist. Either create the js file or remove the css flag in your app settings.');
 			}
+
+			// Create css file link
+			$this->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
 		}
 
-		// Is there an additional css function in or app to run?
+		// Is there an additional css function in app to run?
 		if (method_exists($this, 'addCss')) {
 			$this->addCss();
 		}
@@ -453,8 +541,9 @@ class App
 	/**
 	 * Initiates apps javascript
 	 *
-	 * @throws Error
 	 * @return \Core\Lib\Amvc\App
+	 *
+	 * @throws \RuntimeException
 	 */
 	private final function initJs()
 	{
@@ -467,16 +556,13 @@ class App
 		// your app mainclass. Unlike the css include procedure, the $js property holds also the information where to include the apps .js file.
 		// You hve to set this property to "scripts" (included on the bottom of website) or "header" (included in header section of website).
 		// the apps js file is stored within the app folder structure in an directory named "js".
-		if (isset($this->settings['flags']['js'])) {
-			if (! $this->cfg->exists($this->name, 'dir_js')) {
-				Throw new \RuntimeException('App "' . $this->name . '" js folder does not exist. Create the js folder in apps folder and add app js file or unset the js flag in your app mainclass.');
+		if (in_array('js', $this->settings)) {
+
+			if (!file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
+				Throw new \RuntimeException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
 			}
 
-			if (file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
-				$this->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
-			} else {
-				error_log('App "' . $this->name . '" Js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
-			}
+			$this->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
 		}
 
 		// Js method in app to run?
@@ -493,21 +579,24 @@ class App
 	/**
 	 * Initiates in app set routes.
 	 *
-	 * @throws Error
+	 * @throws \RuntimeException
 	 */
 	private final function initRoutes()
 	{
-		if (!in_array('routes', $this->settings)){
+		if (! in_array('routes', $this->settings)) {
 
-			// No routes set? Set at least index as default route
-			$this->settings['routes'] = [
-				[
-					'name' => $this->name . '_index',
-					'route' => '/',
-					'ctrl' => 'Core',
+			// No routes set? Map at least index as default route
+			$route = [
+				'name' => $this->name . '_index',
+				'route' => '/',
+				'target' => [
+					'app' => $this->name,
+					'ctrl' => 'Index',
 					'action' => 'Index'
 				]
 			];
+
+			$this->request->mapRoute($route);
 
 			self::$init_stages[$this->name]['routes'] = true;
 
@@ -519,20 +608,23 @@ class App
 			return;
 		}
 
-		$routes_file = $this->cfg('dir_app') . '/Routes.php';
+		// Path to routes file
+		$routes_file = $this->path . '/Routes.php';
 
-		if (!file_exists($routes_file)) {
-			Throw new \RuntimeException('Routefile for app "' . $this->name . '" is missing');
+		// Check routes file existance
+		if (! file_exists($routes_file)) {
+			Throw new \RuntimeException('Routesfile for app "' . $this->name . '" is missing.');
 		}
 
 		// Load routes file
-		$routes = include($routes_file);
+		$routes = include ($routes_file);
 
 		// Get uncamelized app name
 		$app_name = $this->uncamelizeString($this->name);
 
-		// Add routes to request handler
+		// Map routes to request handler router
 		foreach ($routes as $route) {
+
 			// Create route string
 			$route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
 
@@ -586,18 +678,13 @@ class App
 	}
 
 	/**
-	 * Returns the apps config definition.
-	 * If app has no definition, this method returns false.
+	 * Returns the apps config definition. Returns boolean false on empty settings.
 	 *
-	 * @return boolean
+	 * @return array|boolean
 	 */
 	public function getSettings()
 	{
-		if (isset($this->settings)) {
-			return $this->settings;
-		}
-
-		return false;
+		return $this->settings ? $this->settings : false;
 	}
 
 	/**
@@ -631,13 +718,24 @@ class App
 	}
 
 	/**
-	 * Returns loading state of an app
+	 * Returns loading state of an app.
 	 *
 	 * @param string $app_name
+	 *
 	 * @return boolean
 	 */
 	public static function isLoaded($app_name)
 	{
 		return in_array($app_name, self::$loaded_apps);
+	}
+
+	/**
+	 * Returns the init stagelist of this app.
+	 *
+	 * @return array
+	 */
+	public function getInitState()
+	{
+		return self::$init_stages[$this->name];
 	}
 }
