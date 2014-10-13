@@ -39,6 +39,7 @@ $loader->register();
 ob_start();
 
 try {
+
 	// --------------------------------------------------------
 	// Prepare Dependency Injection
 	// --------------------------------------------------------
@@ -46,7 +47,6 @@ try {
 	$di = new DI();
 
 	// == DB ===========================================================
-
 	$di->mapValue('db.default.dsn', $cfg['db_dsn']);
 	$di->mapValue('db.default.user', $cfg['db_user']);
 	$di->mapValue('db.default.pass', $cfg['db_pass']);
@@ -56,14 +56,12 @@ try {
 		\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
 	]);
 	$di->mapValue('db.default.prefix', $cfg['db_prefix']);
-
 	$di->mapService('db.default.pdo', '\PDO', [
 		'db.default.dsn',
 		'db.default.user',
 		'db.default.pass',
 		'db.default.options'
 	]);
-
 	$di->mapFactory('db.default', '\Core\Lib\Data\Database', [
 		'db.default.pdo',
 		'db.default.prefix'
@@ -119,7 +117,7 @@ try {
 		'core.content.nav',
 		'core.amvc.creator'
 	]);
-
+	$di->mapService('core.content.lang', '\Core\Lib\Content\Language');
 	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.request');
 	$di->mapFactory('core.content.ajaxcmd', '\Core\Lib\Content\AjaxCommand');
 	$di->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
