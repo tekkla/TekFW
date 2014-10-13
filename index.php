@@ -94,7 +94,7 @@ try {
 	]);
 	$di->mapService('core.sec.user', '\Core\Lib\Security\User', 'db.default');
 	$di->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
-	$di->mapService('core.sec.permissions', '\Core\Lib\Security\Permissions', 'db.default');
+	$di->mapService('core.sec.permissions', '\Core\Lib\Security\Permission', 'db.default');
 
 	// == AMVC =========================================================
 	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator');
