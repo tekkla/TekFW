@@ -103,7 +103,8 @@ class Creator
 				'core.request',
 				'core.content.css',
 				'core.content.js',
-				'core.content.nav'
+				'core.content.nav',
+				'core.sec.permission',
 			];
 
 			// Create an app instance
