@@ -12,7 +12,7 @@ namespace Core\Lib\Data;
  */
 class Database
 {
-	use \Core\Lib\Traits\SerializeTrait;
+	use\Core\Lib\Traits\SerializeTrait;
 
 	/**
 	 * Conversionlist from db fieldtype to smf fieldtypes
@@ -330,6 +330,8 @@ class Database
 	 * @param string $param
 	 * @param mixed $value
 	 * @param string $type Optional
+	 *
+	 * @return \PDOStatement
 	 */
 	public function bindParam($param, &$value, $type = null)
 	{
@@ -348,10 +350,6 @@ class Database
 				default:
 					$type = \PDO::PARAM_STR;
 			}
-		}
-
-		if (is_array($value)) {
-			$value = implode(', ', $value);
 		}
 
 		$this->stmt->bindParam($param, $value, $type);
@@ -679,12 +677,91 @@ class Database
 		return $this->query_counter;
 	}
 
+	/**
+	 * Checks argument for being a serialized value which will be returnd unserialized.
+	 *
+	 * @param string $val
+	 *
+	 * @return string|Ambigous mixed>
+	 */
 	private function checkSerialized($val = null)
 	{
-		if ($val === null) {
+		// Return val when it is not a string or is empty
+		if (! is_string($val) || empty($val)) {
 			return $val;
 		}
 
 		return $this->isSerialized($val) ? unserialize($val) : $val;
+	}
+
+	/**
+	 * Creates a string of named parameters and an array of named parameters => values.
+	 *
+	 * @param string $param
+	 * @param array $values
+	 *
+	 * @return array
+	 */
+	public function prepareArrayQuery($param, $values = [])
+	{
+		$params_names = [];
+		$params_val = [];
+
+		foreach ($values as $key => $val) {
+			$name = ':' . $param . $key;
+			$params_name[] = $name;
+			$params_val[$name] = $val;
+		}
+
+		return [
+			'sql' => implode(', ', $params_name),
+			'values' => $params_val
+		];
+	}
+
+	/**
+	 * Returns interpolated sql string with parameters
+	 *
+	 * @return string
+	 */
+	public function debugSql($sql, $param=[])
+	{
+		if ($param) {
+
+			$indexed = $param == array_values($param);
+
+			foreach ($param as $k => $v) {
+
+				if (is_object($v)) {
+
+					if ($v instanceof \DateTime) {
+						$v = $v->format('Y-m-d H:i:s');
+					}
+					else {
+						continue;
+					}
+				}
+				elseif (is_string($v)) {
+					$v = "'$v'";
+				}
+				elseif ($v === null) {
+					$v = 'NULL';
+				}
+				elseif (is_array($v)) {
+					$v = implode(',', $v);
+				}
+
+				if ($indexed) {
+					$sql = preg_replace('/\?/', $v, $sql, 1);
+				}
+				else {
+					$sql = str_replace($k, $v, $sql);
+				}
+			}
+		}
+
+		$sql = str_replace('{db_prefix}', $this->prefix, $sql);
+
+		return $sql;
 	}
 }
