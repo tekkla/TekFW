@@ -147,14 +147,29 @@ class User
 		return $this->groups;
 	}
 
-	/*
-	 * Loads user from DB
+	/**
+	 * Returns the users permissions
+	 *
+	 * @return array
+	 */
+	public function getPermissions()
+	{
+		return $this->perms;
+	}
+
+	/**
+	 * Loads user from DB.
+	 * Takes care about not to load a user more than once
+	 *
+	 * @param int $id_user
+	 * @param boolean $force
 	 */
 	public function load($id_user, $force=false)
 	{
 		// Do not load the user more than once
-		if ($this->id_user == $id_user && $force == false)
+		if ($this->id_user == $id_user && $force == false) {
 			return;
+		}
 
 		$this->id_user = $id_user;
 
