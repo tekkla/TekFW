@@ -92,9 +92,13 @@ try {
 		'core.cookie',
 		'core.sec.user'
 	]);
-	$di->mapService('core.sec.user', '\Core\Lib\Security\User', 'db.default');
+	$di->mapService('core.sec.user', '\Core\Lib\Security\User', [
+		'db.default',
+		'core.sec.permission'
+	]);
 	$di->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
-	$di->mapService('core.sec.permissions', '\Core\Lib\Security\Permission', 'db.default');
+	$di->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
+	$di->mapService('core.sec.usergroup', '\Core\Lib\Security\Usergroup', 'db.default');
 
 	// == AMVC =========================================================
 	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator');
@@ -239,6 +243,10 @@ try {
 		$app->run();
 	}
 
+	// Intit basic page css and javascript
+	$di['core.content.css']->init();
+	$di['core.content.js']->init();
+
 	// Get name of requested controller
 	$controller_name = $request->getCtrl();
 
@@ -272,9 +280,6 @@ try {
 		$di['core.content.ajax']->process();
 	} else {
 
-		$di['core.content.js']->init();
-		$di['core.content.css']->init();
-
 		// Run controller and store result
 		$content = $controller->run($action, $param);
 
@@ -296,7 +301,19 @@ try {
 		// Call content builder
 		$page->build($content);
 
-		echo '<div class="container"><hr>Runtime : ' . $timer->stop() . 's</div>';
+		echo '
+		<div class="container">
+			<hr>
+			<h4>Debug</h4>
+			<p>Runtime : ' . $timer->stop() . 's</p>
+			<p>Permissions:</p>
+			<p>';
+
+			var_dump($di['core.sec.permission']->getPermissions());
+
+			echo '
+			</p>
+		</div>';
 	}
 }
 
