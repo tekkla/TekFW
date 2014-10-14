@@ -1869,46 +1869,8 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 	 *
 	 * @return string
 	 */
-	protected function debugSql()
+	protected function debugSql($sql, $param)
 	{
-		$sql_string = $this->sql;
-
-		if ($this->param) {
-
-			$indexed = $this->param == array_values($this->param);
-
-			foreach ($this->param as $k => $v) {
-
-				if (is_object($v)) {
-
-					if ($v instanceof \DateTime) {
-						$v = $v->format('Y-m-d H:i:s');
-					}
-					else {
-						continue;
-					}
-				}
-				elseif (is_string($v)) {
-					$v = "'$v'";
-				}
-				elseif ($v === null) {
-					$v = 'NULL';
-				}
-				elseif (is_array($v)) {
-					$v = implode(',', $v);
-				}
-
-				if ($indexed) {
-					$sql_string = preg_replace('/\?/', $v, $sql_string, 1);
-				}
-				else {
-					$sql_string = str_replace($k, $v, $sql_string);
-				}
-			}
-		}
-
-		$sql_string = str_replace('{db_prefix}', $this->db->getPrefix(), $sql_string);
-
-		return $sql_string;
+		return $this->db->debugSql($sql, $param);
 	}
 }
