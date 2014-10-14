@@ -6,6 +6,7 @@ use Core\Lib\Request;
 use Core\Lib\Content\Css;
 use Core\Lib\Content\Javascript;
 use Core\Lib\Content\Menu;
+use Core\Lib\Security\Permission;
 
 /**
  * Parent class for all apps
@@ -90,6 +91,13 @@ class App
 	protected $menu;
 
 	/**
+	 *
+	 * @var Permission
+	 */
+	private $permission;
+
+
+	/**
 	 * Constructor
 	 *
 	 * @param string $app_name
@@ -99,7 +107,7 @@ class App
 	 * @param Javascript $js
 	 * @param Menu $menu
 	 */
-	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js, Menu $menu)
+	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js, Menu $menu, Permission $permission)
 	{
 		// Setting properties
 		$this->name = $app_name;
@@ -108,6 +116,7 @@ class App
 		$this->css = $css;
 		$this->js = $js;
 		$this->menu = $menu;
+		$this->permission = $permission;
 
 		// Set path property which is used on including additional app files like settings, routes, config etc
 		$this->path = BASEDIR . '\\' . $this->getNamespace();
@@ -191,7 +200,7 @@ class App
 				$name = $this->uncamelizeString($this->name);
 
 				// Add permissions to permission service
-				$this->di['core.sec.permissions']->addPermission($name, $permissions);
+				$this->permission->addPermission($name, $permissions);
 			}
 
 			self::$init_stages[$this->name]['permissions'] = true;
@@ -256,7 +265,7 @@ class App
 			self::$init_done[] = $this->name;
 		}
 
-		// Create classname to create
+		// Create classname of component to create
 		$class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
 
 		// By default each MVC component constructor needs at least a name and
@@ -613,7 +622,7 @@ class App
 
 		// Check routes file existance
 		if (! file_exists($routes_file)) {
-			Throw new \RuntimeException('Routesfile for app "' . $this->name . '" is missing.');
+			Throw new \RuntimeException('Routes file for app "' . $this->name . '" is missing.');
 		}
 
 		// Load routes file
@@ -737,5 +746,35 @@ class App
 	public function getInitState()
 	{
 		return self::$init_stages[$this->name];
+	}
+
+	/**
+	 * Registers an app related di service.
+	 *
+	 * @param string $name Name of service
+	 * @param string $class Class name this service uses
+	 * @param array $args Optional arguments
+	 *
+	 * @return \Core\Lib\Amvc\App
+	 */
+	protected function registerService($name, $class, $args = [])
+	{
+		$this->di->mapService('app.' . $this->name . '.' . $name, $class, $args);
+		return $this;
+	}
+
+	/**
+	 * Registers an app related di class factor.
+	 *
+	 * @param string $name Name of factory
+	 * @param string $class Class name this service uses
+	 * @param array $args Optional arguments
+	 *
+	 * @return \Core\Lib\Amvc\App
+	 */
+	protected function registerFactory($name, $class, $args = [])
+	{
+		$this->di->mapFactory('app.' . $this->name . '.' . $name, $class, $args);
+		return $this;
 	}
 }
