@@ -9,5 +9,7 @@ return [
 	'secure',
 	'lang',
 	'config',
-	'routes'
+	'routes',
+	'language',
+	'permissions'
 ];
