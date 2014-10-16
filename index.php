@@ -107,7 +107,7 @@ try {
 	$di->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
 
 	// == AMVC =========================================================
-	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator');
+	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
 	$di->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
 	// == IO ===========================================================

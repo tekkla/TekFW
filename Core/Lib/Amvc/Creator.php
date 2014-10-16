@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Amvc;
 
+use Core\Lib\Cfg;
+
 /**
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
@@ -33,10 +35,18 @@ class Creator
 	private static $instances = [];
 
 	/**
+	 *
+	 * @var Cfg
+	 */
+	private $cfg;
+
+	/**
 	 * Make this class defintive a singleton
 	 */
-	protected function __constructor()
-	{}
+	public function __construct(Cfg $cfg)
+	{
+		$this->cfg = $cfg;
+	}
 
 	private function __clone()
 	{}
@@ -104,7 +114,7 @@ class Creator
 				'core.content.css',
 				'core.content.js',
 				'core.content.nav',
-				'core.sec.permission',
+				'core.sec.permission'
 			];
 
 			// Create an app instance
@@ -122,7 +132,8 @@ class Creator
 	 * Autodiscovers installed apps in the given path.
 	 * When an app is found an instance of it will be created.
 	 *
-	 * @param string|array $path Path to check for apps. Can be an array of paths.
+	 * @param string|array $path
+	 *        	Path to check for apps. Can be an array of paths.
 	 */
 	public function autodiscover($path)
 	{
@@ -159,17 +170,14 @@ class Creator
 	public function initAppConfig($app_name)
 	{
 		// Init app
-		$cfg_app = $this->create($app_name)->getSettings();
-
-		// Get global config
-		$cfg = $this->di['core.cfg'];
+		$cfg_app = $this->create($app_name)->getConfig();
 
 		// Add default values for not set config
 		foreach ($cfg_app as $key => $cfg_def) {
 
 			// Set possible vaue from apps default config when no config was loaded from db
-			if (! $cfg->exists($app_name, $key) && isset($cfg_def['default']))
-				$cfg->set($app_name, $key, $cfg_def['default']);
+			if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default']))
+				$this->cfg->set($app_name, $key, $cfg_def['default']);
 		}
 	}
 }
