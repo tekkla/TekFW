@@ -90,15 +90,21 @@ try {
 		'core.cfg',
 		'core.session',
 		'core.cookie',
-		'core.sec.user'
+		'core.sec.user.current',
+		'core.sec.group',
+		'core.sec.permission'
 	]);
-	$di->mapService('core.sec.user', '\Core\Lib\Security\User', [
+	$di->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
+		'db.default',
+		'core.sec.permission'
+	]);
+	$di->mapService('core.sec.user.current', '\Core\Lib\Security\User', [
 		'db.default',
 		'core.sec.permission'
 	]);
 	$di->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
 	$di->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
-	$di->mapService('core.sec.usergroup', '\Core\Lib\Security\Usergroup', 'db.default');
+	$di->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
 
 	// == AMVC =========================================================
 	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator');
@@ -133,9 +139,9 @@ try {
 	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.request');
 	$di->mapService('core.content.nav', '\Core\Lib\Content\Menu');
 	$di->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
+	$di->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
 
-	// == HELPER ============================================================
-	$di->mapFactory('core.helper.formdesigner', '\Core\Helper\FormDesigner');
+
 
 	// -------------------------------------------------------
 	// Config
@@ -306,6 +312,13 @@ try {
 			<hr>
 			<h4>Debug</h4>
 			<p>Runtime : ' . $timer->stop() . 's</p>
+			<p>User Permissions:</p>
+			<p>';
+
+			var_dump($di['core.sec.security']->getPermissions());
+
+			echo '
+			</p>
 			<p>Permissions:</p>
 			<p>';
 

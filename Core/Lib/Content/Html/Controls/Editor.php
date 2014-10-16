@@ -4,10 +4,11 @@ namespace Core\Lib\Content\Html\Controls;
 use Core\Lib\Abstracts\FormElementAbstract;
 use Core\Lib\Content\Html\Form\Input;
 use Core\Lib\Content\Html\Elements\Div;
+use Core\Lib\Content\Html\HtmlFactory;
 
 /**
  * Creates a CKE inline control
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Controls
@@ -19,63 +20,63 @@ class Editor extends FormElementAbstract
 
     /**
      * Height in px
-     * 
+     *
      * @var int
      */
     private $height = 600;
 
     /**
      * Background color (hex)
-     * 
+     *
      * @var string
      */
     private $color = '#666';
 
     /**
      * Use filebrowser flag
-     * 
+     *
      * @var bool
      */
     private $filebrowser_use = true;
 
     /**
      * Filebrowser width
-     * 
+     *
      * @var int string
      */
     private $filebrowser_width = 600;
 
     /**
      * Filebrowser height
-     * 
+     *
      * @var int string
      */
     private $filebrowser_height = 300;
 
     /**
      * Filebrowser userrole
-     * 
+     *
      * @var string
      */
     private $filebrowser_userrole = '';
 
     /**
      * Id of form the editor belongs to
-     * 
+     *
      * @var string
      */
     private $form_id;
 
     /**
      * Hidden value form field
-     * 
+     *
      * @var Input
      */
     private $content_element;
 
     /**
      * Visible editor area div
-     * 
+     *
      * @var Div
      */
     private $edit_element;
@@ -90,17 +91,22 @@ class Editor extends FormElementAbstract
 
     private $session;
 
-    public function __construct()
+    private $factory;
+
+    public function __construct(HtmlFactory $factory)
     {
-        
+    	parent::__construct($factory);
+
+
+
         // our editor will be uesd as inline editor
         $this->edit_element = $this->div->addAttribute('contenteditable', 'true')->addData('url', $this->cfg->get('Core', 'url_tools'));
-        
+
         // we need an hidden form field for content to post
         $this->content_element = $this->input->setType('hidden');
-        
+
         $this->addData('control', 'editor');
-        
+
         // Add needed CKE js library
         $this->js->file($this->cfg->get('Core', 'url_tools') . '/ckeditor/ckeditor.js?' . time());
     }
@@ -127,7 +133,7 @@ class Editor extends FormElementAbstract
     {
         // the hidden field is the field with the form content
         $this->content_element->setName($name);
-        
+
         return $this;
     }
 
@@ -151,7 +157,7 @@ class Editor extends FormElementAbstract
 
     /**
      * Sets user role and grants access on filebrowser
-     * 
+     *
      * @param string $role
      * @return \Core\Lib\Content\Html\Controls\Editor
      */
@@ -159,7 +165,7 @@ class Editor extends FormElementAbstract
     {
         $this->session->set('KCFinder_Role', $role);
         $this->session->set('KCFinder_Access', true);
-        
+
         return $this;
     }
 
@@ -210,12 +216,12 @@ class Editor extends FormElementAbstract
 				e.preventDefault();
 			});
 		}";
-        
+
         $this->js->script($script);
-        
+
         $html = $this->content_element->build();
         $html .= $this->edit_element->build();
-        
+
         return $html;
     }
 }
