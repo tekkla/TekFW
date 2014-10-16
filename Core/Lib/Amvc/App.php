@@ -25,7 +25,7 @@ class App
 
 	/**
 	 * List of appnames which are already initialized
-	 *
+	 *}}
 	 * @var array
 	 */
 	private static $init_done = [];
@@ -40,18 +40,52 @@ class App
 	protected $name;
 
 	/**
-	 * Secure app föag
+	 * Secure app flag
 	 *
 	 * @var boolean
 	 */
-	private $secure = false;
+	protected $secure = false;
 
 	/**
-	 * Apps settings storage
+	 * Falg for using language system
+	 *
+	 * @var boolean
+	 */
+	protected $language = false;
+
+	/**
+	 * Flag for using seperate css file
+	 *
+	 * @var boolean
+	 */
+	protected $css_file = false;
+
+	/**
+	 * Flag for using seperate js file
+	 *
+	 * @var boolean
+	 */
+	protected $js_file = false;
+
+	/**
+	 * Apps routes storage
+	 * @var array
+	 */
+	protected $routes = [];
+
+	/**
+	 * Apps default config storage
 	 *
 	 * @var array
 	 */
-	private $settings = [];
+	protected $config = [];
+
+	/**
+	 * Apps permission storage
+	 *
+	 * @var array
+	 */
+	protected $permissions = [];
 
 	/**
 	 * Stores app path
@@ -61,36 +95,42 @@ class App
 	private $path = '';
 
 	/**
+	 * Config service
 	 *
 	 * @var Cfg
 	 */
 	protected $cfg;
 
 	/**
+	 * Request service
 	 *
 	 * @var Request
 	 */
 	protected $request;
 
 	/**
+	 * Css service
 	 *
 	 * @var Css
 	 */
 	protected $css;
 
 	/**
+	 * Javascript service
 	 *
 	 * @var Javascript
 	 */
 	protected $js;
 
 	/**
+	 * Navmenu service
 	 *
 	 * @var Menu
 	 */
 	protected $menu;
 
 	/**
+	 * Permission service
 	 *
 	 * @var Permission
 	 */
@@ -186,36 +226,18 @@ class App
 		$this->permission->addPermission($app_name, 'admin');
 
 		// Having a config means we have to add an admin permission
-		if (in_array('config', $this->settings)) {
+		if ($this->config) {
 			$this->permission->addPermission($app_name, 'config');
 		}
 
-		// Do we have permissions do add?
-		if (in_array('permissions', $this->settings)) {
-
-			// Include permission file
-			$permissions_file = $this->path . '/Permissions.php';
-
-			// Should we throw an exception due to missing permissions file?
-			if (! file_exists($permissions_file)) {
-				Throw new \RuntimeException('The permission file for app "' . $this->name . '" is missing. Add Permission.php to your app root folder or remove permission flag in your app settings file.');
-			}
-
-			// Include permission file
-			$permissions = include ($permissions_file);
-
-			// Any permissions found?
-			if (! empty($permissions)) {
-
-				// We need the uncamelized name of app
-				$name = $this->uncamelizeString($this->name);
-
-				// Add permissions to permission service
-				$this->permission->addPermission($name, $permissions);
-			}
-
-			self::$init_stages[$this->name]['permissions'] = true;
+		// Add permissions to permission service
+		if ($this->permissions) {
+			$this->permission->addPermission($app_name, $this->permissions);
 		}
+
+		// Set flat that permission init is done
+		self::$init_stages[$this->name]['permissions'] = true;
+
 	}
 
 	/**
@@ -231,7 +253,7 @@ class App
 		}
 
 		// Do we have permissions do add?
-		if (in_array('language', $this->settings)) {
+		if ($this->language) {
 
 			// Check
 			if (!$this->cfg->exists($this->name, 'dir_language')) {
@@ -376,6 +398,16 @@ class App
 	}
 
 	/**
+	 * Returns apps default config
+	 *
+	 * @return array
+	 */
+	public function getConfig()
+	{
+		return $this->config;
+	}
+
+	/**
 	 * Gives access on the apps config.
 	 * Calling only with key returns the set value.
 	 * Calling with key and value will set the apps config.
@@ -418,29 +450,14 @@ class App
 		// Add general app id an name
 		$this->cfg->set($this->name, 'app', $this->name);
 
-		// Try to get default values for not set configs
-		if (in_array('config', $this->settings)) {
+		// Check the loaded config against the keys of the default config
+		// and set the default value if no cfg value is found
+		foreach ($this->config as $key => $cfg_def) {
 
-			// Path to config file
-			$config_file = $this->path . '/Config.php';
-
-			// Check config file exists
-			if (! file_exists($config_file)) {
-				Throw new \RuntimeException('Config file for app "' . $this->name . '" is missing.');
-			}
-
-			// Load routes file
-			$config = include ($config_file);
-
-			// Check the loaded config against the keys of the default config
-			// and set the default value if no cfg value is found
-			foreach ($config as $key => $cfg_def) {
-
-				// When there is no config set but a default value defined for the app,
-				// the default value will be used then
-				if (! $this->cfg->exists($this->name, $key) && isset($cfg_def['default'])) {
-					$this->cfg->set($this->name, $key, $cfg_def['default']);
-				}
+			// When there is no config set but a default value defined for the app,
+			// the default value will be used then
+			if (! $this->cfg->exists($this->name, $key) && isset($cfg_def['default'])) {
+				$this->cfg->set($this->name, $key, $cfg_def['default']);
 			}
 		}
 	}
@@ -473,7 +490,7 @@ class App
 	public function getAppType()
 	{
 		// Normal app or secure app?
-		return in_array('secure', $this->settings) ? 'appssec' : 'apps';
+		return $this->secure === true ? 'appssec' : 'apps';
 	}
 
 	/**
@@ -537,7 +554,7 @@ class App
 		}
 
 		// Css flag set that indicates app has a css file?
-		if (in_array('css', $this->settings)) {
+		if ($this->css_file) {
 
 			// Check for existance of apps css file
 			if (!file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
@@ -577,7 +594,7 @@ class App
 		// your app mainclass. Unlike the css include procedure, the $js property holds also the information where to include the apps .js file.
 		// You hve to set this property to "scripts" (included on the bottom of website) or "header" (included in header section of website).
 		// the apps js file is stored within the app folder structure in an directory named "js".
-		if (in_array('js', $this->settings)) {
+		if ($this->js_file) {
 
 			if (!file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
 				Throw new \RuntimeException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
@@ -604,7 +621,12 @@ class App
 	 */
 	private final function initRoutes()
 	{
-		if (! in_array('routes', $this->settings)) {
+		// routes already initiated? Do nothing if so.
+		if (self::$init_stages[$this->name]['routes'] == true) {
+			return;
+		}
+
+		if (! $this->routes) {
 
 			// No routes set? Map at least index as default route
 			$route = [
@@ -624,27 +646,11 @@ class App
 			return;
 		}
 
-		// routes already initiated? Do nothing if so.
-		if (self::$init_stages[$this->name]['routes'] == true) {
-			return;
-		}
-
-		// Path to routes file
-		$routes_file = $this->path . '/Routes.php';
-
-		// Check routes file existance
-		if (! file_exists($routes_file)) {
-			Throw new \RuntimeException('Routes file for app "' . $this->name . '" is missing.');
-		}
-
-		// Load routes file
-		$routes = include ($routes_file);
-
 		// Get uncamelized app name
 		$app_name = $this->uncamelizeString($this->name);
 
 		// Map routes to request handler router
-		foreach ($routes as $route) {
+		foreach ($this->routes as $route) {
 
 			// Create route string
 			$route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
@@ -699,23 +705,13 @@ class App
 	}
 
 	/**
-	 * Returns the apps config definition. Returns boolean false on empty settings.
-	 *
-	 * @return array|boolean
-	 */
-	public function getSettings()
-	{
-		return $this->settings ? $this->settings : false;
-	}
-
-	/**
 	 * Is this app a secured one?
 	 *
 	 * @return boolean
 	 */
 	public function isSecure()
 	{
-		return isset($this->secure) && $this->secure === true ? true : false;
+		return $this->secure === true ? true : false;
 	}
 
 	/**

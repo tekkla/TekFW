@@ -10,7 +10,7 @@ if (! defined('TEKFW'))
 /**
  * Mainclass for secured Doc app
  * This app handles all admin stuff about the framework and apps
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -20,11 +20,14 @@ if (! defined('TEKFW'))
 class Doc extends App
 {
 
-    public $secure = true;
+    protected $secure = true;
 
-    public $css = true;
+    protected $css_file = true;
+
+    protected $js_file = true;
+
     // public $js = true;
-    public $lang = true;
+    protected $language = true;
 
     public $routes = array(
         array(
