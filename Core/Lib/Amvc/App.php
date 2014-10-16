@@ -11,7 +11,7 @@ use Core\Lib\Security\Permission;
 /**
  * Parent class for all apps
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @package TekFW
  * @subpackage Lib
  * @license MIT
@@ -179,6 +179,17 @@ class App
 	 */
 	private function initPermissions()
 	{
+		// We need lowercase app name
+		$app_name = $this->uncamelizeString($this->name);
+
+		// Add admin permission by default
+		$this->permission->addPermission($app_name, 'admin');
+
+		// Having a config means we have to add an admin permission
+		if (in_array('config', $this->settings)) {
+			$this->permission->addPermission($app_name, 'config');
+		}
+
 		// Do we have permissions do add?
 		if (in_array('permissions', $this->settings)) {
 
@@ -342,7 +353,8 @@ class App
 			'core.content.message',
 			'core.content.page',
 			'core.content.url',
-			'core.content.menu'
+			'core.content.menu',
+			'core.content.html.factory'
 		];
 
 		return $this->MVCFactory($name, 'Controller', $args);
