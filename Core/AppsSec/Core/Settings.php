@@ -11,5 +11,4 @@ return [
 	'config',
 	'routes',
 	'language',
-	'permissions'
 ];
