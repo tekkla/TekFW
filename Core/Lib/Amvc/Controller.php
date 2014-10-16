@@ -9,6 +9,7 @@ use Core\Lib\Content\Url;
 use Core\Lib\Content\Message;
 use Core\Lib\Content\LinktreeElement;
 use Core\Lib\Content\Menu;
+use Core\Lib\Content\Html\HtmlFactory;
 
 /**
  * Controllers parent class.
@@ -125,10 +126,26 @@ class Controller extends MvcAbstract
 	protected $menu;
 
 	/**
+	 *
+	 * @var HtmlFactory
+	 */
+	protected $html;
+
+	/**
 	 * Hidden constructor.
 	 * Runs the onLoad eventmethod and inits the internal view and model.
 	 */
-	final public function __construct($name, App $app, Request $request, Security $security, Message $message, Page $page, Url $url, Menu $menu)
+	final public function __construct(
+		$name,
+		App $app,
+		Request $request,
+		Security $security,
+		Message $message,
+		Page $page,
+		Url $url,
+		Menu $menu,
+		HtmlFactory $html
+	)
 	{
 		// Store name
 		$this->name = $name;
@@ -139,6 +156,7 @@ class Controller extends MvcAbstract
 		$this->page = $page;
 		$this->url = $url;
 		$this->menu = $menu;
+		$this->html = $html;
 
 		// Model to bind?
 		$this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
@@ -520,10 +538,11 @@ class Controller extends MvcAbstract
 	final protected function getFormDesigner()
 	{
 		/* @var $form \Core\Helper\FormDesigner */
-		$form = $this->di['core.helper.formdesigner'];
+		$form = $this->di['core.content.html.factory']->create('FormDesigner');
 
-		if (!property_exists($this, 'has_no_model'))
+		if (!property_exists($this, 'has_no_model')) {
 			$form->attachModel($this->model);
+		}
 
 		$form->setAction($this->url->compile($this->request->getCurrentRoute(), $this->param));
 
