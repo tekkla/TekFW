@@ -63,7 +63,7 @@ class User
 	 *
 	 * @var unknown
 	 */
-	private $is_admin = true;
+	private $is_admin = false;
 
 	/**
 	 *
@@ -184,18 +184,21 @@ class User
 			$this->display_name = $row['display_name'];
 			$this->password = $row['password'];
 
-			// Groups set?
-			if ($row['groups']) {
-				$this->groups = unserialize($row['groups']);
-			}
+			// Load groups the user is in
+			$this->db->query('SELECT id_group FROM {db_prefix}users_groups WHERE id_user=:id_user');
+			$this->db->bindValue(':id_user', $id_user);
 
-			// User in group 1 means user is admin
-			if (in_array('1', $this->groups)) {
-				$this->is_admin = true;
+			if ($this->db->execute()) {
+				$this->groups = $this->db->column();
 			}
 
 			// Load user permissions based on groups of the user
 			$this->perms = $this->permission->loadPermission($this->groups);
+
+			// Is the user an admin?
+			if (in_array('core_admin', $this->perms)) {
+				$this->is_admin = true;
+			}
 		}
 	}
 }

@@ -1,6 +1,11 @@
 <?php
 namespace Core\Lib\Security;
 
+use Core\Lib\Session;
+use Core\Lib\Cfg;
+use Core\Lib\Cookie;
+use Core\Lib\Data\Database;
+
 /**
  * Class: Security
  *
@@ -43,29 +48,66 @@ class Security
 	private $expire_time = 0;
 
 	/**
-	 * Storage of current users permissions
 	 *
-	 * @var array
+	 * @var Database
 	 */
-	private $permissions = [];
-
 	private $db;
 
+	/**
+	 *
+	 * @var Cookie
+	 */
 	private $cookie;
 
+	/**
+	 *
+	 * @var User
+	 */
 	private $user;
 
+	/**
+	 *
+	 * @var Cfg
+	 */
 	private $cfg;
 
+	/**
+	 *
+	 * @var Session
+	 */
 	private $session;
 
-	public function __construct($db, $cfg, $session, $cookie, $user)
+	/**
+	 *
+	 * @var Group
+	 */
+	private $group;
+
+	/**
+	 *
+	 * @var Permission
+	 */
+	private $permission;
+
+	/**
+	 */
+	public function __construct(
+		Database $db,
+		Cfg $cfg,
+		Session $session,
+		Cookie $cookie,
+		User $user,
+		Group $group,
+		Permission $permission
+	)
 	{
 		$this->db = $db;
 		$this->cfg = $cfg;
 		$this->session = $session;
 		$this->cookie = $cookie;
 		$this->user = $user;
+		$this->group = $group;
+		$this->permission = $permission;
 	}
 
 	/*
@@ -335,6 +377,11 @@ class Security
 		$this->cookie->set();
 	}
 
+	/**
+	 * Generates a hashed user token based on userdata
+	 * @param unknown $id_user
+	 * @return string
+	 */
 	private function generateUserToken($id_user)
 	{
 		// Get userinfo
@@ -346,66 +393,86 @@ class Security
 			$this->pepper,
 			$this->user->getUsername(),
 			$this->user->getPassword(),
-			implode('+', $this->user->getGroups())
+			implode(',', $this->user->getGroups()),
 		];
 
 		// Build hash from combinded data
-		return md5(implode('|', $pieces));
+		$token = md5(implode('|', $pieces));
+
+		return $token;
 	}
 
+	/**
+	 * Returns login state of current user
+	 * @return boolean
+	 */
 	public function loggedIn()
 	{
 		return $this->session->get('logged_in') == true && $this->session->get('id_user') > 0 ? true : false;
 	}
 
+	/**
+	 * Generates the expiring timestamp for cookies
+	 *
+	 * @return number
+	 */
 	private function generateExpireTime()
 	{
 		// Create expire date of autologin
 		return $this->expire_time = time() + 3600 * 24 * $this->days;
 	}
 
-	private function getPermissions()
+	/**
+	 * Returns the list of permissions the current user owns
+	 *
+	 * @return array
+	 */
+	public function getPermissions()
 	{
-		return $this->permissions;
-		$this->db->query('SELECT id_groups FROM {db_prefix}groups');
+		return $this->user->getPermissions();
+	}
+
+	public function getGroups()
+	{
+		return $this->group->getGroups();
 	}
 
 	/**
 	 * Checks user access by permissions
-	 * @Todo !!! Always returns true for now.
-	 * Needs to be implemented properly. !!!
+	 *
+	 * @param unknown $perms
+	 * @param string $force
+	 *
+	 * @return boolean
 	 */
 	public function checkAccess($perms = [], $force = false)
 	{
-		#return true;
+		// Guests are not allowed by default
+		if ($this->user->isGuest()) {
+			return false;
+		}
 
-		// We are optimistic and empty permissions means granting access
-		if (! $perms) {
+		// Allow access to all users when perms argument is empty
+		if (empty($perms)) {
 			return true;
 		}
 
-		// $this->user->load($this->session->get('id_user'));
-
-		// You're never allowed to do something if your data hasn't been loaded yet!
-		// if (!$userisLoaded())
-		// return false;
-
-		// Administrators are supermen :P.
+		// Administrators are supermen :P
 		if ($this->user->isAdmin()) {
 			return true;
 		}
 
+		// Explicit array conversion of perms arg
 		if (! is_array($perms)) {
 			$perms = (array) $perms;
 		}
 
-		// Are we checking the _current_ board, or some other boards?
-		if (count(array_intersect($perms, $this->permissions)) != 0) {
+		// User has the right to do this?
+		if (count(array_intersect($perms, $this->user->getPermissions())) > 0) {
 			return true;
 		}
+
 		// You aren't allowed, by default.
-		else {
-			return false;
-		}
+		return false;
 	}
 }

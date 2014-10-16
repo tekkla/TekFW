@@ -39,7 +39,7 @@ class Permission
 		if ($permissions) {
 
 			if (! is_array($permissions)) {
-				$var = (array) $permissions;
+				$permissions = (array) $permissions;
 			}
 
 			foreach ($permissions as $perm) {
