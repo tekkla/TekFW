@@ -15,9 +15,6 @@
 <IfModule mod_rewrite.c>
 
 	RewriteEngine On
-
-	# No rewrite for the following endings
-	RewriteRule \.(css|jpe?g|gif|png|js|txt|bmp|xml|json|eot|svg|ttf|woff|ico)$ - [NC,L]
 	
 	# Do not rewrite urls to js tools like cke
 	RewriteRule ^Core/Tools/ - [NC,L]
