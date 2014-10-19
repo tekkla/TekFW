@@ -205,6 +205,20 @@ abstract class HtmlAbstract
 	}
 
 	/**
+	 * Adds content to existing inner conntent
+	 *
+	 * @param string $content
+	 *
+	 * @return \Core\Lib\Abstracts\HtmlAbstract
+	 */
+	public function addInner($content)
+	{
+		$this->inner .= $content;
+
+		return $this;
+	}
+
+	/**
 	 * Returns inner value if set.
 	 * No set returns boolean false.
 	 *
