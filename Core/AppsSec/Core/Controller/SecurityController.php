@@ -12,47 +12,58 @@ class SecurityController extends Controller
 
 	public $has_no_model;
 
-    public function Login()
-    {
-        $post = $this->request->getPost();
+	public function Login()
+	{
+		$post = $this->router->getPost();
 
-        if ($post) {
-            $id_user = $this->security->login($post->login, $post->password);
+		if ($post) {
 
-            if ($id_user)
-                $this->message->success('Login OK!');
-            else
-                $this->message->error('Login Failed');
-        }
+			// Do login procedure
+			$this->security->login($post->login, $post->password);
+		}
 
-        if ($this->security->loggedIn())
-            $this->redirectExit();
+		if ($this->security->loggedIn()) {
+			$this->message->success('Login OK!');
+			$this->redirectExit();
+		} else {
+			$this->message->error('Login Failed');
+		}
 
-        $form = $this->getFormDesigner();
+		$form = $this->getFormDesigner();
 
-        $form->setApp('Core');
-        $form->setModelName('Security');
+		$form->setApp('Core');
+		$form->setModelName('Security');
 
-        $action = $this->request->getRouteUrl('core_login');
-        $form->setAction($action);
+		$action = $this->router->url('core_login');
+		$form->setAction($action);
 
-        /* @var $control-> \Core\Lib\Content\Html\Form\Input */
-        $control = $form->createElement('input', 'login');
-        $control->noLabel();
-        $control->setPlaceholder('Username');
+		/* @var $control \Core\Lib\Content\Html\Form\Input */
+		$control = $form->createElement('input', 'login');
+		$control->noLabel();
+		$control->setPlaceholder('Username');
 
-        /* @var $control-> \Core\Lib\Content\Html\Form\Input */
-        $control = $form->createElement('password', 'password');
-        $control->noLabel();
-        $control->setPlaceholder('Password');
+		/* @var $control \Core\Lib\Content\Html\Form\Input */
+		$control = $form->createElement('password', 'password');
+		$control->noLabel();
+		$control->setPlaceholder('Password');
 
-        /* @var $control-> \Core\Lib\Content\Html\Form\Checkbox */
-        $control = $form->createElement('checkbox', 'remember');
-        $control->setLabel('Remember me');
+		/* @var $control \Core\Lib\Content\Html\Form\Checkbox */
+		$control = $form->createElement('checkbox', 'remember');
+		$control->setLabel('Remember me');
 
-        $form->setSaveButtonText('Login');
-        $form->setIcon('submit', 'key');
+		$form->setSaveButtonText('Login');
+		$form->setIcon('submit', 'key');
 
-        $this->setVar('form', $form);
-    }
+		$this->setVar('form', $form);
+	}
+
+	public function Logout() {
+
+		$this->security->logout();
+
+		$this->redirectExit($this->router->url('core_index'));
+
+
+
+	}
 }

@@ -16,7 +16,7 @@ final class AdminController extends Controller
     public function Index()
     {
         $this->setVar([
-            'config' => $this->url->compile('admin_app_config', [
+            'config' => $this->router->url('admin_app_config', [
                 'app_name' => 'core'
             ]),
             'loaded_apps' => $this->model->getApplist()

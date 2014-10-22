@@ -152,7 +152,14 @@ final class Core extends App
 			'group' => 'url',
 			'control' => 'switch',
 			'default' => 0
-		]
+		],
+
+		// Display
+		'theme' => [
+			'group' => 'display',
+			'control' => 'text',
+			'default' => 'Core'
+		],
 	];
 
 	// Apps routes
@@ -169,6 +176,13 @@ final class Core extends App
 			'route' => '../login',
 			'ctrl' => 'Security',
 			'action' => 'Login'
+		],
+		[
+			'name' => 'logout',
+			'method' => 'GET',
+			'route' => '../logout',
+			'ctrl' => 'Security',
+			'action' => 'Logout'
 		],
 		[
 			'name' => 'admin',
@@ -202,4 +216,24 @@ final class Core extends App
 			'action' => 'reconfigure'
 		]
 	];
+
+	protected function addMenuItems()
+	{
+
+		if ($this->security->checkAccess('core_admin')) {
+			$this->content->navbar->createRootItem('admin', $this->txt('admin'), $this->router->url('core_admin'));
+		}
+
+		if ($this->security->loggedIn())
+		{
+			$text = $this->txt('logout');
+			$route = 'core_logout';
+		}
+		else {
+			$text = $this->txt('login');
+			$route = 'core_login';
+		}
+
+		$this->content->navbar->createRootItem('login', $text, $this->router->url($route));
+	}
 }

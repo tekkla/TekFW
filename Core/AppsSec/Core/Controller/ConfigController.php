@@ -30,7 +30,7 @@ class ConfigController extends Controller
 			Throw new \RuntimeException('No accessrights');
 		}
 
-		$post = $this->request->getPost();
+		$post = $this->router->getPost();
 
 		// save process
 		if ($post) {
@@ -38,7 +38,7 @@ class ConfigController extends Controller
 
 			if ($this->model->hasNoErrors()) {
 				$this->messagesuccess($this->txt('config_saved'));
-				$redir_url = $this->request->getRouteUrl($this->request->getCurrentRoute(), array(
+				$redir_url = $this->router->url($this->router->getCurrentRoute(), array(
 					'app_name' => $this->uncamelizeString($app_name)
 				));
 				$this->redirectExit($redir_url);
@@ -61,7 +61,7 @@ class ConfigController extends Controller
 		$form = $this->getFormDesigner();
 
 		// Set forms action route
-		$form->setActionRoute($this->request->getCurrentRoute(), array(
+		$form->setActionRoute($this->router->getCurrentRoute(), array(
 			'app_name' => $this->uncamelizeString($app_name)
 		));
 
@@ -208,7 +208,7 @@ class ConfigController extends Controller
 		$this->setVar('form', $form);
 
 		// Add linktreee
-		$this->addLinktree('TekFW Admincenter', $this->url->compile('admin_admin'));
+		$this->addLinktree('TekFW Admincenter', $this->router->url('admin_admin'));
 
 		$this->addLinktree($this->txt('name', $app_name));
 	}
