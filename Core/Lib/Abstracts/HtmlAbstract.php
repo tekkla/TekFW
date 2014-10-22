@@ -522,6 +522,10 @@ abstract class HtmlAbstract
 	{
 		$html_attr = [];
 
+		if (!$this->element) {
+			$this->element = strtolower((new \ReflectionClass($this))->getShortName());
+		}
+
 		if (isset($this->id)) {
 			$html_attr['id'] = $this->id;
 		}
@@ -576,24 +580,15 @@ abstract class HtmlAbstract
 		// html attribute string has been created, lets build the element
 		switch ($this->element) {
 
-			case 'label':
-				$html = '<label ' . $html_attr . '>' . $this->inner . '</label>';
-				break;
-
 			case 'input':
-				$html = '<input ' . $html_attr . '>';
-				break;
-
-			case 'textarea':
-				$html = '<textarea ' . $html_attr . '>' . $this->inner . '</textarea>';
-				break;
-
+			case 'meta':
 			case 'img':
-				$html = '<img ' . $html_attr . '>';
+			case 'link':
+				$html = '<' . $this->element . ($html_attr ? ' ' . $html_attr : '') . '>';
 				break;
 
 			default:
-				$html = '<' . $this->element . ' ' . $html_attr . '>' . $this->inner . '</' . $this->element . '>';
+				$html = '<' . $this->element . ($html_attr ? ' ' . $html_attr : '') . '>' . $this->inner . '</' . $this->element . '>';
 				break;
 		}
 
