@@ -17,14 +17,15 @@ class DI implements \ArrayAccess
 
 	/**
 	 * Creates an instance of a class
+	 *
 	 * Analyzes $arguments parameter and injects needed services and objects
-	 * into the object instance.
-	 * A so created object instance gets always the
+	 * into the object instance. A so created object instance gets always the
 	 * di container object injected.
 	 *
 	 * @param unknown $class_name
 	 * @param string $arguments
-	 * @return Ambigous <unknown, object>
+	 *
+	 * @return object
 	 */
 	public function instance($class_name, $arguments = null)
 	{
@@ -81,11 +82,11 @@ class DI implements \ArrayAccess
 
 	/**
 	 * Maps a named service.
-	 * Requesting this service will result in returning
-	 * always the same object.
 	 *
-	 * @param unknown $key Name of the service
-	 * @param unknown $value Class to use for object creation
+	 * Requesting this service will result in returning always the same object.
+	 *
+	 * @param string $key Name of the service
+	 * @param string $value Class to use for object creation
 	 * @param string $arguments Arguments to provide on instance create
 	 */
 	public function mapService($key, $value, $arguments = null)
@@ -99,10 +100,11 @@ class DI implements \ArrayAccess
 
 	/**
 	 * Maps a class by name.
-	 * Requesting this class will result in new object.
+	 *
+	 * Requestingthis class will result in new object.
 	 *
 	 * @param string $key Name to access object
-	 * @param unknown $value Classname of object
+	 * @param string $value Classname of object
 	 * @param string $arguments Arguments to provide on instance create
 	 */
 	public function mapFactory($key, $value, $arguments = null)
@@ -120,8 +122,10 @@ class DI implements \ArrayAccess
 	 * @param $obj Object to call parameter injected method
 	 * @param $method Name of method to call
 	 * @param $param (Optional) Array of parameters to inject into method
+	 *
 	 * @throws MethodNotExistsError
 	 * @throws ParameterNotSetError
+	 *
 	 * @return object
 	 */
 	public function invokeMethod(&$obj, $method, $param = [])
@@ -163,43 +167,80 @@ class DI implements \ArrayAccess
 		return $method->invokeArgs($obj, $args);
 	}
 
-	public function offsetExists($offset)
+	/**
+	 * Checks for a registred service by it's name.
+	 *
+	 * @param string $service Name of service to check for
+	 *
+	 * @return boolean
+	 */
+	public function exists($service)
 	{
-		return array_key_exists($offset, self::$map);
+		return $this->offsetExists($service);
 	}
 
-	public function offsetGet($offset)
+	/**
+	 * Returns requested service, class or value
+	 *
+	 * @param string $service Name of registered service, class or value
+	 */
+	public function get($service) {
+		$this->offsetGet($service);
+	}
+
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetExists()
+	 */
+	public function offsetExists($service)
 	{
-		if (! $this->offsetExists($offset)) {
-			Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $offset));
+		return array_key_exists($service, self::$map);
+	}
+
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetGet()
+	 */
+	public function offsetGet($service)
+	{
+		if (! $this->offsetExists($service)) {
+			Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $service));
 		}
 
-		$type = self::$map[$offset]['type'];
-		$value = self::$map[$offset]['value'];
+		$type = self::$map[$service]['type'];
+		$value = self::$map[$service]['value'];
 
 		if ($type == 'value') {
 			return $value;
 		} elseif ($type == 'factory') {
-			return $this->instance($value, self::$map[$offset]['arguments']);
+			return $this->instance($value, self::$map[$service]['arguments']);
 		} else {
 
-			if (! isset(self::$services[$offset])) {
-				self::$services[$offset] = $this->instance($value, self::$map[$offset]['arguments']);
+			if (! isset(self::$services[$service])) {
+				self::$services[$service] = $this->instance($value, self::$map[$service]['arguments']);
 			}
 
-			return self::$services[$offset];
+			return self::$services[$service];
 		}
 	}
 
-	public function offsetSet($offset, $value)
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetSet()
+	 */
+	public function offsetSet($service, $value)
 	{
-		self::$map[$offset] = $value;
+		self::$map[$service] = $value;
 	}
 
-	public function offsetUnset($offset)
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetUnset()
+	 */
+	public function offsetUnset($service)
 	{
-		if ($this->offsetExists($offset)) {
-			unset(self::$map[$offset]);
+		if ($this->offsetExists($service)) {
+			unset(self::$map[$service]);
 		}
 	}
 }
