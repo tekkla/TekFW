@@ -54,54 +54,34 @@
 	margin-bottom: 0;
 }
 
-/*
-|--------------------------------------------------------------------------
-| SMF compatibility
-|--------------------------------------------------------------------------
-*/
-
-/**
- * Some parts of SMF do not like global box-sizing: border-box of BS
- */
-.sceditor-button,.admin-menu-icon:before {
-	box-sizing: content-box;
+.navbar > ul {
+	position: relative;
 }
 
-/**
- * SMF uses headings as column titles. So we have to reset margins overridden by BS.
- */
-h3.catbg,h4.catbg,h3.titlebg,h4.titlebg {
+.navbar li.navbar-parent:hover {
+	background-color: #eee;
+}
+
+.navbar li.navbar-parent ul {
+	display: none;
+	list-style: none;
+	padding: 5px 10px;
 	margin: 0;
 }
 
-/**
- * Fixes display error where topic header info col is to high
- */
-#topic_header .icon,#topic_header .info,#topic_header .stats,#topic_header .lastpost,#topic_header .moderation
-	{
-	margin-bottom: 0;
+.navbar li.navbar-parent ul {
+	position: absolute;
+	width: 200px;
+	background-color: #eee;
 }
 
-/**
- * I do not understand why headings are used for bold texts. Is it for SR?
- */
-div.news h2 {
-	font-size: 1em;
-	font-weight: 700;
+.navbar li.navbar-parent:hover > ul {
+	display: block;
 }
 
-/**
- * Fixes margins and pattern as result of using a 14px font size in BS
- */
-.dropmenu span,#profile_menu span {
-	margin: -3px 5px 0 0;
-}
-
-/**
- * Same for line heights in menus
- */
-.dropmenu li,#top_info>li {
-	line-height: 2em;
+.navbar li.navbar-parent ul ul{
+	top: 0;
+	left: 150px;
 }
 
 /*
@@ -180,6 +160,7 @@ body.loading #status {
 .xdebug-error th {
 	background: #333;
 	font-size: 1.2em;
+	color: #ddd;
 }
 
 .xdebug-error td {
