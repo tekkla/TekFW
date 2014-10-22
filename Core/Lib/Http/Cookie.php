@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib;
+namespace Core\Lib\Http;
 
 /**
  * Class handles cookie related stuff
