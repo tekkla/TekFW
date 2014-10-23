@@ -7,9 +7,16 @@ use Core\Lib\Content\Html\HtmlFactory;
 class Template
 {
 
-	protected $head = '';
+	/**
+	 * Layers to render
+	 *
+	 * @var array
+	 */
+	protected $layers = [
+		'Head',
+		'Body'
+	];
 
-	protected $css;
 
 	/**
 	 *
@@ -29,6 +36,13 @@ class Template
 	 */
 	private $html;
 
+	/**
+	 * Constructor
+	 *
+	 * @param Cfg $cfg
+	 * @param Content $content
+	 * @param HtmlFactory $html
+	 */
 	public function __construct(Cfg $cfg, Content $content, HtmlFactory $html)
 	{
 		$this->cfg = $cfg;
@@ -36,18 +50,24 @@ class Template
 		$this->html = $html;
 	}
 
+	/**
+	 * Renders the template
+	 *
+	 * Uses the $layer property to look for layers to be rendered. Will throw a
+	 * runtime exception when a requested layer does not exist in the called
+	 * template file.
+	 *
+	 * @throws \RuntimeException
+	 */
 	final public function render()
 	{
-		if (! method_exists($this, 'Head')) {
-			Throw new \RuntimeException('Head method missing');
-		}
+		foreach ($this->layers as $layer) {
+			if (!method_exists($this, $layer)) {
+				Throw new \RuntimeException('Template Error: The requested layer "' . $layer . '" does not exist.');
+			}
 
-		if (! method_exists($this, 'Body')) {
-			Throw new \RuntimeException('Body method missing');
+			$this->$layer();
 		}
-
-		$this->Head();
-		$this->Body();
 	}
 
 	/**
@@ -439,27 +459,10 @@ class Template
 		foreach ($messages as $msg) {
 
 			$html .= PHP_EOL . '
-		<div class="alert alert-' . $msg->getType() . ' alert-dismissable' . ($msg->getFadeout() ? ' fadeout' : '') . '">
-			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-			' . $msg->getMessage() . '
-		</div>';
-
-			/*
-			 * $div->addCss([
-			 * 'alert',
-			 * 'alert-' . $msg->getType(),
-			 * 'alert-dismissable',
-			 * ]);
-			 *
-			 * if ($msg->getFadeout()) {
-			 * $div->addCss('fadeout');
-			 * }
-			 *
-			 * $div->setInner('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . $msg->getMessage());
-			 *
-			 * $html .= PHP_EOL . $div->build();
-			 *
-			 */
+			<div class="alert alert-' . $msg->getType() . ' alert-dismissable' . ($msg->getFadeout() ? ' fadeout' : '') . '">
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+				' . $msg->getMessage() . '
+			</div>';
 		}
 
 		return $html;
