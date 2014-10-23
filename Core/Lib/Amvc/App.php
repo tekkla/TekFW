@@ -2,11 +2,14 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Cfg;
-use Core\Lib\Request;
 use Core\Lib\Content\Css;
 use Core\Lib\Content\Javascript;
 use Core\Lib\Content\Menu;
 use Core\Lib\Security\Permission;
+use Core\Lib\Content\Content;
+use Core\Lib\Security\Security;
+use Core\Lib\Http\Router;
+use Core\Lib\DI;
 
 /**
  * Parent class for all apps
@@ -25,7 +28,7 @@ class App
 
 	/**
 	 * List of appnames which are already initialized
-	 *}}
+	 *
 	 * @var array
 	 */
 	private static $init_done = [];
@@ -69,6 +72,7 @@ class App
 
 	/**
 	 * Apps routes storage
+	 *
 	 * @var array
 	 */
 	protected $routes = [];
@@ -102,32 +106,17 @@ class App
 	protected $cfg;
 
 	/**
-	 * Request service
+	 * Router service
 	 *
-	 * @var Request
+	 * @var Router
 	 */
-	protected $request;
+	protected $router;
 
 	/**
-	 * Css service
 	 *
-	 * @var Css
+	 * @var Content
 	 */
-	protected $css;
-
-	/**
-	 * Javascript service
-	 *
-	 * @var Javascript
-	 */
-	protected $js;
-
-	/**
-	 * Navmenu service
-	 *
-	 * @var Menu
-	 */
-	protected $menu;
+	protected $content;
 
 	/**
 	 * Permission service
@@ -136,45 +125,49 @@ class App
 	 */
 	private $permission;
 
+	/**
+	 *
+	 * @var Security
+	 */
+	protected $security;
+
+	/**
+	 *
+	 * @var DI
+	 */
+	protected $di;
 
 	/**
 	 * Constructor
 	 *
 	 * @param string $app_name
 	 * @param Cfg $cfg
-	 * @param Request $request
+	 * @param Router $router
 	 * @param Css $css
 	 * @param Javascript $js
 	 * @param Menu $menu
 	 */
-	final public function __construct($app_name, Cfg $cfg, Request $request, Css $css, Javascript $js, Menu $menu, Permission $permission)
+	final public function __construct(
+		$app_name,
+		Cfg $cfg,
+		Router $router,
+		Content $content,
+		Permission $permission,
+		Security $security,
+		DI $di
+	)
 	{
 		// Setting properties
 		$this->name = $app_name;
 		$this->cfg = $cfg;
-		$this->request = $request;
-		$this->css = $css;
-		$this->js = $js;
-		$this->menu = $menu;
+		$this->router = $router;
+		$this->content = $content;
 		$this->permission = $permission;
+		$this->security = $security;
+		$this->di = $di;
 
 		// Set path property which is used on including additional app files like settings, routes, config etc
 		$this->path = BASEDIR . '\\' . $this->getNamespace();
-
-		// Try to load settings from settings file
-		$settings_file = $this->path . '/Settings.php';
-
-		// Is there a settingsfile to load?
-		if (file_exists($settings_file)) {
-
-			// Include it
-			$this->settings = include ($settings_file);
-
-			// Is this a secured app?
-			if (in_array('secure', $this->settings)) {
-				$this->secure = true;
-			}
-		}
 
 		// Set default init stages which are used to prevent initiation of app parts when not needed and
 		// to prevent multiple initiations when dealing with multiple app instances
@@ -183,16 +176,13 @@ class App
 				'config' => false,
 				'routes' => false,
 				'paths' => false,
-				'perms' =>false,
+				'perms' => false,
 				'lang' => false,
 				'css' => false,
 				'js' => false
 			];
 		}
-	}
 
-	public function init()
-	{
 		// Config will always be initiated. no matter what else follows.
 		$this->initCfg();
 
@@ -208,16 +198,31 @@ class App
 		$this->initRoutes();
 		$this->initPermissions();
 		$this->initLanguage();
+
+		// Finally call a possible app related methods
+		$methods = [
+			'appInit',
+			'addHeaders',
+			'addMenuItems'
+		];
+
+		foreach ($methods as $method) {
+			if (method_exists($this, $method)) {
+				$this->$method();
+			}
+		}
+
 	}
 
 	/**
 	 * Checks app settings for permissions to load, checks for existing permissions
-	 * file and adds permissions to core permission service. Throws runtimeexception
+	 * file and adds permissions to core permission service.
+	 * Throws runtimeexception
 	 * when permissions are set to be loaded but no permissions file is found.
 	 *
 	 * @throws \RuntimeException
 	 */
-	private function initPermissions()
+	final private function initPermissions()
 	{
 		// We need lowercase app name
 		$app_name = $this->uncamelizeString($this->name);
@@ -237,7 +242,6 @@ class App
 
 		// Set flat that permission init is done
 		self::$init_stages[$this->name]['permissions'] = true;
-
 	}
 
 	/**
@@ -245,7 +249,7 @@ class App
 	 *
 	 * @throws \RuntimeException
 	 */
-	private function initLanguage()
+	final private function initLanguage()
 	{
 		// Init only once
 		if (self::$init_stages[$this->name]['lang']) {
@@ -256,10 +260,9 @@ class App
 		if ($this->language) {
 
 			// Check
-			if (!$this->cfg->exists($this->name, 'dir_language')) {
+			if (! $this->cfg->exists($this->name, 'dir_language')) {
 				Throw new \RuntimeException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
 			}
-
 
 			// Include permission file
 			$language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
@@ -278,20 +281,15 @@ class App
 	 *
 	 * @return Model|View|Controller
 	 */
-	private function MVCFactory($name, $type, $arguments = null)
+	final private function MVCFactory($name, $type, $arguments = null)
 	{
 		// Here we make sure that CSS and JS will correctly and only once be initiated!
 		if (! in_array($this->name, self::$init_done)) {
 
 			// Init css and js only on non ajax requests
-			if (! $this->request->isAjax()) {
+			if (! $this->router->isAjax()) {
 				$this->initCss();
 				$this->initJs();
-
-				// Finally call a possible headers methods
-				if (method_exists($this, 'addHeaders')) {
-					$this->addHeaders();
-				}
 			}
 
 			// Store our apps name to be initiated
@@ -329,7 +327,7 @@ class App
 	 *
 	 * @return string
 	 */
-	private function getComponentsName()
+	final private function getComponentsName()
 	{
 		$dt = debug_backtrace();
 		$parts = array_reverse(explode('\\', $dt[1]['class']));
@@ -363,21 +361,33 @@ class App
 	 *
 	 * @return Controller
 	 */
-	public function getController($name)
+	final public function getController($name)
 	{
 		if (! $name) {
 			$name = $this->getComponentsName();
 		}
 
 		$args = [
-			'core.request',
+			'core.http.router',
+			'core.http.post',
 			'core.sec.security',
 			'core.content.message',
-			'core.content.page',
-			'core.content.url',
+			'core.content.content',
 			'core.content.menu',
 			'core.content.html.factory'
 		];
+
+		/*
+		 * $name,
+		 * App $app,
+		 * Router $router,
+		 * Security $security,
+		 * Message $message,
+		 * Content $page,
+		 * Url $url,
+		 * Menu $menu,
+		 * HtmlFactory $html
+		 */
 
 		return $this->MVCFactory($name, 'Controller', $args);
 	}
@@ -388,7 +398,7 @@ class App
 	 * @param string $name The viewss name
 	 * @return View
 	 */
-	public function getView($name)
+	final public function getView($name)
 	{
 		if (! $name) {
 			$name = $this->getComponentsName();
@@ -402,7 +412,7 @@ class App
 	 *
 	 * @return array
 	 */
-	public function getConfig()
+	final public function getConfig()
 	{
 		return $this->config;
 	}
@@ -420,7 +430,7 @@ class App
 	 *
 	 * @throws \InvalidArgumentException
 	 */
-	public function cfg($key = null, $val = null)
+	final public function cfg($key = null, $val = null)
 	{
 		// Getting config
 		if (isset($key) && ! isset($val)) {
@@ -467,7 +477,7 @@ class App
 	 *
 	 * @return string
 	 */
-	public function getNamespace()
+	final public function getNamespace()
 	{
 		return substr(get_called_class(), 0, strrpos(get_called_class(), '\\'));
 	}
@@ -477,7 +487,7 @@ class App
 	 *
 	 * @return string
 	 */
-	public function getPath()
+	final public function getPath()
 	{
 		return $this->path;
 	}
@@ -487,7 +497,7 @@ class App
 	 *
 	 * @return string
 	 */
-	public function getAppType()
+	final public function getAppType()
 	{
 		// Normal app or secure app?
 		return $this->secure === true ? 'appssec' : 'apps';
@@ -541,7 +551,8 @@ class App
 	}
 
 	/**
-	 * Initiates apps css. Each app can have it's own css file. The css file needs to be placed in an Css folder within
+	 * Initiates apps css.
+	 * Each app can have it's own css file. The css file needs to be placed in an Css folder within
 	 * the apps folder. App settings need a css flag, otherwise the css file won't be loaded.
 	 *
 	 * @return \Core\Lib\Amvc\App
@@ -557,12 +568,12 @@ class App
 		if ($this->css_file) {
 
 			// Check for existance of apps css file
-			if (!file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
+			if (! file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
 				Throw new \RuntimeException('App "' . $this->name . '" css file does not exist. Either create the js file or remove the css flag in your app settings.');
 			}
 
 			// Create css file link
-			$this->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
+			$this->content->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
 		}
 
 		// Is there an additional css function in app to run?
@@ -596,11 +607,11 @@ class App
 		// the apps js file is stored within the app folder structure in an directory named "js".
 		if ($this->js_file) {
 
-			if (!file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
+			if (! file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
 				Throw new \RuntimeException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
 			}
 
-			$this->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
+			$this->content->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
 		}
 
 		// Js method in app to run?
@@ -626,20 +637,18 @@ class App
 			return;
 		}
 
+		/* @var $router AltoRouter */
+
 		if (! $this->routes) {
 
 			// No routes set? Map at least index as default route
-			$route = [
-				'name' => $this->name . '_index',
-				'route' => '/',
-				'target' => [
-					'app' => $this->name,
-					'ctrl' => 'Index',
-					'action' => 'Index'
-				]
+			$target = [
+				'app' => $this->name,
+				'ctrl' => 'Index',
+				'action' => 'Index'
 			];
 
-			$this->request->mapRoute($route);
+			$this->router->map('GET', '/', $target, $this->name . '_index');
 
 			self::$init_stages[$this->name]['routes'] = true;
 
@@ -670,38 +679,14 @@ class App
 				$route['name'] = (! isset($route['app']) ? $app_name : $route['app']) . '_' . $route['name'];
 			}
 
-			// Publish route
-			$this->request->mapRoute($route);
+			if (! isset($route['method'])) {
+				$route['method'] = 'GET';
+			}
+
+			$this->router->map($route['method'], $route['route'], $route['target'], isset($route['name']) ? $route['name'] : null);
 		}
 
 		self::$init_stages[$this->name]['routes'] = true;
-	}
-
-	/**
-	 * Lazy textfunction so you do not have to write the apps name in the wanted textkey
-	 *
-	 * @param string $key The textkey you want to get the text from without need of app name in it.
-	 * @see \Core\Lib\Lib::Txt() <cod
-	 *      => <?php
-	 *      => class Testapp_Controller_MyController extends Controller
-	 *      => {
-	 *      => $app = 'Testapp';
-	 *
-	 *      => public function MyControllerAction()
-	 *      => {
-	 *      => // use this
-	 *      => $mytext = $this->txt('testapp_testtext');
-	 *
-	 *      => // or lazy
-	 *      => $mytext = $this->txt('testtext');
-	 *      => }
-	 *      => }
-	 *      =>
-	 *      => </cod
-	 */
-	public function txt($key)
-	{
-		return $this->txt($key, $this->name);
 	}
 
 	/**
@@ -709,7 +694,7 @@ class App
 	 *
 	 * @return boolean
 	 */
-	public function isSecure()
+	final public function isSecure()
 	{
 		return $this->secure === true ? true : false;
 	}
@@ -719,7 +704,7 @@ class App
 	 *
 	 * @return string
 	 */
-	public function getName()
+	final public function getName()
 	{
 		return $this->name;
 	}
@@ -729,7 +714,7 @@ class App
 	 *
 	 * @return string
 	 */
-	public function getId()
+	final public function getId()
 	{
 		return $this->id;
 	}
@@ -757,7 +742,7 @@ class App
 	}
 
 	/**
-	 * Registers an app related di service.
+	 * Registers an app related service to di container.
 	 *
 	 * @param string $name Name of service
 	 * @param string $class Class name this service uses
@@ -765,14 +750,15 @@ class App
 	 *
 	 * @return \Core\Lib\Amvc\App
 	 */
-	protected function registerService($name, $class, $args = [])
+	final protected function registerService($name, $class, $args = [])
 	{
-		$this->di->mapService('app.' . $this->name . '.' . $name, $class, $args);
+		$this->di->mapService($this->name . '.' . $name, $class, $args);
+
 		return $this;
 	}
 
 	/**
-	 * Registers an app related di class factor.
+	 * Registers an app related class factor to di container.
 	 *
 	 * @param string $name Name of factory
 	 * @param string $class Class name this service uses
@@ -780,9 +766,25 @@ class App
 	 *
 	 * @return \Core\Lib\Amvc\App
 	 */
-	protected function registerFactory($name, $class, $args = [])
+	final protected function registerFactory($name, $class, $args = [])
 	{
-		$this->di->mapFactory('app.' . $this->name . '.' . $name, $class, $args);
+		$this->di->mapFactory($this->name . '.' . $name, $class, $args);
+
+		return $this;
+	}
+
+	/**
+	 * Registers an app related value to di container
+	 *
+	 * @param string $name Name of value
+	 * @param string $value The value itsel
+	 *
+	 * @return \Core\Lib\Amvc\App
+	 */
+	final protected function registerValueFactory($name, $value)
+	{
+		$this->di->mapValue($this->name . '.' . $name, $value);
+
 		return $this;
 	}
 }
