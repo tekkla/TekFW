@@ -2,9 +2,13 @@
 namespace Core\Lib\Content;
 
 /**
+ * Breadcrumb
  *
- * @author Michael
+ * Logical class to build a breadcrumb/linktree control.
  *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @license MIT
+ * @copyright 2014
  */
 class Breadcrumb
 {
@@ -28,7 +32,7 @@ class Breadcrumb
 	 * @param string $text Text to show
 	 * @param string $title Title to use
 	 *
-	 * @return \Core\Lib\Content\Breadcrumbs
+	 * @return \Core\Lib\Content\BreadcrumbObject
 	 */
 	public function createActiveItem($text, $title='')
 	{
@@ -42,17 +46,17 @@ class Breadcrumb
 
 		$this->breadcrumbs[] = $breadcrumb;
 
-		return $this;
+		return $breadcrumb;
 	}
 
 	/**
 	 * Creates an breadcrumb object with link and adds it to the crumbs list.
 	 *
-	 * @param string $text
-	 * @param string $href
-	 * @param string $title
+	 * @param string $text Text to show
+	 * @param string $href Href of the link
+	 * @param string $title Title to use
 	 *
-	 * @return \Core\Lib\Content\Breadcrumbs
+	 * @return \Core\Lib\Content\BreadcrumbObject
 	 */
 	public function createItem($text, $href, $title='')
 	{
@@ -66,7 +70,7 @@ class Breadcrumb
 
 		$this->breadcrumbs[] = $breadcrumb;
 
-		return $this;
+		return $breadcrumb;
 	}
 
 	/**
