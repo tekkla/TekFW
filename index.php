@@ -148,13 +148,11 @@ try {
 		'core.cfg',
 		'core.http.router'
 	]);
-	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message');
+	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
 	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
 	$di->mapService('core.content.nav', '\Core\Lib\Content\Menu');
 	$di->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
 	$di->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
-
-
 
 	// -------------------------------------------------------
 	// Config
