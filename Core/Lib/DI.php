@@ -185,7 +185,7 @@ class DI implements \ArrayAccess
 	 * @param string $service Name of registered service, class or value
 	 */
 	public function get($service) {
-		$this->offsetGet($service);
+		return $this->offsetGet($service);
 	}
 
 	/**
