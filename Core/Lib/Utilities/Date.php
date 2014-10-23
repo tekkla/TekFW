@@ -3,7 +3,7 @@ namespace Core\Lib\Utilities;
 
 /**
  * Class for date related functions
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -18,7 +18,7 @@ class Date
         $time = strtotime($date);
         $now = time();
         $ago = $now - $time;
-        
+
         if ($ago < 60) {
             $when = round($ago);
             $s = ($when == 1) ? "second" : "seconds";
@@ -27,15 +27,15 @@ class Date
             $when = round($ago / 60);
             $m = ($when == 1) ? "minute" : "minutes";
             return "$when $m ago";
-        } elseif ($ago = 3600 && $ago < 86400) {
+        } elseif ($ago == 3600 && $ago < 86400) {
             $when = round($ago / 60 / 60);
             $h = ($when == 1) ? "hour" : "hours";
             return "$when $h ago";
-        } elseif ($ago = 86400 && $ago < 2629743.83) {
+        } elseif ($ago == 86400 && $ago < 2629743.83) {
             $when = round($ago / 60 / 60 / 24);
             $d = ($when == 1) ? "day" : "days";
             return "$when $d ago";
-        } elseif ($ago = 2629743.83 && $ago < 31556926) {
+        } elseif ($ago == 2629743.83 && $ago < 31556926) {
             $when = round($ago / 60 / 60 / 24 / 30.4375);
             $m = ($when == 1) ? "month" : "months";
             return "$when $m ago";
