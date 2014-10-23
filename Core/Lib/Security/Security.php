@@ -1,9 +1,9 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Session;
 use Core\Lib\Cfg;
-use Core\Lib\Cookie;
+use Core\Lib\Http\Session;
+use Core\Lib\Http\Cookie;
 use Core\Lib\Data\Database;
 
 /**
