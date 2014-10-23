@@ -26,6 +26,9 @@ if (file_exists(dirname(__FILE__) . '/Settings.php')) {
 	die('Settings file could not be loaded.');
 }
 
+// Register composer classloader
+require_once dirname(__FILE__) . '/vendor/autoload.php';
+
 // Register core classloader
 require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
 $loader = new SplClassLoader('Core', BASEDIR);
@@ -33,6 +36,10 @@ $loader->register();
 
 // Register app classloader
 $loader = new SplClassLoader('Apps', BASEDIR);
+$loader->register();
+
+// Register themes classloader
+$loader = new SplClassLoader('Themes', BASEDIR);
 $loader->register();
 
 // start output buffering
@@ -45,6 +52,8 @@ try {
 	// --------------------------------------------------------
 
 	$di = new DI();
+
+	$di->mapValue('core.di', $di);
 
 	// == DB ===========================================================
 	$di->mapValue('db.default.dsn', $cfg['db_dsn']);
@@ -70,11 +79,14 @@ try {
 	// == CONFIG =======================================================
 	$di->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
 
-	// == CORE =========================================================
-	$di->mapService('core.session', '\Core\Lib\Session', 'db.default');
-	$di->mapService('core.request', '\Core\Lib\Request');
-	$di->mapFactory('core.cookie', '\Core\Lib\Cookie');
+	// == ERROR=========================================================
 	$di->mapFactory('core.error', '\Core\Lib\Error\Error');
+
+	// == HTTP =========================================================
+	$di->mapService('core.http.router', '\Core\Lib\Http\Router');
+	$di->mapService('core.http.post', '\Core\Lib\Http\Post', 'core.http.router');
+	$di->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
+	$di->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
 
 	// == UTILITIES ====================================================
 	$di->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
@@ -88,8 +100,8 @@ try {
 	$di->mapService('core.sec.security', '\Core\Lib\Security\Security', [
 		'db.default',
 		'core.cfg',
-		'core.session',
-		'core.cookie',
+		'core.http.session',
+		'core.http.cookie',
 		'core.sec.user.current',
 		'core.sec.group',
 		'core.sec.permission'
@@ -118,25 +130,26 @@ try {
 	$di->mapFactory('core.data.validator', '\Core\Lib\Data\Validator');
 
 	// == CONTENT =======================================================
-	$di->mapService('core.content.page', '\Core\Lib\Content\Page', [
-		'core.request',
+	$di->mapService('core.content.content', '\Core\Lib\Content\Content', [
+		'core.http.router',
 		'core.cfg',
-		'core.content.js',
-		'core.content.css',
-		'core.content.message',
+		'core.amvc.creator',
+		'core.content.html.factory',
 		'core.content.nav',
-		'core.amvc.creator'
+		'core.content.css',
+		'core.content.js',
+		'core.content.message',
 	]);
 	$di->mapService('core.content.lang', '\Core\Lib\Content\Language');
-	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.request');
+	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.http.router');
 	$di->mapFactory('core.content.ajaxcmd', '\Core\Lib\Content\AjaxCommand');
 	$di->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
 	$di->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
 		'core.cfg',
-		'core.request'
+		'core.http.router'
 	]);
 	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message');
-	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.request');
+	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
 	$di->mapService('core.content.nav', '\Core\Lib\Content\Menu');
 	$di->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
 	$di->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
@@ -191,17 +204,17 @@ try {
 	$timer = $di['core.util.timer'];
 	$timer->start();
 
+	// # Start session by calling instance factory
+	$di['core.http.session']->init();
+
+	// Try to autologin the user
+	$di['core.sec.security']->init();
+
 	// Use app creator to init Core config
 
 	/* @var $app_creator \Core\Lib\Amvc\Creator */
 	$app_creator = $di['core.amvc.creator'];
 	$app_creator->initAppConfig('Core');
-
-	// # Start session by calling instance factory
-	$di['core.session']->init();
-
-	// Try to autologin the user
-	$di['core.sec.security']->init();
 
 	// Initialize the apps
 	$app_dirs = [
@@ -209,25 +222,28 @@ try {
 		$config->get('Core', 'dir_apps')
 	];
 
+	/* @var $content \Core\Lib\Content\Content */
+	$content = $di['core.content.content'];
+
+	$content->setTitle($config->get('Core', 'sitename'));
+	$content->meta->setCharset();
+	$content->meta->setViewport();
+
 	// Autodiscover installed apps
 	$app_creator->autodiscover($app_dirs);
 
-	// # Handling on and without ajax request
+	/* @var $router \Core\Lib\Http\Router */
+	$router = $di['core.http.router'];
 
-	/* @var $request \Core\Lib\Request */
-	$request = $di['core.request'];
+	// Match request against stored routes
+	$router->match();
 
-	// Run request handler
-	$request->processRequest();
+	$content->css->init();
+	$content->js->init();
 
-	// # Prepare conent
 
-	/* @var $page \Core\Lib\Content\Page */
-	$page = $di['core.content.page'];
-	$page->init();
-
-	// Try to use appname provided by request handler.
-	$app_name = $request->getApp();
+	// Try to use appname provided by router
+	$app_name = $router->getApp();
 
 	// No app by request? Try to get default app from config or set Core as
 	// default app
@@ -249,12 +265,8 @@ try {
 		$app->run();
 	}
 
-	// Intit basic page css and javascript
-	$di['core.content.css']->init();
-	$di['core.content.js']->init();
-
 	// Get name of requested controller
-	$controller_name = $request->getCtrl();
+	$controller_name = $router->getCtrl();
 
 	// Set controller name to "Index" when no controller name has been returned
 	// from request handler
@@ -266,7 +278,7 @@ try {
 	$controller = $app->getController($controller_name);
 
 	// Which controller action has to be run?
-	$action = $request->getAction();
+	$action = $router->getAction();
 
 	// No action => use Index as default
 	if (! $action) {
@@ -274,38 +286,41 @@ try {
 	}
 
 	// Are there parameters to pass to run method?
-	$param = $request->getParam();
+	$param = $router->getParam();
 
 	// Run controller and process result.
-	if ($request->isAjax()) {
+	if ($router->isAjax()) {
 
 		// Result will be processed as ajax command list
 		$controller->ajax($action, $param);
 
 		// Run ajax processor
 		$di['core.content.ajax']->process();
+
 	} else {
 
 		// Run controller and store result
-		$content = $controller->run($action, $param);
+		$result = $controller->run($action, $param);
 
 		// No content created? Check app for onEmpty() event which maybe gives us content.
-		if (empty($content) && method_exists($app, 'onEmpty')) {
-			$content = $app->onEmpty();
+		if (empty($result) && method_exists($app, 'onEmpty')) {
+			$result = $app->onEmpty();
 		}
 
 		// Append content provided by apps onBefore() event method
 		if (method_exists($app, 'onBefore')) {
-			$content = $app->onBefore() . $content;
+			$result = $app->onBefore() . $result;
 		}
 
 		// Prepend content provided by apps onAfter() event method
 		if (method_exists($app, 'onAfter')) {
-			$content .= $app->onAfter();
+			$result .= $app->onAfter();
 		}
 
+		$content->setContent($result);
+
 		// Call content builder
-		$page->build($content);
+		$content->render();
 
 		echo '
 		<div class="container">
@@ -323,6 +338,20 @@ try {
 			<p>';
 
 			var_dump($di['core.sec.permission']->getPermissions());
+
+			echo '
+			</p>
+			<p>Match:</p>
+			<p>';
+
+				var_dump($router->match());
+
+			echo '
+			</p>
+			<p>Routes:</p>
+			<p>';
+
+
 
 			echo '
 			</p>
