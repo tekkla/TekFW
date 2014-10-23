@@ -60,7 +60,7 @@ final class Router extends \AltoRouter
 	/**
 	 * Name of current route
 	 *
-	 * @var unknown
+	 * @var string
 	 */
 	private $name = '';
 
@@ -86,14 +86,35 @@ final class Router extends \AltoRouter
 	/**
 	 * Match a given request url against stored routes
 	 *
-	 * @param string $router_url
-	 * @param string $router_method
+	 * @param string $request_url
+	 * @param string $request_method
+	 *
 	 * @return array boolean with route information on success, false on failure (no match).
 	 */
-	public function match($router_url = null, $router_method = null)
+	public function match($request_url = null, $request_method = null)
 	{
+
+		// Set Request Url if it isn't passed as parameter
+		if($request_url === null) {
+			$request_url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+		}
+
+		// Set Request Method if it isn't passed as a parameter
+		if($request_method === null) {
+			$request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
+		}
+
+		// Framework ajax.js adds automatically an /ajax flag @ the end of the requested URI.
+		// Here we check for this flag, remembers if it's present and then remove the flag
+		// so the following URI matching process runs without flaw.
+		if (substr($request_url, -5) == '/ajax')
+		{
+			$this->is_ajax = true;
+			$request_url = str_replace('/ajax', '', $request_url);
+		}
+
 		// Try to match request
-		$match = parent::match($router_url, $router_method);
+		$match = parent::match($request_url, $request_method);
 
 		if ($match)
 		{
@@ -119,6 +140,11 @@ final class Router extends \AltoRouter
 				$this->action = $this->camelizeString($match['params']['action']);
 			}
 
+			// Is this an ajax request?
+			if (isset($match['params']['ajax'])) {
+				$this->is_ajax = true;
+			}
+
 			$this->params = $match['params'];
 		}
 
@@ -133,20 +159,17 @@ final class Router extends \AltoRouter
 		return $this->name;
 	}
 
+
 	/**
 	 * Checks for an ajax request and returns boolean true or false
 	 *
 	 * @return boolean
 	 */
-	public function isAjax($bool = null)
+	public function isAjax()
 	{
-		if (isset($bool)) {
-			$this->is_ajax = true;
-			return $this;
-		}
-
 		return $this->is_ajax;
 	}
+
 
 	/**
 	 * Checks if the request is a (A)pp(C)ontroller(A)ction call
@@ -173,7 +196,7 @@ final class Router extends \AltoRouter
 	 */
 	public function getApp()
 	{
-		return isset($this->app) ? $this->app : false;
+		return $this->app ? $this->app : false;
 	}
 
 	/**
@@ -310,81 +333,6 @@ final class Router extends \AltoRouter
 		return $this->params;
 	}
 
-	public function isPost()
-	{
-		return isset($_POST) && isset($_POST['app']);
-	}
-
-	/**
-	 * Returns the value of $_POST[web][appname][ctrlname][key]
-	 *
-	 * @param string $key
-	 */
-	public function getPost($app_name = '', $model_name = '')
-	{
-		if (! $this->isPost())
-			return false;
-
-			// Use values provided by request for missing app and model name
-		if (! $app_name || ! $model_name) {
-			$app_name = $this->getApp();
-			$model_name = $this->getCtrl();
-		}
-
-		$app_name = $this->uncamelizeString($app_name);
-		$model_name = $this->uncamelizeString($model_name);
-
-		if (isset($this->post->{$app_name}->{$model_name}))
-			return $this->post->{$app_name}->{$model_name};
-		else
-			return false;
-	}
-
-	/**
-	 * Returns the complete raw post array
-	 *
-	 * @return array
-	 */
-	public function getRawPost()
-	{
-		return $this->post_raw;
-	}
-
-	/**
-	 * Returns the complete processed post object
-	 *
-	 * @return \Core\Lib\Data\Data
-	 */
-	public function getCompletePost()
-	{
-		return $this->post;
-	}
-
-	/**
-	 * Returns true if $_POST[app][appname][modelname] is in the processed post data
-	 *
-	 * @param string $app
-	 */
-	public function checkPost($app_name = null, $model_name = null)
-	{
-		if (! isset($app_name) || ! isset($model_name)) {
-			$app_name = $this->getApp();
-			$model_name = $this->getCtrl();
-		}
-
-		$app_name = $this->uncamelizeString($app_name);
-		$model_name = $this->uncamelizeString($model_name);
-
-		return isset($this->post->{$app_name}) && isset($this->post->{$app_name}->{$model_name});
-	}
-
-	/**
-	 * Clears the post storage
-	 */
-	public function clearPost()
-	{
-		$this->post = new \stdClass();
-	}
 
 	/**
 	 * Returns all request related data in one array
@@ -394,6 +342,7 @@ final class Router extends \AltoRouter
 	{
 		return [
 			'is_ajax' => $this->is_ajax,
+			'method' => $_SERVER['REQUEST_METHOD'],
 			'app' => $this->getApp(),
 			'ctrl' => $this->getCtrl(),
 			'action' => $this->getAction(),
