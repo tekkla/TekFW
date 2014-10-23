@@ -6,6 +6,7 @@ use Core\Lib\Content\Html\HtmlFactory;
 
 class Template
 {
+
 	protected $head = '';
 
 	protected $css;
@@ -32,16 +33,16 @@ class Template
 	{
 		$this->cfg = $cfg;
 		$this->content = $content;
-		$this->html =$html;
+		$this->html = $html;
 	}
 
-	public function render()
+	final public function render()
 	{
-		if (!method_exists($this, 'Head')) {
+		if (! method_exists($this, 'Head')) {
 			Throw new \RuntimeException('Head method missing');
 		}
 
-		if (!method_exists($this, 'Body')) {
+		if (! method_exists($this, 'Body')) {
 			Throw new \RuntimeException('Body method missing');
 		}
 
@@ -52,11 +53,20 @@ class Template
 	/**
 	 * Creates and returns meta tags
 	 *
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
 	 * @return string
 	 */
-	public function getMeta()
+	final protected function getMeta($data_only = false)
 	{
 		$meta_stack = $this->content->meta->getTags();
+
+		if ($data_only) {
+			return $meta_stack;
+		}
 
 		$html = '';
 
@@ -64,11 +74,13 @@ class Template
 
 			$meta = $this->html->create('Elements\Meta');
 
+			$html .= PHP_EOL . '<meta';
+
 			foreach ($tag as $attribute => $value) {
-				$meta->addAttribute($attribute, $value);
+				$html .= ' ' . $attribute . '="' . $value. '"';
 			}
 
-			$html .= PHP_EOL . $meta->build();
+			$html .= '>';
 		}
 
 		return $html;
@@ -77,18 +89,41 @@ class Template
 	/**
 	 * Creates and returns the title tag
 	 *
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
 	 * @return string
 	 */
-	public function getTitle()
+	final protected function getTitle($data_only = false)
 	{
-		$title = $this->html->create('Elements\Title');
-		$title->setInner($this->content->getTitle());
+		if ($data_only) {
+			return $this->content->getTitle();
+		}
 
-		return $title->build();
+		return PHP_EOL . '<title>' . $this->content->getTitle() . '</title>';
 	}
 
-	public function getNavbar()
+	/**
+	 * Returns html navbar or only its data.
+	 *
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
+	 * @return string|array
+	 */
+	final protected function getNavbar($data_only = false)
 	{
+		if ($data_only) {
+			return [
+				'brand' => $this->content->getBrand(),
+				'items' => $this->content->navbar->getMenu()
+			];
+		}
+
 		$navbar = $this->html->create('Controls\Navbar');
 		$navbar->setBrand($this->content->getBrand(), '/');
 		$navbar->setItems($this->content->navbar->getMenu());
@@ -99,21 +134,25 @@ class Template
 	/**
 	 * Creates and return OpenGraph tags
 	 *
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
 	 * @return string
 	 */
-	public function getOpenGraph()
+	final protected function getOpenGraph($data_only = false)
 	{
 		$og_stack = $this->content->og->getTags();
+
+		if ($data_only) {
+			return $og_stack;
+		}
 
 		$html = '';
 
 		foreach ($og_stack as $property => $content) {
-
-			$meta = $this->html->create('Elements\Meta');
-			$meta->addAttribute('property', $property);
-			$meta->addAttribute('content', $content);
-
-			$html .= PHP_EOL . $meta->build();
+			$html .= '<meta property="' . $property . '" content="' . $content .'">' . PHP_EOL;
 		}
 
 		return $html;
@@ -122,19 +161,25 @@ class Template
 	/**
 	 * Creates and returns all css realted content
 	 *
-	 *  @return string
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
+	 * @return array|string
 	 */
-	public function getCss()
+	final protected function getCss($data_only = false)
 	{
-		// Get scripts of this area
 		$css_stack = $this->content->css->getObjectStack();
+
+		if ($data_only) {
+			return $css_stack;
+		}
 
 		$files = [];
 		$inline = [];
 
 		$html = '';
-
-
 
 		/* @var $css Css */
 		foreach ($css_stack as $css) {
@@ -164,7 +209,7 @@ class Template
 					if ($board_parts['host'] != $url_parts['host'])
 						continue;
 
-					// Store filename in minify list
+						// Store filename in minify list
 					$files_to_min[] = '/' . $url_parts['path'];
 				}
 			}
@@ -176,22 +221,11 @@ class Template
 		}
 
 		foreach ($files as $file) {
-
-			// Create link element
-			$link = $this->html->create('Elements\Link');
-			$link->setRel('stylesheet');
-			$link->setType('text/css');
-			$link->setHref($file);
-
-			$html .= PHP_EOL . $link->build();
+			$html .= PHP_EOL .  '<link rel="stylesheet" type="text/css" href="' . $file . '">';
 		}
 
 		if ($inline) {
-
-			$style = $this->html->create('Elements\Style');
-			$style->setInner(implode(PHP_EOL, $inline));
-
-			$html .= PHP_EOL . $style->build;
+			$html .= PHP_EOL . '<style>' . PHP_EOL . implode(PHP_EOL, $inline) . PHP_EOL . '</style>' . PHP_EOL;
 		}
 
 		return $html;
@@ -200,14 +234,22 @@ class Template
 	/**
 	 * Creates and returns js script stuff for the requested area.
 	 *
-	 * @param string $area Valid areas are 'top' and 'below'.
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
 	 *
-	 * @return string
+	 * @param string $area Valid areas are 'top' and 'below'.
+	 * @param boolean $data_only
+	 *
+	 * @return array|string
 	 */
-	public function getScript($area)
+	final protected function getScript($area, $data_only = false)
 	{
 		// Get scripts of this area
 		$script_stack = $this->content->js->getScriptObjects($area);
+
+		if ($data_only) {
+			return $script_stack;
+		}
 
 		// Init js storages
 		$files = $blocks = $inline = $scripts = $ready = $vars = [];
@@ -227,23 +269,23 @@ class Template
 					$files[] = $script->getScript();
 					break;
 
-					// Script to create
+				// Script to create
 				case 'script':
 					$inline[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
 					break;
 
-					// Dedicated block to embaed
+				// Dedicated block to embaed
 				case 'block':
 					$blocks[] = PHP_EOL . $script->getScript();
 					break;
 
-					// A variable to publish to global space
+				// A variable to publish to global space
 				case 'var':
 					$var = $script->getScript();
 					$vars[$var[0]] = $var[1];
 					break;
 
-					// Script to add to $.ready()
+				// Script to add to $.ready()
 				case 'ready':
 					$ready[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
 					break;
@@ -298,30 +340,33 @@ class Template
 
 		// Create compiled output
 		if ($vars || $scripts || $ready || $files) {
-			$html .= PHP_EOL . '<!-- ' . strtoupper($area). ' JAVASCRIPTS -->';
+			$html .= PHP_EOL . '<!-- ' . strtoupper($area) . ' JAVASCRIPTS -->';
 		}
 
 		if ($vars || $scripts || $ready) {
 
 			// Create script html object
-			$script = $this->html->create('Elements\Script');
+			$script = '<script>';
 
 			foreach ($vars as $name => $val) {
-				$script->addInner(PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';');
+				$script .= (PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';');
 			}
 
 			// Create $(document).ready()
 			if ($ready) {
-				$script->addInner('$(document).ready(function() {' . PHP_EOL);
-				$script->addInner(implode(PHP_EOL, $ready) . PHP_EOL);
-				$script->addInner('});');
-
-				if ($this->cfg->get('Core', 'js_minify')) {
-					$script->setInner(\JSMin::minify($script->getInner()));
-				}
+				$script .= PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
+				$script .= implode(PHP_EOL, $ready);
+				$script .= PHP_EOL . '});';
 			}
 
-			$html .= PHP_EOL . $script->build();
+			$script .= PHP_EOL . '</script>';
+
+			// Minify script?
+			if ($this->cfg->get('Core', 'js_minify')) {
+				$script = \JSMin::minify($script);
+			}
+
+			$html .= PHP_EOL . $script;
 		}
 
 		// Add complete blocks
@@ -331,10 +376,7 @@ class Template
 		foreach ($files as $file) {
 
 			// Create script html object
-			$script = $this->html->create('Elements\Script');
-			$script->setSrc($file);
-
-			$html .= PHP_EOL . $script->build();
+			$html .= PHP_EOL . '<script src="' . $file .'"></script>';
 		}
 
 		return $html;
@@ -343,35 +385,48 @@ class Template
 	/**
 	 * Create and returns head link elements
 	 *
-	 * @return string
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
+	 * @return array|string
 	 */
-	public function getHeadLinks()
+	final protected function getHeadLinks($data_only = false)
 	{
 		$link_stack = $this->content->link->getLinkStack();
 
+		if ($data_only) {
+			return $link_stack;
+		}
+
 		$html = '';
 
-		foreach ($link_stack as $link){
+		foreach ($link_stack as $link) {
 
-			$link = $this->html->create('Elements\Link');
+			$html .= PHP_EOL . '<link';
 
 			foreach ($link as $attribute => $value) {
-				$link->addAttribute($attribute, $value);
+				$html .= ' ' . $attribute . '="' . $value . '"';
 			}
 
-			$html .= $link->build();
+			$html .= '>';
 		}
 
 		return $html;
 	}
 
-
 	/**
 	 * Creates and returns stored messages
 	 *
-	 * @return string
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
+	 * @return array|string
 	 */
-	public function getMessages($data_only=false)
+	final protected function getMessages($data_only = false)
 	{
 		$messages = $this->content->msg->getMessages();
 
@@ -379,45 +434,66 @@ class Template
 			return $messages;
 		}
 
-		$html ='';
+		$html = '';
 
 		foreach ($messages as $msg) {
 
-			$html .= PHP_EOL .'
+			$html .= PHP_EOL . '
 		<div class="alert alert-' . $msg->getType() . ' alert-dismissable' . ($msg->getFadeout() ? ' fadeout' : '') . '">
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 			' . $msg->getMessage() . '
 		</div>';
 
 			/*
-			$div->addCss([
-				'alert',
-				'alert-' . $msg->getType(),
-				'alert-dismissable',
-			]);
-
-			if ($msg->getFadeout()) {
-				$div->addCss('fadeout');
-			}
-
-			$div->setInner('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . $msg->getMessage());
-
-			$html .= PHP_EOL . $div->build();
-
-			*/
+			 * $div->addCss([
+			 * 'alert',
+			 * 'alert-' . $msg->getType(),
+			 * 'alert-dismissable',
+			 * ]);
+			 *
+			 * if ($msg->getFadeout()) {
+			 * $div->addCss('fadeout');
+			 * }
+			 *
+			 * $div->setInner('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . $msg->getMessage());
+			 *
+			 * $html .= PHP_EOL . $div->build();
+			 *
+			 */
 		}
 
 		return $html;
-
 	}
 
-	public function getBreadcrumbs($data_only=false)
+	/**
+	 * Creates breadcrumb html control or returns it's data
+	 *
+	 * Set $data_only argument to true if you want to get get only the data
+	 * without a genereated html control.
+	 *
+	 * @param boolean $data_only
+	 *
+	 * @return array|string
+	 */
+	final protected function getBreadcrumbs($data_only = false)
 	{
 		$breadcrumbs = $this->content->breadcrumbs->getBreadcrumbs();
 
 		if ($data_only) {
 			return $breadcrumbs;
 		}
+
+		// Add home button
+		$text = $this->content->txt('home');
+
+		if ($breadcrumbs) {
+			$home_crumb = $this->content->breadcrumbs->createItem($text, BASEURL, $text);
+		} else {
+			$home_crumb = $this->content->breadcrumbs->createActiveItem($text, $text);
+		}
+
+		array_unshift($breadcrumbs, $home_crumb);
+
 
 		$html = '';
 
@@ -431,14 +507,12 @@ class Template
 
 				if ($breadcrumb->getActive()) {
 					$html .= ' class="active">' . $breadcrumb->getText();
-				}
-				else {
+				} else {
 					$html .= '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
 				}
 
 				$html .= '</li>';
 			}
-
 
 			$html .= '</ol>';
 		}
@@ -446,7 +520,10 @@ class Template
 		return $html;
 	}
 
-	public function getContent()
+	/**
+	 * Returns the content generated by app call
+	 */
+	final protected function getContent()
 	{
 		return $this->content->getContent();
 	}
