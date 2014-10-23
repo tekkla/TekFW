@@ -6,7 +6,7 @@ namespace Core\Lib\Content;
  * @author Michael
  *
  */
-class BreadcrumbsObject
+class BreadcrumbObject
 {
 	private $href = '';
 
