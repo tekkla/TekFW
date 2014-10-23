@@ -2,14 +2,13 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Abstracts\MvcAbstract;
-use Core\Lib\Request;
+use Core\Lib\Http\Router;
 use Core\Lib\Security\Security;
-use Core\Lib\Content\Page;
-use Core\Lib\Content\Url;
 use Core\Lib\Content\Message;
-use Core\Lib\Content\LinktreeElement;
 use Core\Lib\Content\Menu;
 use Core\Lib\Content\Html\HtmlFactory;
+use Core\Lib\Content\Content;
+use Core\Lib\Http\Post;
 
 /**
  * Controllers parent class.
@@ -91,9 +90,9 @@ class Controller extends MvcAbstract
 
 	/**
 	 *
-	 * @var Request
+	 * @var Router
 	 */
-	protected $request;
+	protected $router;
 
 	/**
 	 *
@@ -109,15 +108,15 @@ class Controller extends MvcAbstract
 
 	/**
 	 *
-	 * @var Page
+	 * @var Content
 	 */
-	protected $page;
+	protected $content;
 
 	/**
 	 *
-	 * @var Url
+	 * @var Post
 	 */
-	protected $url;
+	protected $post;
 
 	/**
 	 *
@@ -133,16 +132,17 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Hidden constructor.
+	 *
 	 * Runs the onLoad eventmethod and inits the internal view and model.
 	 */
 	final public function __construct(
 		$name,
 		App $app,
-		Request $request,
+		Router $router,
+		Post $post,
 		Security $security,
 		Message $message,
-		Page $page,
-		Url $url,
+		Content $content,
 		Menu $menu,
 		HtmlFactory $html
 	)
@@ -150,11 +150,11 @@ class Controller extends MvcAbstract
 		// Store name
 		$this->name = $name;
 		$this->app = $app;
-		$this->request = $request;
+		$this->router = $router;
+		$this->post = $post;
 		$this->security = $security;
 		$this->message = $message;
-		$this->page = $page;
-		$this->url = $url;
+		$this->content = $content;
 		$this->menu = $menu;
 		$this->html = $html;
 
@@ -167,10 +167,12 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Access the apps config data.
+	 *
 	 * Setting one parameter means you want to read a value. Both param writes a config value.
 	 *
 	 * @param string $key Config to get
 	 * @param mixed $val Value to set in the apps config
+	 *
 	 * @return mixed config value
 	 */
 	final protected function cfg($key = null, $val = null)
@@ -190,7 +192,9 @@ class Controller extends MvcAbstract
 	 *
 	 * @param string $action Optional action to run
 	 * @param string $param Parameter to use
+	 *
 	 * @return boolean bool|string
+	 *
 	 * @todo Controller access is deactivated
 	 */
 	final public function run($action, $param = [])
@@ -315,7 +319,7 @@ class Controller extends MvcAbstract
 
 		// Reset post data
 		if ($post) {
-			$this->request->clearPost();
+			$this->router->clearPost();
 		}
 	}
 
@@ -323,6 +327,7 @@ class Controller extends MvcAbstract
 	 * Event handler
 	 *
 	 * @param string $event
+	 *
 	 * @return \Core\Lib\Amvc\Controller
 	 */
 	private function runEvent($event)
@@ -335,7 +340,7 @@ class Controller extends MvcAbstract
 			}
 
 			foreach ($this->events[$this->action][$event] as $event_func) {
-				$this->di->invokeMethod($this, $event_func, $this->request->getAllParams());
+				$this->di->invokeMethod($this, $event_func, $this->router->getAllParams());
 			}
 		}
 
@@ -361,7 +366,7 @@ class Controller extends MvcAbstract
 	 */
 	final protected function doRefresh($url)
 	{
-		if ($this->request->isAjax()) {
+		if ($this->router->isAjax()) {
 			$this->ajax->refresh($url);
 			$this->firephp('Ajax refresh command set: ' . $url);
 		} else
@@ -372,6 +377,7 @@ class Controller extends MvcAbstract
 	 * Simple interface function for SMFs allowedTo() function
 	 *
 	 * @param string|array $perm
+	 *
 	 * @return boolean
 	 */
 	final protected function checkUserrights($perm)
@@ -381,12 +387,14 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Checks the controller access of the user.
+	 *
 	 * This accesscheck works on serveral levels.
 	 * Level 0 - App: Tries to check access on possible app wide access function
 	 * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
 	 *
 	 * @param boolean $smf Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
 	 * @param bool $force Set this to true if you want to force a brutal stop
+	 *
 	 * @return boolean
 	 */
 	final protected function checkControllerAccess($mode = 'smf', $force = false)
@@ -430,6 +438,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Set the name of the actiuon to rander.
+	 *
 	 * By default this is the current controller action name and do not have to be set manually.
 	 *
 	 * @param string $action
@@ -474,58 +483,9 @@ class Controller extends MvcAbstract
 			}
 		} elseif (isset($arg2)) {
 			$this->view->setVar($arg1, $arg2);
-		} else
+		} else {
 			Throw new \InvalidArgumentException('The vars to set are not correct.', 1001);
-
-		return $this;
-	}
-
-	/**
-	 * Set the meta title of the html output
-	 *
-	 * @param string $title
-	 */
-	final protected function setPageTitle($title)
-	{
-		$this->page->setTitle($title);
-		return $this;
-	}
-
-	/**
-	 * Set the meta description of the html output
-	 *
-	 * @param string $description
-	 */
-	final protected function setPageDescription($description)
-	{
-		$this->page->setDescription($description);
-		return $this;
-	}
-
-	/**
-	 * Shorthand method for adding a flash message.
-	 *
-	 * @param string $message
-	 * @param string $type
-	 */
-	final protected function addMessage($message, $type)
-	{
-		$this->message{$type}($message);
-		return $this;
-	}
-
-	/**
-	 * Adds an entry to the SMF linktree.
-	 * Label will be shown as text and URL
-	 * is the link url. Url parameter can be an instance of Url. The url will
-	 * be created automatic by using the url object getUrl() method.
-	 *
-	 * @param string $name
-	 * @param string,Url $url
-	 */
-	final protected function addLinktree($label, $url = null)
-	{
-		$this->page->addLinktree(new LinktreeElement($label, $url));
+		}
 
 		return $this;
 	}
@@ -544,7 +504,7 @@ class Controller extends MvcAbstract
 			$form->attachModel($this->model);
 		}
 
-		$form->setAction($this->url->compile($this->request->getCurrentRoute(), $this->param));
+		$form->setAction($this->router->url($this->router->getCurrentRoute(), $this->param));
 
 		return $form;
 	}
@@ -553,6 +513,7 @@ class Controller extends MvcAbstract
 	 * Wrapper method for $this->app->getController()
 	 *
 	 * @param string $control->ler_name
+	 *
 	 * @return Controller
 	 */
 	final protected function getController($controller_name)
@@ -564,6 +525,7 @@ class Controller extends MvcAbstract
 	 * Wrapper method for $this->app->getModel()
 	 *
 	 * @param string $model_name
+	 *
 	 * @return \Core\Lib\Amvc\Model
 	 */
 	final protected function getModel($model_name)
@@ -573,6 +535,7 @@ class Controller extends MvcAbstract
 
 	/**
 	 * Adds a paramter to the controllers parameter collection.
+	 *
 	 * Useful when redirecting to other controller action
 	 * which need additional parameters to function.
 	 *
@@ -589,6 +552,7 @@ class Controller extends MvcAbstract
 	 * Sets the selector name to where the result is ajaxed.
 	 *
 	 * @param string $target
+	 *
 	 * @return \Core\Lib\Amvc\Controller
 	 */
 	final protected function setAjaxTarget($target)
@@ -620,5 +584,10 @@ class Controller extends MvcAbstract
 		$location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
 
 		header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
+	}
+
+	public function url($route, $args = [])
+	{
+		return $this->router->url($route, $args);
 	}
 }
