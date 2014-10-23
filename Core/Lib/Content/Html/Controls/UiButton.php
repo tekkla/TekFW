@@ -1,8 +1,8 @@
 <?php
 namespace Core\Lib\Content\Html\Controls;
 
-use Core\Lib\Content\Html\Elements\Link;
 use Core\Lib\Content\Html\Elements\Icon;
+use Core\Lib\Content\Html\Elements\A;
 
 /**
  * Creates an UiButton control
@@ -15,7 +15,7 @@ use Core\Lib\Content\Html\Elements\Icon;
  * @final
  *
  */
-final class UiButton extends Link
+final class UiButton extends A
 {
 
 	/**
@@ -217,8 +217,7 @@ final class UiButton extends Link
 	/**
 	 * Sets named route and optionale params to the url object of button
 	 *
-	 * @param string $route Name of registered route
-	 * @param string $params
+	 * @param string $url
 	 *
 	 * @return \Core\Lib\Content\Html\Controls\UiButton
 	 */
