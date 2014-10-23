@@ -584,7 +584,7 @@ final class FormDesigner extends Form
 			$this->id = str_replace('_', '-', $this->name);
 
 			// Create control name prefix
-		$control_name_prefix = 'app[' . $this->app_name . '][' . $this->model_name . ']';
+		$control_name_prefix = $this->app_name . '[' . $this->model_name . ']';
 
 		// Create display mode
 		switch ($this->display_mode) {
