@@ -1,21 +1,47 @@
 <?php
 namespace Core\Lib\Content\Html\Elements;
 
-// Check for direct file access
-if (! defined('TEKFW'))
-    die('Cannot run without TekFW framework...');
+use Core\Lib\Abstracts\HtmlAbstract;
 
 /**
- * Link Html Element
- * This is a dummy for A html element
- * 
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * Link Html Object
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @package TekFW
- * @subpackage Lib
+ * @subpackage Html\Elements
  * @license MIT
  * @copyright 2014 by author
  */
-class Link extends A
+class Link extends HtmlAbstract
 {
-}
 
+	protected $element = 'link';
+
+	public function setRel($rel)
+	{
+		$this->attribute['rel'] = $rel;
+
+		return $this;
+	}
+
+	public function setType($type)
+	{
+		$this->attribute['type'] = $type;
+
+		return $this;
+	}
+
+	public function setHref($href)
+	{
+		$this->attribute['href'] = $href;
+
+		return $this;
+	}
+
+	public function setTtitle($title)
+	{
+		$this->attribute['title'] = $title;
+
+		return $this;
+	}
+}
