@@ -6,7 +6,7 @@ namespace Core\Lib\Content;
  * Gives r/w access to menu_buttons.
  * Checks for menu handler method in handler app and throws error if method is missing.
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
  * @package TekFW
@@ -14,9 +14,6 @@ namespace Core\Lib\Content;
  */
 class Menu
 {
-
-	private $menu_items = [];
-
 	private $root_items = [];
 
 	public function __construct()
@@ -37,24 +34,31 @@ class Menu
 		]);
 	}
 
+	public function createRootItem($name, $text, $url=null)
+	{
+		return $this->root_items[$name] = $this->createMenuItem($name, $text, $url);
+	}
+
 	/**
 	 * Creates a new menu item with the given arguments, adds it to the menu item
 	 * storage and returns a reference to the item in storage
 	 * @param string $name
 	 * @param string $text
 	 * @param string $url
-	 * @param boolean $is_root^
+	 * @param boolean $is_root
 	 * @return MenuItem
 	 */
-	public function &createMenuItem($name, $text, $url, $is_root=false)
+	public function createMenuItem($name, $text, $url=null)
 	{
 		$menu_item = new MenuItem();
 		$menu_item->setName($name);
 		$menu_item->setText($text);
-		$menu_item->setUrl($url);
-		$menu_item->isRoot($is_root);
 
-		return $this->addMenuItem($menu_item);
+		if ($url !== null){
+			$menu_item->setUrl($url);
+		}
+
+		return $menu_item;
 	}
 
 	/**
@@ -79,19 +83,8 @@ class Menu
 	/**
 	 * Compiles the menu itemsand creates an html menu as output
 	 */
-	public function compile()
+	public function getMenu()
 	{
-		/* @var $menu_item MenuItem */
-		foreach ($this->menu_items as $menu_item) {
-
-			$parent = $menu_item->getParent();
-
-			if ($parent){
-				$this->root_items[$parent]->addChild($menu_item);
-			}
-		}
-
 		return $this->root_items;
 	}
 }
-

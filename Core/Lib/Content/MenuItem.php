@@ -87,10 +87,22 @@ class MenuItem
 
 	/**
 	 * Method to add a menu item as child
+	 *
 	 * @param MenuItem $menu_item
 	 */
-	public function addChild(MenuItem $menu_item) {
+	public function addChild(MenuItem $menu_item)
+	{
 		$this->childs[$menu_item->getName()] = $menu_item;
+	}
+
+	public function hasChilds()
+	{
+		return ! empty($this->childs);
+	}
+
+	public function getChilds()
+	{
+		return $this->childs;
 	}
 
 	/**
@@ -219,6 +231,7 @@ class MenuItem
 
 	/**
 	 * Sets text to be used as link title attribute
+	 *
 	 * @param string $title
 	 * @return MenuItem
 	 */
@@ -229,7 +242,9 @@ class MenuItem
 	}
 
 	/**
-	 * Returns the set url of the item. Will be boolean false when no
+	 * Returns the set url of the item.
+	 * Will be boolean false when no
+	 *
 	 * @return the $url
 	 */
 	public function getUrl()
@@ -239,6 +254,7 @@ class MenuItem
 
 	/**
 	 * Sets url to be used for menu link
+	 *
 	 * @param string $url
 	 * @return MenuItem
 	 */
@@ -250,6 +266,7 @@ class MenuItem
 
 	/**
 	 * Returns set css classes
+	 *
 	 * @return string
 	 */
 	public function getCss()
@@ -258,8 +275,10 @@ class MenuItem
 	}
 
 	/**
-	 * Sets css classes to be used in menulink. Argument can an array and will
+	 * Sets css classes to be used in menulink.
+	 * Argument can an array and will
 	 * be transformed into a string
+	 *
 	 * @param string $css
 	 * @return MenuItem
 	 */

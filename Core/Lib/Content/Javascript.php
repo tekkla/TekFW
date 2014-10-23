@@ -2,7 +2,7 @@
 namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
-use Core\Lib\Request;
+use Core\Lib\Http\Router;
 
 /**
  * Class for managing and creating of javascript objects
@@ -17,41 +17,25 @@ class Javascript
 {
 
 	/**
-	 * Javascript output queue
+	 * Stack of core javascript objects
 	 *
 	 * @var array
 	 */
-	private static $js = [];
+	private static $core_js = [
+		'top' => [],
+		'below' => []
+	];
+
 
 	/**
-	 * Types can be "file", "script", "block", "ready" or "var".
+	 * Stack of app javascript objects
 	 *
-	 * @var string
+	 * @var array
 	 */
-	private $type;
-
-	/**
-	 * Header (false) or scripts (true) below body? This is the target for.
-	 *
-	 * @var bool
-	 */
-	private $defer = false;
-
-	/**
-	 * The script to add.
-	 * This can be an url if its an file or a script block.
-	 *
-	 * @var string
-	 */
-	private $script;
-
-	/**
-	 * Flag for external files.
-	 * External files wont be minified.
-	 *
-	 * @var bool
-	 */
-	private $is_external = false;
+	private static $app_js = [
+		'top' => [],
+		'below' => []
+	];
 
 	/**
 	 * For double file use prevention
@@ -75,18 +59,28 @@ class Javascript
 
 	/**
 	 *
-	 * @var Request
+	 * @var Router
 	 */
-	private $request;
+	private $router;
 
-	public function __construct(Cfg $cfg, Request $request)
+	private $mode = 'apps';
+
+	/**
+	 * Constructor
+	 *
+	 * @param Cfg $cfg
+	 * @param Router $router
+	 */
+	public function __construct(Cfg $cfg, Router $router)
 	{
 		$this->cfg = $cfg;
-		$this->request = $request;
+		$this->router = $router;
 	}
 
 	public function init()
 	{
+		$this->mode = 'core';
+
 		// Add jquery cdn
 		$this->file('//code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
 
@@ -101,6 +95,8 @@ class Javascript
 
 		// Add framework js
 		$this->file($this->cfg->get('Core', 'url_js') . '/framework.js');
+
+		$this->mode = 'apps';
 	}
 
 	/**
@@ -108,256 +104,40 @@ class Javascript
 	 *
 	 * @param Javascript $script
 	 */
-	public function &add()
+	public function &add(JavascriptObject $js)
 	{
-		self::$js[] = $this;
+		$area = $js->getDefer() ? 'below': 'top';
 
-		return $this;
+		if ($this->mode == 'core') {
+			self::$core_js[$area][] = $js;
+		} else {
+			self::$app_js[$area][] = $js;
+		}
+
+		return $js;
 	}
 
 	/**
-	 * Compiles the javascript objects and adds them to the $context javascripts
-	 */
-	public function compile($defer = false)
-	{
-		// No need to run when nothing is to do
-		if (empty(self::$js)) {
-			return;
-		}
-
-		// Init output
-		$output = '';
-
-		// Init js storages
-		$files = $blocks = $inline = $scripts = $ready = $vars = [];
-
-		// Include JSMin lib
-		if ($this->cfg->get('Core', 'js_minify')) {
-			require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
-		}
-
-		/* @var $script Javascript */
-		foreach (self::$js as $key => $script) {
-
-			// Skip all scripts that do not match this area
-			if ($script->getDefer() != $defer) {
-				continue;
-			}
-
-			switch ($script->getType()) {
-
-				// File to lin
-				case 'file':
-					$files[] = $script->getScript();
-					break;
-
-				// Script to create
-				case 'script':
-					$inline[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
-					break;
-
-				// Dedicated block to embaed
-				case 'block':
-					$blocks[] = PHP_EOL . $script->getScript();
-					break;
-
-				// A variable to publish to global space
-				case 'var':
-					$var = $script->getScript();
-					$vars[$var[0]] = $var[1];
-					break;
-
-				// Script to add to $.ready()
-				case 'ready':
-					$ready[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
-					break;
-			}
-
-			// Remove worked script object
-			unset(self::$js[$key]);
-		}
-
-		// Are there files to minify?
-		if ($this->cfg->get('Core', 'js_minify')) {
-
-			if ($files) {
-				$to_minfiy = [];
-			}
-
-			foreach ($files as $file) {
-
-				// Process only files that come from the sitecontext
-				if (strpos($file['filename'], BASEURL) !== false) {
-
-					// Compare host to get sure
-					$board_parts = parse_url(BASEURL);
-					$url_parts = parse_url($file['filename']);
-
-					if ($board_parts['host'] != $url_parts['host']) {
-						continue;
-					}
-
-					// Store filename in minify list
-					if (! in_array('/' . $url_parts['path'], $files)) {
-						$to_minfiy[] = '/' . $url_parts['path'];
-					}
-				}
-			}
-
-			// Are there files to combine?
-			if ($to_minfiy) {
-
-				// Insert filelink above or below?
-				$side = $defer ? 'below' : 'above';
-
-				// Store files to minify in session
-				$_SESSION['min']['js-' . $side] = $to_minfiy;
-
-				// Add link to combined js file
-				$files = [
-					$this->cfg->get('Core', 'url_tools') . '/min/g=js-' . $side
-				];
-			}
-		}
-
-		// Create compiled output
-		ob_start();
-
-		if ($vars || $scripts || $ready || $files) {
-			echo PHP_EOL . PHP_TAB . '<!-- ' . ($defer ? 'LOWER' : 'UPPER') . ' JAVASCRIPTS -->';
-		}
-
-		if ($vars || $scripts || $ready) {
-
-			// Create script commands
-			echo PHP_EOL . PHP_TAB . '<script>';
-
-			foreach ($vars as $name => $val) {
-				echo PHP_EOL . PHP_TAB . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';';
-			}
-
-			// Create $(document).ready()
-			if ($ready) {
-				$script = '$(document).ready(function() {' . PHP_EOL;
-				$script .= implode(PHP_EOL, $ready) . PHP_EOL;
-				$script .= '});';
-
-				echo ($this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script) : $script);
-			}
-
-			echo '
-	</script>';
-		}
-
-		// Add complete blocks
-		echo implode(PHP_EOL, $blocks);
-
-		// Create files
-		foreach ($files as $file) {
-			echo PHP_EOL . "\t" . '<script src="' . $file . '"></script>';
-		}
-
-		return ob_get_clean();
-	}
-
-	/**
-	 * Sets the objects type.
-	 * Select from "file", "script", "ready", "block" or "var".
+	 * Returns the js object stack
 	 *
-	 * @param string $type
-	 * @throws Error
-	 * @return \Core\Lib\Javascript
+	 * @param string $area
+	 *
+	 * @throws \InvalidArgumentException
+	 *
+	 * @return array
 	 */
-	public function setType($type)
+	public function getScriptObjects($area)
 	{
-		$types = array(
-			'file',
-			'script',
-			'ready',
-			'block',
-			'var'
-		);
+		$areas = [
+			'top',
+			'below'
+		];
 
-		if (! in_array($type, $types)) {
-			Throw new \InvalidArgumentException('Javascript targets have to be "file", "script", "block", "var" or "ready"');
+		if (!in_array($area, $areas)) {
+			Throw new \InvalidArgumentException('Wrong scriptarea.');
 		}
 
-		$this->type = $type;
-		return $this;
-	}
-
-	/**
-	 * Sets the objects external flag.
-	 *
-	 * @param bool $bool
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setIsExternal($bool)
-	{
-		$this->is_external = is_bool($bool) ? $bool : false;
-		return $this;
-	}
-
-	/**
-	 * Sets the objects script content.
-	 *
-	 * @param string $script
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setScript($script)
-	{
-		$this->script = $script;
-		return $this;
-	}
-
-	/**
-	 * Returns the objects type.
-	 *
-	 * @return string
-	 */
-	public function getType()
-	{
-		return $this->type;
-	}
-
-	/*
-	 * + Returns the objects external flag state.
-	 */
-	public function getIsExternal()
-	{
-		return $this->is_external;
-	}
-
-	/**
-	 * Returns the objects script content.
-	 *
-	 * @return string
-	 */
-	public function getScript()
-	{
-		return $this->script;
-	}
-
-	/**
-	 * Sets the objects defer state.
-	 *
-	 * @param bool $defer
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setDefer($defer = false)
-	{
-		$this->defer = is_bool($defer) ? $defer : false;
-		return $this;
-	}
-
-	/**
-	 * Returns the objects defer state
-	 *
-	 * @return boolean
-	 */
-	public function getDefer()
-	{
-		return $this->defer;
+		return array_merge(self::$core_js[$area], self::$app_js[$area]);
 	}
 
 	/**
@@ -369,7 +149,7 @@ class Javascript
 	 */
 	public function &file($url, $defer = false, $is_external = false)
 	{
-		if ($this->request->isAjax()) {
+		if ($this->router->isAjax()) {
 			$this->ajax->add(array(
 				'type' => 'act',
 				'fn' => 'load_script',
@@ -385,13 +165,13 @@ class Javascript
 			self::$files_used[self::$filecounter . '-' . $dt[1]['function']] = $url;
 			self::$filecounter ++;
 
-			$script = $this->di['core.content.js'];
+			$script = new JavascriptObject();
 			$script->setType('file');
 			$script->setScript($url);
 			$script->setIsExternal($is_external);
 			$script->setDefer($defer);
 
-			return $script->add();
+			return $this->add($script);
 		}
 	}
 
@@ -403,12 +183,12 @@ class Javascript
 	 */
 	public function &script($script, $defer = false)
 	{
-		$script = $this->di['core.content.js'];
+		$script = new JavascriptObject();
 		$script->setType('script');
 		$script->setScript($script);
 		$script->setDefer($defer);
 
-		return $script->add();
+		return $this->add($script);
 	}
 
 	/**
@@ -420,12 +200,12 @@ class Javascript
 	 */
 	public function &ready($script, $defer = false)
 	{
-		$script = $this->di['core.content.js'];
+		$script = new JavascriptObject();
 		$script->setType('ready');
 		$script->setScript($script);
 		$script->setDefer($defer);
 
-		return $script->add();
+		return $this->add($script);
 	}
 
 	/**
@@ -435,14 +215,14 @@ class Javascript
 	 * @param unknown $content
 	 * @param string $target
 	 */
-	public static function &block($script, $defer = false)
+	public function &block($script, $defer = false)
 	{
-		$script = $this->di['core.content.js'];
+		$script = new JavascriptObject();
 		$script->setType('block');
 		$script->setScript($script);
 		$script->setDefer($defer);
 
-		return $script->add();
+		return $this->add($script);
 	}
 
 	/**
@@ -455,17 +235,18 @@ class Javascript
 	 */
 	public function &variable($name, $value, $is_string = false)
 	{
-		if ($is_string == true)
+		if ($is_string == true) {
 			$value = '"' . $value . '"';
+		}
 
-		$script = $this->di['core.content.js'];
+		$script = new JavascriptObject();
 		$script->setType('var');
 		$script->setScript([
 			$name,
 			$value
 		]);
 
-		return $script->add($script);
+		return $this->add($script);
 	}
 
 	/**
@@ -480,12 +261,13 @@ class Javascript
 	{
 		$url = $this->cfg->get('Core', 'url_js') . '/bootstrap-' . $version . '.min.js';
 
-		if (str_replace(BASEURL, BASEDIR, $url))
+		if (str_replace(BASEURL, BASEDIR, $url)) {
 			return $this->file($url);
+		}
 	}
 
 	public function getStack()
 	{
-		return self::$js;
+		return array_merge(self::$core_js, self::$app_js);
 	}
 }
