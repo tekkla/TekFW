@@ -18,6 +18,8 @@ use Core\Lib\DI;
 class Content
 {
 
+	use \Core\Lib\Traits\TextTrait;
+
 	/**
 	 *
 	 * @var Cfg
@@ -80,7 +82,7 @@ class Content
 
 	/**
 	 *
-	 * @var Breadcrumbs
+	 * @var Breadcrumb
 	 */
 	public $breadcrumbs;
 
@@ -103,20 +105,16 @@ class Content
 	public $msg;
 
 	/**
-	 *
-	 * @var boolean
-	 */
-	private $init_done = false;
-
-
-	/**
-	 * Contructor
+	 * Constructor
 	 *
 	 * @param Router $router
 	 * @param Cfg $cfg
 	 * @param Creator $app_creator
 	 * @param HtmlFactory $html
-	 * @param DI $di
+	 * @param Menu $menu
+	 * @param Css $css
+	 * @param Javascript $js
+	 * @param Message $msg
 	 */
 	public function __construct(
 		Router $router,
@@ -144,7 +142,7 @@ class Content
 
 		$this->breadcrumbs = new Breadcrumb();
 
-		// try to init possible content handler
+		// Try to init possible content handler
 		if ($this->cfg->exists('Core', 'content_handler') && $this->router->isAjax()) {
 
 			// Get instance of content handler app
@@ -157,27 +155,32 @@ class Content
 		}
 	}
 
-	public function getInitDone()
-	{
-		return $this->init_done;
-	}
-
 	/**
 	 * Set pagetitle
+	 *
 	 * @param string $title
+	 *
+	 * @return \Core\Lib\Content\Content
 	 */
 	public function setTitle($title)
 	{
 		$this->title = $title;
+
+		return $this;
 	}
 
 	/**
 	 * Set content to show
+	 *
 	 * @param string $content
+	 *
+	 * @return \Core\Lib\Content\Content
 	 */
 	public function setContent($content)
 	{
 		$this->content = $content;
+
+		return $this;
 	}
 
 	/**
@@ -264,11 +267,21 @@ class Content
 
 	}
 
+	/**
+	 * Returns set pagetitle
+	 *
+	 * @return string
+	 */
 	public function getTitle()
 	{
 		return $this->title;
 	}
 
+	/**
+	 * Returns sitename
+	 *
+	 * @return \Core\Lib\mixed
+	 */
 	public function getBrand()
 	{
 		return $this->cfg->get('Core', 'sitename');
