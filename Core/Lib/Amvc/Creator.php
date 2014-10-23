@@ -110,18 +110,15 @@ class Creator
 			$args = [
 				$name,
 				'core.cfg',
-				'core.request',
-				'core.content.css',
-				'core.content.js',
-				'core.content.nav',
-				'core.sec.permission'
+				'core.http.router',
+				'core.content.content',
+				'core.sec.permission',
+				'core.sec.security',
+				'core.di'
 			];
 
 			// Create an app instance
 			$app = self::$instances[$name] = $this->di->instance($class, $args);
-
-			// And init the app
-			$app->init();
 		}
 
 		// Return app instance
@@ -132,8 +129,7 @@ class Creator
 	 * Autodiscovers installed apps in the given path.
 	 * When an app is found an instance of it will be created.
 	 *
-	 * @param string|array $path
-	 *        	Path to check for apps. Can be an array of paths.
+	 * @param string|array $path Path to check for apps. Can be an array of paths.
 	 */
 	public function autodiscover($path)
 	{
@@ -167,6 +163,14 @@ class Creator
 		}
 	}
 
+	/**
+	 * Inits configuration of an app
+	 *
+	 * Uuses both config values stroed in db and adds default values from app
+	 * config definition for missing config values.
+	 *
+	 * @param string $app_name
+	 */
 	public function initAppConfig($app_name)
 	{
 		// Init app
