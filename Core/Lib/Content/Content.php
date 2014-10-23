@@ -5,7 +5,6 @@ use Core\Lib\Cfg;
 use Core\Lib\Http\Router;
 use Core\Lib\Content\Html\HtmlFactory;
 use Core\Lib\Amvc\Creator;
-use Core\Lib\DI;
 
 /**
  * Content
