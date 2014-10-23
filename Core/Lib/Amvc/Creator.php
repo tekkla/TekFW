@@ -48,12 +48,6 @@ class Creator
 		$this->cfg = $cfg;
 	}
 
-	private function __clone()
-	{}
-
-	private function __wakeup()
-	{}
-
 	/**
 	 * Get an unique app object by cloning an app instance
 	 *
@@ -183,5 +177,15 @@ class Creator
 			if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default']))
 				$this->cfg->set($app_name, $key, $cfg_def['default']);
 		}
+	}
+
+	/**
+	 * Returns a list of loaded app names
+	 *
+	 * @return array
+	 */
+	public function getLoadedApps()
+	{
+		return array_keys(self::$instances);
 	}
 }
