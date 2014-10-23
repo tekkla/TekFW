@@ -142,7 +142,7 @@ class Content
 		$this->og = new OpenGraph();
 		$this->link = new Link();
 
-		$this->breadcrumbs = new Breadcrumbs();
+		$this->breadcrumbs = new Breadcrumb();
 
 		// try to init possible content handler
 		if ($this->cfg->exists('Core', 'content_handler') && $this->router->isAjax()) {
