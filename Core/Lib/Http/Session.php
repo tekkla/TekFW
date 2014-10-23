@@ -53,13 +53,26 @@ final class Session
 		if (isset($_SESSION[$key])) {
 			return $_SESSION[$key];
 		} else {
-			Throw new \InvalidArgumentException('Session key not found.');
+			Throw new \InvalidArgumentException('Session key "' . $key .'" not found.');
 		}
 	}
 
 	public function set($key, $val)
 	{
 		$_SESSION[$key] = $val;
+	}
+
+	public function add($key, $val)
+	{
+		if (! isset($_SESSION[$key])) {
+			$_SESSION[$key] = [];
+		} else {
+			if (!is_array($_SESSION[$key])) {
+				$_SESSION[$key] = (array) $_SESSION[$key];
+			}
+		}
+
+		$_SESSION[$key][] = $val;
 	}
 
 	public function exists($key)
