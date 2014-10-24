@@ -30,7 +30,7 @@ class Select extends FormElementAbstract
 	 */
 	public function &createOption()
 	{
-		$option = $this->factory->creat('Form\Option');
+		$option = $this->factory->create('Form\Option');
 
 		return $this->addOption($option);
 	}
@@ -48,7 +48,7 @@ class Select extends FormElementAbstract
 	 */
 	public function &newOption($value = null, $inner = null, $selected = 0)
 	{
-		$option = $this->factory->creat('Form\Option');
+		$option = $this->factory->create('Form\Option');
 
 		$option->isSelected($selected);
 
