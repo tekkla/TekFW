@@ -1065,11 +1065,6 @@ final class FormDesigner extends Form
 		$this->route = $route;
 
 		// Compile route and set url as action url
-		$url = $this->di->factory('\Core\Lib\Url', [
-			$route,
-			$params
-		]);
-
-		$this->attribute['action'] = $url->getUrl();
+		$this->attribute['action'] = $this->di->get('core.http.router')->url($route, $params);
 	}
 }
