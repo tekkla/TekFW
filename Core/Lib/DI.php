@@ -11,9 +11,9 @@ use Core\Lib\Amvc\App;
 class DI implements \ArrayAccess
 {
 
-	private static $map = [];
+	private $map = [];
 
-	private static $services = [];
+	private $services = [];
 
 	/**
 	 * Creates an instance of a class
@@ -74,7 +74,7 @@ class DI implements \ArrayAccess
 	 */
 	public function mapValue($key, $value)
 	{
-		self::$map[$key] = [
+		$this->map[$key] = [
 			'value' => $value,
 			'type' => 'value'
 		];
@@ -91,7 +91,7 @@ class DI implements \ArrayAccess
 	 */
 	public function mapService($key, $value, $arguments = null)
 	{
-		self::$map[$key] = [
+		$this->map[$key] = [
 			'value' => $value,
 			'type' => 'service',
 			'arguments' => $arguments
@@ -109,7 +109,7 @@ class DI implements \ArrayAccess
 	 */
 	public function mapFactory($key, $value, $arguments = null)
 	{
-		self::$map[$key] = [
+		$this->map[$key] = [
 			'value' => $value,
 			'type' => 'factory',
 			'arguments' => $arguments
@@ -194,7 +194,7 @@ class DI implements \ArrayAccess
 	 */
 	public function offsetExists($service)
 	{
-		return array_key_exists($service, self::$map);
+		return array_key_exists($service, $this->map);
 	}
 
 	/**
@@ -207,20 +207,20 @@ class DI implements \ArrayAccess
 			Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $service));
 		}
 
-		$type = self::$map[$service]['type'];
-		$value = self::$map[$service]['value'];
+		$type = $this->map[$service]['type'];
+		$value = $this->map[$service]['value'];
 
 		if ($type == 'value') {
 			return $value;
 		} elseif ($type == 'factory') {
-			return $this->instance($value, self::$map[$service]['arguments']);
+			return $this->instance($value, $this->map[$service]['arguments']);
 		} else {
 
-			if (! isset(self::$services[$service])) {
-				self::$services[$service] = $this->instance($value, self::$map[$service]['arguments']);
+			if (! isset($this->services[$service])) {
+				$this->services[$service] = $this->instance($value, $this->map[$service]['arguments']);
 			}
 
-			return self::$services[$service];
+			return $this->services[$service];
 		}
 	}
 
@@ -230,7 +230,7 @@ class DI implements \ArrayAccess
 	 */
 	public function offsetSet($service, $value)
 	{
-		self::$map[$service] = $value;
+		$this->map[$service] = $value;
 	}
 
 	/**
@@ -240,7 +240,7 @@ class DI implements \ArrayAccess
 	public function offsetUnset($service)
 	{
 		if ($this->offsetExists($service)) {
-			unset(self::$map[$service]);
+			unset($this->map[$service]);
 		}
 	}
 }
