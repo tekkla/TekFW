@@ -17,10 +17,8 @@ use Core\Lib\Data\Validator;
  */
 class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 {
-	use \Core\Lib\Traits\SerializeTrait,
-		\Core\Lib\Traits\ArrayTrait,
-		\Core\Lib\Traits\ConvertTrait {
-			\Core\Lib\Traits\SerializeTrait::isSerialized insteadof \Core\Lib\Traits\ConvertTrait;
+	use \Core\Lib\Traits\SerializeTrait, \Core\Lib\Traits\ArrayTrait, \Core\Lib\Traits\ConvertTrait {
+		\Core\Lib\Traits\SerializeTrait::isSerialized insteadof \Core\Lib\Traits\ConvertTrait;
 	}
 
 	/**
@@ -367,8 +365,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 			foreach ($val as $fld) {
 				$this->fields[] = $fld;
 			}
-		}
-		else {
+		} else {
 			$this->fields[] = $val;
 		}
 
@@ -709,8 +706,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 			}
 
 			$fieldlist = implode(', ', $this->fields);
-		}
-		else {
+		} else {
 			$fieldlist = '*';
 		}
 
@@ -814,8 +810,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 		// Set fields
 		if (isset($def['field'])) {
 			$this->fields = is_array($def['field']) ? $def['field'] : (array) $def['field'];
-		}
-		else {
+		} else {
 			$this->fields = (array) '*';
 		}
 
@@ -841,8 +836,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 						'by' => $join['by'],
 						'cond' => $join['condition']
 					];
-				}
-				else {
+				} else {
 					$this->join[] = [
 						'tbl' => $join[0],
 						'as' => $join[1],
@@ -891,8 +885,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 		// Is our query type an array which indicates we have to parse a query definition?
 		if (is_array($query_type)) {
 			$this->processQueryDefinition($query_type);
-		}
-		else {
+		} else {
 			$this->query_type = $query_type;
 		}
 
@@ -939,7 +932,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 		// Run query!
 		$this->db->execute();
 
-        // Reset data on all queries not of type 'ext'
+		// Reset data on all queries not of type 'ext'
 
 		if ($this->query_type !== 'ext') {
 			$this->resetData();
@@ -1406,8 +1399,8 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 			// Do we have a definition like filter and paramerter to process?
 			if (is_array($pk)) {
 				$this->processQueryDefinition($pk);
-			} // Or is it a primary key value?
-			else {
+			}  // Or is it a primary key value?
+else {
 				$this->filter = $this->pk . '= :pk';
 				$this->param = [
 					':pk' => $pk
@@ -1799,8 +1792,7 @@ class Model extends MvcAbstract implements \ArrayAccess, \IteratorAggregate
 				list ($model_name, $callback) = explode('::', $callback);
 				$model = $this->getModel($model_name);
 				$data = $model->{$callback}($data);
-			}
-			else {
+			} else {
 				$data = $this->{$callback}($data);
 			}
 
