@@ -27,11 +27,9 @@ class HtmlFactory
 	 *
 	 * @return HtmlAbstract
 	 */
-	public function create($class, $args=[])
+	public function create($class, $args = [])
 	{
-		$class = '\Core\Lib\Content\Html\\' . $class;
-
-		$html = $this->di->instance($class, 'core.content.html.factory');
+		$html = $this->di->instance('\Core\Lib\Content\Html\\' . $class, 'core.content.html.factory');
 
 		foreach ($args as $method => $arg) {
 
@@ -39,21 +37,17 @@ class HtmlFactory
 				Throw new \RuntimeException('Html object has no "' . $method . '" method.');
 			}
 
-			if (is_array($arg))
-			{
-				if (!$this->isAssoc($arg)) {
+			if (is_array($arg)) {
+				if (! $this->isAssoc($arg)) {
 					Throw new \InvalidArgumentException('Arrayed arguments for html objects created by HtmlFactory have to be associative.');
 				}
 
 				foreach ($arg as $attr => $val) {
 					$html->$method($attr, $val);
 				}
-			}
-			else {
+			} else {
 				$html->$method($arg);
 			}
-
-
 		}
 
 		return $html;
