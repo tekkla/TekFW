@@ -3,7 +3,7 @@ namespace Core\Lib\Amvc;
 
 use Core\Lib\Data\Data;
 use Core\Lib\Abstracts\MvcAbstract;
-use Core\Lib\Data\Database;
+use Core\Lib\Data\Db\Database;
 use Core\Lib\Data\Validator;
 
 /**

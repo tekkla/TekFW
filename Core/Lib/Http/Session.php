@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Data\Database;
+use Core\Lib\Data\Db\Database;
 
 /**
  * Basic class for session handling

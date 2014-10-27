@@ -4,7 +4,7 @@ namespace Core\Lib\Security;
 use Core\Lib\Cfg;
 use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
-use Core\Lib\Data\Database;
+use Core\Lib\Data\Db\Database;
 
 /**
  * Class: Security

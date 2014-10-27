@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\Database;
+use Core\Lib\Data\Db\Database;
 
 /**
  *

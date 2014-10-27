@@ -57,6 +57,11 @@ try {
 
 	// == DB ===========================================================
 	$di->mapValue('db.default.dsn', $cfg['db_dsn']);
+
+	$di->mapValue('db.default.driver', $cfg['db_driver']);
+	$di->mapValue('db.default.host', $cfg['db_host']);
+	$di->mapValue('db.default.port', $cfg['db_port']);
+	$di->mapValue('db.default.name', $cfg['db_name']);
 	$di->mapValue('db.default.user', $cfg['db_user']);
 	$di->mapValue('db.default.pass', $cfg['db_pass']);
 	$di->mapValue('db.default.options', [
@@ -65,13 +70,16 @@ try {
 		\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
 	]);
 	$di->mapValue('db.default.prefix', $cfg['db_prefix']);
-	$di->mapService('db.default.pdo', '\PDO', [
-		'db.default.dsn',
+	$di->mapService('db.default.pdo', '\Core\Lib\Data\Db\Connection', [
+		'db.default.name',
+		'db.default.driver',
+		'db.default.host',
+		'db.default.port',
 		'db.default.user',
 		'db.default.pass',
 		'db.default.options'
 	]);
-	$di->mapFactory('db.default', '\Core\Lib\Data\Database', [
+	$di->mapFactory('db.default', '\Core\Lib\Data\Db\Database', [
 		'db.default.pdo',
 		'db.default.prefix'
 	]);
