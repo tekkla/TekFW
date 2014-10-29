@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Data\Db;
+namespace Core\Lib\Data\Adapter\Db;
 
 /**
  *
@@ -59,9 +59,13 @@ class Mysql extends TableInfoAbstract
 		$this->db->execute();
 		$result = $this->db->all();
 
+		var_dump($result);
+
 		$indexes = [];
 
 		foreach ($result as $row) {
+
+			$name = $row['Key_name'];
 
 			// What is the type?
 			if ($row['Key_name'] == 'PRIMARY') {
@@ -77,24 +81,12 @@ class Mysql extends TableInfoAbstract
 				$type = 'index';
 			}
 
-			// This is the first column we've seen?
-			if (empty($indexes[$row['Key_name']])) {
-				$indexes[$row['Key_name']] = [
-					'name' => $row['Key_name'],
-					'type' => $type,
-					'columns' => []
-				];
-			}
-
 			// Is it a partial index?
-			if (! empty($row['Sub_part'])) {
-				$indexes[$row['Key_name']]['columns'][] = $row['Column_name'] . '(' . $row['Sub_part'] . ')';
-			}
-			else {
-				$indexes[$row['Key_name']]['columns'][] = $row['Column_name'];
-			}
+			$column = ! empty($row['Sub_part']) ? $row['Column_name'] . '(' . $row['Sub_part'] . ')' : $row['Column_name'];
+
+			$this->addIndex($name, $type, $column);
 		}
 
-		$this->addIndex($row['Column_name'], $row['Column_name']);
+
 	}
 }

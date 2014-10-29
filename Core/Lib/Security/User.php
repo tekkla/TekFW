@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
 
 /**
  * Wrapper class to access SMF user information from one point
@@ -67,9 +67,9 @@ class User
 
 	/**
 	 *
-	 * @var Database
+	 * @var DataAdapter
 	 */
-	private $db;
+	private $adapter;
 
 	/**
 	 *
@@ -77,9 +77,9 @@ class User
 	 */
 	private $permission;
 
-	public function __construct(Database $db, Permission $permission, $id_user = 0)
+	public function __construct(DataAdapter $adapter, Permission $permission, $id_user = 0)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 		$this->permission = $permission;
 
 		if ($id_user > 0) {
@@ -173,23 +173,23 @@ class User
 
 		$this->id_user = $id_user;
 
-		$this->db->query('SELECT username, password, display_name, groups FROM {db_prefix}users WHERE id_user=:id_user');
-		$this->db->bindValue(':id_user', $id_user);
+		$this->adapter->query('SELECT username, password, display_name, groups FROM {db_prefix}users WHERE id_user=:id_user');
+		$this->adapter->bindValue(':id_user', $id_user);
 
-		if ($this->db->execute()) {
+		if ($this->adapter->execute()) {
 
-			$row = $this->db->single();
+			$row = $this->adapter->single();
 
 			$this->username = $row['username'];
 			$this->display_name = $row['display_name'];
 			$this->password = $row['password'];
 
 			// Load groups the user is in
-			$this->db->query('SELECT id_group FROM {db_prefix}users_groups WHERE id_user=:id_user');
-			$this->db->bindValue(':id_user', $id_user);
+			$this->adapter->query('SELECT id_group FROM {db_prefix}users_groups WHERE id_user=:id_user');
+			$this->adapter->bindValue(':id_user', $id_user);
 
-			if ($this->db->execute()) {
-				$this->groups = $this->db->column();
+			if ($this->adapter->execute()) {
+				$this->groups = $this->adapter->column();
 			}
 
 			// Load user permissions based on groups of the user

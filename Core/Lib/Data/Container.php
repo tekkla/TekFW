@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Data\Validator\Validator;
+
 /**
  *
  * @author Michael
@@ -8,12 +10,9 @@ namespace Core\Lib\Data;
  */
 class Container implements \IteratorAggregate
 {
-
 	private $fields = [];
 
 	private $errors = [];
-
-	private $data = [];
 
 	/**
 	 * Constructor

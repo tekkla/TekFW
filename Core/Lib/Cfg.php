@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
 
 /**
  * Handles all TekFW low level config related stuff
@@ -24,13 +24,13 @@ final class Cfg
 
 	/**
 	 *
-	 * @var Database
+	 * @var DataAdapter
 	 */
-	private $db;
+	private $adapter;
 
-	public function __construct(Database $db)
+	public function __construct(DataAdapter $adapter)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 	}
 
 	/**
@@ -122,10 +122,10 @@ final class Cfg
 	 */
 	public function load()
 	{
-		$this->db->query('SELECT * FROM {db_prefix}config ORDER BY app, cfg');
-		$this->db->execute();
+		$this->adapter->query('SELECT * FROM {db_prefix}config ORDER BY app, cfg');
+		$this->adapter->execute();
 
-		$results = $this->db->all(\PDO::FETCH_NUM);
+		$results = $this->adapter->all(\PDO::FETCH_NUM);
 
 		foreach ($results as $row) {
 			// Check for serialized data and unserialize it

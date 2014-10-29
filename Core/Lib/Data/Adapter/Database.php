@@ -1,8 +1,10 @@
 <?php
-namespace Core\Lib\Data\Db;
+namespace Core\Lib\Data\Adapter;
+
+use Core\Lib\Data\Adapter\AdapterAbstract;
+use Core\Lib\Data\Adapter\Db\Connection;
 
 /**
- * SMF db wrapper Class to work as some kind of ORM
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
@@ -10,7 +12,7 @@ namespace Core\Lib\Data\Db;
  * @package TekFW
  * @subpackage Lib
  */
-class Database
+class Database extends AdapterAbstract
 {
 	use\Core\Lib\Traits\SerializeTrait;
 
@@ -81,33 +83,43 @@ class Database
 	 */
 	private static $default_instance;
 
+
+
+
+	private static $queries = [];
+	private static $query_count = 0;
+
 	/**
 	 * Constructor
 	 *
 	 * @param Connection $conn
 	 * @param string $prefix
 	 */
-	public function __construct(Connection $conn, $prefix)
+	public function __construct(array $options)
 	{
-		$this->conn = $conn;
+		if (!isset($options['conn'])) {
+
+
+			var_dump($options);
+
+			Throw new \InvalidArgumentException('No connection option found in database options');
+		}
+
+		if (! $options['conn'] instanceof Connection)
+		{
+			Throw new \InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
+		}
+
+		if (!isset($options['prefix'])) {
+			Throw new \InvalidArgumentException('No table prefix in database options');
+		}
+
+		$this->conn = $options['conn'];
+
+		$this->prefix = $options['prefix'];
+
+		// Connect to db
 		$this->dbh = $this->conn->connect();
-		$this->prefix = $prefix;
-
-
-	}
-
-	/**
-	 * Sets table prefix
-	 *
-	 * @param string $db_prefix
-	 *
-	 * @return \Core\Lib\Data\Db\Database
-	 */
-	public function setPrefix($db_prefix)
-	{
-		$this->prefix = $db_prefix;
-
-		return $this;
 	}
 
 	/**
@@ -161,44 +173,6 @@ class Database
 		}
 
 		return $fieldlist;
-	}
-
-	private function checkPrefix()
-	{
-		if (strpos($this->tbl, '{db_prefix}') !== 0 || strpos($this->tbl, $this->prefix) !== 0) {
-			$this->tbl = $this->prefix . $this->tbl;
-		}
-		else {
-			$this->tbl = str_replace('{db_prefix}', $this->prefix, $this->tbl);
-		}
-	}
-
-	/**
-	 * Get complex table structure.
-	 *
-	 * @param string $tble The name of the table
-	 *
-	 * @return An array of table structure - the name, the column info from {@link listTblColumns()} and the index info from {@link listTblIndexes()}
-	 */
-	public function getTblStructure($tbl = '')
-	{
-		$this->tbl = $tbl;
-
-		$this->checkPrefix();
-
-		$driver_class = '\Core\Lib\Data\Db\\' . ucfirst($this->conn->getDriver());
-
-		/* @var $db_subs TableInfoAbstract */
-		$db_subs = new $driver_class($this, $this->tbl);
-
-		$db_subs->loadColumns($this->tbl);
-		$db_subs->loadIndexes($this->tbl);
-
-		return [
-			'name' => $this->tbl,
-			'columns' => $db_subs->getColumns(),
-			'indexes' => $db_subs->getIndexes()
-		];
 	}
 
 	/**
@@ -312,7 +286,11 @@ class Database
 	 */
 	public function all($fetch_mode = \PDO::FETCH_ASSOC)
 	{
-		return $this->stmt->fetchAll($fetch_mode);
+		$data = $this->stmt->fetchAll($fetch_mode);
+
+		#$this->adapter->setDataset($data);
+
+		return $data;
 	}
 
 	/**
@@ -324,7 +302,11 @@ class Database
 	 */
 	public function single($fetch_mode = \PDO::FETCH_ASSOC)
 	{
-		return $this->stmt->fetch($fetch_mode);
+		$data = $this->stmt->fetch($fetch_mode);
+
+		#$this->adapter->setData($data);
+
+		return $data;
 	}
 
 	/**
@@ -336,7 +318,11 @@ class Database
 	 */
 	public function column($column = 0)
 	{
-		return $this->stmt->fetchAll(\PDO::FETCH_COLUMN, $column);
+		$data = $this->stmt->fetchAll(\PDO::FETCH_COLUMN, $column);
+
+		#$this->adapter->setData($data);
+
+		return $data;
 	}
 
 	/**
@@ -346,7 +332,11 @@ class Database
 	 */
 	public function value()
 	{
-		return $this->stmt->fetchColumn();
+		$data = $this->stmt->fetchColumn();
+
+		#$this->adapter->setData($data);
+
+		return $data;
 	}
 
 	/**
@@ -462,8 +452,6 @@ class Database
 
 		return $this->dbh->lastInsertId($keys[0]);
 	}
-
-
 
 	/**
 	 * Returns the list of queries done.

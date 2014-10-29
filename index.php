@@ -70,7 +70,7 @@ try {
 		\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
 	]);
 	$di->mapValue('db.default.prefix', $cfg['db_prefix']);
-	$di->mapService('db.default.pdo', '\Core\Lib\Data\Db\Connection', [
+	$di->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
 		'db.default.name',
 		'db.default.driver',
 		'db.default.host',
@@ -79,9 +79,12 @@ try {
 		'db.default.pass',
 		'db.default.options'
 	]);
-	$di->mapFactory('db.default', '\Core\Lib\Data\Db\Database', [
-		'db.default.pdo',
-		'db.default.prefix'
+	$di->mapFactory('db.default', '\Core\Lib\Data\DataAdapter', [
+		'db',
+		[
+			'conn::db.default.conn',
+			'prefix::db.default.prefix'
+		]
 	]);
 
 	// == CONFIG =======================================================
@@ -146,7 +149,7 @@ try {
 		'core.content.nav',
 		'core.content.css',
 		'core.content.js',
-		'core.content.message',
+		'core.content.message'
 	]);
 	$di->mapService('core.content.lang', '\Core\Lib\Content\Language');
 	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.http.router');
@@ -247,7 +250,6 @@ try {
 	$content->css->init();
 	$content->js->init();
 
-
 	// Try to use appname provided by router
 	$app_name = $router->getApp();
 
@@ -263,7 +265,8 @@ try {
 	$app = $app_creator->create($app_name);
 
 	/**
-	 * Each app can have it's own start procedure. This procedure is used to
+	 * Each app can have it's own start procedure.
+	 * This procedure is used to
 	 * init apps with more than the app creator does. To use this feature the
 	 * app needs run() method in it's main file.
 	 */
@@ -302,7 +305,6 @@ try {
 
 		// Run ajax processor
 		$di['core.content.ajax']->process();
-
 	} else {
 
 		// Run controller and store result
@@ -336,30 +338,28 @@ try {
 			<p>User Permissions:</p>
 			<p>';
 
-			var_dump($di['core.sec.security']->getPermissions());
+		var_dump($di['core.sec.security']->getPermissions());
 
-			echo '
+		echo '
 			</p>
 			<p>Permissions:</p>
 			<p>';
 
-			var_dump($di['core.sec.permission']->getPermissions());
+		var_dump($di['core.sec.permission']->getPermissions());
 
-			echo '
+		echo '
 			</p>
 			<p>Match:</p>
 			<p>';
 
-				var_dump($router->match());
+		var_dump($router->match());
 
-			echo '
+		echo '
 			</p>
 			<p>Routes:</p>
 			<p>';
 
-
-
-			echo '
+		echo '
 			</p>
 		</div>';
 	}

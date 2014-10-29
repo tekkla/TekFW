@@ -1,7 +1,8 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Adapter\Db\Connection;
 
 /**
  * Basic class for session handling
@@ -20,11 +21,11 @@ final class Session
 	 *
 	 * @var Database
 	 */
-	private $db;
+	private $adapter;
 
-	public function __construct(Database $db)
+	public function __construct(DataAdapter $adapter)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 
 		// Set handler to overide SESSION
 		session_set_save_handler([
@@ -107,7 +108,7 @@ final class Session
 	public function open()
 	{
 		// If successful return true
-		return $this->db ? true : false;
+		return $this->adapter ? true : false;
 	}
 
 	/**
@@ -116,7 +117,7 @@ final class Session
 	public function close()
 	{
 		// Close the database connection - If successful return true
-		return $this->db->close() ? true : false;
+		return $this->adapter->close() ? true : false;
 	}
 
 	/**
@@ -125,13 +126,13 @@ final class Session
 	public function read($id_session)
 	{
 		// Set query
-		$this->db->query('SELECT data FROM {db_prefix}sessions WHERE id_session = :id_session');
+		$this->adapter->query('SELECT data FROM {db_prefix}sessions WHERE id_session = :id_session');
 
 		// Bind the Id
-		$this->db->bindValue(':id_session', $id_session);
+		$this->adapter->bindValue(':id_session', $id_session);
 
 		// Attempt execution - If successful return the data
-		return $this->db->execute() ? $this->db->single()['data'] : '';
+		return $this->adapter->execute() ? $this->adapter->single()['data'] : '';
 	}
 
 	/**
@@ -143,15 +144,15 @@ final class Session
 		$access = time();
 
 		// Set query
-		$this->db->query('REPLACE INTO {db_prefix}sessions VALUES (:id_session, :access, :data)');
+		$this->adapter->query('REPLACE INTO {db_prefix}sessions VALUES (:id_session, :access, :data)');
 
 		// Bind data
-		$this->db->bindValue(':id_session', $id_session);
-		$this->db->bindValue(':access', $access);
-		$this->db->bindValue(':data', $data);
+		$this->adapter->bindValue(':id_session', $id_session);
+		$this->adapter->bindValue(':access', $access);
+		$this->adapter->bindValue(':data', $data);
 
 		// Attempt Execution - If successful return true
-		return $this->db->execute() ? true : false;
+		return $this->adapter->execute() ? true : false;
 	}
 
 	/**
@@ -160,13 +161,13 @@ final class Session
 	public function destroy($id_session)
 	{
 		// Set query
-		$this->db->query('DELETE FROM {db_prefix}sessions WHERE id_session = :id_session');
+		$this->adapter->query('DELETE FROM {db_prefix}sessions WHERE id_session = :id_session');
 
 		// Bind data
-		$this->db->bindValue(':id_session', $id_session);
+		$this->adapter->bindValue(':id_session', $id_session);
 
 		// Attempt execution - If successful return True
-		return $this->db->execute() ? true : false;
+		return $this->adapter->execute() ? true : false;
 	}
 
 	/**
@@ -178,12 +179,12 @@ final class Session
 		$old = time() - $max;
 
 		// Set query
-		$this->db->query('DELETE * FROM {db_prefix}sessions WHERE access < :old');
+		$this->adapter->query('DELETE * FROM {db_prefix}sessions WHERE access < :old');
 
 		// Bind data
-		$this->db->bindValue(':old', $old);
+		$this->adapter->bindValue(':old', $old);
 
 		// Attempt execution
-		return $this->db->execute() ? true : false;
+		return $this->adapter->execute() ? true : false;
 	}
 }

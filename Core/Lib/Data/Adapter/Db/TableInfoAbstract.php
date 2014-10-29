@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Data\Db;
+namespace Core\Lib\Data\Adapter\Db;
 
 use Core\Lib\Data\Db\Database;
 
@@ -55,7 +55,7 @@ abstract class TableInfoAbstract
 	 */
 	protected function addColumn($name, $null, $default, $type, $size, $auto, $unsigned)
 	{
-		$this->columns[] = [
+		$this->columns[$name] = [
 			'name' => $name,
 			'null' => $null,
 			'default' => $default,
@@ -67,14 +67,26 @@ abstract class TableInfoAbstract
 	}
 
 	/**
-	 * Adds an index to the indexlist
+	 * Adds an index to the indexlist.
 	 *
 	 * @param string $name
+	 * @param string $type
 	 * @param string $column
 	 */
-	protected function addIndex($name, $column)
+	protected function addIndex($name, $type, $column)
 	{
-		$this->indexes[$name] = $column;
+		if (isset($this->indexes[$name])) {
+			$this->indexes[$name]['columns'][] = $column;
+		}
+		else {
+			$this->indexes[$name] = [
+				'name' => $name,
+				'type' => $type,
+				'columns' => [
+					$column
+				]
+			];
+		}
 	}
 
 	/**

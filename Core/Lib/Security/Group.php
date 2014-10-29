@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
 
 /**
  *
@@ -34,13 +34,13 @@ class Group
 	 *
 	 * @var Database
 	 */
-	private $db;
+	private $adapter;
 
 	/**
 	 */
-	function __construct(Database $db)
+	function __construct(DataAdapter $adapter)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 
 		$this->loadGroups();
 	}
@@ -50,10 +50,10 @@ class Group
 		// Copy default groups to
 		#$this->groups = $this->default_groups;
 
-		$this->db->query('SELECT id_group, title FROM {db_prefix}groups ORDER BY id_group');
-		$this->db->execute();
+		$this->adapter->query('SELECT id_group, title FROM {db_prefix}groups ORDER BY id_group');
+		$this->adapter->execute();
 
-		$groups = $this->db->resultset();
+		$groups = $this->adapter->resultset();
 
 		foreach ($groups as $g) {
 			$this->addGroup($g['id_group'], $g['title']);
@@ -72,27 +72,27 @@ class Group
 		try {
 
 			// Important: Use a transaction!
-			$this->db->beginTransaction();
+			$this->adapter->beginTransaction();
 
 			// Delete current groups
-			$this->db->query('DELETE FROM {db_prefix}groups');
-			$this->db->execute();
+			$this->adapter->query('DELETE FROM {db_prefix}groups');
+			$this->adapter->execute();
 
 			// Prepare statement for group insert
-			$this->db->query('INSERT INTO {db_prefix}groups (id_group, title) VALUES (:id_group, :title)');
+			$this->adapter->query('INSERT INTO {db_prefix}groups (id_group, title) VALUES (:id_group, :title)');
 
 			// Insert the groups each by each into the groups table
 			foreach ($groups as $id_group => $title) {
-				$this->db->bindValue(':id_group', $id_group);
-				$this->db->bindValue(':title', $title);
-				$this->db->execute();
+				$this->adapter->bindValue(':id_group', $id_group);
+				$this->adapter->bindValue(':title', $title);
+				$this->adapter->execute();
 			}
 
 			// End end or transaction
-			$this->db->endTransaction();
+			$this->adapter->endTransaction();
 		}
 		catch (\PDOException $e) {
-			$this->db->cancelTransaction();
+			$this->adapter->cancelTransaction();
 			Throw new \PDOException($e->getMessage(), $e->getCode(), $e->getPrevious());
 		}
 	}
@@ -128,27 +128,27 @@ class Group
 	{
 		try {
 
-			$this->db->beginTransaction();
+			$this->adapter->beginTransaction();
 
 			// Delete usergroup
-			$this->db->query('DELETE FROM {db_prefix}groups WHERE id_group = :id_group');
-			$this->db->bindValue(':id_group', $id_group);
-			$this->db->execute();
+			$this->adapter->query('DELETE FROM {db_prefix}groups WHERE id_group = :id_group');
+			$this->adapter->bindValue(':id_group', $id_group);
+			$this->adapter->execute();
 
 			// Delete permissions related to this group
-			$this->db->query('DELETE FROM {db_prefix}permissions WHERE id_group = :id_group');
-			$this->db->bindValue(':id_group', $id_group);
-			$this->db->execute();
+			$this->adapter->query('DELETE FROM {db_prefix}permissions WHERE id_group = :id_group');
+			$this->adapter->bindValue(':id_group', $id_group);
+			$this->adapter->execute();
 
 			// Remove group from current grouplist
 			unset($this->groups[$id_group]);
 
-			$this->db->endTransaction();
+			$this->adapter->endTransaction();
 
 		}
 		catch (\PDOException $e)
 		{
-			$this->db->cancelTransaction();
+			$this->adapter->cancelTransaction();
 
 			Throw new \PDOException($e->getMessage(), $e->getCode(), $e->getPrevious());
 		}

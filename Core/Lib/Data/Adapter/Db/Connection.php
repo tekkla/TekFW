@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Data\Db;
+namespace Core\Lib\Data\Adapter\Db;
 
 /**
  *
@@ -62,7 +62,7 @@ class Connection
 	 *
 	 * @var \PDO
 	 */
-	private $dbh;
+	private $dbh = null;
 
 	function __construct($db, $driver = 'mysql', $host = 'localhost', $port = 3306, $user = '', $password = '', $options = [])
 	{
@@ -82,9 +82,10 @@ class Connection
 	 */
 	public function connect()
 	{
-		$dsn = $this->driver . ':host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->db;
-
-		$this->dbh = new \PDO($dsn, $this->user, $this->password, $this->options);
+		if ($this->dbh === null) {
+			$dsn = $this->driver . ':host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->db;
+			$this->dbh = new \PDO($dsn, $this->user, $this->password, $this->options);
+		}
 
 		return $this->dbh;
 	}
@@ -97,6 +98,7 @@ class Connection
 	public function disconnect()
 	{
 		$this->dbh = null;
+
 		return true;
 	}
 
@@ -136,6 +138,8 @@ class Connection
 	 */
 	public function setDriver($driver)
 	{
+		$this->checkActiveConnection();
+
 		if (!in_array($driver, \PDO::getAvailableDrivers())) {
 			throw new \InvalidArgumentException('The PDO driver "' . $driver . '" is not installed.');
 		}
@@ -160,6 +164,8 @@ class Connection
 	 */
 	public function setHost($host)
 	{
+		$this->checkActiveConnection();
+
 		$this->host = $host;
 	}
 
@@ -179,6 +185,8 @@ class Connection
 	 */
 	public function setPort($port)
 	{
+		$this->checkActiveConnection();
+
 		$this->port = $port;
 	}
 
@@ -197,6 +205,8 @@ class Connection
 	 */
 	public function setUser($user)
 	{
+		$this->checkActiveConnection();
+
 		$this->user = $user;
 	}
 
@@ -215,6 +225,8 @@ class Connection
 	 */
 	public function setPassword($password)
 	{
+		$this->checkActiveConnection();
+
 		$this->password = $password;
 	}
 
@@ -228,12 +240,22 @@ class Connection
 	}
 
 	/**
+	 * Sets connection options
 	 *
 	 * @param array $options
 	 */
 	public function setOptions(array $options)
 	{
+		$this->checkActiveConnection();
+
 		$this->options = $options;
+	}
+
+	private function checkActiveConnection()
+	{
+		if ($this->dbh !== null) {
+			Throw new \RuntimeException('You cannot change databse connection properties while the connection is active.');
+		}
 	}
 }
 

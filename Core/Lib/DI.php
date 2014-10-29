@@ -47,12 +47,34 @@ class DI implements \ArrayAccess
 			// Replace text arguments with objects
 			foreach ($arguments as $key => $arg) {
 
+				if (is_array($arg)) {
+
+					$options = [];
+
+					foreach ($arg as $arr_arg) {
+
+						list($arg_key, $di_service) = explode('::', $arr_arg);
+
+						if (strpos($di_service, '.') === false) {
+							continue;
+						}
+
+						$options[$arg_key] = $this->get($di_service);
+					}
+
+					$arguments[$key] = $options;
+
+					continue;
+				}
+
+
 				// Skip strings without di container typical dot
 				if (($arg instanceof App) || strpos($arg, '.') === false) {
 					continue;
 				}
 
-				$arguments[$key] = $this[$arg];
+				$arguments[$key] = $this->get($arg);
+
 			}
 
 			$obj = $reflection->newInstanceArgs($arguments);

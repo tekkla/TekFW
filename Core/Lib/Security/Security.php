@@ -4,12 +4,14 @@ namespace Core\Lib\Security;
 use Core\Lib\Cfg;
 use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
 
 /**
- * Class: Security
+ * Security
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * For login and permission handling
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
  * @package TekFW
@@ -49,9 +51,9 @@ class Security
 
 	/**
 	 *
-	 * @var Database
+	 * @var DataAdapter
 	 */
-	private $db;
+	private $adapter;
 
 	/**
 	 *
@@ -92,7 +94,7 @@ class Security
 	/**
 	 */
 	public function __construct(
-		Database $db,
+		DataAdapter $adapter,
 		Cfg $cfg,
 		Session $session,
 		Cookie $cookie,
@@ -101,7 +103,7 @@ class Security
 		Permission $permission
 	)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 		$this->cfg = $cfg;
 		$this->session = $session;
 		$this->cookie = $cookie;
@@ -225,11 +227,11 @@ class Security
 		}
 
 		// Try to load user from db
-		$this->db->query('SELECT id_user, password FROM {db_prefix}users WHERE username = :username LIMIT 1');
-		$this->db->bindValue(':username', $username);
-		$this->db->execute();
+		$this->adapter->query('SELECT id_user, password FROM {db_prefix}users WHERE username = :username LIMIT 1');
+		$this->adapter->bindValue(':username', $username);
+		$this->adapter->execute();
 
-		$login = $this->db->single(\PDO::FETCH_NUM);
+		$login = $this->adapter->single(\PDO::FETCH_NUM);
 
 		// No user found => login failed
 		if (! $login) {
@@ -240,10 +242,10 @@ class Security
 		if (password_verify($password . $this->pepper, $login[1])) {
 			// Needs hash to be updated?
 			if (password_needs_rehash($login[1], PASSWORD_DEFAULT)) {
-				$this->db->query('UPDATE {db_prefix}users SET password = :hash WHERE id_user = :id_user');
-				$this->db->bindValue(':hash', password_hash($password . $this->pepper, PASSWORD_DEFAULT));
-				$this->db->bindValue(':id_user', $login[0]);
-				$this->db->execute();
+				$this->adapter->query('UPDATE {db_prefix}users SET password = :hash WHERE id_user = :id_user');
+				$this->adapter->bindValue(':hash', password_hash($password . $this->pepper, PASSWORD_DEFAULT));
+				$this->adapter->bindValue(':id_user', $login[0]);
+				$this->adapter->execute();
 			}
 
 			// Store essential userdata in session
@@ -257,8 +259,11 @@ class Security
 
 			// Login is ok, return user id
 			return $login[0];
+
 		} else {
+
 			return false;
+
 		}
 	}
 

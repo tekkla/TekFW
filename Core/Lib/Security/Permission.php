@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\DataAdapter;
 
 /**
  *
@@ -19,13 +19,13 @@ class Permission
 
 	/**
 	 *
-	 * @var Database
+	 * @var DataAdapter
 	 */
-	private $db;
+	private $adapter;
 
-	public function __construct(Database $db)
+	public function __construct(DataAdapter $adapter)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 	}
 
 	/**
@@ -81,17 +81,17 @@ class Permission
 		}
 
 		// Create a prepared string and param array to use in query
-		$prepared = $this->db->prepareArrayQuery('group', $groups);
+		$prepared = $this->adapter->prepareArrayQuery('group', $groups);
 
 		// Get and return the permissions
-		$this->db->query('SELECT DISTINCT permission FROM {db_prefix}permissions WHERE id_group IN (' . $prepared['sql'] . ')');
+		$this->adapter->query('SELECT DISTINCT permission FROM {db_prefix}permissions WHERE id_group IN (' . $prepared['sql'] . ')');
 
 		foreach ($prepared['values'] as $param => $value) {
-			$this->db->bindValue($param, $value);
+			$this->adapter->bindValue($param, $value);
 		}
 
-		$this->db->execute();
+		$this->adapter->execute();
 
-		return $this->db->column();
+		return $this->adapter->column();
 	}
 }
