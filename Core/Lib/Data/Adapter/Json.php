@@ -4,10 +4,8 @@ namespace Core\Lib\Data\Adapter;
 /**
  *
  * @author Michael
- *        
+ *
  */
-class Json
+class Json extends AdapterAbstract
 {
 }
-
-?>

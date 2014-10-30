@@ -2,6 +2,8 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Abstracts\MvcAbstract;
+use Core\Lib\Data\Adapter\Db\Connection;
+use Core\Lib\Data\DataAdapter;
 
 /**
  * ORM like class to read from and write data to db
@@ -14,8 +16,8 @@ use Core\Lib\Abstracts\MvcAbstract;
  */
 class Model extends MvcAbstract
 {
-	use \Core\Lib\Traits\SerializeTrait, \Core\Lib\Traits\ArrayTrait, \Core\Lib\Traits\ConvertTrait {
-		\Core\Lib\Traits\SerializeTrait::isSerialized insteadof \Core\Lib\Traits\ConvertTrait;
+	use \Core\Lib\Traits\SerializeTrait,\Core\Lib\Traits\ArrayTrait,\Core\Lib\Traits\ConvertTrait {
+\Core\Lib\Traits\SerializeTrait::isSerialized insteadof\Core\Lib\Traits\ConvertTrait;
 	}
 
 	/**
@@ -48,7 +50,6 @@ class Model extends MvcAbstract
 	{
 		return $this->app->cfg($key, $val);
 	}
-
 
 	/**
 	 * Add an error to the models errorlist.
@@ -157,9 +158,46 @@ class Model extends MvcAbstract
 	 *
 	 * @return string
 	 */
-	protected function debugSql($sql, $param)
+	protected function debugSql($sql, $params)
 	{
-		return $this->db->debugSql($sql, $param);
+		return $this->db->debugSql($sql, $params);
 	}
 
+	/**
+	 * Creates a database Dataadapter object
+	 *
+	 * Uses default db DataAdapter when no Connection object is set.
+	 *
+	 * @param Connection $conn Optional Connection object
+	 * @param string $prefix Optional table prefix.
+	 * @param array $fields Optional field definition list to be used as container scheme
+	 *
+	 * @return \Core\Lib\Data\DataAdapter
+	 */
+	protected final function getDbAdapter(Connection $conn = null, $prefix = '', array $fields = [])
+	{
+		if ($conn === null) {
+			$adapter = $this->di->get('db.default');
+
+			if ($prefix) {
+				$adapter->setPrefix($prefix);
+			}
+		} else {
+
+			if (! $prefix) {
+				$prefix = $this->di->get('db.default.prefix');
+			}
+
+			$adapter = new DataAdapter('db', [
+				'conn' => $conn,
+				'prefix' => $prefix
+			]);
+		}
+
+		if ($fields) {
+			$adapter->createContainer($fields);
+		}
+
+		return $adapter;
+	}
 }

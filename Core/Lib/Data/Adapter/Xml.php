@@ -4,10 +4,8 @@ namespace Core\Lib\Data\Adapter;
 /**
  *
  * @author Michael
- *        
+ *
  */
-class Xml
+class Xml extends AdapterAbstract
 {
 }
-
-?>

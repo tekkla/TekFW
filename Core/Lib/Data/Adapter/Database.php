@@ -3,6 +3,8 @@ namespace Core\Lib\Data\Adapter;
 
 use Core\Lib\Data\Adapter\AdapterAbstract;
 use Core\Lib\Data\Adapter\Db\Connection;
+use Core\Lib\Amvc\Model;
+use Core\Lib\Data\Adapter\Db\QueryBuilder;
 
 /**
  *
@@ -132,6 +134,11 @@ class Database extends AdapterAbstract
 		return $this->prefix;
 	}
 
+	public function setPrefix($prefix)
+	{
+		$this->prefix = $prefix;
+	}
+
 	/**
 	 * Converts as string => type to smf db type.
 	 *
@@ -185,7 +192,22 @@ class Database extends AdapterAbstract
 	 */
 	public function query($sql)
 	{
+		if (is_array($sql)) {
+			$builder = new QueryBuilder($sql);
+			$sql = $builder->build();
+
+			// Params?
+			$params = $builder->getParams();
+		}
+
 		$this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $sql));
+
+		if (isset($params)) {
+
+			foreach ($params as $parameter => $value) {
+				$this->stmt->bindValue($parameter, $value);
+			}
+		}
 
 		return $this->stmt;
 	}
@@ -277,6 +299,7 @@ class Database extends AdapterAbstract
 		return $this->all($fetch_mode = \PDO::FETCH_ASSOC);
 	}
 
+
 	/**
 	 * Returns all queried data.
 	 *
@@ -286,11 +309,9 @@ class Database extends AdapterAbstract
 	 */
 	public function all($fetch_mode = \PDO::FETCH_ASSOC)
 	{
-		$data = $this->stmt->fetchAll($fetch_mode);
+		$this->stmt->execute();
 
-		#$this->adapter->setDataset($data);
-
-		return $data;
+		return $this->adapter->setDataset($this->stmt->fetchAll($fetch_mode))->getData();
 	}
 
 	/**
@@ -302,11 +323,9 @@ class Database extends AdapterAbstract
 	 */
 	public function single($fetch_mode = \PDO::FETCH_ASSOC)
 	{
-		$data = $this->stmt->fetch($fetch_mode);
+		$this->stmt->execute();
 
-		#$this->adapter->setData($data);
-
-		return $data;
+		return $this->adapter->setData($this->stmt->fetch($fetch_mode))->getData();
 	}
 
 	/**
@@ -318,11 +337,9 @@ class Database extends AdapterAbstract
 	 */
 	public function column($column = 0)
 	{
-		$data = $this->stmt->fetchAll(\PDO::FETCH_COLUMN, $column);
+		$this->stmt->execute();
 
-		#$this->adapter->setData($data);
-
-		return $data;
+		return $this->stmt->fetchAll(\PDO::FETCH_COLUMN, $column);
 	}
 
 	/**
@@ -332,11 +349,9 @@ class Database extends AdapterAbstract
 	 */
 	public function value()
 	{
-		$data = $this->stmt->fetchColumn();
+		$this->stmt->execute();
 
-		#$this->adapter->setData($data);
-
-		return $data;
+		return $this->stmt->fetchColumn();
 	}
 
 	/**
@@ -346,6 +361,8 @@ class Database extends AdapterAbstract
 	 */
 	public function rowCount()
 	{
+		$this->stmt->execute();
+
 		return $this->stmt->rowCount();
 	}
 
@@ -356,6 +373,8 @@ class Database extends AdapterAbstract
 	 */
 	public function columnCount()
 	{
+		$this->stmt->execute();
+
 		return $this->stmt->columnCount();
 	}
 
@@ -366,7 +385,9 @@ class Database extends AdapterAbstract
 	 */
 	public function lastInsertId()
 	{
-		return $this->dbh->lastInsertId();
+		$this->stmt->execute();
+
+		return $this->adapter->setData($this->dbh->lastInsertId())->getData();
 	}
 
 	/**
@@ -481,13 +502,13 @@ class Database extends AdapterAbstract
 	 *
 	 * @return array
 	 */
-	public function prepareArrayQuery($param, $values = [])
+	public function prepareArrayQuery($params, $values = [])
 	{
 		$params_names = [];
 		$params_val = [];
 
 		foreach ($values as $key => $val) {
-			$name = ':' . $param . $key;
+			$name = ':' . $params . $key;
 			$params_name[] = $name;
 			$params_val[$name] = $val;
 		}
@@ -503,13 +524,13 @@ class Database extends AdapterAbstract
 	 *
 	 * @return string
 	 */
-	public function debugSql($sql, $param=[])
+	public function debugSql($sql, $params=[])
 	{
-		if ($param) {
+		if ($params) {
 
-			$indexed = $param == array_values($param);
+			$indexed = $params == array_values($params);
 
-			foreach ($param as $k => $v) {
+			foreach ($params as $k => $v) {
 
 				if (is_object($v)) {
 

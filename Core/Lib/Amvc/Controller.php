@@ -71,7 +71,7 @@ class Controller extends MvcAbstract
 	 *
 	 * @var Data
 	 */
-	private $param = [];
+	private $params = [];
 
 	/**
 	 * Stores the controller bound Model object.
@@ -191,13 +191,13 @@ class Controller extends MvcAbstract
 	 * wanted result.
 	 *
 	 * @param string $action Optional action to run
-	 * @param string $param Parameter to use
+	 * @param string $params Parameter to use
 	 *
 	 * @return boolean bool|string
 	 *
 	 * @todo Controller access is deactivated
 	 */
-	final public function run($action, $param = [])
+	final public function run($action, $params = [])
 	{
 		$this->action = $action;
 
@@ -211,8 +211,8 @@ class Controller extends MvcAbstract
 		}
 
 		// Try to autodiscover params on empty param args
-		if (! empty($param)) {
-			$this->param = $param;
+		if (! empty($params)) {
+			$this->params = $params;
 		}
 
 		// Init return var with boolean false as default value. This default
@@ -224,7 +224,7 @@ class Controller extends MvcAbstract
 		$this->runEvent('before');
 
 		// a little bit of reflection magic to pass request param into controller func
-		$return = $this->di->invokeMethod($this, $this->action, $this->param);
+		$return = $this->di->invokeMethod($this, $this->action, $this->params);
 
 		// run possible after event handler
 		$this->runEvent('after');
@@ -244,7 +244,7 @@ class Controller extends MvcAbstract
 
 			// Render into own outputbuffer
 			ob_start();
-			$this->view->render($this->action, $this->param);
+			$this->view->render($this->action, $this->params);
 			$content = ob_get_clean();
 
 			// Run possible onEmpty event of app on no render result
@@ -263,11 +263,11 @@ class Controller extends MvcAbstract
 	 * command can be controlled by setting the wanted parameters via $this->ajax->...
 	 *
 	 * @param string $action Name of the action to call
-	 * @param array $param Array of parameter to be used in action call
+	 * @param array $params Array of parameter to be used in action call
 	 * @param string $selector Optional jQuery selector to html() the result.
 	 *        Can be overridden by setAjaxTarget() method
 	 */
-	final public function ajax($action = 'Index', $param = [], $selector = '')
+	final public function ajax($action = 'Index', $params = [], $selector = '')
 	{
 		$this->is_ajax = true;
 
@@ -277,7 +277,7 @@ class Controller extends MvcAbstract
 			$this->ajax->setSelector($selector);
 		}
 
-		$content = $this->run($action, $param);
+		$content = $this->run($action, $params);
 
 		if ($content) {
 			$this->ajax->setArgs($content);
@@ -295,13 +295,13 @@ class Controller extends MvcAbstract
 	 * @param string $action
 	 * @param array $param
 	 */
-	final protected function redirect($action, $param = [])
+	final protected function redirect($action, $params = [])
 	{
 		// Clean data
 		$this->cleanUp();
 
 		// Run redirect method
-		return $this->run($action, $param);
+		return $this->run($action, $params);
 	}
 
 	/**
@@ -504,7 +504,7 @@ class Controller extends MvcAbstract
 			$form->attachModel($this->model);
 		}
 
-		$form->setAction($this->router->url($this->router->getCurrentRoute(), $this->param));
+		$form->setAction($this->router->url($this->router->getCurrentRoute(), $this->params));
 
 		return $form;
 	}
@@ -539,12 +539,12 @@ class Controller extends MvcAbstract
 	 * Useful when redirecting to other controller action
 	 * which need additional parameters to function.
 	 *
-	 * @param string $param Paramertername
+	 * @param string $params Paramertername
 	 * @param mixed $value Parametervalue
 	 */
 	final protected function addParam($param, $value)
 	{
-		$this->param[$param] = $value;
+		$this->params[$param] = $value;
 		return $this;
 	}
 

@@ -50,7 +50,7 @@ final class Validator
      *
      * @var unknown
      */
-    private $param = array();
+    private $params = array();
 
     /**
      * Possible rule message
@@ -181,18 +181,18 @@ final class Validator
 
                     // Parameters set?
                     if (isset($rule[1]))
-                        $this->param = ! is_array($rule[1]) ? array(
+                        $this->params = ! is_array($rule[1]) ? array(
                             $rule[1]
                         ) : $rule[1];
                     else
-                        $this->param = array();
+                        $this->params = array();
 
                         // Custom error message
                     if (isset($rule[2]))
                         $this->msg = $rule[2];
                 } else {
                     $this->func = $rule;
-                    $this->param = array();
+                    $this->params = array();
                     unset($this->msg);
                 }
 
@@ -200,7 +200,7 @@ final class Validator
                 call_user_func_array(array(
                     $this,
                     $this->functions[$this->func]
-                ), $this->param);
+                ), $this->params);
 
                 // Current rules message overwrites maybe set error values
                 if (isset($this->msg))

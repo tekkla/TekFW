@@ -173,24 +173,42 @@ class User
 
 		$this->id_user = $id_user;
 
-		$this->adapter->query('SELECT username, password, display_name, groups FROM {db_prefix}users WHERE id_user=:id_user');
-		$this->adapter->bindValue(':id_user', $id_user);
+		$adapter = $this->di->get('db.default');
 
-		if ($this->adapter->execute()) {
+		$adapter->query([
+			'tbl' => 'users',
+			'field' => [
+				'username',
+				'password',
+				'display_name',
+			],
+			'filter' => 'id_user=:id_user',
+			'params' => [
+				':id_user' => $id_user
+			]
+		]);
 
-			$row = $this->adapter->single();
+		$data = $adapter->single();
 
-			$this->username = $row['username'];
-			$this->display_name = $row['display_name'];
-			$this->password = $row['password'];
+		if ($data) {
+
+			$this->username = $data['username'];
+			$this->display_name = $data['display_name'];
+			$this->password = $data['password'];
 
 			// Load groups the user is in
-			$this->adapter->query('SELECT id_group FROM {db_prefix}users_groups WHERE id_user=:id_user');
-			$this->adapter->bindValue(':id_user', $id_user);
+			$adapter = $this->di->get('db.default');
 
-			if ($this->adapter->execute()) {
-				$this->groups = $this->adapter->column();
-			}
+			$adapter->query([
+				'tbl' => 'users_groups',
+				'fields' => 'id_group',
+				'filter' => 'id_user=:id_user',
+				'params' => [
+					':id_user' => $id_user
+				]
+			]);
+
+			$this->groups = $adapter->column();
 
 			// Load user permissions based on groups of the user
 			$this->perms = $this->permission->loadPermission($this->groups);

@@ -143,16 +143,16 @@ class DI implements \ArrayAccess
 	 *
 	 * @param $obj Object to call parameter injected method
 	 * @param $method Name of method to call
-	 * @param $param (Optional) Array of parameters to inject into method
+	 * @param $params (Optional) Array of parameters to inject into method
 	 *
 	 * @throws MethodNotExistsError
 	 * @throws ParameterNotSetError
 	 *
 	 * @return object
 	 */
-	public function invokeMethod(&$obj, $method, $param = [])
+	public function invokeMethod(&$obj, $method, array $params = [])
 	{
-		if (! is_array($param)) {
+		if (! is_array($params)) {
 			Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
 		}
 
@@ -177,12 +177,12 @@ class DI implements \ArrayAccess
 			$param_name = $parameter->getName();
 
 			// Parameter is not optional and not set => throw error
-			if (! $parameter->isOptional() && ! isset($param[$param_name])) {
+			if (! $parameter->isOptional() && ! isset($params[$param_name])) {
 				Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
 			}
 
 			// If parameter is optional and not set, set argument to null
-			$args[] = $parameter->isOptional() && ! isset($param[$param_name]) ? null : $param[$param_name];
+			$args[] = $parameter->isOptional() && ! isset($params[$param_name]) ? null : $params[$param_name];
 		}
 
 		// Return result executed method

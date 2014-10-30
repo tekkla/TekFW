@@ -21,7 +21,7 @@ class Functions
 	{
 		$this->query($sql);
 
-		foreach ($params as $param => &$val) {
+		foreach ($params as $params => &$val) {
 			$bind_func = $param_mode == 1 ? 'bindParam' : 'bindValue';
 			$this->{$bind_func} = [
 				$param,

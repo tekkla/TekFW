@@ -20,7 +20,4 @@ abstract class AdapterAbstract
 	{
 		$this->adapter = $adapter;
 	}
-
 }
-
-?>

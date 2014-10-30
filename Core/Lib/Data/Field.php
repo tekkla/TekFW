@@ -13,6 +13,8 @@ class Field
 
 	private $type;
 
+	private $size;
+
 	private $primary = false;
 
 	private $value = null;
@@ -64,6 +66,33 @@ class Field
 
 		return $this;
 	}
+
+	/**
+	 *
+	 * @return the unknown_type
+	 */
+	public function getSize()
+	{
+		return $this->size;
+	}
+
+	/**
+	 *
+	 * @param unknown_type $size
+	 */
+	public function setSize($size)
+	{
+		$this->size = $size;
+
+		$this->validate[] = [
+			'max',
+			$size
+		];
+
+		return $this;
+	}
+
+
 
 	/**
 	 *
@@ -143,6 +172,20 @@ class Field
 		$this->serialize = $serialize;
 
 		return $this;
+	}
+
+	public function count() {
+		if (is_string($this->value)) {
+			return strlen($this->value);
+		}
+
+		if (is_numeric($this->value)) {
+			return $this->value;
+		}
+
+		if (is_array($this->value)) {
+			return count($this->value);
+		}
 	}
 
 

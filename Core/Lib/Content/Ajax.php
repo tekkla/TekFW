@@ -145,11 +145,11 @@ final class Ajax
      * @param $action
      * @param $target
      */
-    public function fnCall($app_name, $controller, $action, $target = '', $param = array())
+    public function fnCall($app_name, $controller, $action, $target = '', $params = array())
     {
         self::command([
             'selector' => $target,
-            'args' => App::create($app_name)->getController($controller)->run($action, $param)
+            'args' => App::create($app_name)->getController($controller)->run($action, $params)
         ]);
     }
 

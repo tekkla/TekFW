@@ -8,8 +8,9 @@ use Core\Lib\Data\Validator\Validator;
  * @author Michael
  *
  */
-class Container implements \IteratorAggregate
+class Container implements \IteratorAggregate, \ArrayAccess
 {
+
 	private $fields = [];
 
 	private $errors = [];
@@ -23,18 +24,39 @@ class Container implements \IteratorAggregate
 	 */
 	public function __construct(array $fields = [])
 	{
-		foreach ($fields as $field) {
-
-			if (! isset($field['name'])) {
-				Throw new \RuntimeException('DataContainer fields do need a name. Check your field definition.');
-			}
+		foreach ($fields as $name => $field) {
 
 			if (! isset($field['type'])) {
-				Throw new \RuntimeException('DataContainer fields do need a datatype. Check your field definition.');
+				$field['type'] = 'string';
 			}
 
-			$this->createField($field['name'], $field['type'], isset($field['primary']) ? (bool) $field['primary'] : false, isset($field['serialize']) ? (bool) $field['serialize'] : false, isset($field['validate']) ? $field['validate'] : []);
+			$field['primary'] = isset($field['primary']) ? true : false;
+			$field['serialize'] = isset($field['serialize']) ? true : false;
+			$field['validate'] = isset($field['validate']) ? $field['validate'] : [];
+
+			// Attach always an empty validation rule to primary fields
+			if ($field['primary'] && ! in_array('empty', $field['validate'])) {
+				$field['validate'][] = 'empty';
+			}
+
+			if (! isset($field['size'])) {
+				$field['size'] = null;
+			}
+
+			$this->createField($name, $field['type'], $field['primary'], $field['size'], $field['serialize'], $field['validate']);
 		}
+	}
+
+	/**
+	 * Access on field value.
+	 *
+	 * @param string $name Name of field
+	 *
+	 * @return mixed
+	 */
+	public function __get($name)
+	{
+		return $this->fields[$name]->getValue();
 	}
 
 	/**
@@ -58,11 +80,16 @@ class Container implements \IteratorAggregate
 	 *
 	 * @return \Core\Lib\Data\Container
 	 */
-	public function createField($name, $type, $primary = false, $serialize = false, $validate = [])
+	public function createField($name, $type, $size = null, $primary = false, $serialize = false, $validate = [])
 	{
 		$data_field = new Field();
 		$data_field->setName($name);
 		$data_field->setType($type);
+
+		if ($size !== null) {
+			$data_field->setSize($size);
+		}
+
 		$data_field->setPrimary($primary);
 		$data_field->setSerialize($serialize);
 		$data_field->setValidate($validate);
@@ -159,13 +186,17 @@ class Container implements \IteratorAggregate
 					$value = unserialize($value);
 				}
 
-				if (! is_object($value) && !is_array($value) && !is_null($value)) {
+				if (! $value instanceof Container && ! is_object($value) && ! is_array($value) && ! is_null($value)) {
 					settype($value, $this->fields[$name]->getType());
 				}
 
-				$this->fields[$name]->setValue($value);
+				if (is_array($value)) {
+					$this->fields[$name]->setType('array');
+				}
 
-			} else {
+				$this->fields[$name]->setValue($value);
+			}
+			else {
 				Throw new \RuntimeException('Cannot fill data into container. Field "' . $name . '" does not exist in container.');
 			}
 		}
@@ -181,5 +212,36 @@ class Container implements \IteratorAggregate
 	public function get()
 	{
 		$this->fields();
+	}
+
+	public function offsetSet($offset, $value)
+	{
+		if (is_null($offset)) {
+			Throw new \InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
+		}
+
+		if (! $value instanceof Field) {
+
+			var_dump($value);
+
+			Throw new \InvalidArgumentException('Only Field objects can be added to a container.');
+		}
+
+		$this->fields[$offset] = $value;
+	}
+
+	public function offsetExists($offset)
+	{
+		return isset($this->fields[$offset]);
+	}
+
+	public function offsetUnset($offset)
+	{
+		unset($this->fields[$offset]);
+	}
+
+	public function offsetGet($offset)
+	{
+		return isset($this->fields[$offset]) ? $this->fields[$offset]->getValue() : null;
 	}
 }

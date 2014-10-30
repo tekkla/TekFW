@@ -26,7 +26,7 @@ class Url
 	 *
 	 * @var array
 	 */
-	private $param = [];
+	private $params = [];
 
 	/**
 	 * App name
@@ -85,15 +85,15 @@ class Url
 	 * Factory method which returns an url string based on a compiled named route
 	 *
 	 * @param string $named_route Optional name of route to compile
-	 * @param array $param Optional parameters to use on route
+	 * @param array $params Optional parameters to use on route
 	 *
 	 * @return string
 	 */
-	public function compile($named_route, $param = array())
+	public function compile($named_route, $params = array())
 	{
 		$url = new self($this->di['core.http.router']);
 		$url->setNamedRoute($named_route);
-		$url->setParameter($param);
+		$url->setParameter($params);
 
 		return $url->getUrl();
 	}
@@ -186,7 +186,7 @@ class Url
 	function setParameter($arg1, $arg2 = null, $reset = false)
 	{
 		if ($reset === true)
-			$this->param = [];
+			$this->params = [];
 
 		if ($arg2 === null && is_array($arg1) && ! empty($arg1)) {
 			foreach ($arg1 as $key => $val)
@@ -238,7 +238,7 @@ class Url
 
 		// if action isset, we have a smf url to build
 		if (isset($this->named_route))
-			return $this->router->url($this->named_route, $this->param);
+			return $this->router->url($this->named_route, $this->params);
 
 		return false;
 	}

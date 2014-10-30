@@ -47,13 +47,13 @@ class DataSelect extends Select
      * @param string $datatype How to use the modeldata in the select options (value and inner value)
      * @return \Core\Lib\Content\Html\Controls\DataSelect
      */
-    public function setDataSource($app_name, $model, $func, $param = array(), $datatype = 'assoc')
+    public function setDataSource($app_name, $model, $func, $params = array(), $datatype = 'assoc')
     {
         // Create model object
         $model = $this->di['core.amvc.creator']->create($app_name)->getModel($model);
         
         // Get data from model and use is as datasource
-        $this->datasource = $this->di->invokeMethod($model, $func, $param);
+        $this->datasource = $this->di->invokeMethod($model, $func, $params);
         
         // Set the dataype
         $this->datatype = $datatype;
