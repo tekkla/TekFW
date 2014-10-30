@@ -20,6 +20,8 @@ class QueryBuilder
 
 	private $fields = [];
 
+	private $values = [];
+
 	private $join = [];
 
 	private $filter = '';
@@ -31,6 +33,8 @@ class QueryBuilder
 	private $group_by = '';
 
 	private $having = '';
+
+	private $sql ='';
 
 	/**
 	 *
@@ -199,12 +203,29 @@ class QueryBuilder
 	 */
 	public function build()
 	{
-		$params = [];
 
 		$join = '';
 		$filter = '';
 		$order = '';
 		$limit = '';
+
+		switch (true) {
+			case stripos($this->method, 'update'):
+				$method = 'update';
+				break;
+
+			case stripos($this->method, ' into'):
+				$method = 'insert';
+				break;
+
+			case stripos($this->method, 'delete'):
+				$method = 'delete';
+				break;
+
+			default:
+				$method = 'select';
+				break;
+		}
 
 		// Create the fieldprefix. If given as alias use this, otherwise we use the tablename
 		$field_prefifx = $this->alias ? $this->alias : '{db_prefix}' . $this->tbl;
@@ -222,6 +243,11 @@ class QueryBuilder
 
 		// Create fieldlist
 		if ($this->fields) {
+
+			if (!is_array($this->fields)) {
+				$this->fields = (array) $this->fields;
+			}
+
 
 			// Add `` to some field names as reaction to those stupid developers who chose systemnames as fieldnames
 			foreach ($this->fields as $key_field => $field) {
@@ -247,6 +273,10 @@ class QueryBuilder
 		}
 		else {
 			$fieldlist = ($this->alias ? $this->alias : $this->tbl) . '.*';
+		}
+
+		if ($this->values) {
+			$values = implode(', ', $this->values);
 		}
 
 		// Create filterstatement
@@ -278,8 +308,34 @@ class QueryBuilder
 		// We need a string for the table. if there is an alias, we have to set it
 		$tbl = $this->alias ? $this->tbl . ' AS ' . $this->alias : $this->tbl;
 
-		// Create sql statement by joining all parts from above
-		$this->sql = $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $tbl . $join . $filter . $group_by . $having . $order . $limit;
+		switch ($method) {
+			case 'update':
+
+				// we have to build our own fieldlist
+				$fields = [];
+
+				foreach ($this->fields as $field) {
+					$fields[] = $field .'=:' . $field;
+				}
+
+				$fieldlist = implode(',', $fields);
+
+				$this->sql = $this->method . ' {db_prefix}' . $tbl . ' SET ' . $fieldlist . $filter;
+				break;
+
+			case 'insert':
+				$fieldlist = !$fieldlist || $fieldlist == '*' ? '' : ' (' . $fieldlist . ')';
+				$this->sql = $this->method . ' {db_prefix}' . $tbl . $fieldlist . ' VALUES (' . $values . ')';
+				break;
+
+			case 'delete':
+				$this->sql = 'DELETE FROM {db_prefix}' . $tbl . $filter . $order . $limit;
+				break;
+
+			default:
+				$this->sql = $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $tbl . $join . $filter . $group_by . $having . $order . $limit;
+				break;
+		}
 
 		return $this->sql;
 	}
@@ -305,7 +361,11 @@ class QueryBuilder
 			$this->fields = is_array($def['field']) ? $def['field'] : (array) $def['field'];
 		}
 		else {
-			$this->fields = (array) '*';
+			$this->fields = '*';
+		}
+
+		if(isset($def['values'])) {
+			$this->values = $def['values'];
 		}
 
 		// Set filter

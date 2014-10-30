@@ -21,7 +21,7 @@ class Functions
 	{
 		$this->query($sql);
 
-		foreach ($params as $params => &$val) {
+		foreach ($params as $param => &$val) {
 			$bind_func = $param_mode == 1 ? 'bindParam' : 'bindValue';
 			$this->{$bind_func} = [
 				$param,
@@ -73,7 +73,7 @@ class Functions
 	{
 		$stmt = $this->query($sql, $params);
 
-		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) != false ) {
 
 			$record = (object) $row;
 
@@ -186,7 +186,7 @@ class Functions
 
 		$data = [];
 
-		while ($row = $stmt->fetch(\PDO::FETCH_NUM)) {
+		while (($row = $stmt->fetch(\PDO::FETCH_NUM)) != false) {
 			$data[$row[0]] = $row[1];
 		}
 

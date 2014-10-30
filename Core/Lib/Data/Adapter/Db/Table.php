@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Data\Adapter\Db;
 
+use Core\Lib\Data\Adapter\Database;
+
 /**
  *
  * @author Michael

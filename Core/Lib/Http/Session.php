@@ -2,7 +2,6 @@
 namespace Core\Lib\Http;
 
 use Core\Lib\Data\DataAdapter;
-use Core\Lib\Data\Adapter\Db\Connection;
 
 /**
  * Basic class for session handling
@@ -126,13 +125,18 @@ final class Session
 	public function read($id_session)
 	{
 		// Set query
-		$this->adapter->query('SELECT data FROM {db_prefix}sessions WHERE id_session = :id_session');
+		$this->adapter->query([
+			'tbl' => 'sessions',
+			'field' => 'data',
+			'filter' => 'id_session = :id_session',
+			'params' => [
+				':id_session' => $id_session
+			]
+		]);
 
-		// Bind the Id
-		$this->adapter->bindValue(':id_session', $id_session);
+		$data = $this->adapter->single();
 
-		// Attempt execution - If successful return the data
-		return $this->adapter->execute() ? $this->adapter->single()['data'] : '';
+		return $data ? $data['data'] : '';
 	}
 
 	/**
@@ -144,12 +148,20 @@ final class Session
 		$access = time();
 
 		// Set query
-		$this->adapter->query('REPLACE INTO {db_prefix}sessions VALUES (:id_session, :access, :data)');
-
-		// Bind data
-		$this->adapter->bindValue(':id_session', $id_session);
-		$this->adapter->bindValue(':access', $access);
-		$this->adapter->bindValue(':data', $data);
+		$this->adapter->query([
+			'method' => 'REPLACE INTO',
+			'tbl' => 'sessions',
+			'values' => [
+				':id_session',
+				':access',
+				':data'
+			],
+			'params' => [
+				':id_session' => $id_session,
+				':access' => $access,
+				':data' => $data
+			]
+		]);
 
 		// Attempt Execution - If successful return true
 		return $this->adapter->execute() ? true : false;
@@ -161,10 +173,14 @@ final class Session
 	public function destroy($id_session)
 	{
 		// Set query
-		$this->adapter->query('DELETE FROM {db_prefix}sessions WHERE id_session = :id_session');
-
-		// Bind data
-		$this->adapter->bindValue(':id_session', $id_session);
+		$this->adapter->query([
+			'method' => 'DELETE',
+			'tbl' => 'sessions',
+			'filter' => 'id_session=:id_session',
+			'params' => [
+				'id_session' => $id_session
+			]
+		]);
 
 		// Attempt execution - If successful return True
 		return $this->adapter->execute() ? true : false;
@@ -179,10 +195,14 @@ final class Session
 		$old = time() - $max;
 
 		// Set query
-		$this->adapter->query('DELETE * FROM {db_prefix}sessions WHERE access < :old');
-
-		// Bind data
-		$this->adapter->bindValue(':old', $old);
+		$this->adapter->query([
+			'method' => 'DELETE',
+			'tbl' => 'sessions',
+			'filter' => 'access<:old',
+			'params' => [
+				':old' => $old
+			]
+		]);
 
 		// Attempt execution
 		return $this->adapter->execute() ? true : false;

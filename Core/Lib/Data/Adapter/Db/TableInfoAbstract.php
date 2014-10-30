@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Adapter\Db;
 
-use Core\Lib\Data\Db\Database;
+use Core\Lib\Data\Adapter\Database;
 
 /**
  *
@@ -17,7 +17,6 @@ abstract class TableInfoAbstract
 	 * @var Database
 	 */
 	protected $db;
-
 
 	/**
 	 * Columns list
