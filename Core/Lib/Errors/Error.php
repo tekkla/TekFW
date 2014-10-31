@@ -43,6 +43,12 @@ class Error
     private $error;
 
     /**
+     *
+     * @var \Exception
+     */
+    protected $exception;
+
+    /**
      * Constructor
      *
      * @param string $message
@@ -50,10 +56,12 @@ class Error
      * @param Error $previous
      * @param string $trace
      */
-    public function __construct()
+    public function __construct(\Exception $exception)
     {
+    	$this->exception = $exception;
+
         // Get error handler group code from sent $code parameter
-        $code = floor($code / 1000) * 1000;
+        $code = floor($exception->getCode() / 1000) * 1000;
 
         foreach ($this->codes as $error_code => $handler_name) {
             if ($error_code == $code)
@@ -62,7 +70,7 @@ class Error
 
         $handler_class = '\Core\Lib\Errors\\' . $handler_name . 'Error';
 
-        $this->error_handler = new $handler_class();
+        $this->error_handler = new $handler_class($this);
         $this->error_handlerprocess();
     }
 
@@ -88,7 +96,7 @@ class Error
      */
     public function getComplete($admin = true)
     {
-        $message = '<hTekFW error code: ' . $this->getCode() . '</h';
+        $message = '<h1>TekFW error code: ' . $this->getCode() . '</h1>';
 
         $message .= $this->getMessage();
 
