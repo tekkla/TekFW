@@ -19,7 +19,7 @@ class InvalidArgumentException extends \InvalidArgumentException
      *
      * => =>
      */
-    public function __construct($message, $code, $param = array(), $previous)
+    public function __construct($message, $code, $params = array(), $previous)
     {
         $message .= 
 
