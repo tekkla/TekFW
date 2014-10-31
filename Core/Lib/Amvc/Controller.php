@@ -1,7 +1,6 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Abstracts\MvcAbstract;
 use Core\Lib\Http\Router;
 use Core\Lib\Security\Security;
 use Core\Lib\Content\Message;

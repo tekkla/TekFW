@@ -1,27 +1,27 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Abstracts\MvcAbstract;
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\DataAdapter;
 
 /**
- * ORM like class to read from and write data to db
+ * Model class
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014  by author
  * @license MIT
- * @package TekFW
- * @subpackage Lib
+ * @version 1.0
  */
 class Model extends MvcAbstract
 {
-	use \Core\Lib\Traits\SerializeTrait,\Core\Lib\Traits\ArrayTrait,\Core\Lib\Traits\ConvertTrait {
-\Core\Lib\Traits\SerializeTrait::isSerialized insteadof\Core\Lib\Traits\ConvertTrait;
+	use \Core\Lib\Traits\SerializeTrait;
+	use \Core\Lib\Traits\ArrayTrait;
+	use \Core\Lib\Traits\ConvertTrait {
+		\Core\Lib\Traits\SerializeTrait::isSerialized insteadof \Core\Lib\Traits\ConvertTrait;
 	}
 
 	/**
-	 * Framwork component type
+	 * MVC component type
 	 *
 	 * @var string
 	 */
@@ -121,46 +121,6 @@ class Model extends MvcAbstract
 		}
 
 		return $this->app->getModel($model_name);
-	}
-
-	/**
-	 * Executes callbacks.
-	 * Takes care of callbacks defined in a different model of the same app.
-	 *
-	 * @param array $callbacks The name of callbacks to run
-	 * @param mixed $data Data to which will be processed by callback
-	 * @param bool $exit_on_false Optional flag to stop processing callbacks as soon as one callback methos return boolean false.
-	 * @return mixed Processed $data
-	 */
-	public final function runCallbacks($callbacks, $data, $exit_on_false = false)
-	{
-		foreach ($callbacks as $callback) {
-			// Callback method in a different model?
-			if (strpos($callback, '::') !== false) {
-				list ($model_name, $callback) = explode('::', $callback);
-				$model = $this->getModel($model_name);
-				$data = $model->{$callback}($data);
-			} else {
-				$data = $this->{$callback}($data);
-			}
-
-			// Stop processing as soon as return value of callback is boolean false.
-			if ($exit_on_false && $data === false) {
-				break;
-			}
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Returns interpolated sql string with parameters
-	 *
-	 * @return string
-	 */
-	protected function debugSql($sql, $params)
-	{
-		return $this->db->debugSql($sql, $params);
 	}
 
 	/**
