@@ -10,6 +10,6 @@ trait AccessTrait
 {
 	protected function checkAccess($perms = [], $force = false)
 	{
-		return $this->di['core.sec.security']->checkAccess($perms, $force);
+		return $this->di->get('core.sec.security')->checkAccess($perms, $force);
 	}
 }
