@@ -3,6 +3,7 @@ namespace Core\Lib\Data\Validator;
 
 
 
+use Core\Lib\Data\DataAdapter;
 /**
  * Validator class to validate model data
  *

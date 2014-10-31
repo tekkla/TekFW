@@ -1,12 +1,10 @@
 <?php
 namespace Lib\Data\Rules;
 
-use Core\Lib\Amvc\Model;
-
 /**
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *        
+ *
  */
 class RequiredRule
 {
