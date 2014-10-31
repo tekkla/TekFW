@@ -9,6 +9,8 @@ namespace Core\Lib\Data;
 class DataAdapter implements \IteratorAggregate
 {
 
+	use \Core\Lib\Traits\ArrayTrait;
+
 	/**
 	 *
 	 * @var string
@@ -106,8 +108,6 @@ class DataAdapter implements \IteratorAggregate
 	 */
 	public function createContainer(array $fields)
 	{
-		var_dump(debug_backtrace());
-
 		$this->container = new Container($fields);
 
 		return $this;
@@ -173,8 +173,9 @@ class DataAdapter implements \IteratorAggregate
 	 *
 	 * @return \Core\Lib\Data\DataAdapter
 	 */
-	public function setData($data)
+	public function setData(array $data)
 	{
+
 		// Callbacks?
 		if ($this->callbacks) {
 
@@ -188,12 +189,22 @@ class DataAdapter implements \IteratorAggregate
 			}
 		}
 
-		$this->checkContainer($data);
+		// When data is an assoc array we check here for an existing
+		// Container object and fill the container with our data
+		if ($this->isAssoc($data)) {
 
-		$container = $this->getContainer();
-		$container->fill($data);
+			$this->checkContainer($data);
 
-		$this->data = $container;
+			$container = $this->getContainer();
+			$container->fill($data);
+
+			$this->data = $container;
+		}
+		// None assoc data will be set without container
+		else {
+			$this->data = $data;
+		}
+
 
 		return $this;
 	}
@@ -223,6 +234,8 @@ class DataAdapter implements \IteratorAggregate
 	/**
 	 * Set an array of data as list of containers to data property.
 	 *
+	 * Use this if you want to add a bunch of records to the adapter.
+	 *
 	 * @var array $dataset
 	 *
 	 * @return \Core\Lib\Data\DataAdapter
@@ -231,7 +244,10 @@ class DataAdapter implements \IteratorAggregate
 	{
 		$this->data = [];
 
-		foreach ($dataset as $data) {
+		foreach ($dataset as $key => $data) {
+
+			// Init skip flag
+			$skip = false;
 
 			// Callbacks?
 			if ($this->callbacks) {
@@ -242,16 +258,41 @@ class DataAdapter implements \IteratorAggregate
 					// Execute every callback registerd
 					foreach ($callback[1] as $function) {
 						$data = $callback[0]->$function($data);
+
+						// Callback returned boolean false?
+						if ($data === false) {
+
+							// Set skip flag and stop callback
+							$skip = true;
+							break;
+						}
+					}
+
+					// Skip other callbacks?
+					if ($skip) {
+						break;
 					}
 				}
 			}
 
-			$this->checkContainer($data);
+			// Drop this data?
+			if ($skip) {
+				continue;
+			}
 
-			$container = $this->getContainer();
-			$container->fill($data);
+			// Container creation only from assoc arrays
+			if (!$data instanceof Container && $this->isAssoc($data)) {
 
-			$this->data[] = $container;
+				$this->checkContainer($data);
+
+				$container = $this->getContainer();
+				$container->fill($data);
+
+				$this->data[] = $container;
+			}
+			else {
+				$this->data[] = $data;
+			}
 		}
 
 		return $this;

@@ -10,7 +10,6 @@ use Core\Lib\Data\Validator\Validator;
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
-
 	private $fields = [];
 
 	private $errors = [];
@@ -92,11 +91,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
 		$data_field->setPrimary($primary);
 		$data_field->setSerialize($serialize);
-		$data_field->setValidate($validate);
+		$data_field->setValidation($validate);
 
 		$this->fields[$name] = $data_field;
 
-		$this;
+		return $this;
 	}
 
 	public function addField(Field $field)
@@ -170,6 +169,8 @@ class Container implements \IteratorAggregate, \ArrayAccess
 	/**
 	 * Fills container with data.
 	 *
+	 * Tries to use existig fielnd and creates a generic string field when no matching field is found.
+	 *
 	 * @param array $data
 	 *
 	 * @throws \RuntimeException
@@ -193,12 +194,12 @@ class Container implements \IteratorAggregate, \ArrayAccess
 				if (is_array($value)) {
 					$this->fields[$name]->setType('array');
 				}
-
-				$this->fields[$name]->setValue($value);
 			}
 			else {
-				Throw new \RuntimeException('Cannot fill data into container. Field "' . $name . '" does not exist in container.');
+				$this->createField($name, 'string');
 			}
+
+			$this->fields[$name]->setValue($value);
 		}
 
 		return $this;
@@ -211,7 +212,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
 	 */
 	public function get()
 	{
-		$this->fields();
+		return $this->fields;
 	}
 
 	public function offsetSet($offset, $value)
@@ -220,14 +221,26 @@ class Container implements \IteratorAggregate, \ArrayAccess
 			Throw new \InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
 		}
 
-		if (! $value instanceof Field) {
+		if (!isset($this->fields[$offset]))
+		{
+			switch (true) {
 
-			var_dump($value);
+				case (is_array($value)):
+					$type = 'array';
+					break;
+				case ($value instanceof Container):
+					$type = 'array';
+					$value = $value->get();
+					break;
+				default:
+					$type = 'string';
+					break;
+			}
 
-			Throw new \InvalidArgumentException('Only Field objects can be added to a container.');
+			$this->createField($offset, $type);
 		}
 
-		$this->fields[$offset] = $value;
+		$this->fields[$offset]->setValue($value);
 	}
 
 	public function offsetExists($offset)

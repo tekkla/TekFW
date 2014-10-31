@@ -2,34 +2,74 @@
 namespace Core\Lib\Data;
 
 /**
+ * Field Class
  *
- * @author Michael
+ * Element of a data container. Wrapper for data provided by DataAdapter.
+ * Each field has it's own definiton. Flags like serialize or primary can
+ * be used to control how data has.
  *
+ * Implements ArrayAccess interface to use object like an array.
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @version 1.0
+ * @license MIT
+ * @copyright 2014 by author
  */
-class Field
+class Field implements \ArrayAccess
 {
 
-	private $name;
-
-	private $type;
-
-	private $size;
-
-	private $primary = false;
-
-	private $value = null;
-
-	private $serialize = false;
-
-	private $validate = [];
-
-	public function __construct() {
-
-	}
+	use \Core\Lib\Traits\SerializeTrait;
 
 	/**
 	 *
-	 * @return the unknown_type
+	 * @var string
+	 */
+	private $name;
+
+	/**
+	 *
+	 * @var string
+	 */
+	private $type;
+
+	/**
+	 *
+	 * @var number
+	 */
+	private $size;
+
+	/**
+	 *
+	 * @var bool
+	 */
+	private $primary = false;
+
+	/**
+	 *
+	 * @var mixed
+	 */
+	private $value = null;
+
+	/**
+	 *
+	 * @var bool
+	 */
+	private $serialize = false;
+
+	/**
+	 *
+	 * @var array
+	 */
+	private $validate = [];
+
+
+	public function __construct() {
+	}
+
+	/**
+	 * Returns fieldname.
+	 *
+	 * @return string
 	 */
 	public function getName()
 	{
@@ -37,19 +77,23 @@ class Field
 	}
 
 	/**
+	 * Sets field name.
 	 *
-	 * @param unknown_type $name
+	 * @param string $name
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setName($name)
 	{
-		$this->name = $name;
+		$this->name = (string) $name;
 
 		return $this;
 	}
 
 	/**
+	 * Returns field type.
 	 *
-	 * @return the unknown_type
+	 * @return string
 	 */
 	public function getType()
 	{
@@ -57,8 +101,11 @@ class Field
 	}
 
 	/**
+	 * Sets field type.
 	 *
-	 * @param unknown_type $type
+	 * @param $type
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setType($type)
 	{
@@ -68,8 +115,9 @@ class Field
 	}
 
 	/**
+	 * Returns field size.
 	 *
-	 * @return the unknown_type
+	 * @return number
 	 */
 	public function getSize()
 	{
@@ -77,11 +125,22 @@ class Field
 	}
 
 	/**
+	 * Sets field size.
 	 *
-	 * @param unknown_type $size
+	 * Adds automatic validation check against the size.
+	 *
+	 * @param int $size
+	 *
+	 * @throws \InvalidArgumentException
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setSize($size)
 	{
+		if  (!is_numeric($size)) {
+			Throw new \InvalidArgumentException('Only numbers are allowed as field size.');
+		}
+
 		$this->size = $size;
 
 		$this->validate[] = [
@@ -92,11 +151,10 @@ class Field
 		return $this;
 	}
 
-
-
 	/**
+	 * Returns primary flag.
 	 *
-	 * @return the unknown_type
+	 * @return bool
 	 */
 	public function getPrimary()
 	{
@@ -104,19 +162,23 @@ class Field
 	}
 
 	/**
+	 * Sets primary flag.
 	 *
-	 * @param unknown_type $primary
+	 * @param bool $primary
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setPrimary($primary)
 	{
-		$this->primary = $primary;
+		$this->primary = (bool) $primary;
 
 		return $this;
 	}
 
 	/**
+	 * Returns field value.
 	 *
-	 * @return the unknown_type
+	 * @return mixed
 	 */
 	public function getValue()
 	{
@@ -124,39 +186,87 @@ class Field
 	}
 
 	/**
+	 * Returns field value. Same as getValue() only shorter.
 	 *
-	 * @param unknown_type $value
+	 * @return mixed
+	 */
+	public function get()
+	{
+		return $this->value();
+	}
+
+	/**
+	 * Sets field value.
+	 *
+	 * Takes care of serialized data.
+	 *
+	 * @param mixed $value
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setValue($value)
 	{
+		if ($this->serialize) {
+			$value = unserialize($value);
+		}
+
+		// Is the data serialized?
+		elseif ($this->isSerialized($value)) {
+			$this->serialize = true;
+			$value = unserialize($value);
+		}
+
 		$this->value = $value;
 
 		return $this;
 	}
 
 	/**
+	 * Get validation rules.
 	 *
-	 * @return the unknown_type
+	 * @return array
 	 */
-	public function getValidate()
+	public function getValidattion()
 	{
 		return $this->validate;
 	}
 
 	/**
+	 * Sets validation rule by resetting existing rules.
 	 *
-	 * @param unknown_type $validate
+	 * @param string|array $rule Validation rule
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
-	public function setValidate($validate)
+	public function setValidation($rule)
 	{
-		$this->validate = $validate;
+		if (!is_array($rule)) {
+			$rule = (array) $rule;
+		}
+
+		$this->validate = $rule;
 
 		return $this;
 	}
 
 	/**
+	 * Adds validation rule to already exsiting rules.
 	 *
-	 * @return the unknown_type
+	 * @param string|array $rule Validation rule
+	 *
+	 * @return \Core\Lib\Data\Field
+	 */
+	public function addValidation($rule)
+	{
+		$this->validate[] = $rule;
+
+		return $this;
+	}
+
+	/**
+	 * Returns serialize flag
+	 *
+	 * @return bool
 	 */
 	public function getSerialize()
 	{
@@ -164,16 +274,28 @@ class Field
 	}
 
 	/**
+	 * Set serialize flag
 	 *
-	 * @param unknown_type $serialize
+	 * @param bool $serialize
+	 *
+	 * @return \Core\Lib\Data\Field
 	 */
 	public function setSerialize($serialize)
 	{
-		$this->serialize = $serialize;
+		$this->serialize = (bool) $serialize;
 
 		return $this;
 	}
 
+	/**
+	 * Counts the field value and returns the result.
+	 *
+	 * Uses strlen() on strings
+	 * Uses count() on arrays
+	 * Uses field value when value is numeric
+	 *
+	 * @return number
+	 */
 	public function count() {
 		if (is_string($this->value)) {
 			return strlen($this->value);
@@ -188,5 +310,44 @@ class Field
 		}
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetSet()
+	 */
+	public function offsetSet($offset, $value) {
+		if (is_null($offset)) {
+			Throw new \InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
+		} else {
+			$this->$offset = $value;
+		}
+	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetExists()
+	 */
+	public function offsetExists($offset) {
+		return isset($this->$offset);
+	}
+
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetUnset()
+	 */
+	public function offsetUnset($offset) {
+		unset($this->$offset);
+	}
+
+	/**
+	 * (non-PHPdoc)
+	 * @see ArrayAccess::offsetGet()
+	 */
+	public function offsetGet($offset) {
+		if (isset($this->$offset)) {
+			return $this->$offset;
+		}
+		else {
+			Throw new \InvalidArgumentException('Field property "' . $offset . '" does not exists.');
+		}
+	}
 }

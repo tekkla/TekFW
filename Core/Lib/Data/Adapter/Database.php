@@ -5,6 +5,7 @@ use Core\Lib\Data\Adapter\AdapterAbstract;
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Amvc\Model;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
+use Core\Lib\Data\Container;
 
 /**
  *
@@ -311,7 +312,13 @@ class Database extends AdapterAbstract
 	{
 		$this->stmt->execute();
 
-		return $this->adapter->setDataset($this->stmt->fetchAll($fetch_mode))->getData();
+		$data = $this->stmt->fetchAll($fetch_mode);
+
+		if ($data) {
+			$data = $this->adapter->setDataset($data)->getData();
+		}
+
+		return $data;
 	}
 
 	/**
@@ -325,7 +332,13 @@ class Database extends AdapterAbstract
 	{
 		$this->stmt->execute();
 
-		return $this->adapter->setData($this->stmt->fetch($fetch_mode))->getData();
+		$data = $this->stmt->fetch($fetch_mode);
+
+		if ($data) {
+			$data = $this->adapter->setData($data)->getData();
+		}
+
+		return $data;
 	}
 
 	/**
@@ -387,7 +400,7 @@ class Database extends AdapterAbstract
 	{
 		$this->stmt->execute();
 
-		return $this->adapter->setData($this->dbh->lastInsertId())->getData();
+		return $this->dbh->lastInsertId();
 	}
 
 	/**
