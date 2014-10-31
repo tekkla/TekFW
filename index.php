@@ -295,20 +295,20 @@ try {
 	}
 
 	// Are there parameters to pass to run method?
-	$param = $router->getParam();
+	$params = $router->getParam();
 
 	// Run controller and process result.
 	if ($router->isAjax()) {
 
 		// Result will be processed as ajax command list
-		$controller->ajax($action, $param);
+		$controller->ajax($action, $params);
 
 		// Run ajax processor
 		$di['core.content.ajax']->process();
 	} else {
 
 		// Run controller and store result
-		$result = $controller->run($action, $param);
+		$result = $controller->run($action, $params);
 
 		// No content created? Check app for onEmpty() event which maybe gives us content.
 		if (empty($result) && method_exists($app, 'onEmpty')) {
@@ -368,6 +368,11 @@ try {
 // # Error handling
 catch (Exception $e) {
 
+	echo '
+	<hr>
+	<div class="container">
+		<h3>';
+
 	if ($e instanceof PDOException) {
 		switch ($e->getCode()) {
 			case 2002:
@@ -382,7 +387,12 @@ catch (Exception $e) {
 		echo $e->getMessage() . '> ' . $e->getFile() . ' (' . $e->getLine() . ')<br>';
 	}
 
-	echo '<pre>', $e->xdebug_message, '</pre>';
+	echo '</h3><pre>';
+
+	echo nl2br($e->xdebug_message);
+
+	echo '</pre>
+	</div>';
 
 	// $error = $di['core.error'];
 	// $errorsetError($e);
