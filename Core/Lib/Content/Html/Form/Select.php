@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Abstracts\FormElementAbstract;
+use Core\Lib\Content\Html\FormElementAbstract;
 
 /**
  * Select Form Element

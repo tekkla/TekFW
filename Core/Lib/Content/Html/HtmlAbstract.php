@@ -1,7 +1,5 @@
 <?php
-namespace Core\Lib\Abstracts;
-
-use Core\Lib\Content\Html\HtmlFactory;
+namespace Core\Lib\Content\Html;
 
 /**
  * Parent class for html all elements

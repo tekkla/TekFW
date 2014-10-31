@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Controls;
 
-use Core\Lib\Abstracts\FormElementAbstract;
+use Core\Lib\Content\Html\FormElementAbstract;
 use Core\Lib\Content\Html\Form\Input;
 use Core\Lib\Content\Html\Elements\Div;
 use Core\Lib\Content\Html\HtmlFactory;

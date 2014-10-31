@@ -1,8 +1,6 @@
 <?php
 namespace Core\Lib\Content\Html;
 
-use Core\Lib\Abstracts\HtmlAbstract;
-
 /**
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>

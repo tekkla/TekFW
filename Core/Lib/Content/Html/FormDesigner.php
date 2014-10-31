@@ -7,7 +7,7 @@ use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\Form\Input;
 use Core\Lib\Content\Html\Form\Button;
 use Core\Lib\Content\Html\Controls\Group;
-use Core\Lib\Abstracts\FormElementAbstract;
+use Core\Lib\Content\Html\FormElementAbstract;
 
 /**
  * FormDesigner

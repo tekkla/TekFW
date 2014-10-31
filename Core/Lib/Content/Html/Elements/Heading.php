@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Elements;
 
-use Core\Lib\Abstracts\HtmlAbstract;
+use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
  * Creates a heading html object

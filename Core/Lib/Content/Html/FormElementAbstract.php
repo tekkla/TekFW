@@ -1,7 +1,6 @@
 <?php
-namespace Core\Lib\Abstracts;
+namespace Core\Lib\Content\Html;
 
-use Core\Lib\Abstracts\HtmlAbstract;
 use Core\Lib\Content\Html\Form\Label;
 
 class FormElementAbstract extends HtmlAbstract

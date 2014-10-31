@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Elements;
 
-use Core\Lib\Abstracts\HtmlAbstract;
+use Core\Lib\Content\Html\HtmlAbstract;
 
 // Check for direct file access
 if (! defined('TEKFW'))
@@ -9,7 +9,7 @@ if (! defined('TEKFW'))
 
 /**
  * Creates a img html object
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Element
@@ -23,7 +23,7 @@ class Img extends HtmlAbstract
 
     /**
      * Factory pattern
-     * 
+     *
      * @param string|Url $src
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -36,7 +36,7 @@ class Img extends HtmlAbstract
 
     /**
      * Set src attribute
-     * 
+     *
      * @param string|Url $src Src value
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -48,7 +48,7 @@ class Img extends HtmlAbstract
 
     /**
      * Sets alt attribute
-     * 
+     *
      * @param string $alt
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -60,7 +60,7 @@ class Img extends HtmlAbstract
 
     /**
      * Sets title attribute
-     * 
+     *
      * @param string $title
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -72,7 +72,7 @@ class Img extends HtmlAbstract
 
     /**
      * Set width attribute
-     * 
+     *
      * @param int $width
      */
     public function setWidth($width)
@@ -83,7 +83,7 @@ class Img extends HtmlAbstract
 
     /**
      * Sets height attribute
-     * 
+     *
      * @param int $height
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -95,7 +95,7 @@ class Img extends HtmlAbstract
 
     /**
      * Sets ismap attribute.
-     * 
+     *
      * @param string $flag
      * @return \Core\Lib\Content\Html\Elements\Img
      */
@@ -107,7 +107,7 @@ class Img extends HtmlAbstract
 
     /**
      * Sets the name of map to use
-     * 
+     *
      * @param string $name
      * @return \Core\Lib\Content\Html\Elements\Img
      */
