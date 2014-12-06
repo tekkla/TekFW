@@ -6,12 +6,11 @@ use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
 
 /**
+ * Database
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Database extends AdapterAbstract
 {
