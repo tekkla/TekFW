@@ -16,258 +16,268 @@ use Core\Lib\Http\Router;
 class Javascript
 {
 
-	/**
-	 * Stack of core javascript objects
-	 *
-	 * @var array
-	 */
-	private static $core_js = [
-		'top' => [],
-		'below' => []
-	];
+    /**
+     * Stack of core javascript objects
+     *
+     * @var array
+     */
+    private $core_js = [
+        'top' => [],
+        'below' => []
+    ];
 
+    /**
+     * Stack of app javascript objects
+     *
+     * @var array
+     */
+    private $app_js = [
+        'top' => [],
+        'below' => []
+    ];
 
-	/**
-	 * Stack of app javascript objects
-	 *
-	 * @var array
-	 */
-	private static $app_js = [
-		'top' => [],
-		'below' => []
-	];
+    /**
+     * For double file use prevention
+     *
+     * @var array
+     */
+    private $files_used = [];
 
-	/**
-	 * For double file use prevention
-	 *
-	 * @var array
-	 */
-	private static $files_used = [];
+    /**
+     * Internal filecounter
+     *
+     * @var int
+     */
+    private $filecounter = 0;
 
-	/**
-	 * Internal filecounter
-	 *
-	 * @var int
-	 */
-	private static $filecounter = 0;
+    /**
+     *
+     * @var Cfg
+     */
+    private $cfg;
 
-	/**
-	 *
-	 * @var Cfg
-	 */
-	private $cfg;
+    /**
+     *
+     * @var Router
+     */
+    private $router;
 
-	/**
-	 *
-	 * @var Router
-	 */
-	private $router;
+    private $mode = 'apps';
 
-	private $mode = 'apps';
+    private $js_url = '';
 
-	/**
-	 * Constructor
-	 *
-	 * @param Cfg $cfg
-	 * @param Router $router
-	 */
-	public function __construct(Cfg $cfg, Router $router)
-	{
-		$this->cfg = $cfg;
-		$this->router = $router;
-	}
+    /**
+     * Constructor
+     *
+     * @param Cfg $cfg
+     * @param Router $router
+     */
+    public function __construct(Cfg $cfg, Router $router)
+    {
+        $this->cfg = $cfg;
+        $this->router = $router;
 
-	public function init()
-	{
-		$this->mode = 'core';
+        $this->js_url = $cfg->get('Core', 'url_js');
+    }
 
-		// Add jquery cdn
-		$this->file('//code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
+    public function init()
+    {
+        $this->mode = 'core';
 
-		// Add Bootstrap javascript from cdn
-		$this->file('//maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
+        // Add jquery cdn
+        $this->file('//code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
 
-		// Add plugins file
-		$this->file($this->cfg->get('Core', 'url_js') . '/plugins.js');
+        // Add Bootstrap javascript from cdn
+        $this->file('//maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
 
-		// Add global fadeout time var set in config
-		$this->variable('fadeout_time', $this->cfg->get('Core', 'js_fadeout_time'));
+        // Add plugins file
+        $this->file($this->js_url . '/plugins.js');
 
-		// Add framework js
-		$this->file($this->cfg->get('Core', 'url_js') . '/framework.js');
+        // Add global fadeout time var set in config
+        $this->variable('fadeout_time', $this->cfg->get('Core', 'js_fadeout_time'));
 
-		$this->mode = 'apps';
-	}
+        // Add framework js
+        $this->file($this->js_url . '/framework.js');
 
-	/**
-	 * Adds an javascript objectto the content
-	 *
-	 * @param Javascript $script
-	 */
-	public function &add(JavascriptObject $js)
-	{
-		$area = $js->getDefer() ? 'below': 'top';
+        $this->mode = 'apps';
+    }
 
-		if ($this->mode == 'core') {
-			self::$core_js[$area][] = $js;
-		} else {
-			self::$app_js[$area][] = $js;
-		}
+    /**
+     * Adds an javascript objectto the content.
+     *
+     * @param Javascript $script
+     *
+     * @return JavascriptObject
+     */
+    public function &add(JavascriptObject $js)
+    {
+        $area = $js->getDefer() ? 'below' : 'top';
 
-		return $js;
-	}
+        if ($this->mode == 'core') {
+            $this->core_js[$area][] = $js;
+        } else {
+            $this->app_js[$area][] = $js;
+        }
 
-	/**
-	 * Returns the js object stack
-	 *
-	 * @param string $area
-	 *
-	 * @throws \InvalidArgumentException
-	 *
-	 * @return array
-	 */
-	public function getScriptObjects($area)
-	{
-		$areas = [
-			'top',
-			'below'
-		];
+        return $js;
+    }
 
-		if (!in_array($area, $areas)) {
-			Throw new \InvalidArgumentException('Wrong scriptarea.');
-		}
+    /**
+     * Returns the js object stack
+     *
+     * @param string $area
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @return array
+     */
+    public function getScriptObjects($area)
+    {
+        $areas = [
+            'top',
+            'below'
+        ];
 
-		return array_merge(self::$core_js[$area], self::$app_js[$area]);
-	}
+        if (! in_array($area, $areas)) {
+            Throw new \InvalidArgumentException('Wrong scriptarea.');
+        }
 
-	/**
-	 * Adds a file javascript object to the output queue
-	 *
-	 * @param string $url
-	 * @param bool $defer
-	 * @param bool $is_external
-	 */
-	public function &file($url, $defer = false, $is_external = false)
-	{
-		if ($this->router->isAjax()) {
-			$this->ajax->add(array(
-				'type' => 'act',
-				'fn' => 'load_script',
-				'args' => $url
-			));
-		} else {
-			// Do not add files already added
-			if (in_array($url, self::$files_used)) {
-				Throw new \RuntimeException(sprintf('Url "%s" is already set as included js file.', $url));
-			}
+        return array_merge($this->core_js[$area], $this->app_js[$area]);
+    }
 
-			$dt = debug_backtrace();
-			self::$files_used[self::$filecounter . '-' . $dt[1]['function']] = $url;
-			self::$filecounter ++;
+    /**
+     * Adds a file javascript object to the output queue
+     *
+     * @param string $url
+     * @param bool $defer
+     * @param bool $is_external
+     *
+     * @return JavascriptObject
+     */
+    public function &file($url, $defer = false, $is_external = false)
+    {
+        // Do not add files already added
+        if (in_array($url, $this->files_used)) {
+            Throw new \RuntimeException(sprintf('Url "%s" is already set as included js file.', $url));
+        }
 
-			$script = new JavascriptObject();
-			$script->setType('file');
-			$script->setScript($url);
-			$script->setIsExternal($is_external);
-			$script->setDefer($defer);
+        $dt = debug_backtrace();
+        $this->files_used[$this->filecounter . '-' . $dt[1]['function']] = $url;
+        $this->filecounter ++;
 
-			return $this->add($script);
-		}
-	}
+        $script = new JavascriptObject();
+        $script->setType('file');
+        $script->setScript($url);
+        $script->setIsExternal($is_external);
+        $script->setDefer($defer);
 
-	/**
-	 * Adds an script javascript object to the output queue
-	 *
-	 * @param string $script
-	 * @param bool $defer
-	 */
-	public function &script($script, $defer = false)
-	{
-		$script = new JavascriptObject();
-		$script->setType('script');
-		$script->setScript($script);
-		$script->setDefer($defer);
+        return $this->add($script);
+    }
 
-		return $this->add($script);
-	}
+    /**
+     * Adds an script javascript object to the output queue
+     *
+     * @param string $script
+     * @param bool $defer
+     *
+     * @return JavascriptObject
+     */
+    public function &script($script, $defer = false)
+    {
+        $script = new JavascriptObject();
+        $script->setType('script');
+        $script->setScript($script);
+        $script->setDefer($defer);
 
-	/**
-	 * Creats a ready javascript object
-	 *
-	 * @param string $script
-	 * @param bool $defer
-	 * @return Javascript
-	 */
-	public function &ready($script, $defer = false)
-	{
-		$script = new JavascriptObject();
-		$script->setType('ready');
-		$script->setScript($script);
-		$script->setDefer($defer);
+        return $this->add($script);
+    }
 
-		return $this->add($script);
-	}
+    /**
+     * Creats a ready javascript object
+     *
+     * @param string $script
+     * @param bool $defer
+     *
+     * @return Javascript
+     */
+    public function &ready($script, $defer = false)
+    {
+        $script = new JavascriptObject();
+        $script->setType('ready');
+        $script->setScript($script);
+        $script->setDefer($defer);
 
-	/**
-	 * Blocks with complete code.
-	 * Use this for conditional scripts!
-	 *
-	 * @param unknown $content
-	 * @param string $target
-	 */
-	public function &block($script, $defer = false)
-	{
-		$script = new JavascriptObject();
-		$script->setType('block');
-		$script->setScript($script);
-		$script->setDefer($defer);
+        return $this->add($script);
+    }
 
-		return $this->add($script);
-	}
+    /**
+     * Blocks with complete code.
+     * Use this for conditional scripts!
+     *
+     * @param string $script
+     * @param bool $defer
+     *
+     * @return JavascriptObject
+     */
+    public function &block($script, $defer = false)
+    {
+        $script = new JavascriptObject();
+        $script->setType('block');
+        $script->setScript($script);
+        $script->setDefer($defer);
 
-	/**
-	 * Creates and returns a var javascript object
-	 *
-	 * @param string $name
-	 * @param mixed $value
-	 * @param bool $is_string
-	 * @return Javascript
-	 */
-	public function &variable($name, $value, $is_string = false)
-	{
-		if ($is_string == true) {
-			$value = '"' . $value . '"';
-		}
+        return $this->add($script);
+    }
 
-		$script = new JavascriptObject();
-		$script->setType('var');
-		$script->setScript([
-			$name,
-			$value
-		]);
+    /**
+     * Creates and returns a var javascript object
+     *
+     * @param string $name
+     * @param mixed $value
+     * @param bool $is_string
+     *
+     * @return JavascriptObject
+     */
+    public function &variable($name, $value, $is_string = false)
+    {
+        if ($is_string == true) {
+            $value = '"' . $value . '"';
+        }
 
-		return $this->add($script);
-	}
+        $script = new JavascriptObject();
+        $script->setType('var');
+        $script->setScript([
+            $name,
+            $value
+        ]);
 
-	/**
-	 * Returns an file script block for the BS js lib
-	 *
-	 * @param string $version
-	 * @param bool $from_cdn
-	 * @return string
-	 * @todo Make it an Script object?
-	 */
-	public function &bootstrap($version, $defer = false)
-	{
-		$url = $this->cfg->get('Core', 'url_js') . '/bootstrap-' . $version . '.min.js';
+        return $this->add($script);
+    }
 
-		if (str_replace(BASEURL, BASEDIR, $url)) {
-			return $this->file($url);
-		}
-	}
+    /**
+     * Returns an file script block for the BS js lib
+     *
+     * @param string $version
+     * @param bool $from_cdn
+     * @return string
+     * @todo Make it an Script object?
+     */
+    public function &bootstrap($version, $defer = false)
+    {
+        $url = $this->js_url . '/bootstrap-' . $version . '.min.js';
 
-	public function getStack()
-	{
-		return array_merge(self::$core_js, self::$app_js);
-	}
+        if (str_replace(BASEURL, BASEDIR, $url)) {
+            return $this->file($url);
+        }
+    }
+
+    /**
+     * Returns all registered javacript objects.
+     *
+     * @return array
+     */
+    public function getStack()
+    {
+        return array_merge($this->core_js, $this->app_js);
+    }
 }
