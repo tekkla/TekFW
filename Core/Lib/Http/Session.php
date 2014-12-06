@@ -4,207 +4,261 @@ namespace Core\Lib\Http;
 use Core\Lib\Data\DataAdapter;
 
 /**
- * Basic class for session handling
- * For now it's only useful for init the web tree in session
+ * Session object class
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 final class Session
 {
 
-	/**
-	 *
-	 * @var Database
-	 */
-	private $adapter;
+    /**
+     *
+     * @var Database
+     */
+    private $adapter;
 
-	public function __construct(DataAdapter $adapter)
-	{
-		$this->adapter = $adapter;
+    /**
+     * Constructor
+     *
+     * @param DataAdapter $adapter
+     */
+    public function __construct(DataAdapter $adapter)
+    {
+        $this->adapter = $adapter;
 
-		// Set handler to overide SESSION
-		session_set_save_handler([
-			$this,
-			"open"
-		], [
-			$this,
-			"close"
-		], [
-			$this,
-			"read"
-		], [
-			$this,
-			"write"
-		], [
-			$this,
-			"destroy"
-		], [
-			$this,
-			"gc"
-		]);
-	}
+        // Set handler to overide SESSION
+        session_set_save_handler([
+            $this,
+            "open"
+        ], [
+            $this,
+            "close"
+        ], [
+            $this,
+            "read"
+        ], [
+            $this,
+            "write"
+        ], [
+            $this,
+            "destroy"
+        ], [
+            $this,
+            "gc"
+        ]);
+    }
 
-	public function get($key)
-	{
-		if (isset($_SESSION[$key])) {
-			return $_SESSION[$key];
-		} else {
-			Throw new \InvalidArgumentException('Session key "' . $key .'" not found.');
-		}
-	}
+    /**
+     * Access on data stored in session.
+     *
+     * @param string $key
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @return mixed
+     */
+    public function get($key)
+    {
+        if (isset($_SESSION[$key])) {
+            return $_SESSION[$key];
+        } else {
+            Throw new \InvalidArgumentException('Session key "' . $key . '" not found.');
+        }
+    }
 
-	public function set($key, $val)
-	{
-		$_SESSION[$key] = $val;
-	}
+    /**
+     * Stores data in session under the set key
+     *
+     * @param string $key
+     * @param mixed $val
+     *
+     * @return Session
+     */
+    public function set($key, $val)
+    {
+        $_SESSION[$key] = $val;
 
-	public function add($key, $val)
-	{
-		if (! isset($_SESSION[$key])) {
-			$_SESSION[$key] = [];
-		} else {
-			if (!is_array($_SESSION[$key])) {
-				$_SESSION[$key] = (array) $_SESSION[$key];
-			}
-		}
+        return $this;
+    }
 
-		$_SESSION[$key][] = $val;
-	}
+    /**
+     * Adds data to existing data in session.
+     * Tries to find data by using the set key. Converts non array data
+     * into an array. Adds set $val at end of data array.
+     *
+     * @param string $key
+     * @param mixed $val
+     *
+     * @return \Core\Lib\Http\Session
+     */
+    public function add($key, $val)
+    {
+        if (! isset($_SESSION[$key])) {
+            $_SESSION[$key] = [];
+        } else {
+            if (! is_array($_SESSION[$key])) {
+                $_SESSION[$key] = (array) $_SESSION[$key];
+            }
+        }
 
-	public function exists($key)
-	{
-		return isset($_SESSION[$key]);
-	}
+        $_SESSION[$key][] = $val;
 
-	public function remove($key)
-	{
-		if (isset($_SESSION[$key])) {
-			unset($_SESSION[$key]);
-		}
-	}
+        return $this;
+    }
 
-	public function init()
-	{
-		// Start the session
-		session_start();
+    /**
+     * Checks for existing data by it's key.
+     *
+     * @param boolean $key
+     */
+    public function exists($key)
+    {
+        return isset($_SESSION[$key]);
+    }
 
-		if (! isset($_SESSION['id_user'])) {
-			$_SESSION['id_user'] = 0;
-			$_SESSION['logged_in'] = false;
-		}
+    /**
+     * Removes data from session by it's key.
+     *
+     * @param string $key
+     *
+     * @return \Core\Lib\Http\Session
+     */
+    public function remove($key)
+    {
+        if (isset($_SESSION[$key])) {
+            unset($_SESSION[$key]);
+        }
 
-		// Create session id constant
-		define('SID', session_id());
-	}
+        return $this;
+    }
 
-	/**
-	 * Open session
-	 */
-	public function open()
-	{
-		// If successful return true
-		return $this->adapter ? true : false;
-	}
+    // -------- SESSION HANDLER METHODS FROM HERE ----------- \\
 
-	/**
-	 * Close session
-	 */
-	public function close()
-	{
-		// Close the database connection - If successful return true
-		return $this->adapter->close() ? true : false;
-	}
+    /**
+     * Init session
+     */
+    public function init()
+    {
+        // Start the session
+        session_start();
 
-	/**
-	 * Read session
-	 */
-	public function read($id_session)
-	{
-		// Set query
-		$this->adapter->query([
-			'tbl' => 'sessions',
-			'field' => 'data',
-			'filter' => 'id_session = :id_session',
-			'params' => [
-				':id_session' => $id_session
-			]
-		]);
+        if (! isset($_SESSION['id_user'])) {
+            $_SESSION['id_user'] = 0;
+            $_SESSION['logged_in'] = false;
+        }
 
-		$data = $this->adapter->single();
+        // Create session id constant
+        define('SID', session_id());
+    }
 
-		return $data ? $data['data'] : '';
-	}
+    /**
+     * Open session
+     */
+    public function open()
+    {
+        // If successful return true
+        return $this->adapter ? true : false;
+    }
 
-	/**
-	 * Write session
-	 */
-	public function write($id_session, $data)
-	{
-		// Create timestamp
-		$access = time();
+    /**
+     * Close session
+     */
+    public function close()
+    {
+        // Close the database connection - If successful return true
+        return $this->adapter->close() ? true : false;
+    }
 
-		// Set query
-		$this->adapter->query([
-			'method' => 'REPLACE INTO',
-			'tbl' => 'sessions',
-			'values' => [
-				':id_session',
-				':access',
-				':data'
-			],
-			'params' => [
-				':id_session' => $id_session,
-				':access' => $access,
-				':data' => $data
-			]
-		]);
+    /**
+     * Read session
+     */
+    public function read($id_session)
+    {
+        // Set query
+        $this->adapter->query([
+            'tbl' => 'sessions',
+            'field' => 'data',
+            'filter' => 'id_session = :id_session',
+            'params' => [
+                ':id_session' => $id_session
+            ]
+        ]);
 
-		// Attempt Execution - If successful return true
-		return $this->adapter->execute() ? true : false;
-	}
+        $data = $this->adapter->single();
 
-	/**
-	 * Destroy
-	 */
-	public function destroy($id_session)
-	{
-		// Set query
-		$this->adapter->query([
-			'method' => 'DELETE',
-			'tbl' => 'sessions',
-			'filter' => 'id_session=:id_session',
-			'params' => [
-				'id_session' => $id_session
-			]
-		]);
+        return $data ? $data['data'] : '';
+    }
 
-		// Attempt execution - If successful return True
-		return $this->adapter->execute() ? true : false;
-	}
+    /**
+     * Write session
+     */
+    public function write($id_session, $data)
+    {
+        // Create timestamp
+        $access = time();
 
-	/**
-	 * Garbage Collection
-	 */
-	public function gc($max)
-	{
-		// Calculate what is to be deemed old
-		$old = time() - $max;
+        // Set query
+        $this->adapter->query([
+            'method' => 'REPLACE',
+            'tbl' => 'sessions',
+            'field' => [
+                'id_session',
+                'access',
+                'data'
+            ],
+            'params' => [
+                ':id_session' => $id_session,
+                ':access' => $access,
+                ':data' => $data
+            ]
+        ]);
 
-		// Set query
-		$this->adapter->query([
-			'method' => 'DELETE',
-			'tbl' => 'sessions',
-			'filter' => 'access<:old',
-			'params' => [
-				':old' => $old
-			]
-		]);
+        // Attempt Execution - If successful return true
+        return $this->adapter->execute() ? true : false;
+    }
 
-		// Attempt execution
-		return $this->adapter->execute() ? true : false;
-	}
+    /**
+     * Destroy
+     */
+    public function destroy($id_session)
+    {
+        // Set query
+        $this->adapter->query([
+            'method' => 'DELETE',
+            'tbl' => 'sessions',
+            'filter' => 'id_session=:id_session',
+            'params' => [
+                'id_session' => $id_session
+            ]
+        ]);
+
+        // Attempt execution - If successful return True
+        return $this->adapter->execute() ? true : false;
+    }
+
+    /**
+     * Garbage Collection
+     */
+    public function gc($max)
+    {
+        // Calculate what is to be deemed old
+        $old = time() - $max;
+
+        // Set query
+        $this->adapter->query([
+            'method' => 'DELETE',
+            'tbl' => 'sessions',
+            'filter' => 'access<:old',
+            'params' => [
+                ':old' => $old
+            ]
+        ]);
+
+        // Attempt execution
+        return $this->adapter->execute() ? true : false;
+    }
+
+    // ----------------------------------------------------- \\
 }
