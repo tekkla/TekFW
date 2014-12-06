@@ -1,88 +1,100 @@
 <?php
-namespace Core\Lib;
+namespace Core\Lib\Ajax;
 
 /**
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- *         @Inject ajax
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de
  */
-abstract class AjaxCommand
+class AjaxCommand
 {
 
     /**
      * Kind of command
-     * 
+     *
      * @var string
      */
     private $type = 'dom';
 
     /**
      * The documents DOM ID the ajax content should go in
-     * 
+     *
      * @var string
      */
     private $selector = '';
 
     /**
      * Parameters to pass into the controlleraction
-     * 
+     *
      * @var array
      */
     private $args = [];
 
     /**
      * The type of the current ajax.
-     * 
+     *
      * @var string
      */
     private $fn = 'html';
 
-    public function __construct($definition = array())
+    /**
+     * Constructor with option to parse command from definition array
+     *
+     * @param array $definition
+     *            Definition to parse as ajax command
+     */
+    public function __construct(Array $definition = [])
     {
         if ($definition)
             $this->parse($definition);
     }
 
     /**
-     * Used to set set an array of ajax command arguments
-     * 
-     * @param unknown $args
+     * Sets the ajax command arguments array
+     *
+     * @param mixed $args
+     *
      * @return \Core\Lib\AjaxCommand
      */
-    public function setArgs($args = array())
+    public function setArgs($args = [])
     {
         $this->args = $args;
+
         return $this;
     }
 
     /**
-     * Adds an argument to ajax command
-     * 
-     * @param unknown $val
+     * Adds an argument to ajax command arguments array
+     *
+     * @param mixed $arg
+     *
      * @return \Core\Lib\AjaxCommand
      */
-    public function addArg($val)
+    public function addArg($arg)
     {
-        $this->args[] = $val;
+        $this->args[] = $arg;
+
         return $this;
     }
 
     /**
      * Sets ajax command group type
-     * 
-     * @param $type
+     *
+     * @param string $type
+     *
      * @return \Core\Lib\AjaxCommand
      */
     public function setType($type = 'dom')
     {
         $this->type = $type;
+
         return $this;
     }
 
     /**
      * Sets DOM id of ajax command target
-     * 
-     * @param $target
+     *
+     * @param string $selector
+     *
      * @return \Core\Lib\AjaxCommand
      */
     public function setSelector($selector)
@@ -92,21 +104,10 @@ abstract class AjaxCommand
     }
 
     /**
-     * Sets content of ajax command
-     * 
-     * @param $content
-     * @return \Core\Lib\AjaxCommand
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-        return $this;
-    }
-
-    /**
      * Sets function type of ajax command
-     * 
+     *
      * @param string $fn
+     *
      * @return \Core\Lib\AjaxCommand
      */
     public function setFunction($fn = 'html')
@@ -117,7 +118,7 @@ abstract class AjaxCommand
 
     /**
      * Returns ajax command type
-     * 
+     *
      * @return the $type
      */
     public function getType()
@@ -127,7 +128,7 @@ abstract class AjaxCommand
 
     /**
      * Returns selector of ajax command
-     * 
+     *
      * @return the $selector
      */
     public function getSelector()
@@ -137,7 +138,7 @@ abstract class AjaxCommand
 
     /**
      * Returns ajax command arguments
-     * 
+     *
      * @return the $args
      */
     public function getArgs()
@@ -147,7 +148,7 @@ abstract class AjaxCommand
 
     /**
      * Returns ajax command function
-     * 
+     *
      * @return the $fn
      */
     public function getFn()
@@ -160,28 +161,41 @@ abstract class AjaxCommand
      */
     public function send()
     {
-        $this->ajaxaddCommand();
+        $this->di['core.ajax']->add($this);
     }
 
     /**
      * Parses an array based command definition and sets it's values as command properties
-     * 
+     *
      * @param unknown $definition
      */
-    public function parse($definition = array())
+    public function parse(Array $definition)
     {
-        if ($definition) {
-            foreach ($definition as $property => $value) {
-                if (property_exists($this, $property)) {
-                    if ($property == 'args' && ! is_array($value))
-                        $value = array(
-                            $value
-                        );
-                    
-                    $this->{$property} = $value;
-                }
+        // Be sure that the commandtype isset
+        if (! in_array('type', $definition)) {
+            $definition['type'] = 'dom';
+        } else {
+
+            // Check for correct commandtype
+            $types = [
+                'dom',
+                'act'
+            ];
+
+            if (! in_array($definition['type'], $types)) {
+                Throw new \InvalidArgumentException('Your AjaxCommand type "' . $definition['type'] . '"is not allowed.');
+            }
+        }
+
+        foreach ($definition as $property => $value) {
+            if (property_exists($this, $property)) {
+                if ($property == 'args' && ! is_array($value))
+                    $value = array(
+                        $value
+                    );
+
+                $this->{$property} = $value;
             }
         }
     }
 }
-
