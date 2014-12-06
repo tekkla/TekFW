@@ -2,14 +2,16 @@
 namespace Core\Lib\Data;
 
 /**
+ * Container Object
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014 by author
+ * @license MIT
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
 
-    use\Core\Lib\Traits\SerializeTrait;
+    use \Core\Lib\Traits\SerializeTrait;
 
     private $fields = [];
 
@@ -79,16 +81,17 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Parses a field definition array and created container fields from it. A field withou type attribute is treated as
+     * Parses a field definition array and created container fields from it.
+     * A field withou type attribute is treated as
      * string. You can use the following attributes:
      *
-     * type         => String, integer, float or any other datatype you want to use. Be sure a componenten like
-     *                 DataAdapter can handle this datatype. Default: string
-     * primary      => Flag to show that this field contains the value of a primary key. Default: false
-     * serialize    => Flag that says the Data needs to be serialized before saving and to be unserialized before
-     *                 fillig the field. Default: false
-     * validate     => Array of rules to validate the field value angainst. Default: []
-     * size         => Max contentsize of field. Defaul: null
+     * type => String, integer, float or any other datatype you want to use. Be sure a componenten like
+     * DataAdapter can handle this datatype. Default: string
+     * primary => Flag to show that this field contains the value of a primary key. Default: false
+     * serialize => Flag that says the Data needs to be serialized before saving and to be unserialized before
+     * fillig the field. Default: false
+     * validate => Array of rules to validate the field value angainst. Default: []
+     * size => Max contentsize of field. Defaul: null
      *
      * @param array $fields
      */
@@ -133,7 +136,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return \Core\Lib\Data\Container
      */
-    public function createField($name, $type='string', $size = null, $primary = false, $serialize = false, $validate = [])
+    public function createField($name, $type = 'string', $size = null, $primary = false, $serialize = false, $validate = [])
     {
         $data_field = new Field();
         $data_field->setName($name);
@@ -376,7 +379,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      */
     public function offsetExists($offset)
     {
-        if (!isset($this->fields[$offset])) {
+        if (! isset($this->fields[$offset])) {
             return false;
         }
 
