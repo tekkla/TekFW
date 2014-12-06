@@ -15,6 +15,7 @@ abstract class MvcAbstract
 	use \Core\Lib\Traits\StringTrait;
 	use \Core\Lib\Traits\TextTrait;
 	use \Core\Lib\Traits\AccessTrait;
+	use \Core\Lib\Traits\AnalyzeVarTrait;
 
 	/**
 	 * Name of the MVC object
