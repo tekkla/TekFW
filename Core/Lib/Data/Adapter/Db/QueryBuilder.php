@@ -2,7 +2,6 @@
 namespace Core\Lib\Data\Adapter\Db;
 
 use Core\Lib\Data\Container;
-use Core\Lib\Exceptions\InvalidArgumentException;
 
 /**
  * QueryBuilder
