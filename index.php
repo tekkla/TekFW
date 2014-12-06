@@ -6,7 +6,7 @@
  * defines constants to get rid of some global var use,
  * and registers an autoclassloader.
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @package TekFW
  * @subpackage Global
  * @license MIT
@@ -17,17 +17,25 @@ use Core\Lib\DI;
 // Define that the TekFW has been loaded
 define('TEKFW', 1);
 
+/**
+ * Absolute path to site
+ */
+define('BASEDIR', __DIR__);
+
 $cfg = [];
 
 // Load Settings.php file
-if (file_exists(dirname(__FILE__) . '/Settings.php')) {
-	require_once dirname(__FILE__) . '/Settings.php';
+if (file_exists(BASEDIR . '/Settings.php')) {
+    require_once (BASEDIR . '/Settings.php');
 } else {
-	die('Settings file could not be loaded.');
+    die('Settings file could not be loaded.');
 }
 
+// Include error handler
+require_once (COREDIR . '/Lib/Errors/Error.php');
+
 // Register composer classloader
-require_once dirname(__FILE__) . '/vendor/autoload.php';
+require_once (BASEDIR . '/vendor/autoload.php');
 
 // Register core classloader
 require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
@@ -47,356 +55,228 @@ ob_start();
 
 try {
 
-	// --------------------------------------------------------
-	// Prepare Dependency Injection
-	// --------------------------------------------------------
+    // --------------------------------------------------------
+    // Create DI service container
+    // --------------------------------------------------------
+    $di = new DI();
 
-	$di = new DI();
+    // -------------------------------------------------------
+    // Config
+    // -------------------------------------------------------
 
-	$di->mapValue('core.di', $di);
+    /* @var $config \Core\Lib\Cfg */
+    $config = $di['core.cfg'];
 
-	// == DB ===========================================================
-	$di->mapValue('db.default.dsn', $cfg['db_dsn']);
+    $config->init($cfg);
+    $config->load();
 
-	$di->mapValue('db.default.driver', $cfg['db_driver']);
-	$di->mapValue('db.default.host', $cfg['db_host']);
-	$di->mapValue('db.default.port', $cfg['db_port']);
-	$di->mapValue('db.default.name', $cfg['db_name']);
-	$di->mapValue('db.default.user', $cfg['db_user']);
-	$di->mapValue('db.default.pass', $cfg['db_pass']);
-	$di->mapValue('db.default.options', [
-		\PDO::ATTR_PERSISTENT => true,
-		\PDO::ATTR_ERRMODE => 2,
-		\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-	]);
-	$di->mapValue('db.default.prefix', $cfg['db_prefix']);
-	$di->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
-		'db.default.name',
-		'db.default.driver',
-		'db.default.host',
-		'db.default.port',
-		'db.default.user',
-		'db.default.pass',
-		'db.default.options'
-	]);
-	$di->mapFactory('db.default', '\Core\Lib\Data\DataAdapter', [
-		'db',
-		[
-			'conn::db.default.conn',
-			'prefix::db.default.prefix'
-		]
-	]);
+    // Add dirs to config
+    $dirs = [
+        // Framework directory
+        'fw' => '/Core',
 
-	// == CONFIG =======================================================
-	$di->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
+        // Framwork subdirectories
+        'css' => '/Core/Css',
+        'js' => '/Core/Js',
+        'lib' => '/Core/Lib',
+        'html' => '/Core/Html',
+        'tools' => '/Core/Tools',
+        'cache' => '/Cache',
 
-	// == ERROR=========================================================
-	$di->mapFactory('core.error', '\Core\Lib\Error\Error');
+        // Public application dir
+        'apps' => '/Apps',
 
-	// == HTTP =========================================================
-	$di->mapService('core.http.router', '\Core\Lib\Http\Router');
-	$di->mapService('core.http.post', '\Core\Lib\Http\Post', 'core.http.router');
-	$di->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
-	$di->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
+        // Secure application dir
+        'appssec' => '/Core/AppsSec'
+    ];
 
-	// == UTILITIES ====================================================
-	$di->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
-	$di->mapFactory('core.util.time', '\Core\Lib\Utilities\Time');
-	$di->mapFactory('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
-	$di->mapFactory('core.util.date', '\Core\Lib\Utilities\Date');
-	$di->mapFactory('core.util.debug', '\Core\Lib\Utilities\Debug');
-	$di->mapService('core.util.fire', '\FB');
+    $config->addPaths('Core', $dirs);
 
-	// == SECURITY =====================================================
-	$di->mapService('core.sec.security', '\Core\Lib\Security\Security', [
-		'db.default',
-		'core.cfg',
-		'core.http.session',
-		'core.http.cookie',
-		'core.sec.user.current',
-		'core.sec.group',
-		'core.sec.permission'
-	]);
-	$di->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
-		'db.default',
-		'core.sec.permission'
-	]);
-	$di->mapService('core.sec.user.current', '\Core\Lib\Security\User', [
-		'db.default',
-		'core.sec.permission'
-	]);
-	$di->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
-	$di->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
-	$di->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
+    // Add urls to config
+    $urls = [
+        'apps' => '/Apps',
+        'appssec' => '/Core/AppsSec',
+        'css' => '/Core/Css',
+        'js' => '/Core/Js',
+        'tools' => '/Core/Tools',
+        'cache' => '/Cache'
+    ];
 
-	// == AMVC =========================================================
-	$di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
-	$di->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
+    $config->addUrls('Core', $urls);
 
-	// == IO ===========================================================
-	$di->mapFactory('core.io.file', '\Core\Lib\IO\File');
-	$di->mapFactory('core.io.http', '\Core\Lib\IO\Http');
+    // Runtime measurement start
+    $timer = $di['core.util.timer'];
+    $timer->start();
 
-	// == DATA ==========================================================
-	$di->mapFactory('core.data.validator', '\Core\Lib\Data\Validator');
+    // # Start session by calling instance factory
+    $di['core.http.session']->init();
 
-	// == CONTENT =======================================================
-	$di->mapService('core.content.content', '\Core\Lib\Content\Content', [
-		'core.http.router',
-		'core.cfg',
-		'core.amvc.creator',
-		'core.content.html.factory',
-		'core.content.nav',
-		'core.content.css',
-		'core.content.js',
-		'core.content.message'
-	]);
-	$di->mapService('core.content.lang', '\Core\Lib\Content\Language');
-	$di->mapService('core.content.ajax', '\Core\Lib\Content\Ajax', 'core.http.router');
-	$di->mapFactory('core.content.ajaxcmd', '\Core\Lib\Content\AjaxCommand');
-	$di->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
-	$di->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
-		'core.cfg',
-		'core.http.router'
-	]);
-	$di->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
-	$di->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
-	$di->mapService('core.content.nav', '\Core\Lib\Content\Menu');
-	$di->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
-	$di->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
+    // Try to autologin the user
+    $di['core.sec.security']->init();
 
-	// -------------------------------------------------------
-	// Config
-	// -------------------------------------------------------
+    // Use app creator to init Core config
 
-	/* @var $config \Core\Lib\Cfg */
-	$config = $di['core.cfg'];
+    /* @var $app_creator \Core\Lib\Amvc\Creator */
+    $app_creator = $di['core.amvc.creator'];
+    $app_creator->initAppConfig('Core');
 
-	$config->init($cfg);
-	$config->load();
+    // Initialize the apps
+    $app_dirs = [
+        $config->get('Core', 'dir_appssec'),
+        $config->get('Core', 'dir_apps')
+    ];
 
-	// Add dirs to config
-	$dirs = [
-		// Framework directory
-		'fw' => '/Core',
+    /* @var $content \Core\Lib\Content\Content */
+    $content = $di['core.content.content'];
 
-		// Framwork subdirectories
-		'css' => '/Core/Css',
-		'js' => '/Core/Js',
-		'lib' => '/Core/Lib',
-		'html' => '/Core/Html',
-		'tools' => '/Core/Tools',
-		'cache' => '/Cache',
+    $content->setTitle($config->get('Core', 'sitename'));
+    $content->meta->setCharset();
+    $content->meta->setViewport();
 
-		// Public application dir
-		'apps' => '/Apps',
+    // Autodiscover installed apps
+    $app_creator->autodiscover($app_dirs);
 
-		// Secure application dir
-		'appssec' => '/Core/AppsSec'
-	];
+    /* @var $router \Core\Lib\Http\Router */
+    $router = $di['core.http.router'];
 
-	$config->addPaths('Core', $dirs);
+    // Match request against stored routes
+    $router->match();
 
-	// Add urls to config
-	$urls = [
-		'apps' => '/Apps',
-		'appssec' => '/Core/AppsSec',
-		'css' => '/Core/Css',
-		'js' => '/Core/Js',
-		'tools' => '/Core/Tools',
-		'cache' => '/Cache'
-	];
+    $content->css->init();
+    $content->js->init();
 
-	$config->addUrls('Core', $urls);
+    // Try to use appname provided by router
+    $app_name = $router->getApp();
 
-	// Runtime measurement start
-	$timer = $di['core.util.timer'];
-	$timer->start();
+    // No app by request? Try to get default app from config or set Core as
+    // default app
+    if (! $app_name) {
+        $app_name = $config->exists('Core', 'default_app') ? $config->get('Core', 'default_app') : 'Core';
+    }
 
-	// # Start session by calling instance factory
-	$di['core.http.session']->init();
+    // Start with factoring the requested app
 
-	// Try to autologin the user
-	$di['core.sec.security']->init();
+    /* @var $app \Core\Lib\Amvc\App */
+    $app = $app_creator->create($app_name);
 
-	// Use app creator to init Core config
+    /**
+     * Each app can have it's own start procedure.
+     * This procedure is used to
+     * init apps with more than the app creator does. To use this feature the
+     * app needs run() method in it's main file.
+     */
+    if (method_exists($app, 'run')) {
+        $app->run();
+    }
 
-	/* @var $app_creator \Core\Lib\Amvc\Creator */
-	$app_creator = $di['core.amvc.creator'];
-	$app_creator->initAppConfig('Core');
+    // Get name of requested controller
+    $controller_name = $router->getCtrl();
 
-	// Initialize the apps
-	$app_dirs = [
-		$config->get('Core', 'dir_appssec'),
-		$config->get('Core', 'dir_apps')
-	];
+    // Set controller name to "Index" when no controller name has been returned
+    // from request handler
+    if (! $controller_name) {
+        $controller_name = 'Index';
+    }
 
-	/* @var $content \Core\Lib\Content\Content */
-	$content = $di['core.content.content'];
+    // Load controller object
+    $controller = $app->getController($controller_name);
 
-	$content->setTitle($config->get('Core', 'sitename'));
-	$content->meta->setCharset();
-	$content->meta->setViewport();
+    // Which controller action has to be run?
+    $action = $router->getAction();
 
-	// Autodiscover installed apps
-	$app_creator->autodiscover($app_dirs);
+    // No action => use Index as default
+    if (! $action) {
+        $action = 'Index';
+    }
 
-	/* @var $router \Core\Lib\Http\Router */
-	$router = $di['core.http.router'];
+    // Are there parameters to pass to run method?
+    $params = $router->getParam();
 
-	// Match request against stored routes
-	$router->match();
+    // Run controller and process result.
+    if ($router->isAjax()) {
 
-	$content->css->init();
-	$content->js->init();
+        try {
+            // Result will be processed as ajax command list
+            $controller->ajax($action, $params);
+        } catch (Exception $e) {
+            $di->get('core.error')->handleException($e, true, false);
+        }
 
-	// Try to use appname provided by router
-	$app_name = $router->getApp();
+        // Run ajax processor
+        header('Content-type: application/json');
+        echo $di['core.ajax']->process();
 
-	// No app by request? Try to get default app from config or set Core as
-	// default app
-	if (! $app_name) {
-		$app_name = $config->exists('Core', 'default_app') ? $config->get('Core', 'default_app') : 'Core';
-	}
+        // End end here
+        exit();
 
-	// Start with factoring the requested app
+    } else {
 
-	/* @var $app \Core\Lib\Amvc\App */
-	$app = $app_creator->create($app_name);
+        Try {
+            // Run controller and store result
+            $result = $controller->run($action, $params);
 
-	/**
-	 * Each app can have it's own start procedure.
-	 * This procedure is used to
-	 * init apps with more than the app creator does. To use this feature the
-	 * app needs run() method in it's main file.
-	 */
-	if (method_exists($app, 'run')) {
-		$app->run();
-	}
+            // No content created? Check app for onEmpty() event which maybe gives us content.
+            if (empty($result) && method_exists($app, 'onEmpty')) {
+                $result = $app->onEmpty();
+            }
 
-	// Get name of requested controller
-	$controller_name = $router->getCtrl();
+            // Append content provided by apps onBefore() event method
+            if (method_exists($app, 'onBefore')) {
+                $result = $app->onBefore() . $result;
+            }
 
-	// Set controller name to "Index" when no controller name has been returned
-	// from request handler
-	if (! $controller_name) {
-		$controller_name = 'Index';
-	}
+            // Prepend content provided by apps onAfter() event method
+            if (method_exists($app, 'onAfter')) {
+                $result .= $app->onAfter();
+            }
+        } catch (Exception $e) {
 
-	// Load controller object
-	$controller = $app->getController($controller_name);
+            $result = $di->get('core.error')->handleException($e, false);
+        }
 
-	// Which controller action has to be run?
-	$action = $router->getAction();
+        $content->setContent($result);
 
-	// No action => use Index as default
-	if (! $action) {
-		$action = 'Index';
-	}
+        // Call content builder
+        $content->render();
 
-	// Are there parameters to pass to run method?
-	$params = $router->getParam();
-
-	// Run controller and process result.
-	if ($router->isAjax()) {
-
-		// Result will be processed as ajax command list
-		$controller->ajax($action, $params);
-
-		// Run ajax processor
-		$di['core.content.ajax']->process();
-	} else {
-
-		// Run controller and store result
-		$result = $controller->run($action, $params);
-
-		// No content created? Check app for onEmpty() event which maybe gives us content.
-		if (empty($result) && method_exists($app, 'onEmpty')) {
-			$result = $app->onEmpty();
-		}
-
-		// Append content provided by apps onBefore() event method
-		if (method_exists($app, 'onBefore')) {
-			$result = $app->onBefore() . $result;
-		}
-
-		// Prepend content provided by apps onAfter() event method
-		if (method_exists($app, 'onAfter')) {
-			$result .= $app->onAfter();
-		}
-
-		$content->setContent($result);
-
-		// Call content builder
-		$content->render();
-
-		echo '
-		<div class="container">
+        echo '
+		<div class="container" style="max-height: 300px; overflow-y: scroll;">
 			<hr>
 			<h4>Debug</h4>
 			<p>Runtime : ' . $timer->stop() . 's</p>
 			<p>User Permissions:</p>
 			<p>';
 
-		var_dump($di['core.sec.security']->getPermissions());
+        var_dump($di['core.sec.security']->getPermissions());
 
-		echo '
+        echo '
 			</p>
 			<p>Permissions:</p>
 			<p>';
 
-		var_dump($di['core.sec.permission']->getPermissions());
+        var_dump($di['core.sec.permission']->getPermissions());
 
-		echo '
+        echo '
 			</p>
 			<p>Match:</p>
 			<p>';
 
-		var_dump($router->match());
+        var_dump($router->match());
 
-		echo '
+        echo '
 			</p>
 			<p>Routes:</p>
 			<p>';
 
-		echo '
+        echo '
 			</p>
 		</div>';
-	}
+    }
 }
 
 // # Error handling
 catch (Exception $e) {
-
-	echo '
-	<hr>
-	<div class="container">
-		<h3>';
-
-	if ($e instanceof PDOException) {
-		switch ($e->getCode()) {
-			case 2002:
-				echo 'DB host not found.';
-				break;
-
-			default:
-				echo $e->getMessage();
-		}
-	} else {
-
-		echo $e->getMessage() . '> ' . $e->getFile() . ' (' . $e->getLine() . ')<br>';
-	}
-
-	echo '</h3><pre>';
-
-	echo nl2br($e->xdebug_message);
-
-	echo '</pre>
-	</div>';
-
-	// $error = $di['core.error'];
-	// $errorsetError($e);
-	// echo $errorhandle();
+    echo $di['core.error']->handleException($e);
 }
 
 // That's it! Send all stuff to the browser.
