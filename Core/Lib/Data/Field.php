@@ -48,7 +48,7 @@ class Field implements \ArrayAccess
 	 *
 	 * @var mixed
 	 */
-	private $value = null;
+	private $value = '';
 
 	/**
 	 *
@@ -62,8 +62,11 @@ class Field implements \ArrayAccess
 	 */
 	private $validate = [];
 
+	public function __construct()
+	{}
 
-	public function __construct() {
+	public function __toString() {
+	    return (string) $this->value;
 	}
 
 	/**
@@ -111,6 +114,33 @@ class Field implements \ArrayAccess
 	{
 		$this->type = $type;
 
+		switch ($type) {
+			case 'int':
+			case 'integer':
+				$this->value = (int) $this->value;
+				break;
+			case 'bool':
+			case 'boolean':
+				$this->value = (bool) $this->value;
+				break;
+			case 'float':
+			case 'double':
+			case 'real':
+				$this->value = (float) $this->value;
+				break;
+			case 'string':
+				$this->value = (string) $this->value;
+				break;
+			case 'array':
+				$this->value = (array) $this->value;
+				break;
+			case 'object':
+				$this->value = (object) $this->value;
+				break;
+			default:
+				Throw new \InvalidArgumentException('The type "' . $type . '" is not supported for data fields');
+		}
+
 		return $this;
 	}
 
@@ -137,7 +167,7 @@ class Field implements \ArrayAccess
 	 */
 	public function setSize($size)
 	{
-		if  (!is_numeric($size)) {
+		if (! is_numeric($size)) {
 			Throw new \InvalidArgumentException('Only numbers are allowed as field size.');
 		}
 
@@ -186,13 +216,14 @@ class Field implements \ArrayAccess
 	}
 
 	/**
-	 * Returns field value. Same as getValue() only shorter.
+	 * Returns field value.
+	 * Same as getValue() only shorter.
 	 *
 	 * @return mixed
 	 */
 	public function get()
 	{
-		return $this->value();
+		return $this->value;
 	}
 
 	/**
@@ -206,12 +237,8 @@ class Field implements \ArrayAccess
 	 */
 	public function setValue($value)
 	{
-		if ($this->serialize) {
-			$value = unserialize($value);
-		}
-
 		// Is the data serialized?
-		elseif ($this->isSerialized($value)) {
+		if ($this->isSerialized($value)) {
 			$this->serialize = true;
 			$value = unserialize($value);
 		}
@@ -220,13 +247,35 @@ class Field implements \ArrayAccess
 
 		return $this;
 	}
+	
+	/**
+	 * Same as setValue only shorter.
+	 *
+	 * Takes care of serialized data.
+	 *
+	 * @param mixed $value
+	 *
+	 * @return \Core\Lib\Data\Field
+	 */
+	public function set($value)
+	{
+	    // Is the data serialized?
+	    if ($this->isSerialized($value)) {
+	        $this->serialize = true;
+	        $value = unserialize($value);
+	    }
+	
+	    $this->value = $value;
+	
+	    return $this;
+	}	
 
 	/**
 	 * Get validation rules.
 	 *
 	 * @return array
 	 */
-	public function getValidattion()
+	public function getValidation()
 	{
 		return $this->validate;
 	}
@@ -240,7 +289,7 @@ class Field implements \ArrayAccess
 	 */
 	public function setValidation($rule)
 	{
-		if (!is_array($rule)) {
+		if (! is_array($rule)) {
 			$rule = (array) $rule;
 		}
 
@@ -296,7 +345,8 @@ class Field implements \ArrayAccess
 	 *
 	 * @return number
 	 */
-	public function count() {
+	public function count()
+	{
 		if (is_string($this->value)) {
 			return strlen($this->value);
 		}
@@ -312,37 +362,46 @@ class Field implements \ArrayAccess
 
 	/**
 	 * (non-PHPdoc)
+	 *
 	 * @see ArrayAccess::offsetSet()
 	 */
-	public function offsetSet($offset, $value) {
+	public function offsetSet($offset, $value)
+	{
 		if (is_null($offset)) {
 			Throw new \InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
-		} else {
+		}
+		else {
 			$this->$offset = $value;
 		}
 	}
 
 	/**
 	 * (non-PHPdoc)
+	 *
 	 * @see ArrayAccess::offsetExists()
 	 */
-	public function offsetExists($offset) {
-		return isset($this->$offset);
+	public function offsetExists($offset)
+	{
+		return isset($this->$offset) && !empty($this->$offset);
 	}
 
 	/**
 	 * (non-PHPdoc)
+	 *
 	 * @see ArrayAccess::offsetUnset()
 	 */
-	public function offsetUnset($offset) {
+	public function offsetUnset($offset)
+	{
 		unset($this->$offset);
 	}
 
 	/**
 	 * (non-PHPdoc)
+	 *
 	 * @see ArrayAccess::offsetGet()
 	 */
-	public function offsetGet($offset) {
+	public function offsetGet($offset)
+	{
 		if (isset($this->$offset)) {
 			return $this->$offset;
 		}
