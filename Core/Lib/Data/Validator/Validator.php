@@ -1,29 +1,29 @@
 <?php
 namespace Core\Lib\Data\Validator;
 
+use Core\Lib\Data\Container;
 
-
-use Core\Lib\Data\DataAdapter;
 /**
- * Validator class to validate model data
+ * Validator
+ *
+ * Validates fields of a Container object against their validation rules.
+ * Adde errors on failed validation to Container errorlist.
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
- * @license BSD
- * @package WebExt
- * @subpackage Lib
+ * @license MIT
  * @todo Split into validator and function?
  */
 final class Validator
 {
-    use\Core\Lib\Traits\TextTrait;
+    use \Core\Lib\Traits\TextTrait;
 
     /**
      * The field name to check
      *
      * @var mixed
      */
-    private $fld;
+    private $field;
 
     /**
      * The value to check
@@ -33,11 +33,11 @@ final class Validator
     private $value;
 
     /**
-     * The associated mdoel
+     * container to check
      *
-     * @var Model
+     * @var Container
      */
-    private $model;
+    private $container = false;
 
     /**
      * Simple name of validation function
@@ -120,12 +120,22 @@ final class Validator
 
     /**
      * Constructor
-     *
-     * @param Model $model
      */
-    public function __construct(DataAdapter &$model)
+    public function __construct()
+    {}
+
+    /**
+     * Set container to run validation on.
+     *
+     * @param Container $container
+     *
+     * @return \Core\Lib\Data\Validator\Validator
+     */
+    public function setContainer(Container &$container)
     {
-        $this->model = $model;
+        $this->container = $container;
+
+        return $this;
     }
 
     /**
@@ -134,45 +144,26 @@ final class Validator
      */
     public function validate()
     {
-        // Get the validation stack from model
-        $validation_stack = $this->model->getValidationStack();
-
-        // No validation rule, no work for us to do
-        if (! $validation_stack)
+        // No container, no validation
+        if (! $this->container) {
             return;
+        }
 
-            // No model, no validation, but error :P
-        if (! isset($this->model))
-            Throw new \RuntimeException('Model definition is missing');
-
-            // No data to validate? Throw error.
-        if (! $this->model->data)
-            Throw new \RuntimeException('No data to validate found.');
-
-            // No column definition in model? Throw error.
-        if (! isset($this->model->columns) && $this->model->getColumns() == false)
-            Throw new \RuntimeException('No colums set to use for validation the data.');
-
-            // Validate each field set in the validation rule stack
-        foreach ($validation_stack as $fld => $rules) {
-            // Rule for a non existent field means no work at all. Skip rule.
-            if (! isset($this->model->data->{$fld}))
+        foreach ($this->container as $field) {
+            // No validation witout rules.
+            if (empty($field['validate'])) {
                 continue;
+            }
 
-                // Our current fieldname
-            $this->field = $fld;
+            // Our current fieldname
+            $this->field = $field['name'];
 
             // Our current value (trimmed)
-            $this->value = trim($this->model->data->{$fld});
+            $this->value = trim($field['value']);
 
-            // Convert single string validation defs to array
-            if (! is_array($rules))
-                $rules = array(
-                    $rules
-                );
+            // Validate each rule against the
+            foreach ($field['validate'] as $rule) {
 
-                // Walk through the rules set in models validate property
-            foreach ($rules as $rule) {
                 // Array type rules are for checks where the func needs one or more parameter
                 // So $rule[0] is the func name and $rule[1] the parameter.
                 // Parameters can be of type array where the elements are used as function parameters in the .. they are set.
@@ -204,17 +195,20 @@ final class Validator
                 ), $this->params);
 
                 // Current rules message overwrites maybe set error values
-                if (isset($this->msg))
+                if (isset($this->msg)) {
                     $this->error = $this->txt($this->msg);
+                }
 
-                    // If no error message is set, use the default validato error
-                if (! isset($this->error))
-                    $this->error = $this->txt('web_validator_error');
+                // If no error message is set, use the default validato error
+                if (! isset($this->error)) {
+                    $this->error = $this->txt('validator_error');
+                }
 
-                    // Is the validation result negative eg false?
+                // Is the validation result negative eg false?
                 if ($this->result === false) {
+
                     // Validation ends with an error
-                    $this->model->addError($fld, $this->error);
+                    $this->container->setError($this->field, $this->error);
 
                     // Clear msg and error properties
                     unset($this->msg, $this->error);
@@ -222,12 +216,14 @@ final class Validator
                     // Is the clear flag set in rule, the content of the field will be cleared
                     // This is useful for password fields or all other fields where you want
                     // to force the user to retype data.
-                    if (isset($rule['clear']))
-                        $this->model->data->{$fld} = null;
+                    if (isset($rule['clear'])) {
+                        $this->container[$this->field] = null;
+                    }
 
-                        // Stop rest of validation if stop flag isset in rule
-                    if (isset($rule['stop']))
+                    // Stop rest of validation if stop flag isset in rule
+                    if (isset($rule['stop'])) {
                         break;
+                    }
                 }
             }
         }
@@ -242,8 +238,8 @@ final class Validator
      */
     private function __Required()
     {
-        $this->result = isset($this->model->data->{$this->field});
-        $this->error = $this->txt('web_validator_required');
+        $this->result = isset($this->container[$this->field]);
+        $this->error = $this->txt('validator_required');
     }
 
     /**
@@ -252,7 +248,7 @@ final class Validator
     private function __Blank()
     {
         $this->result = $this->value !== '' ? true : false;
-        $this->error = $this->txt('web_validator_blank');
+        $this->error = $this->txt('validator_blank');
     }
 
     /**
@@ -260,8 +256,8 @@ final class Validator
      */
     private function __Empty()
     {
-        $this->result = isset($this->model->data->{$this->field}) && empty($this->value) ? ($this->value == '0' . $this->value ? true : false) : true;
-        $this->error = $this->txt('web_validator_empty');
+        $this->result = isset($this->container[$this->field]) && empty($this->value) ? ($this->value == '0' . $this->value ? true : false) : true;
+        $this->error = $this->txt('validator_empty');
     }
 
     /**
@@ -271,10 +267,10 @@ final class Validator
      */
     private function __Min($min, $type = 'string')
     {
-        if ($type == 'string')
-            $this->__TxtMinLength($min);
-        else
+        if (is_numeric($this->value))
             $this->__NumberMin($min);
+        else
+            $this->__TxtMinLength($min);
     }
 
     /**
@@ -282,12 +278,12 @@ final class Validator
      *
      * @param int $max
      */
-    private function __Max($max, $type = 'string')
+    private function __Max($max)
     {
-        if ($type == 'string')
-            $this->__TxtMaxLength($max);
-        else
+        if (is_numeric($this->value))
             $this->__NumberMax($max);
+        else
+            $this->__TxtMaxLength($max);
     }
 
     /**
@@ -296,12 +292,13 @@ final class Validator
      * @param int $min
      * @param int $max
      */
-    private function __Range($min, $max, $type = 'string')
+    private function __Range($min, $max)
     {
-        if ($type == 'string')
-            $this->__TxtLengthBetween($min, $max);
-        else
+        if (is_numeric($this->value)) {
             $this->__NumberRange($min, $max);
+        } else {
+            $this->__TxtLengthBetween($min, $max);
+        }
     }
 
     /**
@@ -310,7 +307,7 @@ final class Validator
     private function __Date()
     {
         $this->result = strtotime($this->value) === false ? false : true;
-        $this->error = $this->txt('web_validator_date');
+        $this->error = $this->txt('validator_date');
     }
 
     /**
@@ -319,7 +316,7 @@ final class Validator
     private function __DateTime()
     {
         $this->result = strtotime($this->value) === false ? false : true;
-        $this->error = $this->txt('web_validator_datetime');
+        $this->error = $this->txt('validator_datetime');
     }
 
     /**
@@ -328,6 +325,7 @@ final class Validator
     private function __DateIso()
     {
         if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $this->value, $parts) == true) {
+
             $this->result = false;
 
             // Build time from parts
@@ -344,7 +342,7 @@ final class Validator
             $this->result = false;
         }
 
-        $this->error = $this->txt('web_validator_date_iso');
+        $this->error = $this->txt('validator_date_iso');
     }
 
     /**
@@ -355,7 +353,7 @@ final class Validator
     private function __TxtMinLength($min)
     {
         $this->result = strlen($this->value) >= $min;
-        $this->error = sprintf($this->txt('web_validator_textminlength'), $min);
+        $this->error = sprintf($this->txt('validator_textminlength'), $min);
     }
 
     /**
@@ -366,7 +364,7 @@ final class Validator
     private function __TxtMaxLength($max)
     {
         $this->result = strlen((string) $this->value) <= $max;
-        $this->error = sprintf($this->txt('web_validator_textmaxlength'), $max);
+        $this->error = sprintf($this->txt('validator_textmaxlength'), $max);
     }
 
     /**
@@ -380,7 +378,7 @@ final class Validator
         $value = (string) $this->value;
 
         $this->result = strlen($value) >= $min && strlen($value) <= $max;
-        $this->error = sprintf($this->txt('web_validator_textrange'), $min, $max, strlen($this->value));
+        $this->error = sprintf($this->txt('validator_textrange'), $min, $max, strlen($this->value));
     }
 
     /**
@@ -394,7 +392,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_time24');
+        $this->error = $this->txt('validator_time24');
     }
 
     private function __Phone()
@@ -405,7 +403,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_phone');
+        $this->error = $this->txt('validator_phone');
     }
 
     /**
@@ -414,7 +412,7 @@ final class Validator
     private function __Email()
     {
         $this->result = filter_var($this->value, FILTER_VALIDATE_EMAIL);
-        $this->error = $this->txt('web_validator_email');
+        $this->error = $this->txt('validator_email');
     }
 
     /**
@@ -423,7 +421,7 @@ final class Validator
     private function __Integer()
     {
         $this->result = is_int($this->value);
-        $this->error = $this->txt('web_validator_integer');
+        $this->error = $this->txt('validator_integer');
     }
 
     /**
@@ -432,7 +430,7 @@ final class Validator
     private function __Float()
     {
         $this->result = is_float($this->value);
-        $this->error = $this->txt('web_validator_float');
+        $this->error = $this->txt('validator_float');
     }
 
     /**
@@ -443,7 +441,7 @@ final class Validator
     private function __NumberMin($min)
     {
         $this->result = $this->value >= $min;
-        $this->error = sprintf($this->txt('web_validator_numbermin'), $min);
+        $this->error = sprintf($this->txt('validator_numbermin'), $min);
     }
 
     /**
@@ -454,7 +452,7 @@ final class Validator
     private function __NumberMax($max)
     {
         $this->result = $this->value <= $max;
-        $this->error = sprintf($this->txt('web_validator_numbermax'), $max);
+        $this->error = sprintf($this->txt('validator_numbermax'), $max);
     }
 
     /**
@@ -466,7 +464,7 @@ final class Validator
     private function __NumberRange($min, $max)
     {
         $this->result = $this->value >= $min && $this->value <= $max;
-        $this->error = sprintf($this->txt('web_validator_numberrange'), $min, $max);
+        $this->error = sprintf($this->txt('validator_numberrange'), $min, $max);
     }
 
     /**
@@ -480,7 +478,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_number');
+        $this->error = $this->txt('validator_number');
     }
 
     /**
@@ -494,7 +492,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_ipv4');
+        $this->error = $this->txt('validator_ipv4');
     }
 
     /**
@@ -508,7 +506,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_url');
+        $this->error = $this->txt('validator_url');
     }
 
     /**
@@ -522,7 +520,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_number');
+        $this->error = $this->txt('validator_number');
     }
 
     /**
@@ -536,7 +534,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_alpha');
+        $this->error = $this->txt('validator_alpha');
     }
 
     /**
@@ -550,7 +548,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_alnum');
+        $this->error = $this->txt('validator_alnum');
     }
 
     /**
@@ -563,7 +561,7 @@ final class Validator
                 "regexp" => $regexp
             )
         ));
-        $this->error = $this->txt('web_validator_customregex');
+        $this->error = $this->txt('validator_customregex');
     }
 
     /**
@@ -605,7 +603,7 @@ final class Validator
                 break;
         }
 
-        $this->error = sprintf($this->txt('web_validator_compare'), $this->value, $to_compare_with, $mode);
+        $this->error = sprintf($this->txt('validator_compare'), $this->value, $to_compare_with, $mode);
     }
 
     /**
@@ -626,7 +624,7 @@ final class Validator
         else
             $this->result = false;
 
-        $this->error = $this->txt('web_validator_equals');
+        $this->error = $this->txt('validator_equals');
     }
 
     /**
@@ -646,7 +644,7 @@ final class Validator
         else
             $this->result = false;
 
-        $this->error = $this->txt('web_validator_bigger');
+        $this->error = $this->txt('validator_bigger');
     }
 
     /**
@@ -666,7 +664,7 @@ final class Validator
         else
             $this->result = false;
 
-        $this->error = $this->txt('web_validator_smaller');
+        $this->error = $this->txt('validator_smaller');
     }
 
     /**
@@ -687,20 +685,22 @@ final class Validator
         else
             $this->result = false;
 
-        $this->error = $this->txt('web_validator_bigger_or_equal');
+        $this->error = $this->txt('validator_bigger_or_equal');
     }
 
     /**
      * Uses a model function to validate value.
      *
-     * @param string $model_function The name of function in model
-     * @param string $message Message to show on fail. Uses modelapp relatet string for translation.
+     * @param string $model_function
+     *            The name of function in model
+     * @param string $message
+     *            Message to show on fail. Uses modelapp relatet string for translation.
      */
     private function __CustomFunction($model_function, $message)
     {
         $result = $this->model->{$model_function}($this->value);
 
         $this->result = is_bool($result) ? $result : false;
-        $this->error = $this->model->txt($message);
+        $this->error = $message;
     }
 }
