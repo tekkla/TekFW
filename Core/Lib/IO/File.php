@@ -18,12 +18,26 @@ class File
 
 	private $file_name;
 
+	/**
+	 * Sets full path to file
+	 *
+	 * @param string $path
+	 *
+	 * @return \Core\Lib\IO\File
+	 */
 	public function setPath($path)
 	{
 		$this->path = $path;
 		return $this;
 	}
 
+	/**
+	 * Set file name without path
+	 *
+	 * @param string $file_name
+	 *
+	 * @return \Core\Lib\IO\File
+	 */
 	public function setFileName($file_name)
 	{
 		$this->file_name = $file_name;
@@ -37,6 +51,7 @@ class File
 	 * value boolean false/true
 	 *
 	 * @param string $path Path and name of dir
+	 *
 	 * @return string bool
 	 */
 	public function createDir($path)
@@ -46,19 +61,26 @@ class File
 	}
 
 	/**
-	 * Deletes a given dir and recursive all files and folders within it.
+	 * Deletes recursive a given dir inclusive all files and folders within it.
 	 *
 	 * @param $dirname Path to the dir
+	 *
 	 * @return boolean
+	 *
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
 	 */
 	public function deleteDir($dirname)
 	{
 		if (is_dir($dirname)) {
 			$dir_handle = opendir($dirname);
 		}
+		else {
+			Throw new \InvalidArgumentException('The dirname parameter is not a valid directory');
+		}
 
 		if (! $dir_handle) {
-			return false;
+			Throw new \RuntimeException('Directory handle couldn\'t be created.');
 		}
 
 		while (($file = readdir($dir_handle)) != false) {
@@ -79,12 +101,12 @@ class File
 
 	/**
 	 * Moves the source to the destination.
-	 * Both parameter have be to full paths.
-	 * On success the return value will be the destination path. Otherwise it will
-	 * be boolean false.
+	 * Both parameter have to be a full paths.On success the return value will be the destination path.
+	 * Otherwise it will be boolean false.
 	 *
 	 * @param string $source Path to source file
 	 * @param string $destination Path to destination file
+
 	 * @return string boolean
 	 */
 	public function moveFile($source, $destination)
@@ -100,13 +122,15 @@ class File
 
 	/**
 	 * Same as php's core move_uploaded_file extended with destination file exists
-	 * check.
-	 * Fails this check an error exception is throwm.
+	 * check. Fails this check an exception is throwm.
 	 *
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $check_exists
-	 * @throws Error
+	 *
+	 * @return boolean
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function moveUploadedFile($source, $destination, $check_exists = true)
 	{
@@ -122,8 +146,10 @@ class File
 	 *
 	 * @param string $full_path Complete path to file
 	 * @param string $log_missing
-	 * @throws Error
+	 *
 	 * @return boolean
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function exists($full_path, $log_missing = false)
 	{
@@ -141,7 +167,10 @@ class File
 	 * For example: 1024 => 1 KByte
 	 *
 	 * @param int $bytes
+	 *
 	 * @return string unknown
+	 *
+	 * @throws \InvalidArgumentException
 	 */
 	public function convFilesize($bytes)
 	{
@@ -171,6 +200,7 @@ class File
 	 *
 	 * @param string $name The string to cleanup
 	 * @param string $delimiter
+	 *
 	 * @return string
 	 */
 	public function cleanFilename($name, $delimiter = '-')
@@ -194,8 +224,10 @@ class File
 	 * Returns an array of files inside the given directory path.
 	 *
 	 * @param string $path Directory path to get filelist from
-	 * @throws PathError
+	 *
 	 * @return void multitype:string
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function getFilenamesFromDir($path)
 	{
@@ -232,7 +264,7 @@ class File
 	}
 
 	/**
-	 * Returns uploads done with TekFW
+	 * Returns uploads
 	 *
 	 * @return array
 	 */
@@ -242,9 +274,10 @@ class File
 	}
 
 	/**
-	 * Transforms the php.ini notation for numbers (like '2M') to an integer (2*1024*1024 in this case)
+	 * Transforms the php.ini notation for numbers (like '2M') to an integer (2*1024*1024 in case of 2M)
 	 *
 	 * @var $size string Size inas string (like '2M')
+	 *
 	 * @return int Size in bytes
 	 */
 	public function convertPHPSizeToBytes($size)

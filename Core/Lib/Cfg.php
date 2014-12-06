@@ -1,11 +1,11 @@
 <?php
 namespace Core\Lib;
 
-if (!defined('TEKFW'))
-	die('Cannot run without TekFW framework...');
+use Core\Lib\Data\DataAdapter;
 
 /**
  * Handles all TekFW low level config related stuff
+ *
  * @author Michael "Tekkla" Zorn (tekkla@tekkla.de)
  * @copyright 2014
  * @license MIT
@@ -14,19 +14,28 @@ if (!defined('TEKFW'))
  */
 final class Cfg
 {
-	use \Core\Lib\Traits\SerializeTrait;
+	use\Core\Lib\Traits\SerializeTrait;
 
+	/**
+	 *
+	 * @var array
+	 */
 	private $cfg;
 
-	private $db;
+	/**
+	 *
+	 * @var DataAdapter
+	 */
+	private $adapter;
 
-	public function __construct($db)
+	public function __construct(DataAdapter $adapter)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
 	}
 
 	/**
 	 * Get an cfg setting
+	 *
 	 * @param string $app
 	 * @param string $key
 	 * @throws Error
@@ -35,7 +44,7 @@ final class Cfg
 	public function get($app, $key = null)
 	{
 		// Calls only with app name indicates, that the complete app config is requested
-		if (!isset($key) && isset($this->cfg[$app])) {
+		if (! isset($key) && isset($this->cfg[$app])) {
 			return $this->cfg[$app];
 		}
 
@@ -50,6 +59,7 @@ final class Cfg
 
 	/**
 	 * Set a cfg setting
+	 *
 	 * @param string $app
 	 * @param string $key
 	 * @param mixed $val
@@ -61,40 +71,50 @@ final class Cfg
 
 	/**
 	 * Checks the state of a cfg setting.
+	 *
 	 * Returns true for set and false for not set.
+	 *
 	 * @param string $app
 	 * @param string $key
 	 */
 	public function exists($app, $key = null)
 	{
 		// No app found = false
-		if (!isset($this->cfg[$app]))
+		if (! isset($this->cfg[$app])) {
 			return false;
+		}
 
 		// app found and no key requested? true
-		if (!isset($key))
+		if (! isset($key)) {
 			return true;
+		}
 
 		// key requested and found? true
-		if (isset($key) && isset($this->cfg[$app][$key]))
+		if (isset($key) && isset($this->cfg[$app][$key])) {
 			return true;
+		}
 
 		// All other: false
 		return false;
 	}
 
-
 	/**
-	 * Init config. Parameter is used as initial core config
+	 * Init config.
+	 * Parameter is used as initial core config
+	 *
 	 * @param array $cfg
 	 */
-	public function init($cfg=array())
+	public function init($cfg = array())
 	{
-		if (!is_array($cfg))
+		if (! is_array($cfg)) {
 			Throw new \InvalidArgumentException('Initial config needs to be an array');
+		}
 
-		if ($cfg)
-			$this->cfg = array('Core' => $cfg);
+		if ($cfg) {
+			$this->cfg = array(
+				'Core' => $cfg
+			);
+		}
 	}
 
 	/**
@@ -102,32 +122,34 @@ final class Cfg
 	 */
 	public function load()
 	{
-		$this->db->query('SELECT * FROM {db_prefix}config ORDER BY app, cfg');
-		$this->db->execute();
+		$this->adapter->query('SELECT * FROM {db_prefix}config ORDER BY app, cfg');
+		$this->adapter->execute();
 
-		$results = $this->db->resultset(\PDO::FETCH_NUM);
+		$results = $this->adapter->all(\PDO::FETCH_NUM);
 
-		foreach ( $results as $row )
-		{
+		foreach ($results as $row) {
 			// Check for serialized data and unserialize it
-			if ($this->isSerialized($row[3]))
+			if ($this->isSerialized($row[3])) {
 				$row[3] = unserialize($row[3]);
+			}
 
 			$this->cfg[$row[1]][$row[2]] = $row[3];
 		}
 	}
 
-	public function addPaths($app='Core', $dirs = array())
+	public function addPaths($app = 'Core', $dirs = array())
 	{
 		// Write dirs to config storage
-		foreach ( $dirs as $key => $val )
+		foreach ($dirs as $key => $val) {
 			$this->cfg[$app]['dir_' . $key] = BASEDIR . $val;
+		}
 	}
 
 	public function addUrls($app = 'Core', $urls = array())
 	{
 		// Write urls to config storage
-		foreach ( $urls as $key => $val )
+		foreach ($urls as $key => $val) {
 			$this->cfg[$app]['url_' . $key] = BASEURL . $val;
+		}
 	}
 }

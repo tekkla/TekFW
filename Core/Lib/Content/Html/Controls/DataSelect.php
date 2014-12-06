@@ -5,6 +5,7 @@ use Core\Lib\Content\Html\Form\Select;
 
 /**
  * Creates a data driven select element
+ * 
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Controls
@@ -13,100 +14,96 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class DataSelect extends Select
 {
-	/**
-	 * The data from which the options of the select will be created
-	 * @var array
-	 */
-	private $datasource;
 
-	/**
-	 * How to use the data in the selects option
-	 * @var string
-	 */
-	private $datatype;
+    /**
+     * The data from which the options of the select will be created
+     * 
+     * @var array
+     */
+    private $datasource;
 
-	/**
-	 * The value which should causes an option to be selected.
-	 * Can be a value or an array of values
-	 * @var mixed
-	 */
-	private $selected;
+    /**
+     * How to use the data in the selects option
+     * 
+     * @var string
+     */
+    private $datatype;
 
-	/**
-	 * Sets a datasource
-	 * @param string $app
-	 * Name of app the model is of
-	 * @param string $model
-	 * Name of model
-	 * @param string $func
-	 * Action to run on model
-	 * @param string $params
-	 * Array of parameter used by the model
-	 * @param string $datatype
-	 * How to use the modeldata in the select options (value and inner value)
-	 * @return \Core\Lib\Content\Html\Controls\DataSelect
-	 */
-	public function setDataSource($app_name, $model, $func, $param = array(), $datatype = 'assoc')
-	{
-		// Create model object
-		$model = $this->di['core.amvc.creator']->create($app_name)->getModel($model);
+    /**
+     * The value which should causes an option to be selected.
+     * Can be a value or an array of values
+     * 
+     * @var mixed
+     */
+    private $selected;
 
-		// Get data from model and use is as datasource
-		$this->datasource = $this->di->invokeMethod($model, $func, $param);
+    /**
+     * Sets a datasource
+     * 
+     * @param string $app Name of app the model is of
+     * @param string $model Name of model
+     * @param string $func Action to run on model
+     * @param string $params Array of parameter used by the model
+     * @param string $datatype How to use the modeldata in the select options (value and inner value)
+     * @return \Core\Lib\Content\Html\Controls\DataSelect
+     */
+    public function setDataSource($app_name, $model, $func, $params = array(), $datatype = 'assoc')
+    {
+        // Create model object
+        $model = $this->di['core.amvc.creator']->create($app_name)->getModel($model);
+        
+        // Get data from model and use is as datasource
+        $this->datasource = $this->di->invokeMethod($model, $func, $params);
+        
+        // Set the dataype
+        $this->datatype = $datatype;
+        
+        return $this;
+    }
 
-		// Set the dataype
-		$this->datatype = $datatype;
+    /**
+     * Set one or more values to set as selected
+     * 
+     * @param int|string|array
+     * @return \Core\Lib\Content\Html\Controls\DataSelect
+     */
+    public function setSelectedValue($selected)
+    {
+        $this->selected = $selected;
+        return $this;
+    }
 
-		return $this;
-	}
-
-	/**
-	 * Set one or more values to set as selected
-	 * @param
-	 * int|string|array
-	 * @return \Core\Lib\Content\Html\Controls\DataSelect
-	 */
-	public function setSelectedValue($selected)
-	{
-		$this->selected = $selected;
-		return $this;
-	}
-
-	/**
-	 * Builds and returna html code
-	 * @see \Core\Lib\Content\Html\Form\Select::build()
-	 */
-	public function build()
-	{
-		foreach ( $this->datasource as $val => $inner )
-		{
-			$option = $this->createOption();
-
-			// inner will always be used
-			$option->setInner($inner);
-
-			// if we have an assoc datasource we use the value attribute
-			if ($this->datatype == 'assoc')
-				$option->setValue($val);
-
-				// in dependence of the data type is value to be selected $val or $inner
-			if (isset($this->selected))
-			{
-				// A list of selected?
-				if (is_array($this->selected))
-				{
-					if (array_search(( $this->datatype == 'assoc' ? $val : $inner ), $this->selected))
-						$option->isSelected(1);
-				}
-				// Or a value to look for?
-				else
-				{
-					if ($this->selected == ( $this->datatype == 'assoc' ? $val : $inner ))
-						$option->isSelected(1);
-				}
-			}
-		}
-
-		return parent::build();
-	}
+    /**
+     * Builds and returna html code
+     * 
+     * @see \Core\Lib\Content\Html\Form\Select::build()
+     */
+    public function build()
+    {
+        foreach ($this->datasource as $val => $inner) {
+            $option = $this->createOption();
+            
+            // inner will always be used
+            $option->setInner($inner);
+            
+            // if we have an assoc datasource we use the value attribute
+            if ($this->datatype == 'assoc')
+                $option->setValue($val);
+                
+                // in dependence of the data type is value to be selected $val or $inner
+            if (isset($this->selected)) {
+                // A list of selected?
+                if (is_array($this->selected)) {
+                    if (array_search(($this->datatype == 'assoc' ? $val : $inner), $this->selected))
+                        $option->isSelected(1);
+                }                 // Or a value to look for?
+                else {
+                    if ($this->selected == ($this->datatype == 'assoc' ? $val : $inner))
+                        $option->isSelected(1);
+                }
+            }
+        }
+        
+        return parent::build();
+    }
 }

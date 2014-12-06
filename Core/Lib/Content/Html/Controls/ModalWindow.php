@@ -3,6 +3,7 @@ namespace Core\Lib\Content\Html\Controls;
 
 /**
  * Creates a Bootstrap modal window control
+ * 
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Controls
@@ -11,47 +12,53 @@ namespace Core\Lib\Content\Html\Controls;
  */
 class ModalWindow
 {
-	/**
-	 * Windowtitle
-	 * @var string
-	 */
-	private $title = 'ModalWindow';
 
-	/**
-	 * Content
-	 * @var string
-	 */
-	private $content = 'No content set';
+    /**
+     * Windowtitle
+     * 
+     * @var string
+     */
+    private $title = 'ModalWindow';
 
-	/**
-	 * Set title of window
-	 * @param string $title
-	 * @return \Core\Lib\Content\Html\Controls\ModalWindow
-	 */
-	public function setTitle($title)
-	{
-		$this->title = $title;
-		return $this;
-	}
+    /**
+     * Content
+     * 
+     * @var string
+     */
+    private $content = 'No content set';
 
-	/**
-	 * Sets content of window
-	 * @param string $content
-	 * @return \Core\Lib\Content\Html\Controls\ModalWindow
-	 */
-	public function setContent($content)
-	{
-		$this->content = $content;
-		return $this;
-	}
+    /**
+     * Set title of window
+     * 
+     * @param string $title
+     * @return \Core\Lib\Content\Html\Controls\ModalWindow
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+        return $this;
+    }
 
-	/**
-	 * Builds and returns modal window html
-	 * @return string
-	 */
-	public function build()
-	{
-		$html = '
+    /**
+     * Sets content of window
+     * 
+     * @param string $content
+     * @return \Core\Lib\Content\Html\Controls\ModalWindow
+     */
+    public function setContent($content)
+    {
+        $this->content = $content;
+        return $this;
+    }
+
+    /**
+     * Builds and returns modal window html
+     * 
+     * @return string
+     */
+    public function build()
+    {
+        $html = '
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -65,7 +72,7 @@ class ModalWindow
 				</div>
 			</div>
 		</div>';
-
-		return $html;
-	}
+        
+        return $html;
+    }
 }

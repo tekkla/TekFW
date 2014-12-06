@@ -1,5 +1,4 @@
 <?php
-
 namespace Core\AppsSec\Doc\View;
 
 use Core\Lib\Amvc\View;
@@ -7,66 +6,66 @@ use Core\Lib\Amvc\View;
 /**
  *
  * @author Michael
- *
+ *        
  */
 class MainView extends View
 {
 
-	public function Index()
-	{
-		echo '
+    public function Index()
+    {
+        echo '
 		<div class="row
 			<div class="col-lg-9';
-
-		$this->content();
-
-		echo '
+        
+        $this->content();
+        
+        echo '
 			</di
 			<div class="col-lg-3';
-
-		$this->menu();
-
-		echo '
+        
+        $this->menu();
+        
+        echo '
 			</di
 		</di';
-	}
+    }
 
-	private function menu()
-	{
-		echo '
+    private function menu()
+    {
+        echo '
 		<div id="app-doc-sidebar
 			<ul class="nav';
 
 		foreach ( ->menu as $menu )
-		{
-			echo '
+		
+        {
+            echo '
 				<l
 					<a href="#app-doc-', $menu['node'], '', $menu['title'], '</';
-
-			if ($menu['subs'])
-			{
-				echo '<ul class="nav';
-
-				foreach ( $menu['subs'] as $sub )
-					echo '<l<a href="#app-doc-', $menu['node'], '-', $sub['node'], '', $sub['title'], '</</l';
-
-				echo '</u';
-			}
-
-			echo '
+            
+            if ($menu['subs']) {
+                echo '<ul class="nav';
+                
+                foreach ($menu['subs'] as $sub)
+                    echo '<l<a href="#app-doc-', $menu['node'], '-', $sub['node'], '', $sub['title'], '</</l';
+                
+                echo '</u';
+            }
+            
+            echo '
 				</l';
-		}
-
-		echo '
+        }
+        
+        echo '
 			</u
 		</di';
-	}
+    }
 
-	private function content()
-	{
-
-		// Intro
-		echo '
+    private function content()
+    {
+        
+        // Intro
+        echo '
 
 		<div class="app-doc-section
 			<h1 id="app-doc-welcome" class="page-headerWelcome to the TekFW framework Docs</h
@@ -128,8 +127,8 @@ class MainView extends View
 			<Each app has to have a mainfile called <codYourAppName.php</cod in the <codApps\YourAppName</cod folder. In this file you can define pretty much things like using od css, js an language files or about controlling and running your app. An app mainfile could look like this:</
 			<div class="highlight
 				<pr';
-
-		echo highlight_php_code('<?php
+        
+        echo highlight_php_code('<?php
 // Namespace
 namespace Apps\YourAppName;
 
@@ -177,7 +176,7 @@ final class YourAppName extends App
 	public $hooks = [];
 }
 ');
-		echo '
+        echo '
 				</pr
 			</di
 			<hDescription of structure</h
@@ -210,5 +209,5 @@ final class YourAppName extends App
 			<Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</
 			<Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</
 		</di';
-	}
+    }
 }

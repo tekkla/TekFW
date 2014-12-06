@@ -2,209 +2,422 @@
 namespace Core\Lib;
 
 use Core\Lib\Amvc\App;
+
 /**
+ *  DI Container
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014
+ * @license MIT
  *
  */
 class DI implements \ArrayAccess
 {
 
-	private static $map = [];
+    private $map = [];
 
-	private static $singletons = [];
+    private $services = [];
 
-	public function singleton($class_name, $arguments = null)
-	{
-		if (! isset(self::$singletons[$class_name])) {
-			self::$singletons[$class_name] = $this->instance($class_name, $arguments);
-		}
+    public function __construct($defaults = true)
+    {
+        if ($defaults == true)
+            $this->mapDefaults();
+    }
 
-		return self::$singletons[$class_name];
-	}
+    /**
+     * Maps some core default services, factories and values
+     */
+    private function mapDefaults()
+    {
+        global $cfg;
 
-	public function factory($class_name, $arguments = null)
-	{
-		if ($arguments !== null && ! is_array($arguments)) {
-			$arguments = (array) $arguments;
-		}
+        $this->mapValue('core.di', $this);
 
-		// Replace text arguments with objects
-		foreach ($arguments as $key => $arg) {
+        // == DB ===========================================================
+        $this->mapValue('db.default.driver', $cfg['db_driver']);
+        $this->mapValue('db.default.host', $cfg['db_host']);
+        $this->mapValue('db.default.port', $cfg['db_port']);
+        $this->mapValue('db.default.name', $cfg['db_name']);
+        $this->mapValue('db.default.user', $cfg['db_user']);
+        $this->mapValue('db.default.pass', $cfg['db_pass']);
+        $this->mapValue('db.default.options', [
+            \PDO::ATTR_PERSISTENT => true,
+            \PDO::ATTR_ERRMODE => 2,
+            \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+        ]);
+        $this->mapValue('db.default.prefix', $cfg['db_prefix']);
+        $this->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
+            'db.default.name',
+            'db.default.driver',
+            'db.default.host',
+            'db.default.port',
+            'db.default.user',
+            'db.default.pass',
+            'db.default.options'
+        ]);
+        $this->mapFactory('db.default', '\Core\Lib\Data\DataAdapter', [
+            'db',
+            [
+                'conn::db.default.conn',
+                'prefix::db.default.prefix'
+            ]
+        ]);
 
-			// Skip strings without di container typical dot
-			if (($arg instanceof App) || strpos($arg, '.') === false) {
-				continue;
-			}
+        // == CONFIG =======================================================
+        $this->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
 
-			$arguments[$key] = $this[$arg];
-		}
+        // == ERROR=========================================================
+        $this->mapFactory('core.error', '\Core\Lib\Error\Error');
 
-		// And add this di container as last arguments
-		$arguments[] = $this;
+        // == HTTP =========================================================
+        $this->mapService('core.http.router', '\Core\Lib\Http\Router');
+        $this->mapService('core.http.post', '\Core\Lib\Http\Post', 'core.http.router');
+        $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
+        $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
 
-		$reflection = new \ReflectionClass($class_name);
+        // == UTILITIES ====================================================
+        $this->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
+        $this->mapFactory('core.util.time', '\Core\Lib\Utilities\Time');
+        $this->mapFactory('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
+        $this->mapFactory('core.util.date', '\Core\Lib\Utilities\Date');
+        $this->mapFactory('core.util.debug', '\Core\Lib\Utilities\Debug');
+        $this->mapService('core.util.fire', '\FB');
 
-		// Make sure the class has a factory method
-		if (! $reflection->hasMethod('factory')) {
-			Throw new \RuntimeException($class_name . '::factory() does not exist.');
-		}
+        // == SECURITY =====================================================
+        $this->mapService('core.sec.security', '\Core\Lib\Security\Security', [
+            'db.default',
+            'core.cfg',
+            'core.http.session',
+            'core.http.cookie',
+            'core.sec.user.current',
+            'core.sec.group',
+            'core.sec.permission'
+        ]);
+        $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
+            'db.default',
+            'core.sec.permission'
+        ]);
+        $this->mapService('core.sec.user.current', '\Core\Lib\Security\User', [
+            'db.default',
+            'core.sec.permission'
+        ]);
+        $this->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
+        $this->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
+        $this->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
 
-		return call_user_func_array($class_name . '::factory', $arguments);
-	}
+        // == AMVC =========================================================
+        $this->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
+        $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
-	public function instance($class_name, $arguments = null)
-	{
-		// initialized the ReflectionClass
-		$reflection = new \ReflectionClass($class_name);
+        // == IO ===========================================================
+        $this->mapFactory('core.io.file', '\Core\Lib\IO\File');
+        $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
-		// creating an instance of the class
-		if ($arguments === null || count($arguments) == 0) {
+        // == DATA ==========================================================
+        $this->mapFactory('core.data.validator', '\Core\Lib\Data\Validator\Validator');
+        $this->mapFactory('core.data.container', '\Core\Lib\Data\Container');
 
-			// Create instance without arguments
-			$obj = new $class_name();
-		}
-		else {
+        // == CONTENT =======================================================
+        $this->mapService('core.content.content', '\Core\Lib\Content\Content', [
+            'core.http.router',
+            'core.cfg',
+            'core.amvc.creator',
+            'core.content.html.factory',
+            'core.content.nav',
+            'core.content.css',
+            'core.content.js',
+            'core.content.message'
+        ]);
+        $this->mapService('core.content.lang', '\Core\Lib\Content\Language');
+        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
+        $this->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
+            'core.cfg',
+            'core.http.router'
+        ]);
+        $this->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
+        $this->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
+        $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
+        $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
+        $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
 
-			if (! is_array($arguments)) {
-				$arguments = (array) $arguments;
-			}
+        // == AJAX ==========================================================
+        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax');
+        $this->mapFactory('core.ajax.cmd', '\Core\Lib\Ajax\AjaxCommand');
 
-			// Replace text arguments with objects
-			foreach ($arguments as $key => $arg) {
+        // == ERROR =========================================================
+        $this->mapService('core.error', '\Core\Lib\Errors\Error', [
+            'core.http.router',
+            'core.sec.user.current',
+            'core.ajax',
+            'core.content.message',
+            'db.default'
+        ]);
+    }
 
-				// Skip strings without di container typical dot
-				if (($arg instanceof App) || strpos($arg, '.') === false) {
-					continue;
-				}
+    /**
+     * Creates an instance of a class
+     *
+     * Analyzes $arguments parameter and injects needed services and objects
+     * into the object instance. A so created object instance gets always the
+     * di container object injected.
+     *
+     * @param unknown $class_name
+     * @param string $arguments
+     *
+     * @return object
+     */
+    public function instance($class_name, $arguments = null)
+    {
+        // Initialized the ReflectionClass
+        $reflection = new \ReflectionClass($class_name);
 
-				$arguments[$key] = $this[$arg];
-			}
+        // Creating an instance of the class when no arguments provided
+        if ($arguments === null || count($arguments) == 0) {
+            $obj = new $class_name();
+        }
 
-			$obj = $reflection->newInstanceArgs($arguments);
-		}
+        // Creating instance of class with provided arguments
+        else {
 
-		if (! property_exists($obj, 'di')) {
-			$obj->di = $this;
-		}
+            if (! is_array($arguments)) {
+                $arguments = (array) $arguments;
+            }
 
-		// Inject and return the created instance
-		return $obj;
-	}
+            // Replace text arguments with objects
+            foreach ($arguments as $key => $arg) {
 
-	public function mapValue($key, $value)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'value'
-		];
-	}
+                if (is_array($arg)) {
 
-	public function mapInstance($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'instance',
-			'arguments' => $arguments
-		];
-	}
+                    $options = [];
 
-	public function mapSingleton($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'singleton',
-			'arguments' => $arguments
-		];
-	}
+                    foreach ($arg as $arr_arg) {
 
-	public function mapFactory($key, $value, $arguments = null)
-	{
-		self::$map[$key] = [
-			'value' => $value,
-			'type' => 'factory',
-			'arguments' => $arguments
-		];
-	}
+                        list ($arg_key, $di_service) = explode('::', $arr_arg);
 
-	/**
-	 * Executes object method by using Reflection
-	 *
-	 * @param $obj Object to call parameter injected method
-	 * @param $method Name of method to call
-	 * @param $param (Optional) Array of parameters to inject into method
-	 * @throws MethodNotExistsError
-	 * @throws ParameterNotSetError
-	 * @return object
-	 */
-	public function invokeMethod(&$obj, $method, $param = [])
-	{
-		if (! is_array($param)) {
-			Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
-		}
+                        if (strpos($di_service, '.') === false) {
+                            continue;
+                        }
 
-		// Look for the method in object. Throw error when missing.
-		if (! method_exists($obj, $method)) {
-			Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
-		}
+                        $options[$arg_key] = $this->get($di_service);
+                    }
 
-		// Get reflection method
-		$method = new \ReflectionMethod($obj, $method);
+                    $arguments[$key] = $options;
 
-		// Init empty arguments array
-		$args = [];
+                    continue;
+                }
 
-		// Get list of parameters from reflection method object
-		$method_parameter = $method->getParameters();
+                // Skip strings without di container typical dot
+                if (($arg instanceof App) || strpos($arg, '.') === false) {
+                    continue;
+                }
 
-		// Let's see what arguments are needed and which are optional
-		foreach ($method_parameter as $parameter) {
+                $arguments[$key] = $this->get($arg);
+            }
 
-			// Get current paramobject name
-			$param_name = $parameter->getName();
+            $obj = $reflection->newInstanceArgs($arguments);
+        }
 
-			// Parameter is not optional and not set => throw error
-			if (! $parameter->isOptional() && ! isset($param[$param_name])) {
-				Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
-			}
+        if (! property_exists($obj, 'di')) {
+            $obj->di = $this;
+        }
 
-			// If parameter is optional and not set, set argument to null
-			$args[] = $parameter->isOptional() && ! isset($param[$param_name]) ? null : $param[$param_name];
-		}
+        // Inject and return the created instance
+        return $obj;
+    }
 
-		// Return result executed method
-		return $method->invokeArgs($obj, $args);
-	}
+    /**
+     * Maps a named value
+     *
+     * @param string $key
+     *            Name of the value
+     * @param unknown $value
+     *            The value itself
+     */
+    public function mapValue($key, $value)
+    {
+        $this->map[$key] = [
+            'value' => $value,
+            'type' => 'value'
+        ];
+    }
 
-	public function offsetExists($offset)
-	{
-		return array_key_exists($offset, self::$map);
-	}
+    /**
+     * Maps a named service.
+     *
+     * Requesting this service will result in returning always the same object.
+     *
+     * @param string $key
+     *            Name of the service
+     * @param string $value
+     *            Class to use for object creation
+     * @param string $arguments
+     *            Arguments to provide on instance create
+     */
+    public function mapService($key, $value, $arguments = null)
+    {
+        $this->map[$key] = [
+            'value' => $value,
+            'type' => 'service',
+            'arguments' => $arguments
+        ];
+    }
 
-	public function offsetGet($offset)
-	{
-		if (! $this->offsetExists($offset)) {
-			Throw new \InvalidArgumentException(sprintf('Service "%s" not mapped', $offset));
-		}
+    /**
+     * Maps a class by name.
+     *
+     * Requestingthis class will result in new object.
+     *
+     * @param string $key
+     *            Name to access object
+     * @param string $value
+     *            Classname of object
+     * @param string $arguments
+     *            Arguments to provide on instance create
+     */
+    public function mapFactory($key, $value, $arguments = null)
+    {
+        $this->map[$key] = [
+            'value' => $value,
+            'type' => 'factory',
+            'arguments' => $arguments
+        ];
+    }
 
-		if (self::$map[$offset]['type'] == 'value') {
-			return self::$map[$offset]['value'];
-		}
-		else {
-			$method = self::$map[$offset]['type'];
-			return $this->$method(self::$map[$offset]['value'], self::$map[$offset]['arguments']);
-		}
-	}
+    /**
+     * Executes object method by using Reflection
+     *
+     * @param $obj Object
+     *            to call parameter injected method
+     * @param $method Name
+     *            of method to call
+     * @param $params (Optional)
+     *            Array of parameters to inject into method
+     *
+     * @throws MethodNotExistsError
+     * @throws ParameterNotSetError
+     *
+     * @return object
+     */
+    public function invokeMethod(&$obj, $method, array $params = [])
+    {
+        if (! is_array($params)) {
+            Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
+        }
 
-	public function offsetSet($offset, $value)
-	{
-		self::$map[$offset] = $value;
-	}
+        // Look for the method in object. Throw error when missing.
+        if (! method_exists($obj, $method)) {
+            Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
+        }
 
-	public function offsetUnset($offset)
-	{
-		if ($this->offsetExists($offset)) {
-			unset(self::$map[$offset]);
-		}
-	}
+        // Get reflection method
+        $method = new \ReflectionMethod($obj, $method);
+
+        // Init empty arguments array
+        $args = [];
+
+        // Get list of parameters from reflection method object
+        $method_parameter = $method->getParameters();
+
+        // Let's see what arguments are needed and which are optional
+        foreach ($method_parameter as $parameter) {
+
+            // Get current paramobject name
+            $param_name = $parameter->getName();
+
+            // Parameter is not optional and not set => throw error
+            if (! $parameter->isOptional() && ! isset($params[$param_name])) {
+                Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
+            }
+
+            // If parameter is optional and not set, set argument to null
+            $args[] = $parameter->isOptional() && ! isset($params[$param_name]) ? null : $params[$param_name];
+        }
+
+        // Return result executed method
+        return $method->invokeArgs($obj, $args);
+    }
+
+    /**
+     * Checks for a registred service by it's name.
+     *
+     * @param string $service
+     *            Name of service to check for
+     *
+     * @return boolean
+     */
+    public function exists($service)
+    {
+        return $this->offsetExists($service);
+    }
+
+    /**
+     * Returns requested service, class or value
+     *
+     * @param string $service
+     *            Name of registered service, class or value
+     */
+    public function get($service)
+    {
+        return $this->offsetGet($service);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetExists()
+     */
+    public function offsetExists($service)
+    {
+        return array_key_exists($service, $this->map);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetGet()
+     */
+    public function offsetGet($service)
+    {
+        if (! $this->offsetExists($service)) {
+            Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $service));
+        }
+
+        $type = $this->map[$service]['type'];
+        $value = $this->map[$service]['value'];
+
+        if ($type == 'value') {
+            return $value;
+        } elseif ($type == 'factory') {
+            return $this->instance($value, $this->map[$service]['arguments']);
+        } else {
+
+            if (! isset($this->services[$service])) {
+                $this->services[$service] = $this->instance($value, $this->map[$service]['arguments']);
+            }
+
+            return $this->services[$service];
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetSet()
+     */
+    public function offsetSet($service, $value)
+    {
+        $this->map[$service] = $value;
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetUnset()
+     */
+    public function offsetUnset($service)
+    {
+        if ($this->offsetExists($service)) {
+            unset($this->map[$service]);
+        }
+    }
 }

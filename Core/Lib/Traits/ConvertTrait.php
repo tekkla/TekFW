@@ -2,6 +2,7 @@
 namespace Core\Lib\Traits;
 
 /**
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  *
  */
@@ -12,18 +13,18 @@ trait ConvertTrait
 	/**
 	 * Converts an object and it's public members recursively into an array.
 	 * Use this if you want to convert objects into array.
+	 *
 	 * @param object $obj
 	 * @return array
 	 */
 	function convertObjectToArray($obj)
 	{
-		if (!is_object($obj))
+		if (! is_object($obj))
 			return $obj;
 
 		$out = [];
 
-		foreach ( $obj as $key => $val )
-		{
+		foreach ($obj as $key => $val) {
 			if (is_object($val))
 				$out[$key] = $this->convertToArray($val);
 			else
@@ -36,7 +37,9 @@ trait ConvertTrait
 	/**
 	 * Converts an array into an Data object.
 	 * This method works recursive.
+	 *
 	 * @param array $data
+	 *
 	 * @return Data
 	 */
 	function convertToObject($data)
@@ -47,8 +50,7 @@ trait ConvertTrait
 
 		$data = new \Core\Lib\Data\Data($data);
 
-		foreach ( $data as $key => $val )
-		{
+		foreach ($data as $key => $val) {
 			if ($this->isSerialized($val))
 				$val = unserialize($val);
 
@@ -61,5 +63,32 @@ trait ConvertTrait
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Converts a value into boolean.
+	 *
+	 * Converts the following strings to true: true
+	 *
+	 * @param mixed $value
+	 *
+	 * @return boolean
+	 */
+	function toBool($value)
+	{
+		if (! is_string($value)) {
+			return (bool) $value;
+		}
+
+		switch (strtolower($value)) {
+			#case '1':
+			case 'true':
+			#case 'on':
+			#case 'yes':
+			#case 'y':
+				return true;
+			default:
+				return false;
+		}
 	}
 }

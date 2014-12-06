@@ -1,22 +1,18 @@
 <?php
 namespace Core\Lib\Content\Html\Elements;
 
-use Core\Lib\Abstracts\HtmlAbstract;
-
-// Check for direct file access
-if (!defined('TEKFW'))
-	die('Cannot run without TekFW framework...');
+use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
  * Adress Html Object
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Lib
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
  * @copyright 2014 by author
  */
 class Abbr extends HtmlAbstract
 {
+
 	protected $element = 'adress';
 }
 

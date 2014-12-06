@@ -1,51 +1,53 @@
 <?php
-
 namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
 
 /**
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  */
 class SecurityController extends Controller
 {
+
+	public $has_no_model;
+
 	public function Login()
 	{
-		$post = $this->request->getPost();
+		$post = $this->post->get();
 
-		var_dump($post);
+		if ($post) {
 
-		if($post)
-		{
-			$id_user = $this->security->login($post->login, $post->password);
+			// Do login procedure
+			$this->security->login($post->login, $post->password);
 
-			if ($id_user)
+			if ($this->security->loggedIn()) {
 				$this->message->success('Login OK!');
-			else
+				$this->redirectExit();
+			} else {
 				$this->message->error('Login Failed');
+			}
 		}
-
-
-		if ($this->security->loggedIn())
-			$this->redirectExit();
 
 		$form = $this->getFormDesigner();
 
-		$action = $this->request->getRouteUrl('core_login');
+		$form->setApp('Core');
+		$form->setModelName('Security');
+
+		$action = $this->router->url('core_login');
 		$form->setAction($action);
 
-		/* @var $control-> \Core\Lib\Content\Html\Form\Input */
+		/* @var $control \Core\Lib\Content\Html\Form\Input */
 		$control = $form->createElement('input', 'login');
 		$control->noLabel();
 		$control->setPlaceholder('Username');
 
-		/* @var $control-> \Core\Lib\Content\Html\Form\Input */
+		/* @var $control \Core\Lib\Content\Html\Form\Input */
 		$control = $form->createElement('password', 'password');
 		$control->noLabel();
 		$control->setPlaceholder('Password');
 
-		/* @var $control-> \Core\Lib\Content\Html\Form\Checkbox */
+		/* @var $control \Core\Lib\Content\Html\Form\Checkbox */
 		$control = $form->createElement('checkbox', 'remember');
 		$control->setLabel('Remember me');
 
@@ -53,5 +55,13 @@ class SecurityController extends Controller
 		$form->setIcon('submit', 'key');
 
 		$this->setVar('form', $form);
+
+		$this->content->breadcrumbs->createActiveItem('login');
+	}
+
+	public function Logout()
+	{
+		$this->security->logout();
+		$this->redirectExit($this->router->url('core_index'));
 	}
 }

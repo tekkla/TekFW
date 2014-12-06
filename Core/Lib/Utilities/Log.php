@@ -2,57 +2,65 @@
 namespace Core\Lib;
 
 // Check for direct file access
-if (!defined('TEKFW'))
+if (! defined('TEKFW'))
 	die('Cannot run without TekFW framework...');
 
 /**
  * Logger class
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
  * @package TekFW
  * @subpackage Lib
- * @Inject user
- * @Inject request
- * @Inject cfg
- * @Inject debug
- * @inject fileio
- * @inject fire
+ *             @Inject user
+ *             @Inject request
+ *             @Inject cfg
+ *             @Inject debug
+ *             @inject fileio
+ *             @inject fire
  */
 final class Log
 {
+
 	/**
 	 * Log message
+	 *
 	 * @var string
 	 */
 	private $message = '';
 
 	/**
 	 * Log type
+	 *
 	 * @var string
 	 */
 	private $type = '';
 
 	/**
 	 * Memory used
+	 *
 	 * @var int
 	 */
 	private $memory = 0;
 
 	/**
 	 * Timestamp
+	 *
 	 * @var int
 	 */
 	private $time = 0;
 
 	/**
 	 * Trace flag for appending traces to log
+	 *
 	 * @var boolean
 	 */
 	private $trace = false;
 
 	/**
 	 * Returns log type
+	 *
 	 * @return string
 	 */
 	public function getType()
@@ -62,6 +70,7 @@ final class Log
 
 	/**
 	 * Returns log message
+	 *
 	 * @return string
 	 */
 	public function getMessage()
@@ -71,6 +80,7 @@ final class Log
 
 	/**
 	 * Returns memory value
+	 *
 	 * @return int
 	 */
 	public function getMemory()
@@ -80,6 +90,7 @@ final class Log
 
 	/**
 	 * Returns timestamp
+	 *
 	 * @return number
 	 */
 	public function getTime()
@@ -89,6 +100,7 @@ final class Log
 
 	/**
 	 * Sets log message
+	 *
 	 * @param string $message
 	 * @return \Core\Lib\Log
 	 */
@@ -100,6 +112,7 @@ final class Log
 
 	/**
 	 * Sets timestamp
+	 *
 	 * @param int $time
 	 * @return \Core\Lib\Log
 	 */
@@ -123,23 +136,24 @@ final class Log
 
 	/**
 	 * Writes a message to the logfile
+	 *
 	 * @param string $msg
 	 */
 	public function add($msg, $app = 'Global', $function = 'Info', $check_setting = '', $trace = false)
 	{
 		// Do not log when settingto check is wsitched off
-		if (!empty($check_setting) && !$this->cfg->get('Core', $check_setting))
+		if (! empty($check_setting) && ! $this->cfg->get('Core', $check_setting))
 			return;
 
 			// Logging only when log is activated
-		if (!$this->cfg->get('Core', 'log') || !$this->user->isAdmin())
+		if (! $this->cfg->get('Core', 'log') || ! $this->user->isAdmin())
 			return;
 
 			// Debug the message if it is not of type string
 		if (is_object($msg))
 			$msg = $this->debugdumpVar($msg);
 
-		// SSI tag if SSI and not in log
+			// SSI tag if SSI and not in log
 		if (SMF == 'SSI' && strpos($function, 'SSI') === false)
 			$function .= ' (SSI)';
 
@@ -157,20 +171,20 @@ final class Log
 
 	/**
 	 * Writes debug backtrace with an individual depth to the log
+	 *
 	 * @param number $depth
 	 */
 	public function trace($depth = 10)
 	{
 		// Logging only when log is activated
-		if (!$this->cfg->get('Core', 'log') || !$this->user->isAdmin())
+		if (! $this->cfg->get('Core', 'log') || ! $this->user->isAdmin())
 			return;
 
 		$dt = debug_backtrace();
 
 		$logs = [];
 
-		for($i = 0; $i < $depth; $i++)
-		{
+		for ($i = 0; $i < $depth; $i ++) {
 			$key = $i + 1;
 
 			$file = isset($dt[$key]['file']) ? $dt[$key]['file'] . ' => ' : '';
@@ -192,6 +206,7 @@ final class Log
 
 	/**
 	 * Adds an error message to the log
+	 *
 	 * @param unknown $msg
 	 */
 	public function error($msg)
@@ -201,6 +216,7 @@ final class Log
 
 	/**
 	 * Adds a notice to the log
+	 *
 	 * @param unknown $msg
 	 */
 	public static function notice($msg)
@@ -217,18 +233,13 @@ final class Log
 	public function saveLog()
 	{
 		// Write log to file
-		if ($this->cfg->get('Core', 'log_handler') == 'file')
-		{
+		if ($this->cfg->get('Core', 'log_handler') == 'file') {
 			// @todo: seriously?
-		}
-		// For ajax request logs and when FirePHP is set as log handler, we use FirePHP for log output!
-		elseif ($this->cfg->get('Core', 'log_handler') == 'fire' || $this->request->isAjax())
-		{
+		} // For ajax request logs and when FirePHP is set as log handler, we use FirePHP for log output!
+elseif ($this->cfg->get('Core', 'log_handler') == 'fire' || $this->router->isAjax()) {
 			$this->firelog($this->message, $this->type);
-		}
-		// All else goes to session log
-		else
-		{
+		}  // All else goes to session log
+else {
 			// Still her? Output to session so the output can go to page
 			if (empty($_SESSION['logs']))
 				$_SESSION['log'] = [];
@@ -239,12 +250,13 @@ final class Log
 
 	/**
 	 * Returns a formatted html output of created log entries.
+	 *
 	 * @return boolean string
 	 */
 	public function get()
 	{
 		// No admin? no output wanted? return false!
-		if (!$this->user->isAdmin() || !$this->cfg->get('Core', 'show_log_output'))
+		if (! $this->user->isAdmin() || ! $this->cfg->get('Core', 'show_log_output'))
 			return false;
 
 			// Simple counter
@@ -273,20 +285,18 @@ final class Log
 						 => <td colspan="4" class="text-center<stronNo logs to show.</stron</t
 						</t';
 
-		else
-		{
+		else {
 			/* @var $log Log */
-			foreach ( $_SESSION['logs'] as $log )
-			{
+			foreach ($_SESSION['logs'] as $log) {
 				$html .= '
-						 <tr class="' . ( $log_counter % 2 == 0 ? 'odd' : 'even' ) . '
+						 <tr class="' . ($log_counter % 2 == 0 ? 'odd' : 'even') . '
 							 <t' . $log_counter . '</t
 							 <t' . $log->getType() . '</t
 							 <t' . $log->getMessage() . '</t
 							 <t' . $log->getMemory() . '</t
 						 </t';
 
-				$log_counter++;
+				$log_counter ++;
 			}
 		}
 

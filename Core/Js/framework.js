@@ -88,7 +88,8 @@ $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 $(document).on('click', '#scrolltotop', function(event) {
 
     if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {           
-        window.scrollTo(0,0) // first value for left offset, second value for top offset
+        window.scrollTo(0,0) // first value for left offset, second value for
+								// top offset
     } else {
         $('html,body').animate({
             scrollTop: 0,
@@ -108,9 +109,9 @@ $(document).on('click', '.btn-back', function(event) {
     document.history.go(-1);
 });
 
-//----------------------------------------------------------------------------
-//ClickHandler for confirms
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ClickHandler for confirms
+// ----------------------------------------------------------------------------
 $(document).on('click', '*[data-confirm]', function(event) {
 
     if ($(this).data('ajax') !== undefined)
@@ -132,8 +133,9 @@ $(document).on('click', '*[data-ajax]', function(event) {
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
         var result = confirm($(this).data('confirm'));
-        if (!result)
+        if (!result) {
             return false;
+    	}
     }
 
     // Prepare options object
@@ -197,12 +199,12 @@ $(document).on('click', '*[data-ajax]', function(event) {
 
     // Add error handler
     ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-        $('#message').append(XMLHttpRequest.responseText);
+        $('#message').append('<div class="panel panel-danger">' + XMLHttpRequest.responseText + '</div>');
     };
 
     // Fire ajax request!
     $.ajax(ajaxOptions);
-
+    
     event.preventDefault();
 });
 
@@ -210,8 +212,8 @@ $(document).on('click', '*[data-ajax]', function(event) {
 // Json parser for Ext ajax response
 // ----------------------------------------------------------------------------
 function parseJson(json) {
-
-    //console.debug(json);
+    
+    console.log(json);
     
     $.each(json, function(type, stack) {
         
@@ -238,29 +240,29 @@ function parseJson(json) {
                         bootbox.alert(cmd.a[0]);
                         break;
                     case "error":
-                        $(v.target).addClass('fade in').html('<a class="close" data-dismiss="alert" href="#" aria-hidden="true">&times;</a>' + cmd.a[0]).alert();
-                        $(v.target).bind('closed.bs.alert', function() {
+                        $('#message').addClass('fade in').append(cmd.a[0]);
+                        $('#message').bind('closed.bs.alert', function() {
                             $(this).removeClass().html('').unbind('closed.bs.alert');
                         });
                         break;
                     case "log":
                     case "console":
-                        console.log(cmd.a[0]);
+                        console.log(cmd.a);
                         break;
                     case "modal":
 
                         // fill dialog with content
-                        $('#modal').html(cmd.a[0]).modal({
+                        $('#modal').html(cmd.a).modal({
                             keyboard : false
                         });
                         break;
 
                     case 'load_script':
-                        $.getScript(cmd.a[0]);
+                        $.getScript(cmd.a);
                         break;
-                        
-                    case 'refresh':
-                        window.location.href = cmd.a[0];
+                    
+                    case 'href':
+                        window.location.href = cmd.a;
                         return;
                 }
             });

@@ -5,7 +5,8 @@ namespace Core\Lib\Content;
  * Handles menuhandler actions.
  * Gives r/w access to menu_buttons.
  * Checks for menu handler method in handler app and throws error if method is missing.
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
  * @package TekFW
@@ -13,81 +14,77 @@ namespace Core\Lib\Content;
  */
 class Menu
 {
+	private $root_items = [];
 
-	/**
-	 * Checks for a set menu handler in framework config
-	 * @return boolean
-	 */
-	public static function hasHandler()
+	public function __construct()
 	{
-		return Cfg::exists('Core', 'menu_handler');
-	}
-
-	/**
-	 * Runs menuhandler set in config.
-	 * Checks for existance of
-	 * menu handler method and throws an error when method is missing.
-	 * @throws MethodNotExistsError
-	 */
-	public static function runHandler()
-	{
-		// Act only on set menu handler
-		if (Cfg::exists('Core', 'menu_handler'))
-		{
-			// Get an instance of app in which the menu handler is to find
-			$app = App::create(Cfg::get('Core', 'menu_handler'));
-
-			// Check for missing MenuHandler method. Throws an error if it is missing.
-			if (!method_exists($app, 'menuHandler'))
-				Throw new Error('Method not found.', 5000, array(
-					'menuHandler',
-					Cfg::get('Core', 'menu_handler')
-				));
-
-				// Run MenuHandler method in app
-			$appmenuHandler();
-		}
-	}
-
-	/**
-	 * Set menu buttons to context
-	 * @param array $menu_buttons
-	 */
-	public static function setMenuButtons($menu_buttons)
-	{
-		Context::setTo('menu_buttons', $menu_buttons);
-	}
-
-	/**
-	 * Get menu buttons from context
-	 * @return array
-	 */
-	public static function getMenuButtons()
-	{
-		return Context::getByKey('menu_buttons');
 	}
 
 	/**
 	 * Ajax refresh of menu
 	 */
-	public static function refreshMenu()
+	public function refreshMenu($menu_item_name)
 	{
-		// Rebuild the menu structure
-		setupMenuContext();
-
-		// Start own outputbuffer...
-		ob_start();
-
-		// ... to get the result of templates menu function
-		template_menu();
-
 		// Create ajax command to refresh #main_menu
-		Ajax::command(array(
-			'selector' => '#main_menu',
-			'args' => ob_get_clean(),
+		$this->ajax->command([
+			'selector' => '#' . $menu_item_name,
+			'args' => $this->compile(),
 			'fn' => 'html',
 			'type' => 'dom'
-		));
+		]);
+	}
+
+	public function createRootItem($name, $text, $url=null)
+	{
+		return $this->root_items[$name] = $this->createMenuItem($name, $text, $url);
+	}
+
+	/**
+	 * Creates a new menu item with the given arguments, adds it to the menu item
+	 * storage and returns a reference to the item in storage
+	 * @param string $name
+	 * @param string $text
+	 * @param string $url
+	 * @param boolean $is_root
+	 * @return MenuItem
+	 */
+	public function createMenuItem($name, $text, $url=null)
+	{
+		$menu_item = new MenuItem();
+		$menu_item->setName($name);
+		$menu_item->setText($text);
+
+		if ($url !== null){
+			$menu_item->setUrl($url);
+		}
+
+		return $menu_item;
+	}
+
+	/**
+	 * Method to add a menu item to the appropriate item storage by checking
+	 * the root property of the item.
+	 *
+	 * @param MenuItem $menu_item
+	 * @return MenuItem
+	 */
+	public function &addMenuItem(MenuItem &$menu_item)
+	{
+		// Determine which type of item we have. Root or child?
+		$storage = $menu_item->isRoot() ? 'root_items' : 'menu_items';
+
+		// Store menu item
+		$this->{$storage}[$menu_item->getName()] = $menu_item;
+
+		// And return a reference to the stored items
+		return $this->{$storage}[$menu_item->getName()];
+	}
+
+	/**
+	 * Compiles the menu itemsand creates an html menu as output
+	 */
+	public function getMenu()
+	{
+		return $this->root_items;
 	}
 }
-

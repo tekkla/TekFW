@@ -1,9 +1,12 @@
 <?php
 namespace Core\Lib\Security;
 
+use Core\Lib\Data\DataAdapter;
+
 /**
  * Wrapper class to access SMF user information from one point
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
  * @package TekFW
@@ -11,54 +14,82 @@ namespace Core\Lib\Security;
  */
 class User
 {
+
 	/**
 	 * User id
+	 *
 	 * @var int
 	 */
 	private $id_user = 0;
 
 	/**
 	 * Username
+	 *
 	 * @var string
 	 */
 	private $username = '';
 
 	/**
 	 * Name to show instead of login
+	 *
 	 * @var string
 	 */
 	private $display_name = 'Guest';
 
 	/**
 	 * Password
+	 *
 	 * @var string
 	 */
 	private $password = '';
 
+	/*
+	 * +
+	 * Permissions the user owns
+	 *
+	 * @var array
+	 */
+	private $perms = [];
+
 	/**
 	 * Usergroups the use is in
+	 *
 	 * @var array
 	 */
 	private $groups = [];
 
 	/**
 	 * User flag: admin
+	 *
 	 * @var unknown
 	 */
-	private $is_admin = true;
+	private $is_admin = false;
 
-	private $db;
+	/**
+	 *
+	 * @var DataAdapter
+	 */
+	private $adapter;
 
-	public function __construct($db, $id_user=0)
+	/**
+	 *
+	 * @var Permission
+	 */
+	private $permission;
+
+	public function __construct(DataAdapter $adapter, Permission $permission, $id_user = 0)
 	{
-		$this->db = $db;
+		$this->adapter = $adapter;
+		$this->permission = $permission;
 
-		if ($id_user > 0)
+		if ($id_user > 0) {
 			$this->load($id_user);
+		}
 	}
 
-	/*+
-	 * Checks the user for to be a guest. Is true when user is not logged in
+	/*
+	 * Checks the user for to be a guest. Is true when user is not logged in.
+	 *
 	 * @return boolean
 	 */
 	public function isGuest()
@@ -68,6 +99,7 @@ class User
 
 	/**
 	 * Returns users admin state
+	 *
 	 * @return boolean
 	 */
 	public function isAdmin()
@@ -76,8 +108,8 @@ class User
 	}
 
 	/**
-	 * Returns current users id.
-	 * Returns 0 when user ist not logged in.
+	 * Returns current users id. Returns 0 when user ist not logged in.
+	 *
 	 * @return number
 	 */
 	public function getId()
@@ -87,7 +119,8 @@ class User
 
 	/**
 	 * Returns the users login name. Returns false when login is empty.
-	 * @return Ambigous <boolean, strin
+	 *
+	 * @return string|boolean
 	 */
 	public function getUsername()
 	{
@@ -96,7 +129,8 @@ class User
 
 	/**
 	 * Returns the users current password. Returns false when password is empty.
-	 * @return Ambigous <boolean, strin
+	 *
+	 * @return string|boolean
 	 */
 	public function getPassword()
 	{
@@ -105,35 +139,84 @@ class User
 
 	/**
 	 * Returns groups user is in
+	 *
+	 * @return array
 	 */
 	public function getGroups()
 	{
 		return $this->groups;
 	}
 
-	/*+
-	 * loads user from DB
+	/**
+	 * Returns the users permissions
+	 *
+	 * @return array
 	 */
-	public function load($id_user)
+	public function getPermissions()
 	{
+		return $this->perms;
+	}
+
+	/**
+	 * Loads user from DB.
+	 * Takes care about not to load a user more than once
+	 *
+	 * @param int $id_user
+	 * @param boolean $force
+	 */
+	public function load($id_user, $force=false)
+	{
+		// Do not load the user more than once
+		if ($this->id_user == $id_user && $force == false) {
+			return;
+		}
+
 		$this->id_user = $id_user;
 
-		$this->db->query('SELECT username, password, display_name, groups FROM {db_prefix}users WHERE id_user=:id_user');
-		$this->db->bindValue(':id_user', $id_user);
+		$adapter = $this->di->get('db.default');
 
-		if ($this->db->execute())
-		{
-			$row = $this->db->single();
+		$adapter->query([
+			'tbl' => 'users',
+			'field' => [
+				'username',
+				'password',
+				'display_name',
+			],
+			'filter' => 'id_user=:id_user',
+			'params' => [
+				':id_user' => $id_user
+			]
+		]);
 
-			if ($row['groups'])
-				$this->groups = unserialize($row['groups']);
+		$data = $adapter->single();
 
-			if (in_array('1', $this->groups))
+		if ($data) {
+
+			$this->username = $data['username'];
+			$this->display_name = $data['display_name'];
+			$this->password = $data['password'];
+
+			// Load groups the user is in
+			$adapter = $this->di->get('db.default');
+
+			$adapter->query([
+				'tbl' => 'users_groups',
+				'fields' => 'id_group',
+				'filter' => 'id_user=:id_user',
+				'params' => [
+					':id_user' => $id_user
+				]
+			]);
+
+			$this->groups = $adapter->column();
+
+			// Load user permissions based on groups of the user
+			$this->perms = $this->permission->loadPermission($this->groups);
+
+			// Is the user an admin?
+			if (in_array('core_admin', $this->perms)) {
 				$this->is_admin = true;
-
-			$this->username = $row['username'];
-			$this->display_name = $row['display_name'];
-			$this->password = $row['password'];
+			}
 		}
 	}
 }

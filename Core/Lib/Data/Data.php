@@ -4,6 +4,7 @@ namespace Core\Lib\Data;
 /**
  * Class to provide an easy to use interface for reading/writing associative array based information
  * by exposing properties that represents each key of the array
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @copyright 2014
  * @license MIT
@@ -15,12 +16,14 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Keeps the state of each property
+	 *
 	 * @var array
 	 */
 	private $properties = [];
 
 	/**
 	 * Keeps the current propertyname accessed by __get($name)
+	 *
 	 * @var string
 	 */
 	private static $cur;
@@ -28,13 +31,14 @@ class Data implements \IteratorAggregate
 	/**
 	 * Creates a new Data instance initialized with $properties
 	 */
-	public function __construct($properties = array())
+	public function __construct($properties = [])
 	{
 		$this->populate($properties);
 	}
 
 	/**
 	 * Return iterator
+	 *
 	 * @see IteratorAggregate::getIterator()
 	 */
 	public function getIterator()
@@ -47,8 +51,9 @@ class Data implements \IteratorAggregate
 	 */
 	private function populate($properties)
 	{
-		foreach ( $properties as $name => $value )
+		foreach ($properties as $name => $value) {
 			$this->create_property($name, $value);
+		}
 	}
 
 	/**
@@ -81,18 +86,21 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Creates a new property if it does not exists
+	 *
 	 * @param string $name
 	 */
 	private function create_property_if_not_exists($name)
 	{
-		if (array_key_exists($name, $this->properties))
+		if (array_key_exists($name, $this->properties)) {
 			return;
+		}
 
-		$this->create_property($name, array());
+		$this->create_property($name, []);
 	}
 
 	/**
 	 * Magic setter
+	 *
 	 * @param string $name
 	 * @param mixed $value
 	 */
@@ -103,6 +111,7 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Magic unset
+	 *
 	 * @param string $name
 	 */
 	public function __unset($name)
@@ -112,6 +121,7 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Magic isset
+	 *
 	 * @param string $name
 	 */
 	public function __isset($name)
@@ -121,6 +131,7 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Shows a missing info when accessing a none existing property
+	 *
 	 * @return string
 	 */
 	public function __toString()
@@ -130,6 +141,7 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Returns amount of current properties
+	 *
 	 * @return number
 	 */
 	public function count()
@@ -139,6 +151,7 @@ class Data implements \IteratorAggregate
 
 	/**
 	 * Returns keys of current properties
+	 *
 	 * @return multitype:
 	 */
 	public function keys()
