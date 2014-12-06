@@ -1,8 +1,6 @@
 <?php
 namespace Core\Lib\Data;
 
-use Core\Lib\Data\Validator\Validator;
-
 /**
  *
  * @author Michael
@@ -10,251 +8,403 @@ use Core\Lib\Data\Validator\Validator;
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
-	private $fields = [];
 
-	private $errors = [];
+    use\Core\Lib\Traits\SerializeTrait;
 
-	/**
-	 * Constructor
-	 *
-	 * Field need at least a type definition.
-	 *
-	 * @param array $fields
-	 */
-	public function __construct(array $fields = [])
-	{
-		foreach ($fields as $name => $field) {
+    private $fields = [];
 
-			if (! isset($field['type'])) {
-				$field['type'] = 'string';
-			}
+    private $errors = [];
 
-			$field['primary'] = isset($field['primary']) ? true : false;
-			$field['serialize'] = isset($field['serialize']) ? true : false;
-			$field['validate'] = isset($field['validate']) ? $field['validate'] : [];
+    /**
+     * Constructor
+     *
+     * @param array $fields
+     */
+    public function __construct(array $fields = [])
+    {
+        if ($fields) {
+            $this->parseFields($fields);
+        }
+    }
 
-			// Attach always an empty validation rule to primary fields
-			if ($field['primary'] && ! in_array('empty', $field['validate'])) {
-				$field['validate'][] = 'empty';
-			}
+    /**
+     * Access on field.
+     *
+     * @param string $name
+     *            Name of field
+     *
+     * @return mixed
+     */
+    public function &__get($name)
+    {
+        $null = null;
 
-			if (! isset($field['size'])) {
-				$field['size'] = null;
-			}
+        if (isset($this->fields[$name])) {
+            return $this->fields[$name];
+        } else {
+            return $null;
+        }
+    }
 
-			$this->createField($name, $field['type'], $field['primary'], $field['size'], $field['serialize'], $field['validate']);
-		}
-	}
+    /**
+     * Unsets field
+     *
+     * @param string $name
+     */
+    public function __unset($name)
+    {
+        if (isset($this->fields[$name])) {
+            unset($this->fields[$name]);
+        }
+    }
 
-	/**
-	 * Access on field value.
-	 *
-	 * @param string $name Name of field
-	 *
-	 * @return mixed
-	 */
-	public function __get($name)
-	{
-		return $this->fields[$name]->getValue();
-	}
+    /**
+     * Isset on fields
+     *
+     * @param string $name
+     */
+    public function __isset($name)
+    {
+        return isset($this->fields[$name]);
+    }
 
-	/**
-	 * Return iterator
-	 *
-	 * @see IteratorAggregate::getIterator()
-	 */
-	public function getIterator()
-	{
-		return new \ArrayIterator($this->fields);
-	}
+    /**
+     * Return iterator
+     *
+     * @see IteratorAggregate::getIterator()
+     */
+    public function getIterator()
+    {
+        return new \ArrayIterator($this->fields);
+    }
 
-	/**
-	 * Creates a container field and adds it to the container
-	 *
-	 * @param string $name Fieldname
-	 * @param string $type Fieldtype
-	 * @param boolean $primary Primary key flag
-	 * @param boolean $serialize Serialize flag
-	 * @param string|array $validate One or more validation rules
-	 *
-	 * @return \Core\Lib\Data\Container
-	 */
-	public function createField($name, $type, $size = null, $primary = false, $serialize = false, $validate = [])
-	{
-		$data_field = new Field();
-		$data_field->setName($name);
-		$data_field->setType($type);
+    /**
+     * Parses a field definition array and created container fields from it. A field withou type attribute is treated as
+     * string. You can use the following attributes:
+     *
+     * type         => String, integer, float or any other datatype you want to use. Be sure a componenten like
+     *                 DataAdapter can handle this datatype. Default: string
+     * primary      => Flag to show that this field contains the value of a primary key. Default: false
+     * serialize    => Flag that says the Data needs to be serialized before saving and to be unserialized before
+     *                 fillig the field. Default: false
+     * validate     => Array of rules to validate the field value angainst. Default: []
+     * size         => Max contentsize of field. Defaul: null
+     *
+     * @param array $fields
+     */
+    public function parseFields(Array $fields)
+    {
+        foreach ($fields as $name => $field) {
 
-		if ($size !== null) {
-			$data_field->setSize($size);
-		}
+            if (! isset($field['type'])) {
+                $field['type'] = 'string';
+            }
 
-		$data_field->setPrimary($primary);
-		$data_field->setSerialize($serialize);
-		$data_field->setValidation($validate);
+            $field['primary'] = isset($field['primary']) ? (bool) $field['primary'] : false;
+            $field['serialize'] = isset($field['serialize']) ? (bool) $field['serialize'] : false;
+            $field['validate'] = isset($field['validate']) ? $field['validate'] : [];
 
-		$this->fields[$name] = $data_field;
+            // Attach always an empty validation rule to primary fields
+            if ($field['primary'] && ! in_array('empty', $field['validate'])) {
+                $field['validate'][] = 'empty';
+            }
 
-		return $this;
-	}
+            if (! isset($field['size'])) {
+                $field['size'] = null;
+            }
 
-	public function addField(Field $field)
-	{
-		$this->fields[$field->getName()] = $field;
+            $this->createField($name, $field['type'], $field['primary'], $field['size'], $field['serialize'], $field['validate']);
+        }
+    }
 
-		return $this;
-	}
+    /**
+     * Creates a container field and adds it to the container
+     *
+     * @param string $name
+     *            Fieldname
+     * @param string $type
+     *            Fieldtype
+     * @param boolean $primary
+     *            Primary key flag
+     * @param boolean $serialize
+     *            Serialize flag
+     * @param string|array $validate
+     *            One or more validation rules
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    public function createField($name, $type='string', $size = null, $primary = false, $serialize = false, $validate = [])
+    {
+        $data_field = new Field();
+        $data_field->setName($name);
+        $data_field->setType($type);
 
-	/**
-	 * Sets one or more validation rule for a specific field.
-	 *
-	 * @param string $field Fieldname
-	 * @param string|array $rule Rulename or an array of rulenames
-	 *
-	 * @return \Core\Lib\Data\DataContainer
-	 */
-	public function setValidation($field, $rule)
-	{
-		$this->field[$field]->setValidate(is_array($rule) ? $rule : (array) $rule);
+        if ($size !== null) {
+            $data_field->setSize($size);
+        }
 
-		return $this;
-	}
+        $data_field->setPrimary($primary);
+        $data_field->setSerialize($serialize);
+        $data_field->setValidation($validate);
 
-	/**
-	 * Validates container data against the set validation rules
-	 */
-	public function validate()
-	{
-		$validator = new Validator($this);
-		$validator->validate();
-	}
+        $this->fields[$name] = $data_field;
 
-	/**
-	 * Sets an field related error.
-	 *
-	 * @param string $field Fieldname
-	 * @param string $error Errortext
-	 *
-	 * @return \Core\Lib\Data\DataContainer
-	 */
-	public function setError($field, $error)
-	{
-		$this->erros[$field][] = $error;
+        return $this;
+    }
 
-		return $this;
-	}
+    public function addField(Field $field)
+    {
+        $this->fields[$field->getName()] = $field;
 
-	/**
-	 * Get all field specific errors as an array.
-	 *
-	 * @param string $field
-	 *
-	 * @return array
-	 */
-	public function getFieldErrors($field)
-	{
-		return isset($this->errors[$field]) ? $this->errors[$field] : [];
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns all errors
-	 *
-	 * @return array
-	 */
-	public function getErrors()
-	{
-		return $this->errors;
-	}
+    /**
+     * Sets one or more validation rule for a specific field.
+     *
+     * @param string $field
+     *            Fieldname
+     * @param string|array $rule
+     *            Rulename or an array of rulenames
+     *
+     * @return \Core\Lib\Data\DataContainer
+     */
+    public function setValidation($field, $rule)
+    {
+        if (! isset($this->fields[$field])) {
+            $this->createField($field, 'string');
+        }
 
-	/**
-	 * Fills container with data.
-	 *
-	 * Tries to use existig fielnd and creates a generic string field when no matching field is found.
-	 *
-	 * @param array $data
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return \Core\Lib\Data\DataContainer
-	 */
-	public function fill(array $data)
-	{
-		foreach ($data as $name => $value) {
+        $this->fields[$field]->setValidation(is_array($rule) ? $rule : (array) $rule);
 
-			if (in_array($name, array_keys($this->fields))) {
+        return $this;
+    }
 
-				if ($this->fields[$name]->getSerialize()) {
-					$value = unserialize($value);
-				}
+    /**
+     * Validates container data against the set validation rules
+     */
+    public function validate()
+    {
+        $validator = $this->di->get('core.data.validator');
+        $validator->setContainer($this);
+        $validator->validate();
+    }
 
-				if (! $value instanceof Container && ! is_object($value) && ! is_array($value) && ! is_null($value)) {
-					settype($value, $this->fields[$name]->getType());
-				}
+    /**
+     * Adds a field related error message.
+     *
+     * @param string $field
+     *            Fieldname
+     * @param string $error
+     *            Errortext
+     *
+     * @return \Core\Lib\Data\DataContainer
+     */
+    public function addError($field, $error)
+    {
+        $this->errors[$field][] = $error;
 
-				if (is_array($value)) {
-					$this->fields[$name]->setType('array');
-				}
-			}
-			else {
-				$this->createField($name, 'string');
-			}
+        return $this;
+    }
 
-			$this->fields[$name]->setValue($value);
-		}
+    /**
+     * Sets a field related error message.
+     *
+     * @param string $field
+     *            Fieldname
+     * @param string $error
+     *            Errortext
+     *
+     * @deprecated
+     *
+     * @return \Core\Lib\Data\DataContainer
+     */
+    public function setError($field, $error)
+    {
+        return $this->addError($field, $error);
+    }
 
-		return $this;
-	}
+    /**
+     * Get all field specific errors as an array.
+     *
+     * @param string $field
+     *
+     * @return array
+     */
+    public function getErrors($field = '')
+    {
+        if (! $field) {
+            return $this->errors;
+        }
 
-	/**
-	 * Returns all fields as array
-	 *
-	 * @return array
-	 */
-	public function get()
-	{
-		return $this->fields;
-	}
+        return isset($this->errors[$field]) ? $this->errors[$field] : [];
+    }
 
-	public function offsetSet($offset, $value)
-	{
-		if (is_null($offset)) {
-			Throw new \InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
-		}
+    public function hasErrors()
+    {
+        return $this->errors ? true : false;
+    }
 
-		if (!isset($this->fields[$offset]))
-		{
-			switch (true) {
+    /**
+     * Fills container with data.
+     *
+     * Tries to use an existing field and creates a generic string field when no matching field is found.
+     *
+     * @param array $data
+     *
+     * @throws \RuntimeException
+     *
+     * @return \Core\Lib\Data\DataContainer
+     */
+    public function fill(array $data)
+    {
+        foreach ($data as $name => $value) {
 
-				case (is_array($value)):
-					$type = 'array';
-					break;
-				case ($value instanceof Container):
-					$type = 'array';
-					$value = $value->get();
-					break;
-				default:
-					$type = 'string';
-					break;
-			}
+            // Not existing field? Create a generic one.
+            if (! in_array($name, array_keys($this->fields))) {
+                $this->createField($name, 'string');
+            }
 
-			$this->createField($offset, $type);
-		}
+            if (! $value instanceof Container && ! is_object($value) && ! is_array($value) && ! is_null($value)) {
+                settype($value, $this->fields[$name]->getType());
+            }
 
-		$this->fields[$offset]->setValue($value);
-	}
+            // Simple array check to determine array field type and set serialize flag
+            if (is_array($value)) {
+                $this->fields[$name]->setType('array');
+                $this->fields[$name]->setSerialize(true);
+            }
 
-	public function offsetExists($offset)
-	{
-		return isset($this->fields[$offset]);
-	}
+            $this->fields[$name]->setValue($value);
+        }
 
-	public function offsetUnset($offset)
-	{
-		unset($this->fields[$offset]);
-	}
+        return $this;
+    }
 
-	public function offsetGet($offset)
-	{
-		return isset($this->fields[$offset]) ? $this->fields[$offset]->getValue() : null;
-	}
+    /**
+     * Returns all fields as array
+     *
+     * @return array
+     */
+    public function get()
+    {
+        return $this->fields;
+    }
+
+    /**
+     * Returns array with names of fields in container.
+     *
+     * @return array
+     */
+    public function getFieldNames()
+    {
+        return array_keys($this->fields);
+    }
+
+    /**
+     * Returns areference to a conatiner field.
+     *
+     * @param string $field
+     *
+     * @return Field
+     */
+    public function &getField($field)
+    {
+        return $this->fields[$field];
+    }
+
+    /**
+     * Sets serialize flag on fields provided by fields argument.
+     *
+     * @param string|array $fields
+     *            One field or list of fields to set flag
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    public function setSerialize($fields = [])
+    {
+        if (! is_array($fields)) {
+            $fields = (array) $fields;
+        }
+
+        foreach ($fields as $field) {
+            $this->fields[$field]->setSerialize(true);
+        }
+
+        return $this;
+    }
+
+    public function getColumn($field)
+    {}
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetSet()
+     */
+    public function offsetSet($offset, $value)
+    {
+        if (is_null($offset)) {
+            Throw new \InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
+        }
+
+        if (! isset($this->fields[$offset])) {
+            switch (true) {
+
+                case (is_array($value)):
+                    $type = 'array';
+                    break;
+                case ($value instanceof Container):
+                    $type = 'array';
+                    $value = $value->get();
+                    break;
+                default:
+                    $type = 'string';
+                    break;
+            }
+
+            $this->createField($offset, $type);
+        }
+
+        $this->fields[$offset]->setValue($value);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetExists()
+     */
+    public function offsetExists($offset)
+    {
+        if (!isset($this->fields[$offset])) {
+            return false;
+        }
+
+        // Field found, get value to check for null
+        $value = $this->fields[$offset]->getValue();
+
+        return is_null($value) ? false : true;
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetUnset()
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->fields[$offset]);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetGet()
+     *
+     * @return Field
+     */
+    public function offsetGet($offset)
+    {
+        return isset($this->fields[$offset]) ? $this->fields[$offset]->getValue() : false;
+    }
 }
