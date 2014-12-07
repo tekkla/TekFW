@@ -102,6 +102,8 @@ class Content
      */
     public $msg;
 
+    private $debug = [];
+
     /**
      * Constructor
      *
@@ -275,6 +277,24 @@ class Content
     public function getBrand()
     {
         return $this->cfg->get('Core', 'sitename');
+    }
+
+    /**
+     * Adds data to debug output
+     *
+     * @param string $debug_data
+     *
+     * @return \Core\Lib\Content\Content
+     */
+    public function addDebug($debug_data)
+    {
+        $this->debug[] = $debug_data;
+
+        return $this;
+    }
+
+    public function getDebug(){
+        return $this->debug;
     }
 }
 
