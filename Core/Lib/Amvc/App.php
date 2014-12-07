@@ -372,7 +372,7 @@ class App
             'core.http.post',
             'core.sec.security',
             'core.content.message',
-            'core.content.content',
+            'core.content',
             'core.content.menu',
             'core.content.html.factory'
         ];
