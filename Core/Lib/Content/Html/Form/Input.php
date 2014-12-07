@@ -5,16 +5,14 @@ use Core\Lib\Content\Html\FormElementAbstract;
 
 /**
  * Input Form Element
- * 
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Form
- * @license MIT
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014 by author
+ * @license MIT
  */
 class Input extends FormElementAbstract
 {
-    
+
     // element specific value for
     // type: text|hidden|button|submit
     // default: text
@@ -33,9 +31,9 @@ class Input extends FormElementAbstract
         $this->data['control'] = $type == 'hidden' ? 'hidden' : 'input';
         return $this;
     }
-    
-    /*
-     * + Returns the input type attribute
+
+    /**
+     * Returns the input type attribute
      */
     public function getType()
     {
@@ -45,6 +43,7 @@ class Input extends FormElementAbstract
     public function setValue($value)
     {
         $this->attribute['value'] = $value;
+
         return $this;
     }
 
@@ -57,7 +56,7 @@ class Input extends FormElementAbstract
     {
         if (! is_int($size))
             Throw new \InvalidArgumentException('A html form inputs size needs to be an integer.');
-        
+
         $this->attribute['size'] = $size;
         return $this;
     }
@@ -66,7 +65,7 @@ class Input extends FormElementAbstract
     {
         if (! is_int($maxlenght))
             Throw new \InvalidArgumentException('A html form inputs maxlenght needs to be an integer.');
-        
+
         $this->attribute['maxlenght'] = $maxlenght;
         return $this;
     }
@@ -80,15 +79,15 @@ class Input extends FormElementAbstract
     public function isChecked($state = null)
     {
         $attrib = 'checked';
-        
+
         if (! isset($state))
             return $this->checkAttribute($attrib);
-        
+
         if ($state == 0)
             $this->removeAttribute($attrib);
         else
             $this->attribute[$attrib] = false;
-        
+
         return $this;
     }
 
