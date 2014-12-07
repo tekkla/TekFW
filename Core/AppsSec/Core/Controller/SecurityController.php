@@ -4,8 +4,11 @@ namespace Core\AppsSec\Core\Controller;
 use Core\Lib\Amvc\Controller;
 
 /**
+ * Appsec/Core/SecurityController
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014
+ * @license MIT
  */
 class SecurityController extends Controller
 {
@@ -16,16 +19,14 @@ class SecurityController extends Controller
 
         if ($data) {
 
-            $this->var_dump($data);
-
             // Do login procedure
             $data = $this->model->doLogin($data);
 
             if ($data['logged_in'] === true) {
-                $this->message->success($this->txt('login_ok'));
+                $this->content->msg->success($this->txt('login_ok'));
                 $this->redirectExit();
             } else {
-                $this->message->danger($this->txt('login_failed'));
+                $this->content->msg->danger($this->txt('login_failed'));
             }
         }
         else {
