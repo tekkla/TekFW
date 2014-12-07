@@ -127,7 +127,7 @@ try {
     ];
 
     /* @var $content \Core\Lib\Content\Content */
-    $content = $di['core.content.content'];
+    $content = $di['core.content'];
 
     $content->setTitle($config->get('Core', 'sitename'));
     $content->meta->setCharset();
@@ -264,13 +264,22 @@ try {
         var_dump($router->match());
 
         echo '
-			</p>
-			<p>Routes:</p>
-			<p>';
+			</p>';
+
+            $debug = $content->getDebug();
+
+            if ($debug) {
+                echo '
+                <h5>Debug:</h5>
+                <p>';
+                echo implode('<br>', $content->getDebug());
+
+                echo '
+                </p>';
+            }
 
         echo '
-			</p>
-		</div>';
+        </div>';
     }
 }
 
