@@ -143,7 +143,7 @@ class Creator
                     while (($name = readdir($dh)) !== false) {
 
                         // Skip Core app and parent names
-                        if ($name == '..' || $name == '.' || $name == 'Core') {
+                        if ($name == '..' || $name == '.' || $name == 'Core' || substr($name, 0, 1) == '.') {
                             continue;
                         }
 
