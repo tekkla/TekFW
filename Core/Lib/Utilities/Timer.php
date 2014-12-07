@@ -25,6 +25,12 @@ class Timer
 
     /**
      *
+     * @var bool
+     */
+    private $running = false;
+
+    /**
+     *
      * @var array
      */
     private $checkpoints = [];
@@ -34,20 +40,27 @@ class Timer
      */
     public function start()
     {
+        if ($this->running) {
+            Throw new \RuntimeException('Timer is already running.');
+        }
+
         $this->start = microtime(true);
         $this->checkpoints['start'] = $this->start;
+        $this->running = true;
     }
 
     /**
      * Stopps timer and returns difference from start
-     *
-     * @return number
      */
     public function stop()
     {
-        $this->end = microtime(true);
+        if (!$this->running) {
+            Throw new \RuntimeException('Timer is not running.');
+        }
 
-        return $this->getDiff();
+        $this->end = microtime(true);
+        $this->checkpoints['end'] = $this->end;
+        $this->running = false;
     }
 
     /**
@@ -78,9 +91,9 @@ class Timer
      */
     private function getEnd()
     {
-        $this->stop();
-
-        $this->checkpoints['end'] = $this->end;
+        if ($this->running) {
+            $this->stop();
+        }
 
         return $this->end;
     }
@@ -100,6 +113,6 @@ class Timer
      */
     public function reset()
     {
-        $this->start = microtime(true);
+        $this->start = 0;
     }
 }
