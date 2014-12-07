@@ -17,7 +17,7 @@ class DocumentController extends Controller
 
     public function Edit($id_document = NULL)
     {
-        $post = $this->request->getPost();
+        $post = $this->router->getPost();
         
         if ($post) {
             var_dump($post);
