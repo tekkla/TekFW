@@ -30,8 +30,9 @@ final class ConfigModel extends Model
 	public function loadByApp($app_name)
 	{
 		// get config structure from app
-		$app = $this->di['core.amvc.creator']->create($app_name);
-		$cfg_def = $app->getConfigDefinition();
+		$app = $this->di['core.amvc.creator']->getAppInstance($app_name);
+
+		$cfg_def = $app->getConfig();
 
 		if ($cfg_def) {
 
@@ -42,8 +43,8 @@ final class ConfigModel extends Model
 			// set config values to app config structure
 			foreach ($cfg_def_keys as $key) {
 
-				if ($this->cfg->exists($app_name, $key)) {
-					$val = $this->cfg->get($app_name, $key);
+				if ($this->di->get('core.cfg')->exists($app_name, $key)) {
+					$val = $this->di->get('core.cfg')->get($app_name, $key);
 				}
 				else{
 					$val = isset($cfg_def[$key]['default']) && $cfg_def[$key]['default'] !== '' ? $cfg_def[$key]['default'] : '';

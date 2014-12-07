@@ -30,7 +30,7 @@ class ConfigController extends Controller
 			Throw new \RuntimeException('No accessrights');
 		}
 
-		$post = $this->router->getPost();
+		$post = $this->post->get();
 
 		// save process
 		if ($post) {
@@ -73,7 +73,7 @@ class ConfigController extends Controller
 
 		// Get the config definition from app
 		$app = $this->di['core.amvc.creator']->create($app_name);
-		$app_cfg = $app->getConfigDefinition();
+		$app_cfg = $app->getConfig();
 
 		// controls for each config key will be created as a loop
 		foreach ($this->model->data as $cfg_key => $cfg_value) {
@@ -100,10 +100,10 @@ class ConfigController extends Controller
 			}
 
 			// Is this a control with more settings or only the controltype
-			$control->_type = is_object($cfg_def->control) ? $cfg_def->control{0} : $cfg_def->control;
+			$control_type = is_object($cfg_def->control) ? $cfg_def->control{0} : $cfg_def->control;
 
 			// Create control object
-			$control = $form->createElement($control->_type, $cfg_key);
+			$control = $form->createElement($control_type, $cfg_key);
 
 			// Are there attributes to add?
 			if (is_object($cfg_def->control) && isset($cfg_def->control{1}) && is_object($cfg_def->control{1})) {
@@ -115,7 +115,7 @@ class ConfigController extends Controller
 			}
 
 			// Create controls
-			switch ($control->_type) {
+			switch ($control_type) {
 				case 'textarea':
 				case 'text':
 					if (isset($cfg_def->default) && ! isset($cfg_deftranslate)) {
@@ -166,7 +166,7 @@ class ConfigController extends Controller
 
 						if (is_object($cfg_value)) {
 							foreach ($cfg_value as $k => $v) {
-								if (($control->_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control->_type == 'optiongroup' && ($cfg_def->data->{2} == 0 && $k == $option_value) || ($cfg_def->data->{2} == 1 && $v == $option_value))) {
+								if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg_def->data->{2} == 0 && $k == $option_value) || ($cfg_def->data->{2} == 1 && $v == $option_value))) {
 									$option->isSelected(1);
 									unset($cfg_value{$k});
 									continue;
@@ -208,9 +208,9 @@ class ConfigController extends Controller
 		$this->setVar('form', $form);
 
 		// Add linktreee
-		$this->addLinktree('TekFW Admincenter', $this->router->url('admin_admin'));
+		$this->content->breadcrumbs->createItem('TekFW Admincenter', $this->router->url('core_admin'));
 
-		$this->addLinktree($this->txt('name', $app_name));
+		$this->content->breadcrumbs->createActiveItem($this->txt('name', $app_name));
 	}
 
 	public function Reconfigure($app_name)

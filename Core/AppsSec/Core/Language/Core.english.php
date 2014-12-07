@@ -38,6 +38,12 @@ return [
 	'login' => 'Login',
 	'logout' => 'Logout',
 
+	'username' => 'Username',
+	'password' => 'Password',
+	'remember_me' => 'Stay logged in',
+
+	'admin' => 'Administration',
+
 	// NED texts
 	'delete' => 'Delete',
 	'delete_confirm' => 'Should data really be deleted?',
@@ -124,6 +130,8 @@ return [
 
 	// Number
 	'validator_compare' => 'Comparecheck failed. Checked: $1 $3 $2',
+
+	'validator_numbermax' => 'The value exeeds the set maximum of $1',
 
 	/**
 	 * **************************************************************************

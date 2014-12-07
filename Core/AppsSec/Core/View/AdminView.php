@@ -1,5 +1,5 @@
 <?php
-namespace Core\AppsSec\Admin\View;
+namespace Core\AppsSec\Core\View;
 
 use Core\Lib\Amvc\View;
 
@@ -20,14 +20,14 @@ class AdminView extends View
 				<div class="panel panel-default">
 					<div class="panel-body">
 						<a class="btn btn-default" href="', $this->config, '">Framework Config</a>
-						<h2><strong>Applications:</strong</h2>
+						<h2><strong>Applications:</strong></h2>
 						<ul class="list-group">';
 
-		foreach ($this->loaded_apps as $app_name => $app) {
-			echo '<li class="list-group-item clearfix">', $app_name, ($app->config_link ? '<a href="' . $app->config_link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
-		}
+						foreach ($this->loaded_apps as $app_name => $app) {
+							echo '<li class="list-group-item clearfix">', $app_name, ($app->config_link ? '<a href="' . $app->config_link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
+						}
 
-		echo '
+						echo '
 						</ul>
 					</div>
 				</div>

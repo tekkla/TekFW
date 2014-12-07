@@ -1,5 +1,5 @@
 <?php
-namespace Core\AppsSec\Admin\Controller;
+namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
 
@@ -13,15 +13,15 @@ use Core\Lib\Amvc\Controller;
 final class AdminController extends Controller
 {
 
-    public function Index()
-    {
-        $this->setVar([
-            'config' => $this->router->url('admin_app_config', [
-                'app_name' => 'core'
-            ]),
-            'loaded_apps' => $this->model->getApplist()
-        ]);
+	public function Index()
+	{
+		$this->setVar([
+			'config' => $this->router->url('core_config', [
+				'app_name' => 'core'
+			]),
+			'loaded_apps' => $this->model->getApplist()
+		]);
 
-        $this->addLinktree('TekFW Framework Center');
-    }
+		$this->content->breadcrumbs->createActiveItem('TekFW Framework Center');
+	}
 }
