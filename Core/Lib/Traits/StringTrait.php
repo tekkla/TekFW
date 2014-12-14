@@ -11,6 +11,7 @@ trait StringTrait
 
     /**
      * Shortens a string to the given length and adds .
+     *
      * .. at the end of string
      *
      * @param string $string
@@ -25,7 +26,7 @@ trait StringTrait
             return $string;
         }
 
-            // Shorten string by length
+        // Shorten string by length
         $string = substr($string, 0, $length);
 
         // Shorten further until last occurence of a ' '
@@ -46,23 +47,21 @@ trait StringTrait
      *
      * @param string $val
      * @return string
-     * @tutorial <cod
-     *           => <?php
-     *
-     *           => $string = 'my_name';
-     *           => $string = String::camelize($string);
-     *
-     *           => echo $string;
-     *           =>
-     *           => </cod
-     *           => Result: MyName
+     * @tutorial <code>
+     *           <?php
+     *           $string = 'my_name';
+     *           $string = String::camelize($string);
+     *           echo $string;
+     *           </code>
+     *           Result: MyName
      */
     public function camelizeString($string, $upper_first = true)
     {
         // even if there is no underscore in string, the first char will be converted to uppercase
         if (strpos($string, '_') == 0 && $upper_first == true) {
             $string = ucwords($string);
-        } else {
+        }
+        else {
             $string = str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($string))));
 
             if ($upper_first == false) {
@@ -90,7 +89,7 @@ trait StringTrait
             Throw new \InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
         }
 
-        if (!is_string($string)) {
+        if (! is_string($string)) {
             Throw new \InvalidArgumentException('Only strings can be used to be uncamelized.', 1000);
         }
 
