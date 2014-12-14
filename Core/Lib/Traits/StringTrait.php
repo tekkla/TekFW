@@ -2,8 +2,11 @@
 namespace Core\Lib\Traits;
 
 /**
+ * String Trait
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014 by author
+ * @license MIT
  *
  */
 trait StringTrait
