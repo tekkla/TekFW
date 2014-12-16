@@ -1,7 +1,9 @@
 <?php
 namespace Core\Lib\Data\Validator;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Traits\TextTrait;
+use Core\Lib\Traits\StringTrait;
+use Core\Lib\Data\Validator\Rules\RuleAbstract;
 
 /**
  * Validator
@@ -16,107 +18,21 @@ use Core\Lib\Data\Container;
  */
 final class Validator
 {
-    use \Core\Lib\Traits\TextTrait;
+    use TextTrait, StringTrait;
 
     /**
-     * The field name to check
-     *
-     * @var mixed
-     */
-    private $field;
-
-    /**
-     * The value to check
-     *
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * container to check
-     *
-     * @var Container
-     */
-    private $container = false;
-
-    /**
-     * Simple name of validation function
-     *
-     * @var unknown
-     */
-    private $func;
-
-    /**
-     * Array of params to send to validation functions
-     *
-     * @var unknown
-     */
-    private $params = array();
-
-    /**
-     * Possible rule message
-     *
-     * @var string
-     */
-    private $msg;
-
-    /**
-     * The current validation error message
-     *
-     * @var unknown
-     */
-    private $error;
-
-    private $result;
-
-    /**
-     * Array of shorthand function names and the corresponding validator methods
+     * The messages from the current check
      *
      * @var array
      */
-    private $functions = array(
+    private $msg = [];
 
-        // existance
-        'required' => '__Required',
-        'empty' => '__Empty',
-        'blank' => '__Blank',
-
-        // sizes
-        'min' => '__Min',
-        'max' => '__Max',
-        'range' => '__Range',
-
-        // date / time
-        'date' => '__Date',
-        'date-iso' => '__DateIso',
-        'datetime' => '__DateTime',
-
-        'time' => '__Time',
-        'time-24' => '__Time24',
-
-        // contact
-        'phone' => '__Phone',
-
-        // strings
-        'alpha' => '__OnlyLetter',
-        'alnum' => '__OnlyLetterNumber',
-
-        // web
-        'mail' => '__Email',
-        'url' => '__Url',
-        'ip4' => '__IpV4',
-
-        // regexp
-        'regex' => '__CustomRegExp',
-
-        // numbers
-        'num' => '__OnlyNumber',
-        'int' => '__Integer',
-
-        'float' => '__Float',
-
-        'function' => '__CustomFunction'
-    );
+    /**
+     * Storage for loaded rule objects
+     *
+     * @var array
+     */
+    private $rules = [];
 
     /**
      * Constructor
@@ -125,582 +41,132 @@ final class Validator
     {}
 
     /**
-     * Set container to run validation on.
+     * Validates a value against the wanted rules.
      *
-     * @param Container $container
-     *
-     * @return \Core\Lib\Data\Validator\Validator
+     * @param mixed $value
+     * @param string|array $rules One or more rules
+     * @return multitype:
      */
-    public function setContainer(Container &$container)
+    public function validate($value, $rules)
     {
-        $this->container = $container;
+        // Our current value (trimmed)
+        $value = trim($value);
 
-        return $this;
-    }
-
-    /**
-     * Starts validation process for the set field and content
-     * If a check fails, a message will be set in the messegaes storage.
-     */
-    public function validate()
-    {
-        // No container, no validation
-        if (! $this->container) {
-            return;
+        if (! is_array($rules)) {
+            $rules = (array) $rules;
         }
 
-        foreach ($this->container as $field) {
-            // No validation witout rules.
-            if (empty($field['validate'])) {
-                continue;
+        // Reset present messages
+        $this->msg = [];
+
+        // Validate each rule against the
+        foreach ($rules as $rule) {
+
+            // Reset the last result
+            $result = false;
+
+            // Array type rules are for checks where the func needs one or more parameter
+            // So $rule[0] is the func name and $rule[1] the parameter.
+            // Parameters can be of type array where the elements are used as function parameters in the .. they are set.
+            if (is_array($rule)) {
+
+                // Get the functionname
+                $rule_name = $this->camelizeString($rule[0]);
+
+                // Parameters set?
+                if (isset($rule[1])) {
+                    $args = ! is_array($rule[1]) ? [
+                        $rule[1]
+                    ] : $rule[1];
+                }
+                else {
+                    $args = [];
+                }
+
+                // Custom error message
+                if (isset($rule[2])) {
+                    $custom_message = $rule[2];
+                }
+            }
+            else {
+                $rule_name = $this->camelizeString($rule);
+                $args = [];
+                unset($custom_message);
             }
 
-            // Our current fieldname
-            $this->field = $field['name'];
+            // Call rule creation process to make sure rule exists before starting further actions.
+            $rule = $this->createRule($rule_name);
 
-            // Our current value (trimmed)
-            $this->value = trim($field['value']);
+            $rule->setValue($value);
 
-            // Validate each rule against the
-            foreach ($field['validate'] as $rule) {
+            // Calling the validation function
+            call_user_func_array(array(
+                $rule,
+                'execute'
+            ), $args);
 
-                // Array type rules are for checks where the func needs one or more parameter
-                // So $rule[0] is the func name and $rule[1] the parameter.
-                // Parameters can be of type array where the elements are used as function parameters in the .. they are set.
-                if (is_array($rule)) {
-                    // Get the functionname
-                    $this->func = $rule[0];
+            // Get result from rule
+            $result = $rule->isValid();
 
-                    // Parameters set?
-                    if (isset($rule[1]))
-                        $this->params = ! is_array($rule[1]) ? array(
-                            $rule[1]
-                        ) : $rule[1];
-                    else
-                        $this->params = array();
+            // Is the validation result negative eg false?
+            if ($result === false) {
 
-                        // Custom error message
-                    if (isset($rule[2]))
-                        $this->msg = $rule[2];
-                } else {
-                    $this->func = $rule;
-                    $this->params = array();
-                    unset($this->msg);
-                }
-
-                // Calling the validation function
-                call_user_func_array(array(
-                    $this,
-                    $this->functions[$this->func]
-                ), $this->params);
-
-                // Current rules message overwrites maybe set error values
-                if (isset($this->msg)) {
-                    $this->error = $this->txt($this->msg);
-                }
+                // Get msg from rule
+                $msg = $rule->getMsg();
 
                 // If no error message is set, use the default validato error
-                if (! isset($this->error)) {
-                    $this->error = $this->txt('validator_error');
+                if (empty($msg)) {
+                   $this->msg[] = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
                 }
 
-                // Is the validation result negative eg false?
-                if ($this->result === false) {
-
-                    // Validation ends with an error
-                    $this->container->setError($this->field, $this->error);
-
-                    // Clear msg and error properties
-                    unset($this->msg, $this->error);
-
-                    // Is the clear flag set in rule, the content of the field will be cleared
-                    // This is useful for password fields or all other fields where you want
-                    // to force the user to retype data.
-                    if (isset($rule['clear'])) {
-                        $this->container[$this->field] = null;
-                    }
-
-                    // Stop rest of validation if stop flag isset in rule
-                    if (isset($rule['stop'])) {
-                        break;
-                    }
-                }
+                $this->msg[] = $msg;
             }
         }
-    }
 
-    // -------------------------------------------------------------
-    // Validation methods
-    // -------------------------------------------------------------
-
-    /**
-     * Checks for a field to be set and empty.
-     */
-    private function __Required()
-    {
-        $this->result = isset($this->container[$this->field]);
-        $this->error = $this->txt('validator_required');
+        return $this->msg;
     }
 
     /**
-     * Checks for empty value but treats 0, -0, 0.0 as existing values
-     */
-    private function __Blank()
-    {
-        $this->result = $this->value !== '' ? true : false;
-        $this->error = $this->txt('validator_blank');
-    }
-
-    /**
-     * Checks for empty value like the php function empty()
-     */
-    private function __Empty()
-    {
-        $this->result = isset($this->container[$this->field]) && empty($this->value) ? ($this->value == '0' . $this->value ? true : false) : true;
-        $this->error = $this->txt('validator_empty');
-    }
-
-    /**
-     * Checks the values for the minimum length (string) or amount (numeric) given by the parameter
+     * Returns the last validation result.
      *
-     * @param int $min
+     * @return bool
      */
-    private function __Min($min, $type = 'string')
+    public function isValid()
     {
-        if (is_numeric($this->value))
-            $this->__NumberMin($min);
-        else
-            $this->__TxtMinLength($min);
+        return empty($this->msg);
     }
 
     /**
-     * Checks the values for the maximum length (string) or amount (numeric) given by the parameter
+     * Returns the last validation msg.
      *
-     * @param int $max
+     * @return array
      */
-    private function __Max($max)
+    public function getMsg()
     {
-        if (is_numeric($this->value))
-            $this->__NumberMax($max);
-        else
-            $this->__TxtMaxLength($max);
+        return $this->msg;
     }
 
     /**
-     * Checks the value for the minimum and maximum length (string) or amount (number) given by the parameters
+     * Creates and returns a rule object.
      *
-     * @param int $min
-     * @param int $max
+     * @param string $rule_name
+     *
+     * @return RuleAbstract
      */
-    private function __Range($min, $max)
+    public function &createRule($rule_name)
     {
-        if (is_numeric($this->value)) {
-            $this->__NumberRange($min, $max);
+        // Rules are singletons
+        if (! array_key_exists($rule_name, $this->rules)) {
+            $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
+            $this->rules[$rule_name] = $this->di->instance($rule_class, $this);
         } else {
-            $this->__TxtLengthBetween($min, $max);
-        }
-    }
 
-    /**
-     * Checks the value to be valid date by trying to convert it into timestamp.
-     */
-    private function __Date()
-    {
-        $this->result = strtotime($this->value) === false ? false : true;
-        $this->error = $this->txt('validator_date');
-    }
+            // Reset existing rules
+            $this->rules[$rule_name]->reset();
 
-    /**
-     * Checks the value to be valid date/time by trying to convert it into timestamp.
-     */
-    private function __DateTime()
-    {
-        $this->result = strtotime($this->value) === false ? false : true;
-        $this->error = $this->txt('validator_datetime');
-    }
-
-    /**
-     * Compares the value aginst the ISO dateformat (YYYY-mm-dd)
-     */
-    private function __DateIso()
-    {
-        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $this->value, $parts) == true) {
-
-            $this->result = false;
-
-            // Build time from parts
-            $time = mktime(0, 0, 0, $parts[2], $parts[3], $parts[1]);
-
-            // Build time from value
-            $input_time = strtotime($this->value);
-
-            // Compare both timestamps
-            if ($input_time == $time)
-                $this->result = true;
-        } else {
-            // No matches found
-            $this->result = false;
         }
 
-        $this->error = $this->txt('validator_date_iso');
-    }
 
-    /**
-     * Check for a minimum text lenth
-     *
-     * @param unknown $min
-     */
-    private function __TxtMinLength($min)
-    {
-        $this->result = strlen($this->value) >= $min;
-        $this->error = sprintf($this->txt('validator_textminlength'), $min);
-    }
-
-    /**
-     * Checks the length of the value against the given lenght ($max)
-     *
-     * @param int $max
-     */
-    private function __TxtMaxLength($max)
-    {
-        $this->result = strlen((string) $this->value) <= $max;
-        $this->error = sprintf($this->txt('validator_textmaxlength'), $max);
-    }
-
-    /**
-     * Checks the length of the value to be within min ($min) and max ($max) lenght.
-     *
-     * @param int $min
-     * @param int $max
-     */
-    private function __TxtLengthBetween($min, $max)
-    {
-        $value = (string) $this->value;
-
-        $this->result = strlen($value) >= $min && strlen($value) <= $max;
-        $this->error = sprintf($this->txt('validator_textrange'), $min, $max, strlen($this->value));
-    }
-
-    /**
-     * Checks the value against the 24-hour notation
-     */
-    private function __Time24()
-    {
-        $regexp = '/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_time24');
-    }
-
-    private function __Phone()
-    {
-        $regexp = '/^([\+][0-9]{1,3}[\ \.\-])?([\(]{1}[0-9]{2,6}[\)])?([0-9\ \.\-\/]{3,20})((x|ext|extension)[\ ]?[0-9]{1,4})?$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_phone');
-    }
-
-    /**
-     * Checks the value to be a valid email adress
-     */
-    private function __Email()
-    {
-        $this->result = filter_var($this->value, FILTER_VALIDATE_EMAIL);
-        $this->error = $this->txt('validator_email');
-    }
-
-    /**
-     * Checks the value to be of type integer
-     */
-    private function __Integer()
-    {
-        $this->result = is_int($this->value);
-        $this->error = $this->txt('validator_integer');
-    }
-
-    /**
-     * Checks the value to be of type float
-     */
-    private function __Float()
-    {
-        $this->result = is_float($this->value);
-        $this->error = $this->txt('validator_float');
-    }
-
-    /**
-     * Checks the value to be bigger or equal to parameter ($min)
-     *
-     * @param unknown $min
-     */
-    private function __NumberMin($min)
-    {
-        $this->result = $this->value >= $min;
-        $this->error = sprintf($this->txt('validator_numbermin'), $min);
-    }
-
-    /**
-     * Check the value to be smaller or equal to parameter ($max)
-     *
-     * @param int $max
-     */
-    private function __NumberMax($max)
-    {
-        $this->result = $this->value <= $max;
-        $this->error = sprintf($this->txt('validator_numbermax'), $max);
-    }
-
-    /**
-     * Check the value to be within a range of numbers ($min, $max)
-     *
-     * @param int $min
-     * @param int $max
-     */
-    private function __NumberRange($min, $max)
-    {
-        $this->result = $this->value >= $min && $this->value <= $max;
-        $this->error = sprintf($this->txt('validator_numberrange'), $min, $max);
-    }
-
-    /**
-     * Checks the value to be a valid number
-     */
-    private function __Number()
-    {
-        $regexp = '/^[\-\+]?((([0-9]{1,3})([,][0-9]{3})*)|([0-9]+))?([\.]([0-9]+))?$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_number');
-    }
-
-    /**
-     * Checks the value to by a valid IpV4 adress
-     */
-    private function __IpV4()
-    {
-        $regexp = '/^((([01]?[0-9]{1,2})|(2[0-4][0-9])|(25[0-5]))[.]){3}(([0-1]?[0-9]{1,2})|(2[0-4][0-9])|(25[0-5]))$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_ipv4');
-    }
-
-    /**
-     * Checks the value to be a valid url
-     */
-    private function __Url()
-    {
-        $regexp = '/^(https?|ftp)\:\/\/([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?[a-z0-9+\$_-]+(\.[a-z0-9+\$_-]+)*(\:[0-9]{2,5})?(\/([a-z0-9+\$_-]\.?)+)*\/?(\?[a-z+&\$_.-][a-z0-9;:@/&%=+\$_.-]*)?(#[a-z_.-][a-z0-9+\$_.-]*)?\$';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_url');
-    }
-
-    /**
-     * Checks the value to be only of numbers
-     */
-    private function __OnlyNumber()
-    {
-        $regexp = '/^[0-9\ ]+$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_number');
-    }
-
-    /**
-     * Checks the value to be only of letters
-     */
-    private function __OnlyLetter()
-    {
-        $regexp = '/^[a-zA-Z\ \']+$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_alpha');
-    }
-
-    /**
-     * Checks the value to be only of letters and numbers
-     */
-    private function __OnlyLetterNumber()
-    {
-        $regexp = '/^[0-9a-zA-Z]+$/';
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_alnum');
-    }
-
-    /**
-     * Checks the value against a custom regexp
-     */
-    private function __CustomRegExp($regexp)
-    {
-        $this->result = filter_var($this->value, FILTER_VALIDATE_REGEXP, array(
-            "options" => array(
-                "regexp" => $regexp
-            )
-        ));
-        $this->error = $this->txt('validator_customregex');
-    }
-
-    /**
-     * Checks the value against a comparision value.
-     * The comparemode can be defined by use.
-     */
-    private function __Compare($to_compare_with, $mode = '=')
-    {
-        $modes = array(
-            '=',
-            '>',
-            '<',
-            '>=',
-            '<='
-        );
-
-        if (! in_array($mode, $modes))
-            Throw new \InvalidArgumentException(sprintf('Parameter "%s" not allowed', $mode), 1001);
-
-        switch ($mode) {
-            case '=':
-                $this->result = $this->value == $to_compare_with;
-                break;
-
-            case '>':
-                $this->result = $this->value > $to_compare_with;
-                break;
-
-            case '<':
-                $this->result = $this->value < $to_compare_with;
-                break;
-
-            case '>=':
-                $this->result = $this->value >= $to_compare_with;
-                break;
-
-            case '<=':
-                $this->result = $this->value <= $to_compare_with;
-                break;
-        }
-
-        $this->error = sprintf($this->txt('validator_compare'), $this->value, $to_compare_with, $mode);
-    }
-
-    /**
-     * Checks the value against a compare value to proof both to be equal in type and value.
-     * Compares only strings and numbers. All other types will return false.
-     *
-     * @param string|number $to_compare
-     */
-    private function __Equals($to_compare)
-    {
-        $value = $this->value;
-
-        if (is_string($value) && is_string($to_compare))
-            $this->result = $value == $to_compare ? true : false;
-
-        elseif ((is_int($value) && is_int($to_compare)) || (is_float($value) && is_float($to_compare)))
-            $this->result = $value == $to_compare ? true : false;
-        else
-            $this->result = false;
-
-        $this->error = $this->txt('validator_equals');
-    }
-
-    /**
-     * Checks the value typsave to be longer/bigger than the compare value.
-     * Only strings and numbers can be compared. All othe types returns false.
-     *
-     * @param string|number $to_compare
-     */
-    private function __Bigger($to_compare)
-    {
-        $value = $this->value;
-
-        if (is_string($value) && is_string($to_compare))
-            $this->result = strlen($value) > strlen($to_compare) ? true : false;
-        elseif ((is_int($value) && is_int($to_compare)) || (is_float($value) && is_float($to_compare)))
-            $this->result = $value > $to_compare ? true : false;
-        else
-            $this->result = false;
-
-        $this->error = $this->txt('validator_bigger');
-    }
-
-    /**
-     * Checks the value typsave to be shorter/smaller than the compare value.
-     * Only strings and numbers can be compared. All othe types returns false.
-     *
-     * @param string|number $to_compare
-     */
-    private function __Smaller($to_compare)
-    {
-        $value = $this->value;
-
-        if (is_string($value) && is_string($to_compare))
-            $this->result = strlen($value) < strlen($to_compare) ? true : false;
-        elseif ((is_int($value) && is_int($to_compare) || is_float($value) && is_float($to_compare)))
-            $this->result = $value > $to_compare ? true : false;
-        else
-            $this->result = false;
-
-        $this->error = $this->txt('validator_smaller');
-    }
-
-    /**
-     * Compares the value against a compare value by type and lenghts.
-     * Only strings and numbers can be compared. All othe types returns false.
-     *
-     * @param string|number $to_compare
-     */
-    private function __BiggerOrEqual($to_compare)
-    {
-        $value = $this->value;
-
-        if (is_string($value) && is_string($to_compare))
-            $this->result = strlen($value) >= strlen($to_compare) ? true : false;
-
-        elseif ((is_int($value) && is_int($to_compare)) || (is_float($this->value) && is_float($to_compare)))
-            $this->result = $this->value >= $to_compare ? true : false;
-        else
-            $this->result = false;
-
-        $this->error = $this->txt('validator_bigger_or_equal');
-    }
-
-    /**
-     * Uses a model function to validate value.
-     *
-     * @param string $model_function
-     *            The name of function in model
-     * @param string $message
-     *            Message to show on fail. Uses modelapp relatet string for translation.
-     */
-    private function __CustomFunction($model_function, $message)
-    {
-        $result = $this->model->{$model_function}($this->value);
-
-        $this->result = is_bool($result) ? $result : false;
-        $this->error = $message;
+        return $this->rules[$rule_name];
     }
 }
