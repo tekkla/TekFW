@@ -17,16 +17,10 @@ class MinRule extends RuleAbstract
     public function execute()
     {
         // Which rule object shoud be used? Number or text?
-        if (is_numeric($this->value) && func_get_arg(1) === false) {
-            $rule = new NumberMinRule();
-        }
-        else {
-            $rule = new TxtMinLengthRule();
-        }
+        $rule_name = is_numeric($this->value) && func_get_arg(1) === false ? 'NumberMinRule' : 'TxtMinLengthRule';
 
+        $rule = $this->createRule($rule_name);
         $rule->setValue($this->value);
-
-        // Execute rule
         $rule->execute(func_get_arg(0));
 
         // Work with the result of check
