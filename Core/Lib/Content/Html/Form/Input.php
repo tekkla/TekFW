@@ -24,11 +24,32 @@ class Input extends FormElementAbstract
         'control' => 'input'
     ];
 
+    /**
+     * Sets input type
+     *
+     * @param string $type
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @return \Core\Lib\Content\Html\Form\Input
+     */
     public function setType($type)
     {
+        $types = [
+            'text',
+            'hidden',
+            'button',
+            'submit'
+        ];
+
+        if (!in_array($type, $types)) {
+            Throw new \InvalidArgumentException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
+        }
+
         $this->type = $type;
         $this->attribute['type'] = $type;
         $this->data['control'] = $type == 'hidden' ? 'hidden' : 'input';
+
         return $this;
     }
 
@@ -61,12 +82,12 @@ class Input extends FormElementAbstract
         return $this;
     }
 
-    public function setMaxlenght($maxlenght)
+    public function setMaxlength($maxlength)
     {
-        if (! is_int($maxlenght))
+        if (! is_int($maxlength))
             Throw new \InvalidArgumentException('A html form inputs maxlenght needs to be an integer.');
 
-        $this->attribute['maxlenght'] = $maxlenght;
+        $this->attribute['maxlength'] = $maxlength;
         return $this;
     }
 
