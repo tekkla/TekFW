@@ -17,7 +17,7 @@ class RangeRule extends RuleAbstract
     public function execute()
     {
         // Which rule object shoud be used? Number or text?
-        $rule_name = is_numeric($this->value) && func_get_arg(2) === false ? 'NumberRangeRule' : 'TxtLengthBetweenRule';
+        $rule_name = is_numeric($this->value) && func_get_arg(2) === false ? 'NumberRange' : 'TxtLengthBetween';
 
         $rule = $this->createRule($rule_name);
         $rule->setValue($this->value);
