@@ -130,6 +130,8 @@ class Error
         $this->message = $message;
         $this->adapter = $adapter;
 
+
+
         $this->error_id = uniqid('#error_');
     }
 
@@ -143,7 +145,7 @@ class Error
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
 
         // Append more informations for admin users
-        if ($this->user->isAdmin() == false) {
+        if ($this->user->isAdmin() == true) {
 
             $this->error_html .= '
             <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
@@ -151,6 +153,7 @@ class Error
             <p><small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></p>
             <hr>
             <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
+
         } else {
 
             $this->error_html .= '
