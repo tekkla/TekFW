@@ -52,6 +52,12 @@ class Field implements \ArrayAccess
 
 	/**
 	 *
+	 * @var string
+	 */
+	private $control = 'text';
+
+	/**
+	 *
 	 * @var bool
 	 */
 	private $serialize = false;
@@ -62,11 +68,27 @@ class Field implements \ArrayAccess
 	 */
 	private $validate = [];
 
+	/**
+	 *
+	 * @var mixed
+	 */
+	private $default = '';
+
+	/**
+	 * Constructor
+	 */
 	public function __construct()
 	{}
 
+	/**
+	 * On echo field ...
+	 *
+	 * @return string
+	 */
 	public function __toString() {
+
 	    return (string) $this->value;
+
 	}
 
 	/**
@@ -217,6 +239,7 @@ class Field implements \ArrayAccess
 
 	/**
 	 * Returns field value.
+	 *
 	 * Same as getValue() only shorter.
 	 *
 	 * @return mixed
@@ -235,7 +258,7 @@ class Field implements \ArrayAccess
 	 *
 	 * @return \Core\Lib\Data\Field
 	 */
-	public function setValue($value)
+	public function setValue($value, $type = null)
 	{
 		// Is the data serialized?
 		if ($this->isSerialized($value)) {
@@ -245,9 +268,13 @@ class Field implements \ArrayAccess
 
 		$this->value = $value;
 
+		if (isset($type)) {
+		    $this->setType($type);
+		}
+
 		return $this;
 	}
-	
+
 	/**
 	 * Same as setValue only shorter.
 	 *
@@ -257,18 +284,70 @@ class Field implements \ArrayAccess
 	 *
 	 * @return \Core\Lib\Data\Field
 	 */
-	public function set($value)
+	public function set($value, $type = null)
 	{
 	    // Is the data serialized?
 	    if ($this->isSerialized($value)) {
 	        $this->serialize = true;
 	        $value = unserialize($value);
 	    }
-	
+
 	    $this->value = $value;
-	
+
+	    if (isset($type)) {
+	        $this->setType($type);
+	    }
+
 	    return $this;
-	}	
+	}
+
+	/**
+	 * Sets the control to use when field used in displayfunctions.
+	 *
+	 * @param string $control_type
+	 *
+	 * @return \Core\Lib\Data\Field
+	 */
+	public function setControl($control_type)
+	{
+	    $this->control = $control_type;
+
+	    return $this;
+	}
+
+	/**
+	 * Get control type.
+	 *
+	 * @retur nstring
+	 */
+	public function getControl()
+	{
+	    return $this->control;
+	}
+
+	/**
+	 * Sets fields default value.
+	 *
+	 * @param mixed $default_value
+	 *
+	 * @return \Core\Lib\Data\Field
+	 */
+	public function setDefault($default_value)
+	{
+	    $this->default = $default_value;
+
+	    return $this;
+	}
+
+	/**
+	 * Get control default value.
+	 *
+	 * @retur nstring
+	 */
+	public function getDefault()
+	{
+	    return $this->default;
+	}
 
 	/**
 	 * Get validation rules.
