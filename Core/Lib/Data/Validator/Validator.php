@@ -158,7 +158,7 @@ final class Validator
         // Rules are singletons
         if (! array_key_exists($rule_name, $this->rules)) {
             $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
-            $this->rules[$rule_name] = $this->di->instance($rule_class, $this);
+            $this->rules[$rule_name] = $this->di->instance($rule_class, 'core.data.validator');
         } else {
 
             // Reset existing rules
