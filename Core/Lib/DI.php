@@ -129,7 +129,7 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
         // == DATA ==========================================================
-        $this->mapFactory('core.data.validator', '\Core\Lib\Data\Validator\Validator');
+        $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
         $this->mapFactory('core.data.container', '\Core\Lib\Data\Container');
 
         // == CONTENT =======================================================
@@ -187,7 +187,7 @@ class DI implements \ArrayAccess
         $reflection = new \ReflectionClass($class_name);
 
         // Creating an instance of the class when no arguments provided
-        if ($arguments === null || count($arguments) == 0) {
+        if (empty($arguments) || count($arguments) == 0) {
             $obj = new $class_name();
         }
 
