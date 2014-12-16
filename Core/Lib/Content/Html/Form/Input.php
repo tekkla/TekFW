@@ -39,7 +39,8 @@ class Input extends FormElementAbstract
             'text',
             'hidden',
             'button',
-            'submit'
+            'submit',
+            'password'
         ];
 
         if (!in_array($type, $types)) {
