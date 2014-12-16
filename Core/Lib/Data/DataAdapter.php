@@ -1,6 +1,7 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Data\Container;
 /**
  * DataAdapter Object
  *
@@ -11,7 +12,7 @@ namespace Core\Lib\Data;
 class DataAdapter implements \IteratorAggregate
 {
 
-    use\Core\Lib\Traits\ArrayTrait;
+    use \Core\Lib\Traits\ArrayTrait;
 
     /**
      *
@@ -108,9 +109,13 @@ class DataAdapter implements \IteratorAggregate
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function createContainer(array $fields)
+    public function createContainer(array $fields = [])
     {
-        $this->container = new Container($fields);
+        $this->container = $this->di->get('core.data.container');
+
+        if (!empty($fields)) {
+            $this->container->parseFields($fields);
+        }
 
         return $this;
     }
