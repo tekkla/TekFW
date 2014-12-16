@@ -10,9 +10,12 @@ use Core\Lib\Content\Content;
 use Core\Lib\Http\Post;
 use Core\Lib\Data\Container;
 use Core\Lib\Content\Html\FormDesigner;
+use Core\Lib\Traits\UrlTrait;
+use Core\Lib\Traits\TextTrait;
 
 /**
  * Controllers parent class.
+ *
  * Each app controller has to be a child of this class.
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
@@ -23,8 +26,8 @@ use Core\Lib\Content\Html\FormDesigner;
 class Controller extends MvcAbstract
 {
 
-    use \Core\Lib\Traits\UrlTrait;
-    use \Core\Lib\Traits\TextTrait;
+    use UrlTrait;
+    use TextTrait;
 
     /**
      * Type of class
@@ -137,17 +140,7 @@ class Controller extends MvcAbstract
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct(
-        $name, 
-        App $app, 
-        Router $router, 
-        Post $post, 
-        Security $security, 
-        Message $message, 
-        Content $content, 
-        Menu $menu, 
-        HtmlFactory $html
-    )
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html)
     {
         // Store name
         $this->name = $name;
@@ -172,10 +165,8 @@ class Controller extends MvcAbstract
      *
      * Setting one parameter means you want to read a value. Both param writes a config value.
      *
-     * @param string $key
-     *            Config to get
-     * @param mixed $val
-     *            Value to set in the apps config
+     * @param string $key Config to get
+     * @param mixed $val Value to set in the apps config
      *
      * @return mixed config value
      */
@@ -194,10 +185,8 @@ class Controller extends MvcAbstract
      * In this case you should provide the action an parameters needed to get the
      * wanted result.
      *
-     * @param string $action
-     *            Optional action to run
-     * @param string $params
-     *            Parameter to use
+     * @param string $action Optional action to run
+     * @param string $params Parameter to use
      *
      * @return boolean bool|string
      *
@@ -270,17 +259,13 @@ class Controller extends MvcAbstract
      * even uses it. The difference is that the renderesult is wrapped by an ajax command object. This ajax command can
      * be controlled by setting the wanted parameters via $this->ajax->...
      *
-     * @param string $action
-     *            Name of the action to call
-     * @param array $params
-     *            Array of parameter to be used in action call
-     * @param string $selector
-     *            Optional jQuery selector to html() the result.
-     *            Can be overridden by setAjaxTarget() method
+     * @param string $action Name of the action to call
+     * @param array $params Array of parameter to be used in action call
+     * @param string $selector Optional jQuery selector to html() the result.
+     *        Can be overridden by setAjaxTarget() method
      */
     final public function ajax($action = 'Index', $params = [], $selector = '')
     {
-
         $this->is_ajax = true;
 
         $this->ajax = $this->di['core.ajax.cmd'];
@@ -327,10 +312,8 @@ class Controller extends MvcAbstract
     /**
      * Method to cleanup data in controllers model and the request handler
      *
-     * @param bool $model
-     *            Flag to clean model data (default: true)
-     * @param string $post
-     *            Flag to clean post data (default: true)
+     * @param bool $model Flag to clean model data (default: true)
+     * @param string $post Flag to clean post data (default: true)
      */
     final protected function cleanUp($model = true, $post = true)
     {
@@ -372,14 +355,13 @@ class Controller extends MvcAbstract
     /**
      * Loads the associated viewobject
      *
-     * @param string $app
-     *            Name of the views app
-     * @param string $view
-     *            Name of the view
+     * @param string $app Name of the views app
+     * @param string $view Name of the view
      */
     final protected function loadView($view)
     {
         $this->view = View::factory($this->app, $view);
+
         return $this;
     }
 
@@ -393,8 +375,10 @@ class Controller extends MvcAbstract
         if ($this->router->isAjax()) {
             $this->ajax->refresh($url);
             $this->firephp('Ajax refresh command set: ' . $url);
-        } else
+        }
+        else {
             $this->redirectExit($url);
+        }
     }
 
     /**
@@ -416,10 +400,8 @@ class Controller extends MvcAbstract
      * Level 0 - App: Tries to check access on possible app wide access function
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
-     * @param boolean $smf
-     *            Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
-     * @param bool $force
-     *            Set this to true if you want to force a brutal stop
+     * @param boolean $smf Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
+     * @param bool $force Set this to true if you want to force a brutal stop
      *
      * @return boolean
      */
@@ -438,7 +420,8 @@ class Controller extends MvcAbstract
             if (isset($this->access['*'])) {
                 if (! is_array($this->access['*'])) {
                     $perm[] = $this->access['*'];
-                } else {
+                }
+                else {
                     $perm += $this->access['*'];
                 }
             }
@@ -447,7 +430,8 @@ class Controller extends MvcAbstract
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
                     $perm[] = $this->access[$this->action];
-                } else {
+                }
+                else {
                     $perm += $this->access[$this->action];
                 }
             }
@@ -472,16 +456,15 @@ class Controller extends MvcAbstract
     final protected function setRenderAction($action)
     {
         $this->action = $action;
+
         return $this;
     }
 
     /**
      * Publish a value to the view
      *
-     * @param string|array $arg1
-     *            Name of var or list of vars in an array
-     * @param mixed $arg2
-     *            Optional value to be ste when $arg1 is the name of a var
+     * @param string|array $arg1 Name of var or list of vars in an array
+     * @param mixed $arg2 Optional value to be ste when $arg1 is the name of a var
      */
     final protected function setVar($arg1, $arg2 = null)
     {
@@ -509,9 +492,11 @@ class Controller extends MvcAbstract
             foreach ($arg1 as $var => $value) {
                 $this->view->setVar($var, $value);
             }
-        } elseif (isset($arg2)) {
+        }
+        elseif (isset($arg2)) {
             $this->view->setVar($arg1, $arg2);
-        } else {
+        }
+        else {
             Throw new \InvalidArgumentException('The vars to set are not correct.', 1001);
         }
 
@@ -565,15 +550,43 @@ class Controller extends MvcAbstract
     }
 
     /**
+     * Creates an app related container
+     *
+     * @param string $container_name Optional: Name of the container to load. When no name is given the name of the current model will be used.
+     * @param bool $auto_init Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    final public function getContainer($container_name = null, $auto_init = true)
+    {
+        if (empty($container_name)) {
+            $container_name = $this->getName();
+        }
+
+        return $this->app->getContainer($container_name, $auto_init);
+    }
+
+    /**
+     * Creates an generic container object.
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    final public function getGenericContainer($fields = [])
+    {
+        $container = $this->di->get('core.data.container');
+        $container->parseFields($fields);
+
+        return $container;
+    }
+
+    /**
      * Adds a paramter to the controllers parameter collection.
      *
      * Useful when redirecting to other controller action
      * which need additional parameters to function.
      *
-     * @param string $params
-     *            Paramertername
-     * @param mixed $value
-     *            Parametervalue
+     * @param string $params Paramertername
+     * @param mixed $value Parametervalue
      */
     final protected function addParam($param, $value)
     {
@@ -600,10 +613,8 @@ class Controller extends MvcAbstract
     /**
      * Redirect function to make sure the browser doesn't come back and repost the form data.
      *
-     * @param string $location
-     *            Location we redirtect to
-     * @param bool $refresh
-     *            Use refresh instead of location
+     * @param string $location Location we redirtect to
+     * @param bool $refresh Use refresh instead of location
      */
     final protected function redirectExit($location = '', $permanent = false)
     {
