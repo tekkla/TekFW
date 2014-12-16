@@ -12,7 +12,7 @@ namespace Core\Lib\Http;
 class Post
 {
 
-    use\Core\Lib\Traits\StringTrait;
+    use \Core\Lib\Traits\StringTrait;
 
     /**
      *
@@ -52,15 +52,32 @@ class Post
         }
 
         // Use values provided by request for missing app and model name
-        if (! $app || ! $key) {
+        if (empty($app) || empty($key)) {
             $app = $this->router->getApp();
-            $key = $this->router->getCtrl();
+            $ctrl = $this->router->getCtrl();
         }
 
-        $app = $this->uncamelizeString($app);
-        $key = $this->uncamelizeString($key);
+        $app_small = $this->uncamelizeString($app);
+        $ctrl_small = $this->uncamelizeString($ctrl);
 
-        return isset($_POST[$app][$key]) ? $_POST[$app][$key] : false;
+        // Return false on missing data
+        if (! isset($_POST[$app_small][$ctrl_small])) {
+            return false;
+        }
+
+        // Get container from matching app
+        $container = $this->di->get('core.amvc.creator')
+            ->create($app)
+            ->getContainer($ctrl);
+
+        if (! $container) {
+            $container = $this->di->get('core.data.container');
+        }
+
+        // Fill data into container
+        $container->fill($_POST[$app_small][$ctrl_small]);
+
+        return $container;
     }
 
     /**
