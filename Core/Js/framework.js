@@ -245,6 +245,7 @@ function parseJson(json) {
                             $(this).removeClass().html('').unbind('closed.bs.alert');
                         });
                         break;
+                    case "dump":                        
                     case "log":
                     case "console":
                         console.log(cmd.a);
