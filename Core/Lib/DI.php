@@ -176,7 +176,7 @@ class DI implements \ArrayAccess
      * into the object instance. A so created object instance gets always the
      * di container object injected.
      *
-     * @param unknown $class_name
+     * @param string $class_name
      * @param string $arguments
      *
      * @return object
