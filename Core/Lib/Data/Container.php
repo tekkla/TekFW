@@ -243,7 +243,9 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Validates container data against the set validation rules
+     * Validates container data against the set validation rules.
+     *
+     * @return boolean
      */
     public function validate()
     {
@@ -253,6 +255,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         /* @var $field \Core\Lib\Data\Field */
         foreach ($this->fields as $field) {
 
+            /* @todo CHECK THIS TO APPLY RULES FOR PK NEEDED? */
             if ($field->getPrimary()) {
                 continue;
             }
@@ -273,6 +276,8 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
             $this->addError($field->getName(), $result);
         }
+
+        return $this->errors ? true : false;
     }
 
     /**
