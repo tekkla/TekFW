@@ -1,6 +1,9 @@
 <?php
 namespace Core\Lib\Content\Html;
 
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Traits\TextTrait;
+
 /**
  * Parent class for html all elements
  *
@@ -10,7 +13,8 @@ namespace Core\Lib\Content\Html;
  */
 abstract class HtmlAbstract
 {
-    use \Core\Lib\Traits\ArrayTrait;
+    use ArrayTrait;
+    use TextTrait;
 
     /**
      * Element type
@@ -79,12 +83,10 @@ abstract class HtmlAbstract
      *
      * @var HtmlFactory
      */
-    protected $factory;
+    public $factory;
 
-    public function __construct(HtmlFactory $factory)
-    {
-        $this->factory = $factory;
-    }
+    public function __construct()
+    {}
 
     /**
      * Sets the element type like 'div', 'input', 'p' etc
@@ -184,7 +186,10 @@ abstract class HtmlAbstract
     }
 
     /**
-     * Sets inner value of element like
+     * Sets inner value of element like.
+     *
+     * Tries to load string from txt storage when argument begins with "txt-".
+     *
      * <code>
      * &lt;div&gt;{inner}&lt;/div&gt;
      * </code>
@@ -195,13 +200,21 @@ abstract class HtmlAbstract
      */
     public function setInner($inner)
     {
+        $inner = (string) $inner;
+
+        if (substr($inner, 0, 4) == 'txt-') {
+            $inner = $this->txt(substr($inner, 4));
+        }
+
         $this->inner = $inner;
 
         return $this;
     }
 
     /**
-     * Adds content to existing inner conntent
+     * Adds content to existing inner conntent.
+     *
+     * Tries to load string from txt storage when argument begins with "txt-".
      *
      * @param string $content
      *
@@ -209,6 +222,12 @@ abstract class HtmlAbstract
      */
     public function addInner($content)
     {
+        $content = (string) $content;
+
+        if (substr($content, 0, 4) == 'txt-') {
+            $content = $this->txt(substr($content, 4));
+        }
+
         $this->inner .= $content;
 
         return $this;
@@ -226,7 +245,9 @@ abstract class HtmlAbstract
     }
 
     /**
-     * Sets html title attribute
+     * Sets html title attribute.
+     *
+     * Tries to load string from txt storage when argument begins with "txt-".
      *
      * @param string $title
      *
@@ -234,6 +255,12 @@ abstract class HtmlAbstract
      */
     public function setTitle($title)
     {
+        $title = (string) $title;
+
+        if (substr($title, 0, 4) == 'txt-') {
+            $title = $this->txt(substr($title, 4));
+        }
+
         $this->addAttribute('title', $title);
 
         return $this;
@@ -285,7 +312,8 @@ abstract class HtmlAbstract
 
             // Is css to check already in objects css array?
             $check = array_intersect($check, $this->css) ? true : false;
-        } else {
+        }
+        else {
             // Without set css param we only check if css is used
             $check = $this->css ? true : false;
         }
@@ -392,7 +420,8 @@ abstract class HtmlAbstract
     {
         if (! isset($this->attribute[$attribute])) {
             Throw new \InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
-        } else {
+        }
+        else {
             return $this->attribute[$attribute];
         }
     }
@@ -486,20 +515,23 @@ abstract class HtmlAbstract
             // This is when you set attributes without values like selected, disabled etc.
             if (! is_array($args[0])) {
                 $this->{$func}[$args[0]] = false;
-            } else {
+            }
+            else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
                 if ($this->isAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }
-                } else {
+                }
+                else {
                     foreach ($args[0] as $val) {
                         $this->{$func}[] = $val;
                     }
                 }
             }
-        } else {
+        }
+        else {
             $this->{$func}[$args[0]] = $args[1];
         }
     }
@@ -528,6 +560,10 @@ abstract class HtmlAbstract
         if ($this->css) {
             $this->css = array_unique($this->css);
             $html_attr['class'] = implode(' ', $this->css);
+        }
+
+        if ($this->inner && is_string($this->inner) && substr($this->inner, 0, 4) == 'txt-') {
+            $this->inner = $this->txt($this->inner);
         }
 
         if ($this->style) {
