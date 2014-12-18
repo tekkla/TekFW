@@ -1,18 +1,18 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Textarea Form Element
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Form
  * @license MIT
  * @copyright 2014 by author
  */
-final class Textarea extends FormElementAbstract
+class Textarea extends FormAbstract
 {
 
     protected $element = 'textarea';
@@ -31,7 +31,7 @@ final class Textarea extends FormElementAbstract
     {
         if (! is_int($cols))
             Throw new \InvalidArgumentException('A html form textareas cols attribute need to be of type integer');
-        
+
         $this->attribute['cols'] = $cols;
         return $this;
     }
@@ -40,7 +40,7 @@ final class Textarea extends FormElementAbstract
     {
         if (! is_int($rows))
             Throw new \InvalidArgumentException('A html form textareas rows attribute needs to be of type integer');
-        
+
         $this->attribute['rows'] = $rows;
         return $this;
     }
@@ -49,7 +49,7 @@ final class Textarea extends FormElementAbstract
     {
         if (! is_int($maxlength))
             Throw new \InvalidArgumentException('A html form textareas maxlenght attribute needs to be of type integer.');
-        
+
         $this->attribute['maxlength'] = $maxlength;
         return $this;
     }

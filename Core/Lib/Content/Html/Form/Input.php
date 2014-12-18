@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Input Form Element
@@ -10,7 +10,7 @@ use Core\Lib\Content\Html\FormElementAbstract;
  * @copyright 2014 by author
  * @license MIT
  */
-class Input extends FormElementAbstract
+class Input extends FormAbstract
 {
 
     // element specific value for

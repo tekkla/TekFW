@@ -1,8 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
-
+use Core\Lib\Content\Html\FormAbstract;
 /**
  * Creates a html object for uses as button in forms.
  *
@@ -12,7 +11,7 @@ use Core\Lib\Content\Html\FormElementAbstract;
  * @license MIT
  * @copyright 2014 by author
  */
-class Button extends FormElementAbstract
+class Button extends FormAbstract
 {
 
     /**
@@ -21,28 +20,28 @@ class Button extends FormElementAbstract
      * @var
      *
      */
-    private $button_icon;
+    protected $button_icon;
 
     /**
      * Type of button
      *
      * @var string
      */
-    private $type = 'button';
+    protected $type = 'button';
 
     /**
      * Type
      *
      * @var string
      */
-    private $button_type = 'default';
+    protected $button_type = 'default';
 
     /**
      * Size
      *
      * @var string
      */
-    private $button_size;
+    protected $button_size;
 
     // # ------------------------------------------
     // # General html element settings

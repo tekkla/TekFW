@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Option Form Element
@@ -12,7 +12,7 @@ use Core\Lib\Content\Html\FormElementAbstract;
  * @license MIT
  * @copyright 2014 by author
  */
-class Option extends FormElementAbstract
+class Option extends FormAbstract
 {
 
     protected $element = 'option';
