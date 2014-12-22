@@ -1,10 +1,10 @@
 <?php
 namespace Core\Lib\Content\Html\Controls;
 
-use Core\Lib\Content\Html\FormElementAbstract;
 use Core\Lib\Content\Html\Form\Input;
 use Core\Lib\Content\Html\Elements\Div;
 use Core\Lib\Content\Html\HtmlFactory;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Creates a CKE inline control
@@ -15,7 +15,7 @@ use Core\Lib\Content\Html\HtmlFactory;
  * @license MIT
  * @copyright 2014 by author
  */
-class Editor extends FormElementAbstract
+class Editor extends FormAbstract
 {
 
     /**
@@ -23,49 +23,49 @@ class Editor extends FormElementAbstract
      *
      * @var int
      */
-    private $height = 600;
+    protected $height = 600;
 
     /**
      * Background color (hex)
      *
      * @var string
      */
-    private $color = '#666';
+    protected $color = '#666';
 
     /**
      * Use filebrowser flag
      *
      * @var bool
      */
-    private $filebrowser_use = true;
+    protected $filebrowser_use = true;
 
     /**
      * Filebrowser width
      *
      * @var int string
      */
-    private $filebrowser_width = 600;
+    protected $filebrowser_width = 600;
 
     /**
      * Filebrowser height
      *
      * @var int string
      */
-    private $filebrowser_height = 300;
+    protected $filebrowser_height = 300;
 
     /**
      * Filebrowser userrole
      *
      * @var string
      */
-    private $filebrowser_userrole = '';
+    protected $filebrowser_userrole = '';
 
     /**
      * Id of form the editor belongs to
      *
      * @var string
      */
-    private $form_id;
+    protected $form_id;
 
     /**
      * Hidden value form field
@@ -95,9 +95,7 @@ class Editor extends FormElementAbstract
 
     public function __construct(HtmlFactory $factory)
     {
-    	parent::__construct($factory);
-
-
+        parent::__construct($factory);
 
         // our editor will be uesd as inline editor
         $this->edit_element = $this->div->addAttribute('contenteditable', 'true')->addData('url', $this->cfg->get('Core', 'url_tools'));

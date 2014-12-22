@@ -3,7 +3,7 @@ namespace Core\Lib\Content\Html\Controls;
 
 /**
  * Creates a Bootstrap modal window control
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Controls
@@ -15,45 +15,49 @@ class ModalWindow
 
     /**
      * Windowtitle
-     * 
+     *
      * @var string
      */
-    private $title = 'ModalWindow';
+    protected $title = 'ModalWindow';
 
     /**
      * Content
-     * 
+     *
      * @var string
      */
-    private $content = 'No content set';
+    protected $content = 'No content set';
 
     /**
      * Set title of window
-     * 
+     *
      * @param string $title
+     *
      * @return \Core\Lib\Content\Html\Controls\ModalWindow
      */
     public function setTitle($title)
     {
         $this->title = $title;
+
         return $this;
     }
 
     /**
      * Sets content of window
-     * 
+     *
      * @param string $content
+     *
      * @return \Core\Lib\Content\Html\Controls\ModalWindow
      */
     public function setContent($content)
     {
         $this->content = $content;
+
         return $this;
     }
 
     /**
      * Builds and returns modal window html
-     * 
+     *
      * @return string
      */
     public function build()
@@ -72,7 +76,7 @@ class ModalWindow
 				</div>
 			</div>
 		</div>';
-        
+
         return $html;
     }
 }

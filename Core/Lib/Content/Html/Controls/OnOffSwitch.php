@@ -2,6 +2,7 @@
 namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Select;
+use Core\Lib\Traits\TextTrait;
 
 /**
  * Creates a on/off switch control
@@ -12,7 +13,7 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class OnOffSwitch extends Select
 {
-    use \Core\Lib\Traits\TextTrait;
+    use TextTrait;
 
     // array with option objects
     private $switch = [];
