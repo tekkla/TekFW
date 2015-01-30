@@ -5,7 +5,7 @@ use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Option Form Element
- * 
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
  * @package TekFW
  * @subpackage Html\Form
@@ -27,43 +27,48 @@ class Option extends FormAbstract
      * "null" means to check for a set disabled attribute
      * "0" means to remove disabled attribute
      * "1" means to set disabled attribute
-     * 
+     *
      * @param int $state
      * @return \Core\Lib\Content\Html\Form\Option
      */
     public function isSelected($state = null)
     {
         $attrib = 'selected';
-        
-        if (! isset($state))
+
+        if (! isset($state)) {
             return $this->checkAttribute($attrib);
-        
-        if ($state == 0)
+        }
+
+        if ($state == 0) {
             $this->removeAttribute($attrib);
-        else
+        }
+        else {
             $this->addAttribute($attrib, false);
-        
+        }
+
         return $this;
     }
 
     /**
      * Sets value of option
-     * 
+     *
      * @param string|number $value
      * @return \Core\Lib\Content\Html\Form\Option
      */
     public function setValue($value)
     {
-        if ($value === null)
+        if ($value === null) {
             Throw new \InvalidArgumentException('Your are not allowed to set a NULL as value for a html option.');
-        
+        }
+
         $this->addAttribute('value', $value);
+
         return $this;
     }
 
     /**
      * Gets value of option
-     * 
+     *
      * @return \Core\Lib\Content\Html\Form\Option
      */
     public function getValue()
