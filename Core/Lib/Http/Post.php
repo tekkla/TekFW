@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Http;
 
+use Core\Lib\Data\Container;
+
 /**
  * Http POST processor
  *
@@ -12,7 +14,7 @@ namespace Core\Lib\Http;
 class Post
 {
 
-    use \Core\Lib\Traits\StringTrait;
+    use\Core\Lib\Traits\StringTrait;
 
     /**
      *
@@ -27,6 +29,18 @@ class Post
     private $router;
 
     /**
+     *
+     * @var string
+     */
+    private $app;
+
+    /**
+     *
+     * @var string
+     */
+    private $key;
+
+    /**
      * Constructor
      *
      * @param Router $router
@@ -37,14 +51,72 @@ class Post
     }
 
     /**
-     * Returns the value of $_POST[appname][key]
+     * Returns the value of $_POST[appname][key] as container or an array.
+     * Default is 'container'
+     *
+     * @param string $app
+     * @param string $key
+     * @param string $return_type Optional: Type of data to return. Default: Container
+     *
+     * @return array|Container|boolean
+     */
+    public function get($app = '', $key = '', $return_type = 'container')
+    {
+        switch ($return_type) {
+            case 'array':
+                return $this->getArray($app, $key);
+
+            case 'container':
+            default:
+                return $this->getContainer($app, $key);
+        }
+    }
+
+    /**
+     * Returns POST data as a container
      *
      * @param string $app
      * @param string $key
      *
-     * @return array|boolean
+     * @return boolean|Container
      */
-    public function get($app = '', $key = '')
+    public function getContainer($app = '', $key = '')
+    {
+        $post = $this->checkPost($app, $key);
+
+        if (! $post) {
+            return false;
+        }
+
+        // Get container from matching app
+        $container = $this->di->get('core.amvc.creator')
+            ->create($this->app)
+            ->getContainer($this->key);
+
+        if (! $container) {
+            $container = $this->di->get('core.data.container');
+        }
+
+        // Fill data into container
+        $container->fill($post);
+
+        return $container;
+    }
+
+    /**
+     * Returns POST data as an array
+     *
+     * @param string $app
+     * @param string $key
+     *
+     * @return boolean|array
+     */
+    public function getArray($app = '', $key = '')
+    {
+        return $this->checkPost($app, $key);
+    }
+
+    private function checkPost($app = '', $key = '')
     {
         // Do only react on POST requests
         if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
@@ -53,31 +125,19 @@ class Post
 
         // Use values provided by request for missing app and model name
         if (empty($app) || empty($key)) {
-            $app = $this->router->getApp();
-            $ctrl = $this->router->getCtrl();
+            $this->app = $this->router->getApp();
+            $this->key = $this->router->getCtrl();
         }
 
-        $app_small = $this->uncamelizeString($app);
-        $ctrl_small = $this->uncamelizeString($ctrl);
+        $app_small = $this->uncamelizeString($this->app);
+        $key_small = $this->uncamelizeString($this->key);
 
         // Return false on missing data
         if (! isset($_POST[$app_small][$ctrl_small])) {
             return false;
         }
 
-        // Get container from matching app
-        $container = $this->di->get('core.amvc.creator')
-            ->create($app)
-            ->getContainer($ctrl);
-
-        if (! $container) {
-            $container = $this->di->get('core.data.container');
-        }
-
-        // Fill data into container
-        $container->fill($_POST[$app_small][$ctrl_small]);
-
-        return $container;
+        return $_POST[$app_small][$key_small];
     }
 
     /**
