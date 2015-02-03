@@ -16,8 +16,11 @@ class MinRule extends RuleAbstract
      */
     public function execute()
     {
+        // String compare?
+        $string_compare = func_num_args() == 1 || func_get_arg(1) === false ? false : true;
+
         // Which rule object shoud be used? Number or text?
-        $rule_name = is_numeric($this->value) && func_get_arg(1) === false ? 'NumberMin' : 'TxtMinLength';
+        $rule_name = is_numeric($this->value) && $string_compare === false ? 'NumberMin' : 'TxtMinLength';
 
         $rule = $this->createRule($rule_name);
         $rule->setValue($this->value);

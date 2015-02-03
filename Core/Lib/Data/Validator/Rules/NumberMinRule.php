@@ -19,7 +19,7 @@ class NumberMinRule extends RuleAbstract
     {
         $min = func_get_arg(0);
 
-        $result = $this->value <= $min;
+        $result = $this->value >= $min;
 
         if (! $result) {
             $this->msg = sprintf($this->txt('validator_numbermin'), $min);
