@@ -133,7 +133,7 @@ class Post
         $key_small = $this->uncamelizeString($this->key);
 
         // Return false on missing data
-        if (! isset($_POST[$app_small][$ctrl_small])) {
+        if (! isset($_POST[$app_small][$key_small])) {
             return false;
         }
 
