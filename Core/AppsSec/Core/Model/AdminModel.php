@@ -11,28 +11,27 @@ use Core\Lib\Amvc\Model;
 class AdminModel extends Model
 {
 
-	public function getApplist()
-	{
-		$applist = $this->di->get('core.amvc.creator')->getLoadedApps();
+    public function getApplist()
+    {
+        // Get list of loaded apps
+        $applist = $this->di->get('core.amvc.creator')->getLoadedApps();
 
-		sort($applist);
+        // Sort he list alphabetically
+        sort($applist);
 
-		$out = new \stdClass();
+        $out = [];
 
-		foreach ($applist as $app_name) {
+        // Walk through apps list and create app entry
+        foreach ($applist as $app_name) {
 
-			$app = $this->di->get('core.amvc.creator')->getAppInstance($app_name);
+            // Check app for existing config
+            $app = $this->di->get('core.amvc.creator')->getAppInstance($app_name);
 
-			$app_data = new \stdClass();
+            // Link only when config for app exists
+            $out[$app_name] = $app->hasConfig() ? $this->url('core_config', ['app_name' => $this->uncamelizeString($app_name)]) : '';
+        }
 
-			$app_data->config_link = '';
-
-			#$app_data->config_link = isset($appconfig) ? Url::factory('admin_app_config')->setParameter('app_name', String::uncamelize($app_name))->getUrl() : false;
-
-			$out->{$app_name} = $app_data;
-		}
-
-		return $out;
-	}
+        return $out;
+    }
 }
 
