@@ -6,7 +6,7 @@ namespace Core\Lib\Traits;
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
- * @copyright 2014
+ * @copyright 2015
  */
 trait SerializeTrait
 {
