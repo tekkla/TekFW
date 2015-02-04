@@ -14,4 +14,8 @@ class NumberControl extends Input
 {
 
     protected $type = 'number';
+
+    protected $attribute = [
+        'min' => 0,
+    ];
 }
