@@ -2,6 +2,7 @@
 namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
+use Core\Lib\Data\Container;
 
 /**
  * Security Model
@@ -15,7 +16,7 @@ class SecurityModel extends Model
 
     public function getEmptyLogin()
     {
-        $data = $this->getContainer();
+        $data = $this->getGenericContainer();
 
         $data->createField('login', 'string');
         $data->createField('password', 'string');
@@ -26,41 +27,38 @@ class SecurityModel extends Model
         return $data;
     }
 
-    public function doLogin($data)
+    public function doLogin(Container $data)
     {
-        // Create empty data container
-        $container = $this->getContainer();
-
-        // Use fill method to create fields
-        $container->fill($data);
-
         // Set validation rules and validate data
-        $container->setValidation('login', [
+        $data->setValidation('login', [
             'required',
             'empty'
         ]);
 
-        $container->setValidation('password', [
+        $data->setValidation('password', [
             'required',
             'empty'
         ]);
 
-        $container->validate();
+        $data->validate();
 
         // End on validation errors and return data container
-        if ($container->hasErrors()) {
-            return $container;
+        if ($data->hasErrors()) {
+            return $data;
         }
 
         // Acces security lib and do login
         $security = $this->di->get('core.sec.security');
-        $security->login($container['login'], $container['password'], isset($container['remember']));
+        $security->login($data['login'], $data['password'], isset($data['remember']));
 
         if ($security->loggedIn() === true) {
-            $container['logged_in'] = true;
+            $data['logged_in'] = true;
+        }
+        else {
+            $data->addError('@', 'Login failed.');
         }
 
-        return $container;
+        return $data;
     }
 
     public function doLogout()
