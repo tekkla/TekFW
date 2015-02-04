@@ -42,23 +42,27 @@ class SecurityController extends Controller
         $action = $this->router->url('core_login');
         $form->setAction($action);
 
-        /* @var $control \Core\Lib\Content\Html\Form\Input */
-        $control = $form->createElement('input', 'login');
+        // Form save button
+        $form->setSaveButtonText($this->txt('login'));
+        $form->setIcon('submit', 'key');
+
+        // Create element group
+        $group = $form->addGroup();
+
+        /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
+        $control = $group->addControl('Text', 'login');
         $control->noLabel();
         $control->setPlaceholder($this->txt('username'));
 
-        /* @var $control \Core\Lib\Content\Html\Form\Input */
-        $control = $form->createElement('password', 'password');
+        /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
+        $control = $group->addControl('Password', 'password');
         $control->noLabel();
         $control->setPlaceholder($this->txt('password'));
 
         /* @var $control \Core\Lib\Content\Html\Form\Checkbox */
-        $control = $form->createElement('checkbox', 'remember');
+        $control = $group->addControl('Checkbox', 'remember');
         $control->setValue(1);
         $control->setLabel($this->txt('remember_me'));
-
-        $form->setSaveButtonText($this->txt('login'));
-        $form->setIcon('submit', 'key');
 
         $this->setVar('form', $form);
 
@@ -70,4 +74,26 @@ class SecurityController extends Controller
         $this->model->doLogout();
         $this->redirectExit($this->router->url('core_index'));
     }
+
+    public function Register() {
+
+        $data = $this->post->get();
+
+        if ($data) {
+
+            // Do login procedure
+            $data = $this->model->saveUser($data);
+
+            if (!$data->hasErrors()) {
+                $this->content->msg->success($this->txt('login_ok'));
+                $this->redirectExit($this->url('core_user', [$data['id_user']]));
+            } else {
+                $this->content->msg->danger($this->txt('login_failed'));
+            }
+        }
+        else {
+            $data = $this->model->getRegister($id_user);
+        }
+    }
+
 }
