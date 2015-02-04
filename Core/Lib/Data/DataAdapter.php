@@ -2,6 +2,8 @@
 namespace Core\Lib\Data;
 
 use Core\Lib\Data\Container;
+use Core\Lib\Traits\ArrayTrait;
+
 /**
  * DataAdapter Object
  *
@@ -12,7 +14,7 @@ use Core\Lib\Data\Container;
 class DataAdapter implements \IteratorAggregate
 {
 
-    use \Core\Lib\Traits\ArrayTrait;
+    use ArrayTrait;
 
     /**
      *
@@ -113,7 +115,7 @@ class DataAdapter implements \IteratorAggregate
     {
         $this->container = $this->di->get('core.data.container');
 
-        if (!empty($fields)) {
+        if (! empty($fields)) {
             $this->container->parseFields($fields);
         }
 
@@ -142,7 +144,7 @@ class DataAdapter implements \IteratorAggregate
     public function getContainer()
     {
         if (! $this->container) {
-            Throw new \RuntimeException('There is no data container to get in this Dataadapter.');
+            Throw new \RuntimeException('There is no data container to r in this DataAdapter.');
         }
 
         return unserialize(serialize($this->container));
@@ -151,10 +153,8 @@ class DataAdapter implements \IteratorAggregate
     /**
      * Maps a new data apdapter class.
      *
-     * @param string $name
-     *            Unique name of adapter
-     * @param string $class
-     *            Class to map as adapter
+     * @param string $name Unique name of adapter
+     * @param string $class Class to map as adapter
      *
      * @throws \InvalidArgumentException
      *
@@ -184,7 +184,6 @@ class DataAdapter implements \IteratorAggregate
      */
     public function setData($data)
     {
-
         // Callbacks?
         if ($this->callbacks) {
 
@@ -208,8 +207,10 @@ class DataAdapter implements \IteratorAggregate
             $container->fill($data);
 
             $this->data = $container;
-        }  // None assoc data will be set without container
-else {
+        }
+        else {
+
+            // None assoc data will be set without container
             $this->data = $data;
         }
 
@@ -296,7 +297,8 @@ else {
                 $container->fill($data);
 
                 $this->data[] = $container;
-            } else {
+            }
+            else {
                 $this->data[] = $data;
             }
         }
@@ -327,10 +329,8 @@ else {
     /**
      * Sets one or more callback functions.
      *
-     * @param object $object
-     *            Object the callbaks are calles from
-     * @param string|array $callbacks
-     *            One or more callback functions
+     * @param object $object Object the callbaks are calles from
+     * @param string|array $callbacks One or more callback functions
      *
      * @return \Core\Lib\Data\DataAdapter
      */
