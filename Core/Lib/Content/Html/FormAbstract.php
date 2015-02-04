@@ -42,7 +42,7 @@ class FormAbstract extends HtmlAbstract
      *
      * @var bool
      */
-    private $bound = true;
+    private $bound = false;
 
     /**
      * Width for the element

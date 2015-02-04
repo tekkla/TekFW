@@ -27,17 +27,17 @@ class OnOffSwitch extends Select
             return;
         }
 
-        // Add on option
-        $option = $this->factory->create('Form\Option');
-        $option->setValue(1);
-        $option->setInner($this->txt('on'));
-        $this->switch['on'] = $option;
-
         // Add off option
         $option = $this->factory->create('Form\Option');
         $option->setValue(0);
         $option->setInner($this->txt('off'));
         $this->switch['off'] = $option;
+
+        // Add on option
+        $option = $this->factory->create('Form\Option');
+        $option->setValue(1);
+        $option->setInner($this->txt('on'));
+        $this->switch['on'] = $option;
     }
 
     /**
@@ -112,6 +112,8 @@ class OnOffSwitch extends Select
      */
     public function build()
     {
+        $this->createSwitches();
+
         foreach ($this->switch as $option) {
             $this->addOption($option);
         }

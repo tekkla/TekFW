@@ -98,12 +98,14 @@ class DataSelect extends Select
             if (isset($this->selected)) {
                 // A list of selected?
                 if (is_array($this->selected)) {
-                    if (array_search(($this->datatype == 'assoc' ? $val : $inner), $this->selected))
+                    if (array_search(($this->datatype == 'assoc' ? $val : $inner), $this->selected)) {
                         $option->isSelected(1);
+                    }
                 } // Or a value to look for?
                 else {
-                    if ($this->selected == ($this->datatype == 'assoc' ? $val : $inner))
+                    if ($this->selected == ($this->datatype == 'assoc' ? $val : $inner)) {
                         $option->isSelected(1);
+                    }
                 }
             }
         }

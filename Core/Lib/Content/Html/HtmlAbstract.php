@@ -266,6 +266,15 @@ abstract class HtmlAbstract
         return $this;
     }
 
+    public function setTabindex($index)
+    {
+        $index = (int) $index;
+
+        $this->addAttribute('tabindex', $index);
+
+        return $this;
+    }
+
     /**
      * Add one or more css classes to the html object.
      * Accepts single value, a string of space separated classnames or an array of classnames.
@@ -560,10 +569,6 @@ abstract class HtmlAbstract
         if ($this->css) {
             $this->css = array_unique($this->css);
             $html_attr['class'] = implode(' ', $this->css);
-        }
-
-        if ($this->inner && is_string($this->inner) && substr($this->inner, 0, 4) == 'txt-') {
-            $this->inner = $this->txt($this->inner);
         }
 
         if ($this->style) {
