@@ -5,7 +5,7 @@ use Core\Lib\Amvc\Model;
 use Core\Lib\Data\Container;
 
 /**
- * Description
+ * Config model
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
@@ -13,12 +13,11 @@ use Core\Lib\Data\Container;
  */
 final class ConfigModel extends Model
 {
+
     public function loadByApp($app_name)
     {
         // Try to get a config defintion from the app
         $cfg = $this->di['core.amvc.creator']->getAppInstance($app_name)->getConfig();
-
-        var_dump( $this->di->get('core.cfg')->get($app_name));
 
         // Do we have a defintion?
         if ($cfg) {
@@ -42,9 +41,6 @@ final class ConfigModel extends Model
                 if (is_string($control)) {
                     $control = $this->camelizeString($control);
                 }
-
-                // When a field type is not set explicitly
-                // if (empty($def['type'])) {
 
                 switch ($control) {
                     case 'Number':
@@ -134,12 +130,12 @@ final class ConfigModel extends Model
         // Create config entries
         foreach ($fld_list as $key) {
 
-            $adapter->bindValue(':key', $key );
+            $adapter->bindValue(':key', $key);
 
             $val = $data->getField($key)->getValue();
 
             if (isset($app_cfg[$key]['serialize']) && $app_cfg[$key]['serialize'] == true) {
-                $val =  serialize($val);
+                $val = serialize($val);
             }
 
             $adapter->bindValue(':val', $val);
