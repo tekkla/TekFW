@@ -58,10 +58,8 @@ set_error_handler('\Core\Lib\Errors\ErrorHandler', E_ALL);
  * Class for TekFW errors handling
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Error
 {
@@ -130,8 +128,6 @@ class Error
         $this->message = $message;
         $this->adapter = $adapter;
 
-
-
         $this->error_id = uniqid('#error_');
     }
 
@@ -149,12 +145,12 @@ class Error
 
             $this->error_html .= '
             <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
-            <h3 class="no-top-margin">' . $this->exception->getMessage() . '</h3>
-            <p><small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></p>
+            <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
+            <p><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</p>
             <hr>
             <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
-
-        } else {
+        }
+        else {
 
             $this->error_html .= '
             <h3 class="no-top-margin">Error</h3>
@@ -181,10 +177,8 @@ class Error
      * Exceptionhandler
      *
      * @param \Exception $e
-     * @param boolean $clean_buffer
-     *            Optional: Flag to switch buffer clean on/off. (Default: false)
-     * @param string $log_error
-     *            Optional: Flag to switch error logging on/off. (Default: true)
+     * @param boolean $clean_buffer Optional: Flag to switch buffer clean on/off. (Default: false)
+     * @param string $log_error Optional: Flag to switch error logging on/off. (Default: true)
      *
      * @return boolean|string
      */
@@ -227,8 +221,7 @@ class Error
                 continue;
             }
 
-            array_walk($v['args'], function (&$item, $key)
-            {
+            array_walk($v['args'], function (&$item, $key) {
                 $item = var_export($item, true);
             });
 
@@ -254,9 +247,8 @@ class Error
                 'file',
                 'line',
                 'trace'
-            ]
+            ],
             // 'exception'
-            ,
             'params' => [
                 ':stamp' => time(),
                 ':user' => $this->user->getId(),
@@ -266,8 +258,6 @@ class Error
                 ':line' => $this->exception->getLine(),
                 ':trace' => $this->exception->getTraceAsString()
             ]
-            // ':exception' => serialize($this->exception)
-
         ]);
 
         $this->adapter->execute();
@@ -292,21 +282,21 @@ class Error
         die('
         <html>
             <head>
-				<title>Error</title>
-				<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-				<style type="text/css">
-					* { margin: 0; padding: 0; }
-					body { background-color: #aaa; color: #eee; font-family: Sans-Serif; }
-					h1 { margin: 3px 0 7px; }
-					p, pre { margin-bottom: 7px; }
-					pre { padding: 5px; border: 1px solid #333; max-height: 400px; overflow-y: scroll; background-color: #fff; display: block; }
-				</style>
-			</head>
+                <title>Error</title>
+                <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+                <style type="text/css">
+                    * { margin: 0; padding: 0; }
+                    body { background-color: #aaa; color: #eee; font-family: Sans-Serif; }
+                    h1 { margin: 3px 0 7px; }
+                    p, pre { margin-bottom: 7px; }
+                    pre { padding: 5px; border: 1px solid #333; max-height: 400px; overflow-y: scroll; background-color: #fff; display: block; }
+                </style>
+            </head>
 
-			<body>
-				<div class="container">' . $this->getMessage() . '</div>
-			</body>
+            <body>
+                <div class="container">' . $this->getMessage() . '</div>
+            </body>
 
-	   </html>');
+        </html>');
     }
 }
