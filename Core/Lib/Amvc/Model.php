@@ -3,23 +3,26 @@ namespace Core\Lib\Amvc;
 
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Traits\UrlTrait;
+use Core\Lib\Traits\ConvertTrait;
 
 /**
  * Model class
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015 by author
  * @license MIT
- * @version 1.0
  */
 class Model extends MvcAbstract implements \ArrayAccess
 {
 
-    use \Core\Lib\Traits\SerializeTrait;
-    use \Core\Lib\Traits\ArrayTrait;
-    use \Core\Lib\Traits\UrlTrait;
-    use \Core\Lib\Traits\ConvertTrait {
-        \Core\Lib\Traits\SerializeTrait::isSerialized insteadof\Core\Lib\Traits\ConvertTrait;
+    use SerializeTrait;
+    use ArrayTrait;
+    use UrlTrait;
+    use ConvertTrait {
+        SerializeTrait::isSerialized insteadof ConvertTrait;
     }
 
     /**
@@ -49,6 +52,8 @@ class Model extends MvcAbstract implements \ArrayAccess
      *
      * @param string $key
      * @param string $val
+     *
+     * @return mixed
      */
     final public function cfg($key = null, $val = null)
     {
@@ -57,17 +62,16 @@ class Model extends MvcAbstract implements \ArrayAccess
 
     /**
      * Wrapper function for $this->appgetModel($model_name).
-     * There is a little
-     * difference in using this method than the long term. Not setting a model name
+     * There is a little difference in using this method than the long term. Not setting a model name
      * means, that you get a new instance of the currently used model.
      *
-     * @param string $model_name
-     *            Optional: When not set the name of the current model will be used
+     * @param string $model_name Optional: When not set the name of the current model will be used
+     *
      * @return Model
      */
     final public function getModel($model_name = null)
     {
-        if (! isset($model_name)) {
+        if (empty($model_name)) {
             $model_name = $this->getName();
         }
 
@@ -75,11 +79,28 @@ class Model extends MvcAbstract implements \ArrayAccess
     }
 
     /**
-     * Creates an empty container object.
+     * Creates an app related container
+     *
+     * @param string $container_name Optional: Name of the container to load. When no name is given the name of the current model will be used.
+     * @param bool $auto_init Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
      *
      * @return \Core\Lib\Data\Container
      */
-    final public function getContainer($fields = [])
+    final public function getContainer($container_name = null, $auto_init = true)
+    {
+        if (empty($container_name)) {
+            $container_name = $this->getName();
+        }
+
+        return $this->app->getContainer($container_name, $auto_init);
+    }
+
+    /**
+     * Creates an generic container object.
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    final public function getGenericContainer($fields = [])
     {
         $container = $this->di->get('core.data.container');
         $container->parseFields($fields);
@@ -92,12 +113,9 @@ class Model extends MvcAbstract implements \ArrayAccess
      *
      * Uses default db DataAdapter when no Connection object is set.
      *
-     * @param Connection $conn
-     *            Optional Connection object
-     * @param string $prefix
-     *            Optional table prefix.
-     * @param array $fields
-     *            Optional field definition list to be used as container scheme
+     * @param Connection $conn Optional Connection object
+     * @param string $prefix Optional table prefix.
+     * @param array $fields Optional field definition list to be used as container scheme
      *
      * @return \Core\Lib\Data\Adapter\Database
      */
@@ -109,7 +127,8 @@ class Model extends MvcAbstract implements \ArrayAccess
             if ($prefix) {
                 $adapter->setPrefix($prefix);
             }
-        } else {
+        }
+        else {
 
             if (! $prefix) {
                 $prefix = $this->di->get('db.default.prefix');
