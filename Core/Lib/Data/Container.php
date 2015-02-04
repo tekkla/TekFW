@@ -326,11 +326,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
      */
     public function getErrors($field = '')
     {
-        if (! $field) {
+        if (empty($field)) {
             return $this->errors;
         }
 
-        return isset($this->errors[$field]) ? $this->errors[$field] : [];
+        return isset($this->errors[$field]) ? $this->errors[$field] : false;
     }
 
     /**
@@ -338,8 +338,13 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return boolean
      */
-    public function hasErrors()
+    public function hasErrors($field='')
     {
+        // Check field specific error
+        if (!empty($field) && !empty($this->errors)) {
+            return isset($this->errors[$field]);
+        }
+
         return $this->errors ? true : false;
     }
 
@@ -458,6 +463,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         }
 
         if (! isset($this->fields[$offset])) {
+
             switch (true) {
 
                 case (is_array($value)):
