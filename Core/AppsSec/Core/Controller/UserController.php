@@ -5,7 +5,17 @@ use Core\Lib\Amvc\Controller;
 
 class UserController extends Controller
 {
-	public $has_no_model;
+    /**
+     * User edit method. Not set id_user means to edit the current user.
+     *
+     * @param string $id_user
+     */
+    public function Edit($id_user = null) {
+
+
+
+
+    }
 
 }
 
