@@ -395,6 +395,10 @@ class DI implements \ArrayAccess
         return $this->getSFV($name);
     }
 
+    public function log($var) {
+        $this->get('core.util.fire')->log($var);
+    }
+
     /**
      * (non-PHPdoc)
      *
