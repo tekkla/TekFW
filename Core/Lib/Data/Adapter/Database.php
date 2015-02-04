@@ -4,17 +4,18 @@ namespace Core\Lib\Data\Adapter;
 use Core\Lib\Data\Adapter\AdapterAbstract;
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
+use Core\Lib\Traits\SerializeTrait;
 
 /**
- * Database
+ * Database adapter
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class Database extends AdapterAbstract
 {
-    use \Core\Lib\Traits\SerializeTrait;
+    use SerializeTrait;
 
     /**
      * Conversionlist from db fieldtype to smf fieldtypes
@@ -203,8 +204,6 @@ class Database extends AdapterAbstract
             }
         }
 
-        #echo $sql .'<br>';
-
         return $this->stmt;
     }
 
@@ -213,8 +212,7 @@ class Database extends AdapterAbstract
      *
      * @param string $param
      * @param mixed $value
-     * @param string $type
-     *            Optional
+     * @param string $type Optional
      *
      * @return \PDOStatement
      */
@@ -250,8 +248,7 @@ class Database extends AdapterAbstract
      *
      * @param string $param
      * @param mixed $value
-     * @param string $type
-     *            Optional
+     * @param string $type Optional
      *
      * @return \PDOStatement
      */
@@ -290,8 +287,11 @@ class Database extends AdapterAbstract
     }
 
     /**
+     * Old.
+     * Use all() instead.
      *
      * @see all()
+     *
      * @deprecated
      *
      */
@@ -303,8 +303,7 @@ class Database extends AdapterAbstract
     /**
      * Returns all queried data.
      *
-     * @param int $fetch_mode
-     *            PDO fetch mode
+     * @param int $fetch_mode PDO fetch mode
      *
      * @return array
      */
@@ -324,8 +323,7 @@ class Database extends AdapterAbstract
     /**
      * Returns current row of resultset
      *
-     * @param int $fetch_mode
-     *            PDO fetch mode
+     * @param int $fetch_mode PDO fetch mode
      *
      * @return mices
      */
@@ -345,8 +343,7 @@ class Database extends AdapterAbstract
     /**
      * Returns all rows of specific column in resultset.
      *
-     * @param number $column
-     *            Colum to return
+     * @param number $column Colum to return
      *
      * @return array
      */
@@ -460,16 +457,11 @@ class Database extends AdapterAbstract
 
     /**
      *
-     * @param string $method
-     *            "Insert" or "Replace"
-     * @param string $tbl
-     *            Full name of the table to insert data. Do not forget {db_prefix}!
-     * @param array $fields
-     *            Array of the coloums we have data for
-     * @param array $values
-     *            The value to insert
-     * @param array $keys
-     *            Array of table keys
+     * @param string $method "Insert" or "Replace"
+     * @param string $tbl Full name of the table to insert data. Do not forget {db_prefix}!
+     * @param array $fields Array of the coloums we have data for
+     * @param array $values The value to insert
+     * @param array $keys Array of table keys
      *
      * @return integer The id of the last inserted record
      */
@@ -556,20 +548,25 @@ class Database extends AdapterAbstract
 
                     if ($v instanceof \DateTime) {
                         $v = $v->format('Y-m-d H:i:s');
-                    } else {
+                    }
+                    else {
                         continue;
                     }
-                } elseif (is_string($v)) {
+                }
+                elseif (is_string($v)) {
                     $v = "'$v'";
-                } elseif ($v === null) {
+                }
+                elseif ($v === null) {
                     $v = 'NULL';
-                } elseif (is_array($v)) {
+                }
+                elseif (is_array($v)) {
                     $v = implode(',', $v);
                 }
 
                 if ($indexed) {
                     $sql = preg_replace('/\?/', $v, $sql, 1);
-                } else {
+                }
+                else {
                     $sql = str_replace($k, $v, $sql);
                 }
             }
