@@ -292,8 +292,6 @@ class App
 
             $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
 
-            // var_dump($container_class_path);
-
             if (! file_exists($container_class_path)) {
                 return false;
             }
@@ -416,7 +414,7 @@ class App
         // Autoinit requested?
         if ($container && $auto_init) {
 
-            // Get current actio...
+            // Get current action...
             $action = $this->router->getAction();
 
             if (method_exists($container, $action)) {
@@ -452,6 +450,16 @@ class App
     final public function getConfig()
     {
         return $this->config;
+    }
+
+    /**
+     * Boolean check for existing app config.
+     *
+     * @return boolean
+     */
+    final public function hasConfig()
+    {
+        return !empty($this->config);
     }
 
     /**
