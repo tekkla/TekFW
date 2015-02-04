@@ -20,7 +20,6 @@ final class FormDesigner extends Form
     use StringTrait;
     use TextTrait;
     use AnalyzeVarTrait;
-    use FormGroupTrait;
 
     /**
      * Forms group storage
