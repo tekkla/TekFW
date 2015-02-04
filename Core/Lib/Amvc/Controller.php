@@ -9,7 +9,7 @@ use Core\Lib\Content\Html\HtmlFactory;
 use Core\Lib\Content\Content;
 use Core\Lib\Http\Post;
 use Core\Lib\Data\Container;
-use Core\Lib\Content\Html\FormDesigner;
+use Core\Lib\Content\Html\FormDesigner\FormDesigner;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
 
@@ -19,7 +19,7 @@ use Core\Lib\Traits\TextTrait;
  * Each app controller has to be a child of this class.
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  *
  */
@@ -510,10 +510,10 @@ class Controller extends MvcAbstract
      */
     final protected function getFormDesigner(Container $container = null)
     {
-        /* @var $form \Core\Lib\Content\Html\FormDesigner */
-        $form = $this->di['core.content.html.factory']->create('FormDesigner');
+        /* @var $form \Core\Lib\Content\Html\FormDesigner\FormDesigner */
+        $form = $this->di->get('core.content.html.factory')->create('FormDesigner\FormDesigner');
 
-        $form->setAppName($this->app->getName());
+        $form->setApp($this->app->getName());
         $form->setControlName($this->name);
 
         if ($container !== null) {
@@ -623,7 +623,7 @@ class Controller extends MvcAbstract
         }
 
         if (preg_match('~^(ftp|http)[s]?://~', $location) == 0 && substr($location, 0, 6) != 'about:') {
-            $location = BASEURL . ($location != '' ? '?' . $location : '');
+            $location = BASEURL . $location;
         }
 
         // Append session id
