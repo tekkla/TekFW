@@ -21,7 +21,37 @@ final class Core extends App
     // Apps default config
     protected $config = [
 
-        // Group: Global
+        // Security
+        'min_login_lenght' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 8
+        ],
+        'max_login_lenght' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 5
+        ],
+        'min_password_lenght' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 8
+        ],
+        'max_password_lenght' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 50,
+            'validate' => [
+                'required',
+                [
+                    'range',
+                    [8,
+                    100]
+                ]
+            ]
+        ],
+
+        /* Group: Global
         'default_action' => [
             'group' => 'global',
             'control' => 'input',
@@ -42,7 +72,7 @@ final class Core extends App
         'menu_handler' => [
             'group' => 'global',
             'control' => 'input'
-        ],
+        ],*/
 
         // Group: JS
         'js_default_position' => [
@@ -63,7 +93,15 @@ final class Core extends App
             'group' => 'js',
             'control' => 'input',
             'default' => '1.11.1',
-            'translate' => false
+            'translate' => false,
+            'validate' => [
+                'required'
+            ]
+        ],
+        'jquery_use_local' => [
+            'group' => 'js',
+            'control' => 'switch',
+            'default' => 0
         ],
         'js_html5shim' => [
             'group' => 'js',
@@ -82,8 +120,20 @@ final class Core extends App
         ],
         'js_fadeout_time' => [
             'group' => 'js',
-            'control' => 'number',
-            'default' => 5000
+            'control' => [
+                'number',
+                [
+                    'min' => 100
+                ]
+            ],
+            'default' => 5000,
+            'validate' => [
+                'required',
+                [
+                    'min',
+                    100
+                ]
+            ]
         ],
 
         // Group: Minify
@@ -103,14 +153,40 @@ final class Core extends App
             'group' => 'style',
             'control' => 'input',
             'default' => '3.1.1',
-            'translate' => false
+            'translate' => false,
+            'validate' => [
+                'required'
+            ]
         ],
-
+        'bootstrap_use_local' => [
+            'group' => 'style',
+            'control' => 'switch',
+            'default' => 0,
+            'type' => 'int'
+        ],
         'fontawesome_version' => [
             'group' => 'style',
             'control' => 'input',
             'default' => '4.0.3',
-            'translate' => false
+            'translate' => false,
+            'validate' => [
+                'required'
+            ]
+        ],
+        'fontawesome_use_local' => [
+            'group' => 'style',
+            'control' => 'switch',
+            'default' => 0,
+            'type' => 'int'
+        ],
+
+        'theme' => [
+            'group' => 'style',
+            'control' => 'text',
+            'default' => 'Core',
+            'validate' => [
+                'required'
+            ]
         ],
 
         // Logging
@@ -147,42 +223,6 @@ final class Core extends App
             ],
             'default' => 'page',
             'translate' => false
-        ],
-
-        // Url related
-        'url_seo' => [
-            'group' => 'url',
-            'control' => 'switch',
-            'default' => 0
-        ],
-
-        // Display
-        'theme' => [
-            'group' => 'display',
-            'control' => 'text',
-            'default' => 'Core'
-        ],
-
-        // Security
-        'min_login_lenght' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 8
-        ],
-        'max_login_lenght' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 5
-        ],
-        'min_password_lenght' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 8
-        ],
-        'min_password_lenght' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 50
         ]
     ];
 
@@ -250,7 +290,8 @@ final class Core extends App
         if ($this->security->loggedIn()) {
             $text = $this->txt('logout');
             $route = 'core_logout';
-        } else {
+        }
+        else {
             $text = $this->txt('login');
             $route = 'core_login';
         }
