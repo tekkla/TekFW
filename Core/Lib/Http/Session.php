@@ -7,7 +7,7 @@ use Core\Lib\Data\DataAdapter;
  * Session object class
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 final class Session
@@ -63,7 +63,8 @@ final class Session
     {
         if (isset($_SESSION[$key])) {
             return $_SESSION[$key];
-        } else {
+        }
+        else {
             Throw new \InvalidArgumentException('Session key "' . $key . '" not found.');
         }
     }
@@ -97,7 +98,8 @@ final class Session
     {
         if (! isset($_SESSION[$key])) {
             $_SESSION[$key] = [];
-        } else {
+        }
+        else {
             if (! is_array($_SESSION[$key])) {
                 $_SESSION[$key] = (array) $_SESSION[$key];
             }
@@ -133,8 +135,6 @@ final class Session
 
         return $this;
     }
-
-    // -------- SESSION HANDLER METHODS FROM HERE ----------- \\
 
     /**
      * Init session
@@ -259,6 +259,4 @@ final class Session
         // Attempt execution
         return $this->adapter->execute() ? true : false;
     }
-
-    // ----------------------------------------------------- \\
 }
