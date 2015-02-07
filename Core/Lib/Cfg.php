@@ -142,7 +142,7 @@ final class Cfg
      * @param string $app
      * @param array $dirs
      */
-    public function addPaths($app = 'Core', array $dirs=array())
+    public function addPaths($app = 'Core', array $dirs = array())
     {
         // Write dirs to config storage
         foreach ($dirs as $key => $val) {
