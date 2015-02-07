@@ -7,7 +7,7 @@ use Core\Lib\Traits\SerializeTrait;
 /**
  * Handles all TekFW low level config related stuff
  *
- * @author Michael "Tekkla" Zorn (tekkla@tekkla.de)
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
@@ -106,7 +106,7 @@ final class Cfg
     public function init($cfg = array())
     {
         if (! is_array($cfg)) {
-            Throw new \InvalidArgumentException('Initial config needs to be an array');
+            Throw new \InvalidArgumentException('Initial config needs to be an array', 0);
         }
 
         if ($cfg) {
@@ -136,7 +136,13 @@ final class Cfg
         }
     }
 
-    public function addPaths($app = 'Core', $dirs = array())
+    /**
+     * Adds app related file paths to the config.
+     *
+     * @param string $app
+     * @param array $dirs
+     */
+    public function addPaths($app = 'Core', array $dirs=array())
     {
         // Write dirs to config storage
         foreach ($dirs as $key => $val) {
@@ -144,7 +150,13 @@ final class Cfg
         }
     }
 
-    public function addUrls($app = 'Core', $urls = array())
+    /**
+     * Adds app related urls to the config.
+     *
+     * @param string $app
+     * @param array $urls
+     */
+    public function addUrls($app = 'Core', array $urls = array())
     {
         // Write urls to config storage
         foreach ($urls as $key => $val) {
