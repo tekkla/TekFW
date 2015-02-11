@@ -282,6 +282,16 @@ class Security
      */
     public function doAutoLogin()
     {
+        // User already logged in?
+        if ($this->session->exists('logged_in') && $this->session->get('logged_in') === true) {
+
+            // Load data of current user...
+            $this->user->load($this->session->get('id_user'));
+
+            // ...and end here
+            return true;
+        }
+
         // Cookienames for user id and token
         $cookie_user = $this->cookie_name . 'U';
         $cookie_token = $this->cookie_name . 'T';
@@ -302,7 +312,7 @@ class Security
         // Read user id cookie
         $id_user = base64_decode($this->cookie->get($cookie_user));
 
-        // Compare genreated token with token stored in cookie and set user as logged in on equal
+        // Compare geneated token with token stored in cookie and set user as logged in on equal match
         $token = $this->generateUserToken($id_user);
 
         // Cookie successful validated
@@ -321,7 +331,7 @@ class Security
             return true;
         }
 
-        // ## Reaching this point means autologin validation failed
+        // !!! Reaching this point means autologin validation failed
 
         // Remove user and tooken cookie
         $this->cookie->remove($cookie_user);
@@ -451,6 +461,9 @@ class Security
      */
     public function checkAccess($perms = [], $force = false)
     {
+
+        var_dump(debug_backtrace());
+
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
             return false;
