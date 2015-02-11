@@ -173,8 +173,6 @@ class Field implements \ArrayAccess
             case 'object':
                 $this->value = (object) $this->value;
                 break;
-            default:
-                Throw new \InvalidArgumentException('The type "' . $this->type . '" is not supported for data fields');
         }
     }
 

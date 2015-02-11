@@ -1,17 +1,19 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Traits\SerializeTrait;
+
 /**
  * Container Object
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015 by author
  * @license MIT
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
 
-    use\Core\Lib\Traits\SerializeTrait;
+    use SerializeTrait;
 
     /**
      * Optional name of fieldlist to load
@@ -173,7 +175,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return \Core\Lib\Data\Container
      */
-    public function createField($name, $type = 'string', $size = null, $primary = false, $serialize = false, $validate = [], $control = null, $default = null)
+    public function createField($name, $type = 'variant', $size = null, $primary = false, $serialize = false, $validate = [], $control = null, $default = null)
     {
         $field = new Field();
 
@@ -382,6 +384,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
                 $this->fields[$name]->setSerialize(true);
             }
 
+            if ($value instanceof Container) {
+                $this->fields[$name]->setType('container');
+                $this->fields[$name]->setSerialize(true);
+            }
+
             $this->fields[$name]->setValue($value);
         }
 
@@ -473,8 +480,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
                     $type = 'array';
                     $value = $value->get();
                     break;
-                default:
+                case (is_string($value)):
                     $type = 'string';
+                    break;
+                default:
+                    $type = 'variant';
                     break;
             }
 
