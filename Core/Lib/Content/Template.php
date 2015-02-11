@@ -465,7 +465,19 @@ class Template
         foreach ($messages as $msg) {
 
             $html .= PHP_EOL . '
-			<div class="alert alert-' . $msg->getType() . ' alert-dismissable' . ($msg->getFadeout() ? ' fadeout' : '') . '">
+			<div class="alert alert-' . $msg->getType();
+
+            // Message dismissable?
+            if ($msg->geDismissable()) {
+                $html .= ' alert-dismissable';
+            }
+
+            // Fadeout message?
+            if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                $hrml .= ' fadeout';
+            }
+
+            $html .= '">
 				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 				' . $msg->getMessage() . '
 			</div>';
