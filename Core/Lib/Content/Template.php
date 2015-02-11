@@ -468,13 +468,13 @@ class Template
 			<div class="alert alert-' . $msg->getType();
 
             // Message dismissable?
-            if ($msg->geDismissable()) {
+            if ($msg->getDismissable()) {
                 $html .= ' alert-dismissable';
             }
 
             // Fadeout message?
             if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
-                $hrml .= ' fadeout';
+                $html .= ' fadeout';
             }
 
             $html .= '">
