@@ -2,8 +2,11 @@
 namespace Core\Lib\Errors\Exceptions;
 
 /**
+ * BasicException class
  *
- * @author Michael
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015 by author
+ * @license MIT
  *
  */
 class BasicException extends \ErrorException
