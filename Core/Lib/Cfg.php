@@ -3,6 +3,7 @@ namespace Core\Lib;
 
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Traits\SerializeTrait;
+use Core\AppsSec\Core\CoreConfigException;
 
 /**
  * Handles all TekFW low level config related stuff
@@ -53,7 +54,7 @@ final class Cfg
         }
 
         // All other will result in an error exception
-        Throw new \RuntimeException(sprintf('Config "%s" of app "%s" not found.', $key, $app));
+        Throw new CoreConfigException(sprintf('Config "%s" of app "%s" not found.', $key, $app));
     }
 
     /**
@@ -106,7 +107,7 @@ final class Cfg
     public function init($cfg = array())
     {
         if (! is_array($cfg)) {
-            Throw new \InvalidArgumentException('Initial config needs to be an array', 0);
+            Throw new CoreConfigException('Initial config needs to be an array', 0);
         }
 
         if ($cfg) {
