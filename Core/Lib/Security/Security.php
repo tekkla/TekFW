@@ -461,9 +461,6 @@ class Security
      */
     public function checkAccess($perms = [], $force = false)
     {
-
-        var_dump(debug_backtrace());
-
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
             return false;
