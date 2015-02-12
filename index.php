@@ -7,10 +7,8 @@
  * and registers an autoclassloader.
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Global
  * @license MIT
- * @copyright 2014 by author
+ * @copyright 2015 by author
  */
 use Core\Lib\DI;
 
@@ -24,12 +22,13 @@ define('BASEDIR', __DIR__);
 
 $cfg = [];
 
-// Load Settings.php file
-if (file_exists(BASEDIR . '/Settings.php')) {
-    require_once (BASEDIR . '/Settings.php');
-} else {
+// Check for settings file
+if (! file_exists(BASEDIR . '/Settings.php')) {
     die('Settings file could not be loaded.');
 }
+
+// Load Settings.php file
+require_once (BASEDIR . '/Settings.php');
 
 // Include error handler
 require_once (COREDIR . '/Lib/Errors/Error.php');
@@ -39,6 +38,8 @@ require_once (BASEDIR . '/vendor/autoload.php');
 
 // Register core classloader
 require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
+
+// Register Core classloader
 $loader = new SplClassLoader('Core', BASEDIR);
 $loader->register();
 
@@ -50,22 +51,20 @@ $loader->register();
 $loader = new SplClassLoader('Themes', BASEDIR);
 $loader->register();
 
-// start output buffering
-ob_start();
-
 try {
 
-    // --------------------------------------------------------
-    // Create DI service container
-    // --------------------------------------------------------
+    // start output buffering
+    ob_start();
+
+    // Create core di container
     $di = new DI();
 
-    // -------------------------------------------------------
-    // Config
-    // -------------------------------------------------------
+    // --------------------------------------
+    // 1. Init basic config
+    // --------------------------------------
 
     /* @var $config \Core\Lib\Cfg */
-    $config = $di['core.cfg'];
+    $config = $di->get('core.cfg');
 
     $config->init($cfg);
     $config->load();
@@ -104,21 +103,30 @@ try {
 
     $config->addUrls('Core', $urls);
 
-    // Runtime measurement start
-    $timer = $di['core.util.timer'];
-    $timer->start();
+    // --------------------------------------
+    // 2. Start runtime measurement
+    // --------------------------------------
 
-    // # Start session by calling instance factory
-    $di['core.http.session']->init();
+    /* @var $timer \Core\Lib\Utilities\Timer */
+    $timer = $di->get('core.util.timer')->start();
 
-    // Try to autologin the user
-    $di['core.sec.security']->init();
+    // --------------------------------------
+    // 3. Init session handler
+    // --------------------------------------
+    $di->get('core.http.session')->init();
 
-    // Use app creator to init Core config
+    // --------------------------------------
+    // 4. Init security system
+    // --------------------------------------
+    $di->get('core.sec.security')->init();
 
-    /* @var $app_creator \Core\Lib\Amvc\Creator */
-    $app_creator = $di['core.amvc.creator'];
-    $app_creator->initAppConfig('Core');
+    // --------------------------------------
+    // 5. Init essential Core app
+    // --------------------------------------
+
+    /* @var $creator \Core\Lib\Amvc\Creator */
+    $creator = $di->get('core.amvc.creator');
+    $creator->initAppConfig('Core');
 
     // Initialize the apps
     $app_dirs = [
@@ -126,24 +134,38 @@ try {
         $config->get('Core', 'dir_apps')
     ];
 
+    // --------------------------------------
+    // 6. Init essential content
+    // --------------------------------------
+
     /* @var $content \Core\Lib\Content\Content */
-    $content = $di['core.content'];
+    $content = $di->get('core.content');
 
     $content->setTitle($config->get('Core', 'sitename'));
     $content->meta->setCharset();
     $content->meta->setViewport();
 
-    // Autodiscover installed apps
-    $app_creator->autodiscover($app_dirs);
+    $content->css->init();
+    $content->js->init();
+
+    // --------------------------------------
+    // 6. Start app autodiscover process
+    // --------------------------------------
+    $creator->autodiscover($app_dirs);
+
+    // --------------------------------------
+    // 7. Run router to get match
+    // --------------------------------------
 
     /* @var $router \Core\Lib\Http\Router */
-    $router = $di['core.http.router'];
+    $router = $di->get('core.http.router');
 
     // Match request against stored routes
     $router->match();
 
-    $content->css->init();
-    $content->js->init();
+    // --------------------------------------
+    // 8. Run called app
+    // --------------------------------------
 
     // Try to use appname provided by router
     $app_name = $router->getApp();
@@ -157,7 +179,7 @@ try {
     // Start with factoring the requested app
 
     /* @var $app \Core\Lib\Amvc\App */
-    $app = $app_creator->create($app_name);
+    $app = $creator->create($app_name);
 
     /**
      * Each app can have it's own start procedure.
@@ -196,22 +218,30 @@ try {
     if ($router->isAjax()) {
 
         try {
+
             // Result will be processed as ajax command list
             $controller->ajax($action, $params);
-        } catch (Exception $e) {
-            $di->get('core.error')->handleException($e, true, false);
+        }
+        catch (Exception $e) {
+
+            $di->get('core.error')->handleException($e, false, true);
         }
 
-        // Run ajax processor
+        // Send cache preventing headers and set content type
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
         header('Content-type: application/json');
-        echo $di['core.ajax']->process();
+
+        // Run ajax processor
+        echo $di->get('core.ajax')->process();
 
         // End end here
         exit();
-
-    } else {
+    }
+    else {
 
         Try {
+
             // Run controller and store result
             $result = $controller->run($action, $params);
 
@@ -229,63 +259,36 @@ try {
             if (method_exists($app, 'onAfter')) {
                 $result .= $app->onAfter();
             }
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
 
-            $result = $di->get('core.error')->handleException($e, false);
+            $result = $di->get('core.error')->handleException($e);
         }
 
         $content->setContent($result);
 
         // Call content builder
-        $content->render();
+        echo $content->render();
 
-        echo '
-		<div class="container" style="max-height: 300px; overflow-y: scroll;">
-			<hr>
-			<h4>Debug</h4>
-			<p>Runtime : ' . $timer->stop() . 's</p>
-			<p>User Permissions:</p>
-			<p>';
+        $fb = [
+            'Runtime' => $timer->getDiff() . 's',
+            'Permissions' => $di->get('core.sec.permission')->getPermissions(),
+            'Router match' => $router->match()
+        ];
 
-        var_dump($di['core.sec.security']->getPermissions());
+        $debug = $content->getDebug();
 
-        echo '
-			</p>
-			<p>Permissions:</p>
-			<p>';
+        if ($debug) {
+            $fb['Content debug'] = $debug;
+        }
 
-        var_dump($di['core.sec.permission']->getPermissions());
-
-        echo '
-			</p>
-			<p>Match:</p>
-			<p>';
-
-        var_dump($router->match());
-
-        echo '
-			</p>';
-
-            $debug = $content->getDebug();
-
-            if ($debug) {
-                echo '
-                <h5>Debug:</h5>
-                <p>';
-                echo implode('<br>', $content->getDebug());
-
-                echo '
-                </p>';
-            }
-
-        echo '
-        </div>';
+        \FB::log($fb);
     }
 }
 
 // # Error handling
 catch (Exception $e) {
-    echo $di['core.error']->handleException($e);
+    echo $di->get('core.error')->handleException($e, true);
 }
 
 // That's it! Send all stuff to the browser.
