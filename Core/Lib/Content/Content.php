@@ -5,18 +5,19 @@ use Core\Lib\Cfg;
 use Core\Lib\Http\Router;
 use Core\Lib\Content\Html\HtmlFactory;
 use Core\Lib\Amvc\Creator;
+use Core\Lib\Traits\TextTrait;
 
 /**
  * Content
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @licencse MIT
- * @copyright 2014
+ * @license MIT
+ * @copyright 2015
  */
 class Content
 {
 
-    use \Core\Lib\Traits\TextTrait;
+    use TextTrait;
 
     /**
      *
@@ -203,6 +204,7 @@ class Content
      */
     public function getContent()
     {
+        // Add messageblock
         $this->content = '<div id="message"></div>' . $this->content;
 
         // Fill in content
@@ -215,20 +217,21 @@ class Content
                 $app_name = $this->cfg->get('Core', 'content_handler');
 
                 // Get instance of this app
-                $app = $this->appcreator->create($app_name);
+                $app = $this->app_creator->create($app_name);
 
                 // Check for existing ContenCover method
                 if (! method_exists($app, 'runContentHandler')) {
-                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "runContentHandler()". Correct either the config or add the needed method to this app.');
+                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "runContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
                 }
 
                 // Everything is all right. Run content handler by giving the current content to it.
                 $this->content .= $app->runContentHandler($this->content);
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
 
             // Add error message above content
-            $this->content .= '<div class="alert alert-danger alert-dismissable">' . $e->getMessage() . '</div>';
+            $this->content .= '<div class="alert alert-danger">' . $this->di->get('core.error')->handleException($e) . '</div>';
         }
 
         // Add framework status elements
@@ -246,17 +249,15 @@ class Content
     /**
      * Renders and echoes template
      *
-     * @param string $template
-     *            Name of template
-     * @param string $theme
-     *            Name of theme template is from
+     * @param string $template Name of template
+     * @param string $theme Name of theme template is from
      */
     public function render($template = 'Index', $theme = 'Core')
     {
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
         $template = new $class($this->cfg, $this, $this->html);
 
-        echo $template->render();
+        return $template->render();
     }
 
     /**
@@ -293,20 +294,8 @@ class Content
         return $this;
     }
 
-    public function getDebug(){
+    public function getDebug()
+    {
         return $this->debug;
     }
 }
-
-
-// Experimental SEO url converter...
-// if (Cfg::get('Core', 'url_seo'))
-// {
-	// $match_it = function($match) {
-	// return Url::convertSEF($match);
-		// };
-
-		// $html = preg_replace_callback('@(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()]+|\(([^\s()]+|(\([^\s()]+\)))*\))+(?:\(([^\s()]+|(\([^\s()]+\)))*\)|[^\s`!()\[\]{};:\'".,?«»“”‘’]))@', $match_it($match), $html);
-		// }
-		// echo $html;
-
