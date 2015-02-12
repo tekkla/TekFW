@@ -469,8 +469,15 @@ final class FormDesigner extends Form
             $group = $this->addGroup(true);
 
             $div = $group->addElement('Elements\Div');
-            $div->addCss('alert alert-danger');
-            $div->setInner(implode('<br>', $this->container->getErrors('@')));
+            $div->addCss('alert alert-danger alert-dismissable');
+
+            if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0) {
+                $div->addCss('fadeout');
+            }
+
+            $html = '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . implode('<br>', $this->container->getErrors('@'));
+
+            $div->setInner($html);
         }
     }
 
