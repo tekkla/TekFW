@@ -36,7 +36,11 @@ class Timer
     private $checkpoints = [];
 
     /**
-     * Starts timer and creates firt checkpoint
+     * Starts timer and creates first checkpoint
+     *
+     * @throws \RuntimeException
+     *
+     * @return \Core\Lib\Utilities\Timer
      */
     public function start()
     {
@@ -47,7 +51,10 @@ class Timer
         $this->start = microtime(true);
         $this->checkpoints['start'] = $this->start;
         $this->running = true;
+
+        return $this;
     }
+
 
     /**
      * Stopps timer and returns difference from start
@@ -61,6 +68,8 @@ class Timer
         $this->end = microtime(true);
         $this->checkpoints['end'] = $this->end;
         $this->running = false;
+
+        return  $this->getDiff();
     }
 
     /**
