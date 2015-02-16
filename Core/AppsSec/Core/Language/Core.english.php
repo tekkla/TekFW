@@ -83,14 +83,14 @@ return [
 
     // Security
     'cfg_group_security' => 'Security',
-    'cfg_min_login_lenght' => 'Minimum login lenght',
-    'cfg_min_login_lenght_desc' => 'The minimum number of chars needed to create a login name.',
-    'cfg_max_login_lenght' => 'Maximum login lenght',
-    'cfg_max_login_lenght_desc' => 'The maximum number of chars allowed to create a login name.',
-    'cfg_min_password_lenght' => 'Minimum password lenght',
-    'cfg_min_password_lenght_desc' => 'The minimum number of chars needed to create a password.',
-    'cfg_max_password_lenght' => 'Maximum password lenght',
-    'cfg_max_password_lenght_desc' => 'The maximum number of chars allowed to create a password.',
+    'cfg_min_login_length' => 'Minimum login length',
+    'cfg_min_login_length_desc' => 'The minimum number of chars needed to create a login name.',
+    'cfg_max_login_length' => 'Maximum login length',
+    'cfg_max_login_length_desc' => 'The maximum number of chars allowed to create a login name.',
+    'cfg_min_password_length' => 'Minimum password length',
+    'cfg_min_password_length_desc' => 'The minimum number of chars needed to create a password.',
+    'cfg_max_password_length' => 'Maximum password length',
+    'cfg_max_password_length_desc' => 'The maximum number of chars allowed to create a password.',
 
     // Javascript
     'cfg_group_js' => 'Javascript',
@@ -102,10 +102,6 @@ return [
     'cfg_jquery_use_local' => 'Local jQuery files',
     'cfg_jquery_use_local_desc' => 'Use local jQuery files instead of CDN?',
 
-    'cfg_js_html5shim' => 'html5shim',
-    'cfg_js_html5shim_desc' => 'This option activates use of html5shim. (siehe <a href="https://code.google.com/p/html5shim/">https://code.google.com/p/html5shim/</a>)',
-    'cfg_js_selectivizr' => 'Selectivizr',
-    'cfg_js_selectivizr_desc' => 'This option activates thue use of Selectivizr. (siehe <a href="http://selectivizr.com/">http://selectivizr.com/</a>)',
     'cfg_js_modernizr' => 'Modernizer',
     'cfg_js_modernizr_desc' => 'This option activates the use of Modernizr. (siehe <a href="http://modernizr.com/">http://modernizr.com/</a>)',
     'cfg_js_fadeout_time' => 'Fadeouttime',
@@ -123,6 +119,19 @@ return [
     'cfg_fontawesome_use_local' => 'Use local Fontawesome files instead of official CDN?',
     'cfg_theme' => 'Them to use',
 
+    // Error
+    'cfg_group_error' => 'Error handling',
+    'cfg_error_logger' => 'Global errorlogging',
+    'cfg_error_logger_desc' => 'Switch to control error logging globally. It is <strong>recommended</strong> to let this option active and use the options below for finetuning in how errors should be logged.',
+    'cfg_error_to_db' => 'Database logging',
+    'cfg_error_to_db_desc' => 'Switch to activate error logging to error_log table in database (TODO: Add option to set logging server instead of default server).',
+    'cfg_error_to_mail' => 'Send errormail',
+    'cfg_error_to_mail_desc' => 'Sends an email to the set mailadress when an error occurs. Be careful with this option when activated on sites with high traffic.<br><strong>If no mail address is set below the webmaster adress from basic config will be used.</strong>',
+    'cfg_error_to_mail_address' => 'Errormail Reciepient(s)',
+    'cfg_error_to_mail_address_desc' => 'Sends an email to the set mailadress when an error occurs. Be careful with this option when activated on sites with high traffic.',
+    'cfg_error_to_log' => 'Use php errorlog',
+    'cfg_error_to_log_desc' => 'Switch to enable or disable write of errors to the normal php error_log file.',
+
     // Logging
     'cfg_group_logging' => 'Logging',
     'cfg_log' => 'Loggin is',
@@ -133,6 +142,15 @@ return [
     'cfg_log_handler' => 'Log handler',
     '' => '',
     '' => '',
+
+
+    /**
+     * **************************************************************************
+     * SECURITY
+     * **************************************************************************
+     */
+    'login_failed' => 'Login failed! Please check your username and password.',
+    'login_success' => 'Login was successful.',
 
     /**
      * **************************************************************************
