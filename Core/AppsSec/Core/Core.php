@@ -22,22 +22,22 @@ final class Core extends App
     protected $config = [
 
         // Security
-        'min_login_lenght' => [
+        'min_login_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 8
         ],
-        'max_login_lenght' => [
+        'max_login_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 5
         ],
-        'min_password_lenght' => [
+        'min_password_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 8
         ],
-        'max_password_lenght' => [
+        'max_password_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 50,
@@ -103,17 +103,7 @@ final class Core extends App
             'control' => 'switch',
             'default' => 0
         ],
-        'js_html5shim' => [
-            'group' => 'js',
-            'control' => 'switch',
-            'default' => 0
-        ],
         'js_modernizr' => [
-            'group' => 'js',
-            'control' => 'switch',
-            'default' => 0
-        ],
-        'js_selectivizr' => [
             'group' => 'js',
             'control' => 'switch',
             'default' => 0
@@ -189,6 +179,32 @@ final class Core extends App
             ]
         ],
 
+        // Error logger
+        'error_logger' => [
+            'group' => 'error',
+            'control' => 'switch',
+            'default' => 1
+        ],
+        'error_to_db' => [
+            'group' => 'error',
+            'control' => 'switch',
+            'default' => 1
+        ],
+        'error_to_mail' => [
+            'group' => 'error',
+            'control' => 'switch',
+            'default' => 1
+        ],
+        'error_to_mail_address' => [
+            'group' => 'error',
+            'control' => 'input',
+        ],
+        'error_to_log' => [
+            'group' => 'error',
+            'control' => 'switch',
+            'default' => 1
+        ],
+
         // Logging
         'log' => [
             'group' => 'logging',
@@ -223,7 +239,7 @@ final class Core extends App
             ],
             'default' => 'page',
             'translate' => false
-        ]
+        ],
     ];
 
     // Apps routes
