@@ -21,6 +21,21 @@ final class Core extends App
     // Apps default config
     protected $config = [
 
+        // Config
+        'config_display_style' => [
+            'group' => 'config',
+            'control' => 'select',
+            'data' => [
+                'array',
+                [
+                    0 => 'top down',
+                    1 => 'horizontal',
+                ],
+                0
+            ],
+            'default' => 0
+        ],
+
         // Security
         'min_login_length' => [
             'group' => 'security',
