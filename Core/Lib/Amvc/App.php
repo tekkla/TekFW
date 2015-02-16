@@ -511,7 +511,13 @@ class App
 
             // When there is no config set but a default value defined for the app,
             // the default value will be used then
-            if (! $this->cfg->exists($this->name, $key) && isset($cfg_def['default'])) {
+            if (! $this->cfg->exists($this->name, $key)) {
+
+                // Set missing default value to empty string
+                if (!isset($cfg_def['default'])) {
+                    $cfg_def['default'] = '';
+                }
+
                 $this->cfg->set($this->name, $key, $cfg_def['default']);
             }
         }
