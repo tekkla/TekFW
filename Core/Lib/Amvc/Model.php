@@ -7,6 +7,7 @@ use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\ConvertTrait;
+use Core\Lib\Data\Adapter\Database;
 
 /**
  * Model class
@@ -117,7 +118,7 @@ class Model extends MvcAbstract implements \ArrayAccess
      * @param string $prefix Optional table prefix.
      * @param array $fields Optional field definition list to be used as container scheme
      *
-     * @return \Core\Lib\Data\Adapter\Database
+     * @return Database
      */
     final protected function getDbAdapter(Connection $conn = null, $prefix = '', array $fields = [])
     {
