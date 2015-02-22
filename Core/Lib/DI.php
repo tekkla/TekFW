@@ -165,7 +165,8 @@ class DI implements \ArrayAccess
             'core.sec.user.current',
             'core.ajax',
             'core.content.message',
-            'db.default'
+            'db.default',
+            'core.cfg'
         ]);
     }
 
