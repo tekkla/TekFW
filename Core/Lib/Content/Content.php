@@ -147,6 +147,123 @@ class Content
         }
     }
 
+    public function create()
+    {
+
+        // Match request against stored routes
+        $this->router->match();
+
+        // --------------------------------------
+        // 8. Run called app
+        // --------------------------------------
+
+        // Try to use appname provided by router
+        $app_name = $this->router->getApp();
+
+        // No app by request? Try to get default app from config or set Core as
+        // default app
+        if (! $app_name) {
+            $app_name = $this->cfg->exists('Core', 'default_app') ? $this->cfg->get('Core', 'default_app') : 'Core';
+        }
+
+        // Start with factoring the requested app
+
+        /* @var $app \Core\Lib\Amvc\App */
+        $app = $this->app_creator->create($app_name);
+
+        /**
+         * Each app can have it's own start procedure.
+         * This procedure is used to
+         * init apps with more than the app creator does. To use this feature the
+         * app needs run() method in it's main file.
+        */
+        if (method_exists($app, 'run')) {
+            $app->run();
+        }
+        // Get name of requested controller
+        $controller_name = $this->router->getCtrl();
+
+        // Set controller name to "Index" when no controller name has been returned
+        // from request handler
+        if (! $controller_name) {
+            $controller_name = 'Index';
+        }
+
+        // Load controller object
+        $controller = $app->getController($controller_name);
+
+        // Which controller action has to be run?
+        $action = $this->router->getAction();
+
+        // No action => use Index as default
+        if (! $action) {
+            $action = 'Index';
+        }
+
+        // Are there parameters to pass to run method?
+        $params = $this->router->getParam();
+
+        // Run controller and process result.
+        if ($this->router->isAjax()) {
+
+            try {
+
+                // Result will be processed as ajax command list
+                $controller->ajax($action, $params);
+            }
+            catch (\Exception $e) {
+
+                $this->di->get('core.error')->handleException($e, false, true);
+            }
+
+            // Send cache preventing headers and set content type
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+            header('Content-type: application/json; charset=utf-8");');
+
+            // Run ajax processor
+            echo $this->di->get('core.ajax')->process();
+
+            // End end here
+            exit();
+        }
+        else {
+
+            // Always use UTF-8
+            header("Content-Type: text/html; charset=utf-8");
+
+            Try {
+
+                // Run controller and store result
+                $result = $controller->run($action, $params);
+
+                // No content created? Check app for onEmpty() event which maybe gives us content.
+                if (empty($result) && method_exists($app, 'onEmpty')) {
+                    $result = $app->onEmpty();
+                }
+
+                // Append content provided by apps onBefore() event method
+                if (method_exists($app, 'onBefore')) {
+                    $result = $app->onBefore() . $result;
+                }
+
+                // Prepend content provided by apps onAfter() event method
+                if (method_exists($app, 'onAfter')) {
+                    $result .= $app->onAfter();
+                }
+            }
+            catch (\Exception $e) {
+
+                $result = $this->di->get('core.error')->handleException($e);
+            }
+
+            $this->setContent($result);
+
+            // Call content builder
+            echo $this->render();
+        }
+    }
+
     /**
      * Set pagetitle
      *
