@@ -513,7 +513,7 @@ class Controller extends MvcAbstract
         /* @var $form \Core\Lib\Content\Html\FormDesigner\FormDesigner */
         $form = $this->di->get('core.content.html.factory')->create('FormDesigner\FormDesigner');
 
-        $form->setApp($this->app->getName());
+        $form->setAppName($this->app->getName());
         $form->setControlName($this->name);
 
         if ($container !== null) {
