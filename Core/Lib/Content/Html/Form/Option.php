@@ -75,4 +75,17 @@ class Option extends FormAbstract
     {
         return $this->getAttribute('value');
     }
+
+    public function build()
+    {
+        if (!$this->checkAttribute('value') && !empty($this->inner)) {
+            $this->addAttribute('value', $this->inner);
+        }
+
+        if ($this->checkAttribute('value') && empty($this->inner)) {
+            $this->inner = $this->attribute['value'];
+        }
+
+        return parent::build();
+    }
 }

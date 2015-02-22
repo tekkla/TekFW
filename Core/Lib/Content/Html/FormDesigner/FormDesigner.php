@@ -200,6 +200,7 @@ final class FormDesigner extends Form
      * Set the name of the related app.
      *
      * @param string $app_name
+     * @deprecated
      *
      * @return \Core\Lib\Content\Html\Elements\FormDesigner
      */
@@ -428,24 +429,24 @@ final class FormDesigner extends Form
 
         $base_form_name = 'appform';
 
-        $this->app_name = $this->uncamelizeString($this->app_name);
+        $this->lower_app_name = $this->uncamelizeString($this->app_name);
         $this->control_name = $this->uncamelizeString($this->control_name);
 
         // Create formname
         if (! $this->name) {
 
             // Create control id prefix based on the model name
-            $this->control_id_prefix = '' . $this->app_name . '_' . $this->control_name;
+            $this->control_id_prefix = '' . $this->lower_app_name . '_' . $this->control_name;
 
             // Create form name based on model name and possible extensions
-            $this->name = $base_form_name . '_' . $this->app_name . '_' . $this->control_name . (isset($this->name_ext) ? '_' . $this->name_ext : '');
+            $this->name = $base_form_name . '_' . $this->lower_app_name . '_' . $this->control_name . (isset($this->name_ext) ? '_' . $this->name_ext : '');
         }
         else {
             // Create control id prefix based on the provided form name
-            $this->control_id_prefix = '' . $this->app_name . '_' . $this->name;
+            $this->control_id_prefix = '' . $this->lower_app_name . '_' . $this->name;
 
             // Create form name based on th provided form name
-            $this->name = $base_form_name . $this->app_name . '_' . $this->name . (isset($this->name_ext) ? '_' . $this->name_ext : '');
+            $this->name = $base_form_name . $this->lower_app_name . '_' . $this->name . (isset($this->name_ext) ? '_' . $this->name_ext : '');
         }
 
         // Use formname as id when not set
@@ -454,7 +455,7 @@ final class FormDesigner extends Form
         }
 
         // Create control name prefix
-        $this->control_name_prefix = $this->app_name . '[' . $this->control_name . ']';
+        $this->control_name_prefix = $this->lower_app_name . '[' . $this->control_name . ']';
     }
 
     /**
@@ -610,18 +611,27 @@ final class FormDesigner extends Form
 
                 case 'control':
 
-                    // Create controlbuilder
+                    /* @var $builder \Core\Lib\Content\Html\FormDesigner\ControlBuilder */
                     $builder = $this->di->instance(__NAMESPACE__ . '\ControlBuilder');
                     $builder->setAppName($this->app_name);
                     $builder->setNamePrefix($this->control_name_prefix);
                     $builder->setIdPrefix($this->control_id_prefix);
+
+                    // Any errors in container
+                    if (isset($this->container)) {
+
+                        if ($this->container->hasErrors($content->getName())) {
+                            $builder->setErrors($this->container->getErrors($content->getName()));
+                        }
+
+                        if (isset($this->container[$content->getName()])) {
+                            $content->setValue($this->container[$content->getName()]);
+                        }
+                    }
+
                     $builder->setControl($content);
                     $builder->setDisplayMode($this->display_mode);
 
-                    // Any errors in container
-                    if (isset($this->container) && $this->container->hasErrors($content->getName())) {
-                        $builder->setErrors($this->container->getErrors($content->getName()));
-                    }
 
                     // Build control
                     $html .= $builder->build();

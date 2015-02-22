@@ -53,4 +53,8 @@ class Textarea extends FormAbstract
         $this->attribute['maxlength'] = $maxlength;
         return $this;
     }
+
+    public function setValue($value) {
+        $this->inner = $value;
+    }
 }

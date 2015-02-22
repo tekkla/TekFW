@@ -3,6 +3,7 @@ namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Data\Container;
 
 /**
  *
@@ -21,6 +22,8 @@ class FormGroup
      */
     private $elements = [];
 
+    private $container;
+
     /**
      * Creates a formcontrol and adds it by it's name to the controls list.
      *
@@ -31,22 +34,26 @@ class FormGroup
      *
      * @return HtmlAbstract
      */
-    public function &addControl($control, $name = '', $autobind = true)
+    public function &addControl($control, $name, $autobind = true, Container $container = null)
     {
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->camelizeString($control) . 'Control');
 
-        // Set control name
-        if (! empty($name)) {
-            $control->setName($name);
+        $control->setName($name);
 
-            // And optionally bind this control to a field with  the same name
-            if ($autobind == true) {
-                $control->setField($name);
-            }
+        // And optionally bind this control to a field with  the same name
+        if ($autobind == true) {
+            $control->setField($name);
         }
 
         // Inject html factory for controls which are creating html controls by themself
         $control->factory = $this->di->get('core.content.html.factory');
+
+        // is there a field matching the controlname in container?
+        if (isset($container) && isset($container[$name])) {
+
+            // Inject field into control
+            $control->field = $container->getField($name);
+        }
 
         // Create element
         $this->elementFactory('control', $control);

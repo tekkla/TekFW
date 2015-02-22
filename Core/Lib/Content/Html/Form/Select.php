@@ -23,6 +23,8 @@ class Select extends FormAbstract
         'control' => 'select'
     ];
 
+    private $value = [];
+
     /**
      * Creates an Option object and returns it
      *
@@ -107,14 +109,22 @@ class Select extends FormAbstract
         return $this;
     }
 
+    public function setValue($value)
+    {
+        if (!is_array($value)) {
+            $value = (array) $value;
+        }
+
+        $this->value = $value;
+
+        return $this;
+    }
+
     public function getValue()
     {
         $values = [];
 
-        /**
-         *
-         * @var Option $Option
-         */
+        /* @var $option \Core\Lib\Content\Html\Form\Option */
         foreach ($this->options as $option) {
             if ($option->isSelected()) {
                 $values[] = $option->getValue();
@@ -126,13 +136,18 @@ class Select extends FormAbstract
 
     public function build()
     {
-        $inner = '';
-
-        foreach ($this->options as $option) {
-            $inner .= $option->build();
+        if (count($this->value) > 1) {
+            $this->isMultiple(1);
         }
 
-        $this->setInner($inner);
+        foreach ($this->options as $option) {
+
+            if (in_array($option->getValue(), $this->value)) {
+                $option->isSelected(1);
+            }
+
+            $this->inner .= $option->build();
+        }
 
         if ($this->isMultiple()) {
             $this->setName($this->getName() . '[]');

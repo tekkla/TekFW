@@ -198,7 +198,7 @@ class ControlBuilder
 
             // Try to find a suitable text as label in our languagefiles
             if (! $this->control->getLabel()) {
-                $this->control->setLabel($this->txt($this->control->getId(), $this->app_name));
+                $this->control->setLabel($this->txt($field_name, $this->app_name));
             }
 
             // Attach to control id
@@ -220,7 +220,7 @@ class ControlBuilder
 
             // Checkboxes are wrapped by label tags, so we need only the text
             if (empty($label)) {
-                $label = $this->txt($this->control_name . '_' . $this->uncamelizeString($this->control_field), $this->app_name);
+                $label = $this->txt($this->uncamelizeString($field_name), $this->app_name);
             }
         }
         else {
