@@ -4,6 +4,7 @@ namespace Core\Lib;
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Traits\SerializeTrait;
 use Core\AppsSec\Core\Exception\ConfigException;
+use Core\Lib\Data\Adapter\Database;
 
 /**
  * Handles all TekFW low level config related stuff
@@ -24,7 +25,7 @@ final class Cfg
 
     /**
      *
-     * @var DataAdapter
+     * @var Database
      */
     private $adapter;
 
