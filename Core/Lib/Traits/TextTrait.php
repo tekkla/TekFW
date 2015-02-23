@@ -21,24 +21,27 @@ trait TextTrait
      *
      * @return string
      */
-    public function txt($key)
+    public function txt($key, $app = '')
     {
         global $di;
 
-        if (! property_exists($this, 'app_name')) {
+        if (empty($app)) {
 
-            if ($this instanceof App) {
-                $app = $this->name;
-            }
-            elseif (property_exists($this, 'app')) {
-                $app = $this->app->getName();
+            if (! property_exists($this, 'app_name')) {
+
+                if ($this instanceof App) {
+                    $app = $this->name;
+                }
+                elseif (property_exists($this, 'app')) {
+                    $app = $this->app->getName();
+                }
+                else {
+                    $app = 'Core';
+                }
             }
             else {
-                $app = 'Core';
+                $app = $this->app_name;
             }
-        }
-        else {
-            $app = $this->app_name;
         }
 
         return $di->get('core.content.lang')->getTxt($key, $app);
