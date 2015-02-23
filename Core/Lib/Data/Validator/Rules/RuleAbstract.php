@@ -31,6 +31,12 @@ abstract class RuleAbstract
 
     /**
      *
+     * @var boolean
+     */
+    protected $execute_on_empty = true;
+
+    /**
+     *
      * @var Validator
      */
     private $validator;
@@ -52,7 +58,7 @@ abstract class RuleAbstract
      *
      * @return \Core\Lib\Data\Validator\Rules\RuleAbstract
      */
-    public function setValue($value)
+    final public function setValue($value)
     {
         // Reset rule object;
         $this->reset();
@@ -64,12 +70,22 @@ abstract class RuleAbstract
     }
 
     /**
+     * Execute rule on empty value?
+     *
+     * @return boolean
+     */
+    final public function getExecuteOnEmpty()
+    {
+        return (bool) $this->execute_on_empty;
+    }
+
+    /**
      * Checks for empty txt property and returns result as validation result.
      * Empty txt property means the validation check was successful.
      *
      * @return bool
      */
-    public function isValid()
+    final public function isValid()
     {
         return empty($this->msg);
     }
@@ -79,7 +95,7 @@ abstract class RuleAbstract
      *
      * @return string
      */
-    public function getMsg()
+    final public function getMsg()
     {
         return $this->msg;
     }
@@ -91,7 +107,7 @@ abstract class RuleAbstract
      *
      * @return RuleAbstract
      */
-    public function reset()
+    final public function reset()
     {
         // Reset old message;
         $this->msg = '';
@@ -108,7 +124,7 @@ abstract class RuleAbstract
      *
      * @return \Core\Lib\Data\Validator\Rules\RuleAbstract
      */
-    protected function createRule($rule_name)
+    final protected function createRule($rule_name)
     {
         return $this->validator->createRule($rule_name);
     }

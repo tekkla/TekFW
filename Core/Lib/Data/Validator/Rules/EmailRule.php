@@ -8,6 +8,7 @@ namespace Core\Lib\Data\Validator\Rules;
  */
 class EmailRule extends RuleAbstract
 {
+    protected $execute_on_empty = false;
 
     /**
      * (non-PHPdoc)
@@ -19,6 +20,14 @@ class EmailRule extends RuleAbstract
     {
         $result = filter_var($this->value, FILTER_VALIDATE_EMAIL);
 
+        /*
+         * @TODO
+         *
+         * list($userName, $mailDomain) = explode("@", $email);
+         * if (!checkdnsrr($mailDomain, "MX")) {
+         *     // Email is unreachable.
+         * }
+         */
         if (! $result) {
             $this->msg = $this->txt('validator_email');
         }

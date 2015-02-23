@@ -95,7 +95,13 @@ final class Validator
             }
 
             // Call rule creation process to make sure rule exists before starting further actions.
+            /* @var $rule \Core\Lib\Data\Validator\Rules\RuleAbstract */
             $rule = $this->createRule($rule_name);
+
+            // Execute rule on empty values only when rule is explicitly flagged to do so.
+            if (empty($value) && $rule->getExecuteOnEmpty() == false) {
+                continue;
+            }
 
             $rule->setValue($value);
 
