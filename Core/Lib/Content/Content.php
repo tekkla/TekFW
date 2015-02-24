@@ -371,6 +371,10 @@ class Content
      */
     public function render($template = 'Index', $theme = 'Core')
     {
+        if ($theme == 'Core' && $this->cfg->exists('Core', 'theme')) {
+            $theme = $this->cfg->get('Core', 'theme');
+        }
+
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
         $template = new $class($this->cfg, $this, $this->html);
 
