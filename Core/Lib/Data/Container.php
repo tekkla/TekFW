@@ -203,9 +203,32 @@ class Container implements \IteratorAggregate, \ArrayAccess
         return $this;
     }
 
+    /**
+     * Adds a Field object to the fieldlist.
+     *
+     * @param Field $field
+     *
+     * @return \Core\Lib\Data\Container
+     */
     public function addField(Field $field)
     {
         $this->fields[$field->getName()] = $field;
+
+        return $this;
+    }
+
+    /**
+     * Removes a field by it's name from the fieldlist.
+     *
+     * @param string $name
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    public function removeField($name)
+    {
+        if (isset($this->fields[$name])) {
+            unset($this->fields[$name]);
+        }
 
         return $this;
     }
@@ -215,6 +238,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @param array $validationset
      *
+     * @return \Core\Lib\Data\Container
      */
     public function setValidationset(Array $validationset)
     {
