@@ -316,7 +316,8 @@ class QueryBuilder
             }
 
             $fieldlist = implode(', ', $this->fields);
-        } else {
+        }
+        else {
             $fieldlist = ($this->alias ? $this->alias : $this->tbl) . '.*';
         }
 
@@ -391,7 +392,7 @@ class QueryBuilder
                 break;
         }
 
-        // Finally cleanup parameters by redmoving parameter not needed in query and parse array parameter into sql string.
+        // Finally cleanup parameters by removing parameter not needed in query and parse array parameter into sql string.
         foreach ($this->params as $key => $val) {
 
             // Do cleanup
@@ -406,9 +407,6 @@ class QueryBuilder
             }
         }
 
-        // var_dump($this->sql);
-        // var_dump($this->params);
-
         return $this->sql;
     }
 
@@ -418,7 +416,8 @@ class QueryBuilder
         if (isset($def['method'])) {
             $this->method = strtoupper($def['method']);
             unset($def['method']);
-        } else {
+        }
+        else {
             $this->method = 'SELECT';
         }
 
@@ -460,7 +459,7 @@ class QueryBuilder
 
         $this->processFilterDefinition();
 
-        $this->processParamsDefinittion();
+        $this->processParamsDefinition();
 
         $this->processJoinDefinition();
 
@@ -478,16 +477,17 @@ class QueryBuilder
     {
         if (isset($this->definition['data'])) {
             $this->processDataDefinition();
-        } else {
-            if (! isset($this->definition['field'])) {
-                Throw new \RuntimeException('QueryBuilder need a field list to process "INSERT" definition.');
+        }
+        else {
+            if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
+                Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
             }
             if (! isset($this->definition['params'])) {
                 Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
             }
 
             $this->processFieldDefinition();
-            $this->processParamsDefinittion();
+            $this->processParamsDefinition();
         }
     }
 
@@ -497,7 +497,7 @@ class QueryBuilder
         $this->processFilterDefinition();
         $this->processOrderDefinition();
         $this->processLimitDefinition();
-        $this->processParamsDefinittion();
+        $this->processParamsDefinition();
     }
 
     private function processDelete()
@@ -506,7 +506,7 @@ class QueryBuilder
         $this->processFilterDefinition();
         $this->processOrderDefinition();
         $this->processLimitDefinition();
-        $this->processParamsDefinittion();
+        $this->processParamsDefinition();
     }
 
     /**
@@ -515,10 +515,11 @@ class QueryBuilder
      */
     private function processTblDefinition()
     {
-        if (! isset($this->definition['tbl'])) {
-            Throw new \RuntimeException('QueryBuilder needs a table name. Provide tablename by setting "tbl" element in your query definition');
-        } else {
-            $this->tbl = $this->definition['tbl'];
+        if (! isset($this->definition['tbl']) && ! isset($this->definition['table'])) {
+            Throw new \RuntimeException('QueryBuilder needs a table name. Provide tablename by setting "tbl" or "table" element in your query definition');
+        }
+        else {
+            $this->tbl = isset($this->definition['tbl']) ? $this->definition['tbl'] : $this->definition['table'];
         }
 
         if (isset($this->definition['alias'])) {
@@ -534,9 +535,11 @@ class QueryBuilder
     {
         if (isset($this->definition['field'])) {
             $this->fields = $this->definition['field'];
-        } elseif (isset($this->definition['fields'])) {
+        }
+        elseif (isset($this->definition['fields'])) {
             $this->fields = $this->definition['fields'];
-        } else {
+        }
+        else {
             $this->fields = '*';
         }
     }
@@ -597,7 +600,8 @@ class QueryBuilder
                         'by' => $join['by'],
                         'cond' => $join['condition']
                     ];
-                } else {
+                }
+                else {
                     $this->join[] = [
                         'tbl' => $join[0],
                         'as' => $join[1],
@@ -651,7 +655,9 @@ class QueryBuilder
 
                 // Set params
                 $this->setParameter($this->definition['filter'][1]);
-            } else {
+            }
+            else {
+
                 $this->filter = $this->definition['filter'];
             }
         }
@@ -694,10 +700,12 @@ class QueryBuilder
     /**
      * Processes parameter definition
      */
-    private function processParamsDefinittion()
+    private function processParamsDefinition()
     {
-        if (isset($this->definition['params'])) {
-            $this->setParameter($this->definition['params']);
+        $extend = isset($this->definition['params']) ? 's' : '';
+
+        if (isset($this->definition['param' . $extend])) {
+            $this->setParameter($this->definition['param' . $extend]);
         }
     }
 
@@ -723,7 +731,8 @@ class QueryBuilder
             }
 
             $this->params = array_merge($this->params, $arg1);
-        } else {
+        }
+        else {
             $this->params[$arg1] = $arg2;
         }
 
