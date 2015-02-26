@@ -1,9 +1,10 @@
 <?php
-namespace Core\Lib\Content\Html\Controls;
+namespace Core\Lib\Content\Html\Bootstrap\Navbar;
 
-use Core\Lib\Content\Html\Elements\Header;
+use Core\Lib\Content\Html\Elements\Nav;
+use Core\AppsSec\Core\Exception\HtmlException;
 
-class Navbar extends Header
+class Navbar extends Nav
 {
 
     /**
@@ -35,11 +36,11 @@ class Navbar extends Header
     protected $home_url = '/';
 
     /**
-     * Flag to wrap navbar by a BS container
+     * Flag to wrap navbar by a BS fluid container
      *
      * @var boolean
      */
-    protected $container = true;
+    protected $fluid = false;
 
     /**
      * Flag to create a multilevel menu
@@ -53,52 +54,64 @@ class Navbar extends Header
         'navbar-default'
     ];
 
-    public function isStatic()
-    {
-        $this->static = true;
+    private $element_types = [
+        'brand',
+        'link',
+        'dropdown',
+        'form',
+        'text'
+    ];
 
-        return $this;
+    public function isStatic($static = null)
+    {
+        if (isset($static)) {
+            $this->static = (bool) $static;
+            return $this;
+        }
+        else {
+            return $this->static;
+        }
     }
 
-    public function setStatic($static = true)
+    public function isFluid($fluid = null)
     {
-        $this->static = true;
-
-        return $this;
+        if (isset($fluid)) {
+            $this->fluid = (bool) $fluid;
+            return $this;
+        }
+        else {
+            return $this->fluid;
+        }
     }
 
-    public function setItems(array $items)
+    public function isCollapsible($collapsible = null)
     {
-        $this->items = $items;
-
-        return $this;
+        if (isset($collapsible)) {
+            $this->collapsible = (bool) $collapsible;
+            return $this;
+        }
+        else {
+            return $this->collapsible;
+        }
     }
 
-    public function setBrand($brand, $home_url = '/')
-    {
-        $this->brand = $brand;
-        $this->home_url = $home_url;
 
-        return $this;
+    public function addNavbarElement(NavbarElementAbstract $element)
+    {
+        if (! in_array($element->getType(), $this->element_types)) {
+            Throw new HtmlException(sprintf('They type "%s" is not a valid navbar elementtype. Allowed are %s.', $element->getType(), implode(', ', $this->element_types)));
+        }
+
+        $this->elements[] = $element;
     }
 
-    public function setMultilevel($multilevel = true)
+    public function &createNavbarElement($type)
     {
-        $this->multilevel = $multilevel;
+        if (! in_array($type, $this->element_types)) {
+            Throw new HtmlException(sprintf('They type "%s" is not a valid navbar elementtype. Allowed are %s.', $type, implode(', ', $this->element_types)));
+        }
 
-        return $this;
-    }
-
-    /**
-     * Sets container flag to wrap navbar into a BS container
-     *
-     * @param boolean $container
-     */
-    public function setContainer($container = true)
-    {
-        $this->container = $container;
-
-        return $this;
+        return $this->elements[] = $this->factory->create('Bootstrap\Navbar\\' . $type . 'Element');
     }
 
     /**
