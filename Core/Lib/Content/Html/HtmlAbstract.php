@@ -77,7 +77,7 @@ abstract class HtmlAbstract
      *
      * @var string
      */
-    protected $inner;
+    protected $inner = '';
 
     /**
      *
