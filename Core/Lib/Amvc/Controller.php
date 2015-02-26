@@ -12,6 +12,7 @@ use Core\Lib\Data\Container;
 use Core\Lib\Content\Html\FormDesigner\FormDesigner;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
  * Controllers parent class.
@@ -315,13 +316,8 @@ class Controller extends MvcAbstract
      * @param bool $model Flag to clean model data (default: true)
      * @param string $post Flag to clean post data (default: true)
      */
-    final protected function cleanUp($model = true, $post = true)
+    final protected function cleanUp($post = true)
     {
-        // Reset model data
-        if ($model && isset($this->model)) {
-            $this->model->reset(true);
-        }
-
         // Reset post data
         if ($post) {
             $this->router->clearPost();
@@ -523,6 +519,18 @@ class Controller extends MvcAbstract
         $form->setAction($this->router->url($this->router->getCurrentRoute(), $this->params));
 
         return $form;
+    }
+
+    /**
+     * Creates and returns the requested html object
+     *
+     * @param string $object_name
+     *
+     * @return HtmlAbstract
+     */
+    final protected function getHtmlObject($object_name)
+    {
+        return $this->di->get('core.content.html.factory')->create($object_name);
     }
 
     /**
