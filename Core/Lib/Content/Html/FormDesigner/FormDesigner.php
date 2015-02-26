@@ -124,6 +124,12 @@ final class FormDesigner extends Form
     private $grid_control;
 
     /**
+     *
+     * @var boolean
+     */
+    private $no_buttons = false;
+
+    /**
      * Inject model dependency
      *
      * @param Container $container
@@ -397,7 +403,7 @@ final class FormDesigner extends Form
      */
     public function noButtons()
     {
-        $this->buttons = [];
+        $this->no_buttons = true;
 
         return $this;
     }
@@ -506,7 +512,9 @@ final class FormDesigner extends Form
      */
     private function handleButtons()
     {
-        if (! empty($this->buttons)) {
+
+
+        if (! $this->no_buttons && ! empty($this->buttons)) {
 
             /* @var $group \Core\Lib\Content\Html\FormDesigner\FormGroup */
             $group = $this->addGroup();
