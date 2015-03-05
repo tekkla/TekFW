@@ -58,6 +58,7 @@ final class Ajax
         if ($cmd->getType() == 'dom' && ! $cmd->getSelector()) {
 
             $this->fnConsole('Your DOM ajax response needs a selector but none is set. Aborting.');
+            $this->fnConsole($cmd->getArgs());
             return;
         }
 
@@ -69,7 +70,8 @@ final class Ajax
 
         if ($cmd->getType() == 'dom') {
             $this->ajax['dom'][$cmd->getSelector()][] = $ajax;
-        } else {
+        }
+        else {
             $this->ajax['act'][] = $ajax;
         }
     }
@@ -113,8 +115,7 @@ final class Ajax
     /**
      * Create an msgbox in browser
      *
-     * @param
-     *            $msg
+     * @param $msg
      */
     public function fnAlert($msg)
     {
@@ -127,12 +128,9 @@ final class Ajax
     /**
      * Create a HTML ajax which changes the html of target selector
      *
-     * @param $target Selector
-     *            to be changed
-     * @param $content Content
-     *            be used
-     * @param $mode Optional
-     *            mode how to change the selected element. Can be: replace(default) | append | prepend | remove | after | before
+     * @param $target Selector to be changed
+     * @param $content Content be used
+     * @param $mode Optional mode how to change the selected element. Can be: replace(default) | append | prepend | remove | after | before
      */
     public function fnHtml($selector, $content)
     {
@@ -201,8 +199,7 @@ final class Ajax
      * Calls a page refresh by loading the provided url.
      * Calls location.href="url" in page.
      *
-     * @param string|Url $url
-     *            Can be an url as string or an Url object on which the getUrl() method is called
+     * @param string|Url $url Can be an url as string or an Url object on which the getUrl() method is called
      */
     public function fnRefresh($url)
     {
@@ -215,8 +212,7 @@ final class Ajax
     /**
      * Creates ajax response to load a js file.
      *
-     * @param string $file
-     *            Complete url of file to load
+     * @param string $file Complete url of file to load
      */
     public function fnLoadScript($file)
     {
@@ -244,11 +240,28 @@ final class Ajax
      *
      * @param mixed $var
      */
-    public function fnDump($var)
+    public function fnPrintVar($var)
     {
         $this->ajax['act'][] = [
             'f' => 'dump',
             'a' => print_r($var, true)
+        ];
+    }
+
+    /**
+     * Creates a var_dump console output of provided $var
+     *
+     * @param mixed $var
+     */
+    public function fnDumpVar($var)
+    {
+        ob_start();
+
+        var_dump($var);
+
+        $this->ajax['act'][] = [
+            'f' => 'dump',
+            'a' => ob_get_clean(),
         ];
     }
 }
