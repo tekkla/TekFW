@@ -11,17 +11,17 @@ namespace Core\Lib\Traits;
 trait DebugTrait
 {
 
-    private function ajaxDumpVar($var)
+    protected function ajaxDumpVar($var)
     {
         $this->di->get('core.ajax')->fnDumpVar($var);
     }
 
-    private function ajaxPrintVar($var)
+    protected function ajaxPrintVar($var)
     {
         $this->di->get('core.ajax')->fnPrintVar($var);
     }
 
-    private function fbLog($var)
+    protected function fbLog($var)
     {
         \FB::log($var);
     }
