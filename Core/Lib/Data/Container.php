@@ -2,6 +2,7 @@
 namespace Core\Lib\Data;
 
 use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Container Object
@@ -14,6 +15,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
 {
 
     use SerializeTrait;
+    use DebugTrait;
 
     /**
      * Optional name of fieldlist to load
@@ -121,14 +123,17 @@ class Container implements \IteratorAggregate, \ArrayAccess
      */
     public function parseFields(Array $fields = [])
     {
+        if (empty($fields) && ! empty($this->use)) {
+            foreach ($this->use as $fld_name) {
+                $fields[$fld_name] = $this->available[$fld_name];
+            }
+        }
 
         // When there is no field definition, than try to load this defintions
-        if (empty($fields) && $this->available) {
+        if (empty($fields) && !empty($this->available) && is_array($this->available)) {
 
             // The field defintion list can be stored in use property
-            if (is_array($this->available)) {
-                $fields = $this->available;
-            }
+            $fields = $this->available;
         }
 
         // Field creation process
@@ -303,7 +308,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
             $this->addError($field->getName(), $result);
         }
 
-        return $this->errors ? true : false;
+        return $this->hasErrors();
     }
 
     /**
@@ -364,10 +369,10 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return boolean
      */
-    public function hasErrors($field='')
+    public function hasErrors($field = '')
     {
         // Check field specific error
-        if (!empty($field) && !empty($this->errors)) {
+        if (! empty($field) && ! empty($this->errors)) {
             return isset($this->errors[$field]);
         }
 
@@ -438,6 +443,22 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
+     * Returns the fields by their names their values as assoc array.
+     *
+     * @return array
+     */
+    public function getArray()
+    {
+        $out = [];
+
+        foreach ($this->fields as $name => $field) {
+            $out[$name] = $field->getValue();
+        }
+
+        return $out;
+    }
+
+    /**
      * Returns array with names of fields in container.
      *
      * @return array
@@ -475,6 +496,13 @@ class Container implements \IteratorAggregate, \ArrayAccess
         foreach ($fields as $field) {
             $this->fields[$field]->setSerialize(true);
         }
+
+        return $this;
+    }
+
+    public function useAllFields()
+    {
+        $this->use = array_keys($this->available);
 
         return $this;
     }
