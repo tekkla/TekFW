@@ -7,12 +7,24 @@ use Core\Lib\Ajax\Ajax;
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Content\Message;
 use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Cfg;
+
+
+/**
+ * Error.php
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ */
 
 /**
  * throw exceptions based on E_* error types
  */
 function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_context)
 {
+    global $di;
+
     // error was suppressed with the @-operator
     if (error_reporting() === 0) {
         return false;
@@ -20,39 +32,79 @@ function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_
 
     switch ($err_severity) {
         case E_ERROR:
-            throw new \ErrorException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'ErrorException';
+            break;
         case E_WARNING:
-            throw new Exceptions\WarningException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'WarningException';
+            break;
         case E_PARSE:
-            throw new Exceptions\ParseException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'ParseException';
+            break;
         case E_NOTICE:
-            throw new Exceptions\NoticeException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'NoticeException';
+            break;
         case E_CORE_ERROR:
-            throw new Exceptions\CoreErrorException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'CoreErrorException';
+            break;
         case E_CORE_WARNING:
-            throw new Exceptions\CoreWarningException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'CoreWarningException';
+            break;
         case E_COMPILE_ERROR:
-            throw new Exceptions\CompileErrorException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'CompileErrorException';
+            break;
         case E_COMPILE_WARNING:
-            throw new Exceptions\CoreWarningException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'CoreWarningException';
+            break;
         case E_USER_ERROR:
-            throw new Exceptions\UserErrorException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'UserErrorException';
+            break;
         case E_USER_WARNING:
-            throw new Exceptions\UserWarningException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'UserWarningException';
+            break;
         case E_USER_NOTICE:
-            throw new Exceptions\UserNoticeException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'UserNoticeException';
+            break;
         case E_STRICT:
-            throw new Exceptions\StrictException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'StrictException';
+            break;
         case E_RECOVERABLE_ERROR:
-            throw new Exceptions\RecoverableErrorException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'RecoverableErrorException';
+            break;
         case E_DEPRECATED:
-            throw new Exceptions\DeprecatedException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'DeprecatedException';
+            break;
         case E_USER_DEPRECATED:
-            throw new Exceptions\UserDeprecatedException($err_msg, 0, $err_severity, $err_file, $err_line);
+            $exception = 'UserDeprecatedException';
+            break;
+    }
+
+    $exception = '\Core\Lib\Errors\Exceptions\\' . $exception;
+
+    $di->get('core.error')->handleException(new $exception($err_msg, 0, $err_severity, $err_file, $err_line));
+}
+
+function ExceptionHandler(\Exception $e)
+{
+    global $di;
+    echo $di->get('core.error')->handleException($e);
+}
+
+function shutDownFunction()
+{
+    global $di;
+
+    $error = error_get_last();
+
+    if (!empty($error['type'])) {
+        $di->get('core.error')->handleException(new \Exception($error['message'], $error['type']));
     }
 }
 
+register_shutdown_function('\Core\Lib\Errors\shutdownFunction');
+set_exception_handler('\Core\Lib\Errors\ExceptionHandler');
 set_error_handler('\Core\Lib\Errors\ErrorHandler', E_ALL);
+
+ini_set('display_errors', 0);
 
 /**
  * Class for TekFW errors handling
@@ -108,9 +160,15 @@ class Error
 
     /**
      *
-     * @var string
+     * @var Message
      */
     private $message;
+
+    /**
+     *
+     * @var Cfg
+     */
+    private $cfg;
 
     /**
      * Constructor
@@ -119,14 +177,16 @@ class Error
      * @param User $user
      * @param Ajax $ajax
      * @param DataAdapter $adapter
+     * @param Cfg $cfg
      */
-    public function __construct(Router $router, User $user, Ajax $ajax, Message $message, DataAdapter $adapter)
+    public function __construct(Router $router, User $user, Ajax $ajax, Message $message, DataAdapter $adapter, Cfg $cfg)
     {
         $this->router = $router;
         $this->user = $user;
         $this->ajax = $ajax;
         $this->message = $message;
         $this->adapter = $adapter;
+        $this->cfg = $cfg;
 
         $this->error_id = uniqid('#error_');
     }
@@ -134,41 +194,37 @@ class Error
     /**
      * Creates html error message
      */
-    private function createErrorHtml()
+    private function createErrorHtml($dismissable = false)
     {
         $this->error_html = '
-        <div class="alert alert-danger alert-dismissible" role="alert" id="' . $this->error_id . '">
-            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
+        <div class="alert alert-danger' . ($dismissable == true ? ' alert-dismissible' : '') . '" role="alert" id="' . $this->error_id . '">';
+
+        if ($dismissable == true) {
+            $this->error_html .= '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
+        }
 
         // Append more informations for admin users
-        if ($this->user->isAdmin() == true) {
+        if ($this->user->isGuest() == true || $this->user->isAdmin() == false) {
+
+            $this->error_html .= '
+            <h3 class="no-top-margin">Error</h3>
+            <p>Sorry for that! Webmaster has been informed. Please try again later.</p>';
+        }
+        else {
 
             $this->error_html .= '
             <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
             <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
             <p><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</p>
             <hr>
+            <h4>Router</h4>
+            <pre><small>' . print_r($this->router->getStatus(), true) . '</small></pre>
+            <hr>
             <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
-        }
-        else {
-
-            $this->error_html .= '
-            <h3 class="no-top-margin">Error</h3>
-            <p>Sorry for that! Webmaster has been informed. Please try again later.</p>';
         }
 
         $this->error_html .= '
         </div>';
-    }
-
-    /**
-     * Returns html error message
-     */
-    public function getErrorHtml()
-    {
-        if (! $this->error_html) {
-            $this->createErrorHtml();
-        }
 
         return $this->error_html;
     }
@@ -177,38 +233,101 @@ class Error
      * Exceptionhandler
      *
      * @param \Exception $e
+     * @param boolean $fatal Optional: Flags exception to be a fatal error (Default: false)
      * @param boolean $clean_buffer Optional: Flag to switch buffer clean on/off. (Default: false)
-     * @param string $log_error Optional: Flag to switch error logging on/off. (Default: true)
+     * @param boolean $error_log Optional: Flag to switch error logging on/off. (Default: true)
+     * @param boolean $send_mail Optional: Flag to send error message to admins. (Default: false)
+     * @param boolean $to_db Optional: Flag to switch error logging to db driven errorlog on/off. (Default: true)
      *
      * @return boolean|string
      */
-    public function handleException(\Exception $e, $clean_buffer = false, $log_error = true)
+    public function handleException(\Exception $e, $fatal = false, $clean_buffer = false, $error_log = true, $send_mail = false, $to_db = true)
     {
         // Store exception
         $this->exception = $e;
 
-        // Clean outpub buffer?
-        if ($clean_buffer === true) {
-            ob_clean();
+        if ($this->exception instanceof BasicException) {
+            $fatal = $this->exception->getFatal();
+            $clean_buffer = $this->exception->getCleanBuffer();
+            $log_error = $this->exception->getErrorLog();
+            $send_mail = $this->exception->getSendMail();
+            $to_db = $this->exception->getToDb();
         }
 
-        // Write error log entry?
-        if ($log_error == true) {
-            $this->logError();
-            $this->writeToServerLog();
+        // Always send mail on
+        if ($this->exception instanceof \PDOException) {
+            $error_log = true;
+            $send_mail = true;
+
+            // Prevent db logging on PDOException!!!
+            $to_db = - 1;
+        }
+
+        if ($fatal == true) {
+            // $clean_buffer = true;
+        }
+
+        // Clean outpub buffer?
+        if ($clean_buffer === true) {
+            // ob_clean();
+        }
+
+        // Log error
+        if ($this->cfg->get('Core', 'error_logger')) {
+
+            // Write to error log?
+            if ($error_log == true || $this->cfg->get('Core', 'to_log') == true) {
+                $message = $this->exception->getMessage() . ' (' . $this->exception->getFile() . ':' . $this->exception->getLine() . ')';
+                error_log($message);
+            }
+
+            // Write to db error log? Taker care of avoid flag (-1) due to PDOExceptions
+            if ($to_db !== - 1) {
+
+                try {
+
+                    if ($to_db == true || $this->cfg->get('Core', 'to_db') == true) {
+
+                        $this->adapter->query([
+                            'method' => 'INSERT',
+                            'tbl' => 'error_log',
+                            'fields' => [
+                                'stamp',
+                                'msg',
+                                'trace',
+                                'file',
+                                'line'
+                            ],
+                            'params' => [
+                                ':stamp' => time(),
+                                ':msg' => $this->exception->getMessage(),
+                                ':trace' => $this->exception->getTraceAsString(),
+                                ':file' => $this->exception->getFile(),
+                                ':line' => $this->exception->getLine()
+                            ]
+                        ]);
+
+                        $this->adapter->execute();
+                    }
+                }
+                catch (\Exception $e) {
+                    $this->di->get('core.error')->handleException($e);
+                }
+            }
         }
 
         // Ajax output
         if ($this->router->isAjax()) {
-            $this->ajax->fnError($this->getErrorHtml(), $this->error_id);
+
+            $this->ajax->fnError($this->createErrorHtml(true), uniqid());
+
             return false;
         }
 
-        // Normal output to message stack
-        $this->message->danger($this->getErrorHtml(), true);
+        $this->createErrorHtml(false);
 
         // return html
-        return $this->getErrorHtml();
+        return $this->error_html;
     }
 
     private function getTraceCalls($ignore = 2)
@@ -239,7 +358,7 @@ class Error
         $this->adapter->query([
             'tbl' => 'errors',
             'method' => 'INSERT',
-            'field' => [
+            'fields' => [
                 'stamp',
                 'user',
                 'code',
@@ -277,7 +396,7 @@ class Error
         ob_clean();
 
         // Send 500 http status
-        $this->sendHttpStatus(500);
+        http_response_code(500);
 
         die('
         <html>
@@ -294,7 +413,11 @@ class Error
             </head>
 
             <body>
-                <div class="container">' . $this->getMessage() . '</div>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-12">' . $this->createErrorHtml(false) . '</div>
+                    </div>
+                </div>
             </body>
 
         </html>');
