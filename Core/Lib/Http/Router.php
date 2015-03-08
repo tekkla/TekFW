@@ -295,7 +295,7 @@ final class Router extends \AltoRouter
      */
     public function checkParam($key)
     {
-        return array_key_exists($key, $his->params);
+        return array_key_exists($key, $this->params);
     }
 
     /**
