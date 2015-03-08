@@ -2,19 +2,21 @@
 namespace Core\Lib\Data\Adapter\Db;
 
 use Core\Lib\Data\Container;
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Traits\ConvertTrait;
 
 /**
  * QueryBuilder
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class QueryBuilder
 {
 
-    use \Core\Lib\Traits\ArrayTrait;
-    use \Core\Lib\Traits\ConvertTrait;
+    use ArrayTrait;
+    use ConvertTrait;
 
     private $method;
 
