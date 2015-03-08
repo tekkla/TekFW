@@ -8,7 +8,7 @@ use Core\Lib\Traits\ArrayTrait;
  * DataAdapter Object
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015 by author
  * @license MIT
  */
 class DataAdapter implements \IteratorAggregate
@@ -265,6 +265,7 @@ class DataAdapter implements \IteratorAggregate
 
                     // Execute every callback registerd
                     foreach ($callback[1] as $function) {
+
                         $data = $callback[0]->$function($data);
 
                         // Callback returned boolean false?
