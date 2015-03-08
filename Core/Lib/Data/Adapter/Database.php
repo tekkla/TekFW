@@ -5,17 +5,19 @@ use Core\Lib\Data\Adapter\AdapterAbstract;
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
 use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Database adapter
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
 class Database extends AdapterAbstract
 {
     use SerializeTrait;
+    use DebugTrait;
 
     /**
      * Conversionlist from db fieldtype to smf fieldtypes
@@ -188,6 +190,7 @@ class Database extends AdapterAbstract
         $this->stmt = null;
 
         if (is_array($sql)) {
+
             $builder = new QueryBuilder($sql);
             $sql = $builder->build();
 
@@ -196,6 +199,10 @@ class Database extends AdapterAbstract
         }
 
         $this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $sql));
+
+        #if ($this->di->get('core.cfg')->get('Core', 'log_db')) {
+        #    $this->fbLog($sql);
+        #}
 
         if (isset($params)) {
 
@@ -286,19 +293,6 @@ class Database extends AdapterAbstract
         return $this->stmt->execute();
     }
 
-    /**
-     * Old.
-     * Use all() instead.
-     *
-     * @see all()
-     *
-     * @deprecated
-     *
-     */
-    public function resultset($fetch_mode = \PDO::FETCH_ASSOC)
-    {
-        return $this->all($fetch_mode = \PDO::FETCH_ASSOC);
-    }
 
     /**
      * Returns all queried data.
@@ -321,6 +315,20 @@ class Database extends AdapterAbstract
     }
 
     /**
+     * PDO fetchAll
+     *
+     * @param PDO $fetch_mode PDO fetchmode constant
+     *
+     * @return mixed
+     */
+    public function fetchAll($fetch_mode = \PDO::FETCH_ASSOC)
+    {
+        $this->stmt->execute();
+
+        return $this->stmt->fetchAll($fetch_mode);
+    }
+
+    /**
      * Returns current row of resultset
      *
      * @param int $fetch_mode PDO fetch mode
@@ -338,6 +346,19 @@ class Database extends AdapterAbstract
         }
 
         return $data;
+    }
+    /**
+     * PDO fetch.
+     *
+     * @param PDO $fetch_mode PDO fetchmode constant
+     *
+     * @return mixed
+     */
+    public function fetch($fetch_mode = \PDO::FETCH_ASSOC)
+    {
+        $this->stmt->execute();
+
+        return $this->stmt->fetch($fetch_mode);
     }
 
     /**
