@@ -179,7 +179,7 @@ final class Session
         // Set query
         $this->adapter->query([
             'tbl' => 'sessions',
-            'field' => 'data',
+            'fields' => 'data',
             'filter' => 'id_session = :id_session',
             'params' => [
                 ':id_session' => $id_session
@@ -203,7 +203,7 @@ final class Session
         $this->adapter->query([
             'method' => 'REPLACE',
             'tbl' => 'sessions',
-            'field' => [
+            'fields' => [
                 'id_session',
                 'access',
                 'data'
