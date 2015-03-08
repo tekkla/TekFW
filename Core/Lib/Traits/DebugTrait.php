@@ -2,24 +2,26 @@
 namespace Core\Lib\Traits;
 
 /**
+ * DebugTrait.php class
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright  2015 by author
+ * @license MIT
  */
 trait DebugTrait
 {
 
-    public function ajaxDumpVar($var)
+    private function ajaxDumpVar($var)
     {
         $this->di->get('core.ajax')->fnDumpVar($var);
     }
 
-    public function ajaxPrintVar($var)
+    private function ajaxPrintVar($var)
     {
         $this->di->get('core.ajax')->fnPrintVar($var);
     }
 
-    public function fbLog($var)
+    private function fbLog($var)
     {
         \FB::log($var);
     }
