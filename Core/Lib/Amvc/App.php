@@ -9,6 +9,7 @@ use Core\Lib\Http\Router;
 use Core\Lib\DI;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Parent class for all apps
@@ -21,6 +22,8 @@ class App
 {
     use StringTrait;
     use TextTrait;
+
+    use DebugTrait;
 
     /**
      * List of appnames which are already initialized
@@ -417,18 +420,15 @@ class App
             // Get current action...
             $action = $this->router->getAction();
 
-            if (method_exists($container, $action)) {
-
-                // ... and call matching container action when method exists
-                $container->$action();
-            }
-            else {
+            if (!method_exists($container, $action)) {
 
                 // ... and try to find and run Index method when no matching action is found
-                if (method_exists($container, 'Index')) {
-                    $container->Index();
-                }
+                $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
+
             }
+
+            // ... and call matching container action when method exists
+            $container->$action();
 
             // finally try to parse field defintion
             $container->parseFields();
@@ -710,31 +710,36 @@ class App
         $app_name = $this->uncamelizeString($this->name);
 
         // Map routes to request handler router
-        foreach ($this->routes as $route) {
+        foreach ($this->routes as $def) {
 
             // Create route string
-            $route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
+            $route = $def['route'] == '/' ? '/' . $app_name : '/' . (strpos($def['route'], '../') === false ? $app_name . $def['route'] : str_replace('../', '', $def['route']));
 
             // Create target
-            $route['target'] = [
+            $target = [
                 // App not set means app will be set automatic.
-                'app' => ! isset($route['app']) ? $app_name : $route['app'],
-                'ctrl' => empty($route['ctrl']) ? 'Index' : $route['ctrl'],
-                'action' => empty($route['action']) ? 'Index' : $route['action']
+                'app' => ! isset($def['app']) ? $app_name : $def['app'],
             ];
+
+            // is there a defined controller?
+            if (!empty($def['ctrl'])) {
+                $target['ctrl'] = $def['ctrl'];
+            }
+
+            if (!empty($def['action'])) {
+                $target['action'] = $def['action'];
+            }
 
             // The name of the route is set by the key in the routes array.
             // Is the name of type string it will be extended by the current
             // apps name.
-            if (isset($route['name'])) {
-                $route['name'] = (! isset($route['app']) ? $app_name : $route['app']) . '_' . $route['name'];
+            if (isset($def['name'])) {
+                $name = (! isset($def['app']) ? $app_name : $def['app']) . '_' . $def['name'];
             }
 
-            if (! isset($route['method'])) {
-                $route['method'] = 'GET';
-            }
+            $method = isset($def['method']) ? $def['method'] : 'GET';
 
-            $this->router->map($route['method'], $route['route'], $route['target'], isset($route['name']) ? $route['name'] : null);
+            $this->router->map($method, $route, $target, isset($name) ? $name : null);
         }
 
         self::$init_stages[$this->name]['routes'] = true;
