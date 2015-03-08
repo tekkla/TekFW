@@ -6,6 +6,7 @@ use Core\Lib\Http\Router;
 use Core\Lib\Content\Html\HtmlFactory;
 use Core\Lib\Amvc\Creator;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Content
@@ -18,6 +19,7 @@ class Content
 {
 
     use TextTrait;
+    use DebugTrait;
 
     /**
      *
@@ -185,8 +187,8 @@ class Content
 
         // Set controller name to "Index" when no controller name has been returned
         // from request handler
-        if (! $controller_name) {
-            $controller_name = 'Index';
+        if (empty($controller_name)) {
+            $controller_name = $this->router->checkParam('ctrl') ? $this->router->getParam('ctrl') : 'Index';
         }
 
         // Load controller object
@@ -195,9 +197,11 @@ class Content
         // Which controller action has to be run?
         $action = $this->router->getAction();
 
+        $this->fbLog($action);
+
         // No action => use Index as default
-        if (! $action) {
-            $action = 'Index';
+        if (empty($action)) {
+            $action = $this->router->checkParam('action') ? $this->router->getParam('action') : 'Index';
         }
 
         // Are there parameters to pass to run method?
