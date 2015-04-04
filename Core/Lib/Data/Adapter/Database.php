@@ -182,10 +182,11 @@ class Database extends AdapterAbstract
      *
      * @param string $sql
      * @param array $params
+     * @param bool $autoexec
      *
-     * @return \PDOStatement
+     * @return \PDOStatement | queryresult
      */
-    public function query($sql)
+    public function query($sql, $params = [], $autoexec = false)
     {
         $this->stmt = null;
 
@@ -204,14 +205,20 @@ class Database extends AdapterAbstract
         #    $this->fbLog($sql);
         #}
 
-        if (isset($params)) {
+        if (!empty($params)) {
 
             foreach ($params as $parameter => $value) {
                 $this->stmt->bindValue($parameter, $value);
             }
         }
 
-        return $this->stmt;
+        if ($autoexec == true)
+        {
+            return $this->stmt->execute();
+        }
+        else {
+            return $this->stmt;
+        }
     }
 
     /**
