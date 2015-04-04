@@ -353,6 +353,10 @@ class Field implements \ArrayAccess
     {
         $this->default = $default_value;
 
+        if (empty($this->value)) {
+            $this->value = $default_value;
+        }
+
         return $this;
     }
 
