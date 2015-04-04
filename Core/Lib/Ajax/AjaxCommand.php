@@ -2,8 +2,11 @@
 namespace Core\Lib\Ajax;
 
 /**
+ * AjaxCommand
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.de
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class AjaxCommand
 {
@@ -39,13 +42,13 @@ class AjaxCommand
     /**
      * Constructor with option to parse command from definition array
      *
-     * @param array $definition
-     *            Definition to parse as ajax command
+     * @param array $definition Definition to parse as ajax command
      */
     public function __construct(Array $definition = [])
     {
-        if ($definition)
+        if ($definition) {
             $this->parse($definition);
+        }
     }
 
     /**
@@ -100,6 +103,7 @@ class AjaxCommand
     public function setSelector($selector)
     {
         $this->selector = $selector;
+
         return $this;
     }
 
@@ -113,6 +117,7 @@ class AjaxCommand
     public function setFunction($fn = 'html')
     {
         $this->fn = $fn;
+
         return $this;
     }
 
@@ -190,9 +195,9 @@ class AjaxCommand
         foreach ($definition as $property => $value) {
             if (property_exists($this, $property)) {
                 if ($property == 'args' && ! is_array($value))
-                    $value = array(
+                    $value =[
                         $value
-                    );
+                    ];
 
                 $this->{$property} = $value;
             }
