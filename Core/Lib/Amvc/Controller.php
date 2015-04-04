@@ -277,18 +277,8 @@ class Controller extends MvcAbstract
 
         $content = $this->run($action, $params);
 
-        if ($content) {
-            $this->ajax->setArgs($content);
-            $this->ajax->send();
-        }
-
-        if ($this->ajax->getSelector()) {
-            $ajax = $this->di['core.ajax.cmd'];
-            $ajax->setType('act');
-            $ajax->setFunction('href');
-            $ajax->setArgs($this->ajax->getSelector());
-            $ajax->send();
-        }
+        $this->ajax->setArgs($content);
+        $this->ajax->send();
 
         return $this;
     }
@@ -304,7 +294,7 @@ class Controller extends MvcAbstract
     final protected function redirect($action, $params = [])
     {
         // Clean data
-        $this->cleanUp();
+        $this->router->clearPost();
 
         // Run redirect method
         return $this->run($action, $params);
@@ -540,8 +530,12 @@ class Controller extends MvcAbstract
      *
      * @return Controller
      */
-    final protected function getController($controller_name)
+    final protected function getController($controller_name = null)
     {
+        if (empty($controller_name)) {
+            $controller_name = $this->getName();
+        }
+
         return $this->app->getController($controller_name);
     }
 
@@ -552,8 +546,12 @@ class Controller extends MvcAbstract
      *
      * @return \Core\Lib\Amvc\Model
      */
-    final protected function getModel($model_name)
+    final protected function getModel($model_name = null)
     {
+        if (empty($controller_name)) {
+            $controller_name = $this->getName();
+        }
+
         return $this->app->getModel($model_name);
     }
 
