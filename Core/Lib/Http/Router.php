@@ -52,11 +52,18 @@ final class Router extends \AltoRouter
     private $target = '';
 
     /**
-     * storage for GET parameters
+     * Storage for parameters
      *
      * @var array
      */
     private $params = [];
+
+    /**
+     * Default return format
+     *
+     * @var string
+     */
+    private $format = 'html';
 
     /**
      * Name of current route
@@ -105,7 +112,7 @@ final class Router extends \AltoRouter
             $request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
         }
 
-        // Framework ajax.js adds automatically an /ajax flag @ the end of the requested URI.
+        // Framework.js adds automatically an /ajax flag @ the end of the requested URI.
         // Here we check for this flag, remembers if it's present and then remove the flag
         // so the following URI matching process runs without flaw.
         if (substr($request_url, - 5) == '/ajax') {
@@ -143,18 +150,30 @@ final class Router extends \AltoRouter
             }
 
             // Is this an ajax request?
+            // @TODO Still needed?
             if (isset($match['params']['ajax'])) {
                 $this->is_ajax = true;
             }
 
+            // Handle format parameter seperately and remove it from match params array.
+            if (isset($match['params']['format'])) {
+                $this->format = $match['params']['format'];
+                unset($match['params']['format']);
+            }
+
+            // Stroe params
             $this->params = $match['params'];
+
+            #var_dump($this);
         }
 
         return $match;
     }
 
     /**
-     * Returns the name of the current active route
+     * Returns the name of the current active route.
+     *
+     * @return string
      */
     public function getCurrentRoute()
     {
@@ -182,7 +201,9 @@ final class Router extends \AltoRouter
     }
 
     /**
-     * Check set of app property
+     * Check set of app property.
+     *
+     * @return boolean
      */
     public function checkApp()
     {
@@ -203,6 +224,8 @@ final class Router extends \AltoRouter
      * Set appname manually
      *
      * @param string $val
+     *
+     * @return \Core\Lib\Http\Router
      */
     public function setApp($app)
     {
@@ -235,10 +258,38 @@ final class Router extends \AltoRouter
      * Sets the requested ctrl manually
      *
      * @param string $ctrl
+     *
+     * @return \Core\Lib\Http\Router
      */
     public function setCtrl($ctrl)
     {
         $this->ctrl = $ctrl;
+
+        return $this;
+    }
+
+    /**
+     * Sets requested output format
+     *
+     * @param string $format Output format: xml, json or html
+     *
+     * @throws \ErrorException
+     *
+     * @return \Core\Lib\Http\Router
+     */
+    public function setFormat($format)
+    {
+        $allowed = [
+            'html',
+            'xml',
+            'json'
+        ];
+
+        if (!in_array(strtolower($format), $allowed)) {
+            Throw new \ErrorException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
+        }
+
+        $this->format = $format;
 
         return $this;
     }
@@ -304,7 +355,9 @@ final class Router extends \AltoRouter
      * Both args ($arg1 and $arg2) set means to add a parameter by key ($arg1) and value ($arg2)
      *
      * @param string|array $arg1
+     *
      * @param string $arg2
+     *
      * @return \Core\Lib\Router
      */
     public function addParam($arg1, $arg2 = null)
@@ -340,6 +393,16 @@ final class Router extends \AltoRouter
     }
 
     /**
+     * Returns the requested outputformat.
+     *
+     * @return string
+     */
+    public function getFormat()
+    {
+        return $this->format;
+    }
+
+    /**
      * Returns all request related data in one array
      *
      * @return array
@@ -353,6 +416,7 @@ final class Router extends \AltoRouter
             'ctrl' => $this->getCtrl(),
             'action' => $this->getAction(),
             'params' => $this->getParam(),
+            'format' => $this->getFormat(),
             'raw' => $this->raw
         ];
     }
