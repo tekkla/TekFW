@@ -33,25 +33,27 @@ require_once (BASEDIR . '/Settings.php');
 // Include error handler
 require_once (COREDIR . '/Lib/Errors/Error.php');
 
-// Register composer classloader
-require_once (BASEDIR . '/vendor/autoload.php');
-
-// Register core classloader
-require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
-
-// Register Core classloader
-$loader = new SplClassLoader('Core', BASEDIR);
-$loader->register();
-
-// Register app classloader
-$loader = new SplClassLoader('Apps', BASEDIR);
-$loader->register();
-
-// Register themes classloader
-$loader = new SplClassLoader('Themes', BASEDIR);
-$loader->register();
 
 try {
+
+    // Register composer classloader
+    require_once (BASEDIR . '/vendor/autoload.php');
+
+    // Register core classloader
+    require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
+
+    // Register Core classloader
+    $loader = new SplClassLoader('Core', BASEDIR);
+    $loader->register();
+
+    // Register app classloader
+    $loader = new SplClassLoader('Apps', BASEDIR);
+    $loader->register();
+
+    // Register themes classloader
+    $loader = new SplClassLoader('Themes', BASEDIR);
+    $loader->register();
+
 
     // start output buffering
     ob_start();
@@ -140,10 +142,6 @@ try {
 
     /* @var $content \Core\Lib\Content\Content */
     $content = $di->get('core.content');
-
-    $content->setTitle($config->get('Core', 'sitename'));
-    $content->meta->setCharset();
-    $content->meta->setViewport();
 
     $content->css->init();
     $content->js->init();
