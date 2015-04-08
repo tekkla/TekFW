@@ -252,6 +252,11 @@ class Controller extends MvcAbstract
 
             return $content;
         }
+        else {
+
+            // Without view rendering we return the return value send from called controller action
+            return $return;
+        }
     }
 
     /**
@@ -637,4 +642,10 @@ class Controller extends MvcAbstract
 
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
+
+    /**
+     * Dummy method for those who forget to create such method in their controller
+     */
+    public function Index()
+    {}
 }
