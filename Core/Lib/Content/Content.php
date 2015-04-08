@@ -109,6 +109,18 @@ class Content
     private $debug = [];
 
     /**
+     *
+     * @var Controller
+     */
+    private $controller;
+
+    /**
+     *
+     * @var string
+     */
+    private $action;
+
+    /**
      * Constructor
      *
      * @param Router $router
@@ -184,7 +196,7 @@ class Content
             $app->run();
         }
         // Get name of requested controller
-        $controller_name = $this->router->getCtrl();
+        $controller_name = $this->router->getController();
 
         // Set controller name to "Index" when no controller name has been returned
         // from request handler
@@ -193,125 +205,131 @@ class Content
         }
 
         // Load controller object
-        $controller = $app->getController($controller_name);
+        $this->controller = $app->getController($controller_name);
 
         // Which controller action has to be run?
-        $action = $this->router->getAction();
-
-        $this->fbLog($action);
+        $this->action = $this->router->getAction();
 
         // No action => use Index as default
-        if (empty($action)) {
-            $action = $this->router->checkParam('action') ? $this->router->getParam('action') : 'Index';
+        if (empty($this->action)) {
+            $this->action = $this->router->checkParam('action') ? $this->router->getParam('action') : 'Index';
         }
 
         // Run controller and process result.
         if ($this->router->isAjax()) {
-
-            // Send cache preventing headers and set content type
-            header('Cache-Control: no-cache, must-revalidate');
-            header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-
-            switch ($this->router->getFormat()) {
-
-                case 'json':
-                    $this->createJson($controller, $action);
-                    break;
-
-                case 'xml':
-                    $this->createXml($controller, $action);
-                    break;
-
-                case 'html':
-                default:
-                    try {
-                        // Result will be processed as ajax command list
-                        $controller->ajax($action, $this->router->getParam());
-                    }
-                    catch (\Exception $e) {
-                        $this->di->get('core.error')->handleException($e, false, true);
-                    }
-
-                    // send JSON header
-                    header('Content-type: application/json; charset=utf-8");');
-
-                    // Run ajax processor
-                    echo $this->di->get('core.ajax')->process();
-
-                    // End end here
-                    exit();
-
-                    break;
-            }
+            $this->createAjax();
         }
         else {
-
-            switch ($this->router->getFormat()) {
-
-                case 'json':
-                    $this->createJson($controller, $action);
-                    break;
-
-                case 'xml':
-                    $this->createXml($controller, $action);
-                    break;
-
-                case 'html':
-                default:
-
-                    // Always use UTF-8
-                    header("Content-Type: text/html; charset=utf-8");
-
-                    // Add missing title
-                    if (empty($this->title)) {
-                        $this->title = $this->cfg->get('Core', 'sitename');
-                    }
-
-                    Try {
-
-                        // Run controller and store result
-                        $result = $controller->run($action, $this->router->getParam());
-
-                        // No content created? Check app for onEmpty() event which maybe gives us content.
-                        if (empty($result) && method_exists($app, 'onEmpty')) {
-                            $result = $app->onEmpty();
-                        }
-
-                        // Append content provided by apps onBefore() event method
-                        if (method_exists($app, 'onBefore')) {
-                            $result = $app->onBefore() . $result;
-                        }
-
-                        // Prepend content provided by apps onAfter() event method
-                        if (method_exists($app, 'onAfter')) {
-                            $result .= $app->onAfter();
-                        }
-                    }
-                    catch (\Exception $e) {
-
-                        $result = $this->di->get('core.error')->handleException($e);
-                    }
-
-                    $this->setContent($result);
-
-                    // Call content builder
-                    echo $this->render();
-                    break;
-            }
+            $this->createFull();
         }
     }
 
-    private function createJson(Controller $controller, $action)
+    private function createAjax()
+    {
+        // Send cache preventing headers and set content type
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+
+        switch ($this->router->getFormat()) {
+
+            case 'json':
+                $this->createJson();
+                break;
+
+            case 'xml':
+                $this->createXml();
+                break;
+
+            case 'html':
+            default:
+                try {
+                    // Result will be processed as ajax command list
+                    $this->controller->ajax($this->action, $this->router->getParam());
+                }
+                catch (\Exception $e) {
+                    $this->di->get('core.error')->handleException($e, false, true);
+                }
+
+                // send JSON header
+                header('Content-type: application/json; charset=utf-8");');
+
+                // Run ajax processor
+                echo $this->di->get('core.ajax')->process();
+
+                // End end here
+                exit();
+
+                break;
+        }
+    }
+
+    private function createFull()
+    {
+        switch ($this->router->getFormat()) {
+
+            case 'json':
+                $this->createJson();
+                break;
+
+            case 'xml':
+                $this->createXml();
+                break;
+
+            case 'html':
+            default:
+
+                // Always use UTF-8
+                header("Content-Type: text/html; charset=utf-8");
+
+                // Add missing title
+                if (empty($this->title)) {
+                    $this->title = $this->cfg->get('Core', 'sitename');
+                }
+
+                Try {
+
+                    // Run controller and store result
+                    $result = $this->controller->run($this->action, $this->router->getParam());
+
+                    // No content created? Check app for onEmpty() event which maybe gives us content.
+                    if (empty($result) && method_exists($app, 'onEmpty')) {
+                        $result = $app->onEmpty();
+                    }
+
+                    // Append content provided by apps onBefore() event method
+                    if (method_exists($app, 'onBefore')) {
+                        $result = $app->onBefore() . $result;
+                    }
+
+                    // Prepend content provided by apps onAfter() event method
+                    if (method_exists($app, 'onAfter')) {
+                        $result .= $app->onAfter();
+                    }
+                }
+                catch (\Exception $e) {
+
+                    $result = $this->di->get('core.error')->handleException($e);
+                }
+
+                $this->setContent($result);
+
+                // Call content builder
+                echo $this->render();
+                break;
+        }
+    }
+
+    private function createJson()
     {
         header('Content-type: application/json; charset=utf-8");');
-        echo json_encode($controller->run($action, $this->router->getParam()));
+        echo json_encode($this->controller->run($this->action, $this->router->getParam()));
         exit();
     }
 
-    private function createXml(Controller $controller, $action)
+    private function createXml()
     {
         header("Content-Type: application/xml; charset=utf-8");
-        echo $controller->run($action, $this->router->getParam());
+        echo $this->controller->run($this->action, $this->router->getParam());
         exit();
     }
 
