@@ -35,7 +35,7 @@ final class Router extends \AltoRouter
      *
      * @var string
      */
-    private $ctrl = '';
+    private $controller = '';
 
     /**
      * Routeret action
@@ -138,13 +138,13 @@ final class Router extends \AltoRouter
                 }
             }
 
-            // When no target ctrl defined in route but provided by parameter
-            // we use the parameter as requested ctrl
-            if (! $this->ctrl && isset($match['params']['ctrl'])) {
-                $this->ctrl = $this->camelizeString($match['params']['ctrl']);
+            // When no target controller defined in route but provided by parameter
+            // we use the parameter as requested controller
+            if (! $this->controller && isset($match['params']['controller'])) {
+                $this->controller = $this->camelizeString($match['params']['controller']);
             }
 
-            // Same for action as for ctrl
+            // Same for action as for controller
             if (! $this->action && isset($match['params']['action'])) {
                 $this->action = $this->camelizeString($match['params']['action']);
             }
@@ -197,7 +197,7 @@ final class Router extends \AltoRouter
      */
     public function isCall()
     {
-        return $this->checkApp() && $this->checkCtrl() && $this->checkAction();
+        return $this->checkApp() && $this->checkController() && $this->checkAction();
     }
 
     /**
@@ -235,35 +235,35 @@ final class Router extends \AltoRouter
     }
 
     /**
-     * Checks if a ctrl is set and returns true/false
+     * Checks if a controller is set and returns true/false
      *
      * @return boolean
      */
-    public function checkCtrl()
+    public function checkController()
     {
-        return ! empty($this->ctrl);
+        return ! empty($this->controller);
     }
 
     /**
-     * Returns a camelized ctrl name
+     * Returns a camelized controller name
      *
      * @return string
      */
-    public function getCtrl()
+    public function getController()
     {
-        return $this->ctrl;
+        return $this->controller;
     }
 
     /**
-     * Sets the requested ctrl manually
+     * Sets the requested controller manually
      *
-     * @param string $ctrl
+     * @param string $controller
      *
      * @return \Core\Lib\Http\Router
      */
-    public function setCtrl($ctrl)
+    public function setController($controller)
     {
-        $this->ctrl = $ctrl;
+        $this->controller = $controller;
 
         return $this;
     }
@@ -325,7 +325,7 @@ final class Router extends \AltoRouter
     }
 
     /**
-     * Returns requested app, ctrl and action as array
+     * Returns requested app, controller and action as array
      *
      * @return array
      */
@@ -333,7 +333,7 @@ final class Router extends \AltoRouter
     {
         return [
             'app' => $this->app,
-            'ctrl' => $this->ctrl,
+            'controller' => $this->controller,
             'action' => $this->action
         ];
     }
@@ -413,7 +413,7 @@ final class Router extends \AltoRouter
             'is_ajax' => $this->is_ajax,
             'method' => $_SERVER['REQUEST_METHOD'],
             'app' => $this->getApp(),
-            'ctrl' => $this->getCtrl(),
+            'controller' => $this->getController(),
             'action' => $this->getAction(),
             'params' => $this->getParam(),
             'format' => $this->getFormat(),

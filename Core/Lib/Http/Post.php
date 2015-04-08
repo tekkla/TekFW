@@ -126,7 +126,7 @@ class Post
         // Use values provided by request for missing app and model name
         if (empty($app) || empty($key)) {
             $this->app = $this->router->getApp();
-            $this->key = $this->router->getCtrl();
+            $this->key = $this->router->getController();
         }
 
         $app_small = $this->uncamelizeString($this->app);
