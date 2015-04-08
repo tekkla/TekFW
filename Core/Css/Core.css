@@ -1,3 +1,7 @@
+html {
+	overflow-y: scroll;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Ajax links and clickable elements need a pointer
@@ -40,6 +44,14 @@
 	position: relative;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Editbox
+|--------------------------------------------------------------------------
+*/
+.editbox ul.list-inline {
+	margin-bottom: 0;
+}
 /*
 |--------------------------------------------------------------------------
 | Fontsize for button fa icons
@@ -193,11 +205,13 @@ body.loading #status {
 	color: #ddd;
 }
 
-/*!
- * Datetimepicker for Bootstrap 3
-//! version : 4.0.0-beta
- * https://github.com/Eonasdan/bootstrap-datetimepicker/
- */
+/*
+|--------------------------------------------------------------------------
+| Datetimepicker for Bootstrap 3
+| ! version : 4.0.0-beta
+| https://github.com/Eonasdan/bootstrap-datetimepicker/
+|--------------------------------------------------------------------------
+*/
 .bootstrap-datetimepicker-widget.dropdown-menu {
 	margin: 2px 0;
 	padding: 4px;
