@@ -695,7 +695,7 @@ class App
             // No routes set? Map at least index as default route
             $target = [
                 'app' => $this->name,
-                'ctrl' => 'Index',
+                'controller' => 'Index',
                 'action' => 'Index'
             ];
 
@@ -722,8 +722,8 @@ class App
             ];
 
             // is there a defined controller?
-            if (!empty($def['ctrl'])) {
-                $target['ctrl'] = $def['ctrl'];
+            if (!empty($def['controller'])) {
+                $target['controller'] = $def['controller'];
             }
 
             if (!empty($def['action'])) {
