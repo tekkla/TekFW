@@ -134,7 +134,7 @@ final class Ajax
      */
     public function fnHtml($selector, $content)
     {
-        $this->ajax['dom'][$selector] = [
+        $this->ajax['dom'][$selector][] = [
             'f' => 'html',
             'a' => $content
         ];
@@ -161,7 +161,7 @@ final class Ajax
      */
     public function fnAttrib($selector, $attribute, $value)
     {
-        $this->ajax['dom'][$selector] = [
+        $this->ajax['dom'][$selector][] = [
             'f' => 'attr',
             'a' => array(
                 $attribute,
@@ -175,7 +175,7 @@ final class Ajax
      */
     public function fnCss($selector, $property, $value)
     {
-        $this->ajax['dom'][$selector] = [
+        $this->ajax['dom'][$selector][] = [
             'f' => 'css',
             'a' => array(
                 $property,
@@ -189,7 +189,7 @@ final class Ajax
      */
     public function fnAddClass($selector, $class)
     {
-        $this->ajax['dom'][$selector] = [
+        $this->ajax['dom'][$selector][] = [
             'f' => 'addClass',
             'a' => $class
         ];
