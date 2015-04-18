@@ -353,6 +353,7 @@ class Field implements \ArrayAccess
     {
         $this->default = $default_value;
 
+        // @TODO Remember this when setting default values over 0
         if (empty($this->value)) {
             $this->value = $default_value;
         }
