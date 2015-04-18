@@ -48,14 +48,19 @@ class SecurityModel extends Model
         }
 
         // Acces security lib and do login
+
+        /* @var $security \Core\Lib\Security\Security */
         $security = $this->di->get('core.sec.security');
         $security->login($data['login'], $data['password'], isset($data['remember']));
+
+        $data->createField('logged_in', 'boolean');
 
         if ($security->loggedIn() === true) {
             $data['logged_in'] = true;
         }
         else {
-            $data->addError('@', 'Login failed.');
+            $data['logged_in'] = false;
+            $data->addError('@', $this->txt('login_failed'));
         }
 
         return $data;

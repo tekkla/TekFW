@@ -196,7 +196,6 @@ class ConfigController extends Controller
                                     $option->isSelected(1);
                                 }
                             }
-
                     }
 
                     break;

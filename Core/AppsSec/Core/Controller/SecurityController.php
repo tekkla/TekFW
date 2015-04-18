@@ -23,10 +23,7 @@ class SecurityController extends Controller
             $data = $this->model->doLogin($data);
 
             if ($data['logged_in'] === true) {
-                $this->content->msg->success($this->txt('login_ok'));
                 $this->redirectExit();
-            } else {
-                $this->content->msg->danger($this->txt('login_failed'));
             }
         }
         else {
