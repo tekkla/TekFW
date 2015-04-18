@@ -9,82 +9,84 @@ namespace Core\Lib\Content;
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Menu
 {
-	private $root_items = [];
 
-	public function __construct()
-	{
-	}
+    private $root_items = [];
 
-	/**
-	 * Ajax refresh of menu
-	 */
-	public function refreshMenu($menu_item_name)
-	{
-		// Create ajax command to refresh #main_menu
-		$this->ajax->command([
-			'selector' => '#' . $menu_item_name,
-			'args' => $this->compile(),
-			'fn' => 'html',
-			'type' => 'dom'
-		]);
-	}
+    public function __construct()
+    {}
 
-	public function createRootItem($name, $text, $url=null)
-	{
-		return $this->root_items[$name] = $this->createMenuItem($name, $text, $url);
-	}
+    /**
+     * Ajax refresh of menu
+     */
+    public function refreshMenu($menu_item_name)
+    {
+        // Create ajax command to refresh #main_menu
+        $this->ajax->command([
+            'selector' => '#' . $menu_item_name,
+            'args' => $this->compile(),
+            'fn' => 'html',
+            'type' => 'dom'
+        ]);
+    }
 
-	/**
-	 * Creates a new menu item with the given arguments, adds it to the menu item
-	 * storage and returns a reference to the item in storage
-	 * @param string $name
-	 * @param string $text
-	 * @param string $url
-	 * @param boolean $is_root
-	 * @return MenuItem
-	 */
-	public function createMenuItem($name, $text, $url=null)
-	{
-		$menu_item = new MenuItem();
-		$menu_item->setName($name);
-		$menu_item->setText($text);
+    public function createRootItem($name, $text, $url = null)
+    {
+        return $this->root_items[$name] = $this->createMenuItem($name, $text, $url, true);
+    }
 
-		if ($url !== null){
-			$menu_item->setUrl($url);
-		}
+    /**
+     * Creates a new menu item with the given arguments, adds it to the menu item
+     * storage and returns a reference to the item in storage
+     *
+     * @param string $name
+     * @param string $text
+     * @param string $url
+     * @param boolean $is_root
+     *
+     * @return MenuItem
+     */
+    public function createMenuItem($name, $text, $url = null, $root = false)
+    {
+        $menu_item = new MenuItem();
+        $menu_item->setName($name);
+        $menu_item->setText($text);
 
-		return $menu_item;
-	}
+        if ($url !== null) {
+            $menu_item->setUrl($url);
+        }
 
-	/**
-	 * Method to add a menu item to the appropriate item storage by checking
-	 * the root property of the item.
-	 *
-	 * @param MenuItem $menu_item
-	 * @return MenuItem
-	 */
-	public function &addMenuItem(MenuItem &$menu_item)
-	{
-		// Determine which type of item we have. Root or child?
-		$storage = $menu_item->isRoot() ? 'root_items' : 'menu_items';
+        $menu_item->isRoot(true);
 
-		// Store menu item
-		$this->{$storage}[$menu_item->getName()] = $menu_item;
+        return $menu_item;
+    }
 
-		// And return a reference to the stored items
-		return $this->{$storage}[$menu_item->getName()];
-	}
+    /**
+     * Method to add a menu item to the appropriate item storage by checking
+     * the root property of the item.
+     *
+     * @param MenuItem $menu_item
+     * @return MenuItem
+     */
+    public function &addMenuItem(MenuItem &$menu_item)
+    {
+        // Determine which type of item we have. Root or child?
+        $storage = $menu_item->isRoot() ? 'root_items' : 'menu_items';
 
-	/**
-	 * Compiles the menu itemsand creates an html menu as output
-	 */
-	public function getMenu()
-	{
-		return $this->root_items;
-	}
+        // Store menu item
+        $this->{$storage}[$menu_item->getName()] = $menu_item;
+
+        // And return a reference to the stored items
+        return $this->{$storage}[$menu_item->getName()];
+    }
+
+    /**
+     * Compiles the menu itemsand creates an html menu as output
+     */
+    public function getMenu()
+    {
+        return $this->root_items;
+    }
 }
