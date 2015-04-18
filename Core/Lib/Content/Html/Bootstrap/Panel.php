@@ -18,7 +18,7 @@ class Panel extends Div
     private $body = '';
     private $footer = '';
 
-    private $context = 'primary';
+    private $context = 'default';
 
     private $use_title;
 

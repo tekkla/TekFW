@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Content\Html\Bootstrap\Navbar;
 
+use Core\AppsSec\Core\Exception\HtmlException;
+
 /**
  * Abstract NavbarElement
  *
@@ -16,6 +18,12 @@ abstract class NavbarElementAbstract
      * @var string
      */
     protected $type;
+
+    /**
+     *
+     * @var string
+     */
+    protected $side;
 
     /**
      *
@@ -47,6 +55,55 @@ abstract class NavbarElementAbstract
     final public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * Sets element alignment to "left" or "right".
+     *
+     * @param string $align
+     *
+     * @throws HtmlException
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\NavbarElementAbstract
+     */
+    final public function setAlign($align)
+    {
+        $sides = [
+            'left',
+            'right'
+        ];
+
+        if (! in_array($align, $sides)) {
+            Throw new HtmlException(sprintf('Your "%s" is not a valid navbar element position. Allowed are %s.', $align, implode(', ', $sides)));
+        }
+
+        $this->side = $align;
+
+        return $this;
+    }
+
+    /**
+     * Sets element alignment to "left".
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\NavbarElementAbstract
+     */
+    final public function alignLeft()
+    {
+        $this->side = 'left';
+
+        return $this;
+    }
+
+    /**
+     * Sets element alignment to "right".
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\NavbarElementAbstract
+     */
+    final public function alignRight()
+    {
+        $this->side = 'right';
+
+        return $this;
     }
 
     /**

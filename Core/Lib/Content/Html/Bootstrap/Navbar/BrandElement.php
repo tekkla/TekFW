@@ -1,6 +1,9 @@
 <?php
 namespace Core\Lib\Content\Html\Bootstrap\Navbar;
 
+use Core\Lib\Content\Html\Elements\Img;
+use Core\Lib\Content\Html\Elements\A;
+
 /**
  * Brand element for Bootstrap Navbar
  *
@@ -15,7 +18,7 @@ class BrandElement extends NavbarElementAbstract
      *
      * @var string
      */
-    private $brand_type = 'text';
+    protected $type = 'brand';
 
     /**
      *
@@ -25,41 +28,46 @@ class BrandElement extends NavbarElementAbstract
 
     /**
      *
-     * @var string
+     * @var A
      */
-    private $url = '';
+    private $link = false;
 
     /**
-     *
-     * @var string
-     */
-    private $alt = 'Brand';
-
-    /**
-     *
-     * @var boolean
-     */
-    private $ajax = false;
-
-    /**
-     * Flags brand as image and sets image src and alt attribute.
+     * Creates a brand imageobject and returns reference.
      *
      * @param string $src
-     * @param string $alt
+     * @param string $alt Optional
      *
+     * @return \Core\Lib\Content\Html\Elements\Img
+     */
+    public function createImage($src, $alt = '')
+    {
+        /* @var $img \Core\Lib\Content\Html\Elements\Img */
+        $img = $this->factory->create('Elements\Img');
+        $img->setSrc($src);
+
+        if (! empty($alt)) {
+            $img->setAlt($alt);
+        }
+
+        return $this->content = $img;
+    }
+
+    /**
+     * Sets brand imageobject.
+     *
+     * @param Img $img
      * @return \Core\Lib\Content\Html\Bootstrap\Navbar\BrandElement
      */
-    public function setImage($src, $alt = '')
+    public function setImage(Img $img)
     {
-        $this->brand_type = 'image';
-        $this->content = $src;
-        $this->alt = $alt;
+        $this->content = $img;
 
         return $this;
     }
 
     /**
-     * Flags brand as text and sets the text.
+     * Sets brandtext.
      *
      * @param string $text
      *
@@ -67,52 +75,28 @@ class BrandElement extends NavbarElementAbstract
      */
     public function setText($text)
     {
-        $this->brand_type = 'text';
         $this->content = $text;
 
         return $this;
     }
 
-    /**
-     * Returns brand type.
-     *
-     * @return string
-     */
-    public function getBrandType()
+    public function createLink($url='')
     {
-        return $this->brand_type;
+        /* @var $a \Core\Lib\Content\Html\Elements\A */
+        $a = $this->factory->create('Elements\A');
+
+        if (!empty($url)) {
+            $a->setHref($url);
+        }
+
+        return $this->link = $a;
     }
 
-    /**
-     * Set url to use for wrapping link of brand.
-     *
-     * @param string $url
-     *
-     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\BrandElement
-     */
-    public function setUrl($url)
+    public function setLink(A $a)
     {
-        $this->url = $url;
+        $this->link = $a;
 
         return $this;
-    }
-
-    /**
-     * Sets or gets ajax flag.
-     *
-     * @param string $ajax
-     *
-     * @return <boolean>, <\Core\Lib\Content\Html\Bootstrap\Navbar\LinkElement>
-     */
-    public function isAjax($ajax = null)
-    {
-        if (isset($ajax)) {
-            $this->ajax = (bool) $ajax;
-            return $this;
-        }
-        else {
-            return $this->ajax;
-        }
     }
 
     /**
@@ -123,20 +107,16 @@ class BrandElement extends NavbarElementAbstract
      */
     public function build()
     {
-        $html = '';
+        // Create brand
+        $html = $this->content instanceof Img ? $this->content->build() : $this->content;
 
-        if ($this->url) {
-            $html = '<a class="navbar-brand" href="' . $this->url . '"' . ($this->ajax ? ' data-ajax' : '') . '>';
-        }
+        // Brand wrapped by a link
+        if ($this->link instanceof A) {
 
-        if ($this->brand_type == 'image') {
-            $html .= '<img alt="' . $this->alt . '" src="' . $this->content . '">';
-        }
-        else
-            $html .= $this->content;
+            $this->link->addCss('navbar-brand');
+            $this->link->setInner($html);
 
-        if ($this->url) {
-            $html .= '</a>';
+            $html = $this->link->build();
         }
 
         return $html;

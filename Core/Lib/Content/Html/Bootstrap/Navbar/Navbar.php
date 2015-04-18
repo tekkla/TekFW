@@ -4,56 +4,49 @@ namespace Core\Lib\Content\Html\Bootstrap\Navbar;
 use Core\Lib\Content\Html\Elements\Nav;
 use Core\AppsSec\Core\Exception\HtmlException;
 
+/**
+ * Navbar object
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @license MIT
+ * @copyright 2015 by author
+ */
 class Navbar extends Nav
 {
 
     /**
-     * Flag for static navbar
      *
      * @var boolean
      */
-    protected $static = false;
+    protected $fixed = false;
 
     /**
-     * Menuitems
      *
-     * @var array
-     */
-    private $items = [];
-
-    /**
-     * Brand to show
-     *
-     * @var string
-     */
-    protected $brand = '';
-
-    /**
-     * Url used to underlay brand
-     *
-     * @var string
-     */
-    protected $home_url = '/';
-
-    /**
-     * Flag to wrap navbar by a BS fluid container
-     *
-     * @var boolean
+     * @var bool
      */
     protected $fluid = false;
 
     /**
-     * Flag to create a multilevel menu
      *
-     * @var boolean
+     * @var bool
      */
-    protected $multilevel = false;
+    protected $collapsible = true;
+
+    /**
+     *
+     * @var array
+     */
+    private $elements = [];
 
     protected $css = [
         'navbar',
         'navbar-default'
     ];
 
+    /**
+     *
+     * @var array
+     */
     private $element_types = [
         'brand',
         'link',
@@ -62,17 +55,36 @@ class Navbar extends Nav
         'text'
     ];
 
-    public function isStatic($static = null)
+    /**
+     * Sets or gets fixed to top flag.
+     *
+     * @param bool $fixed_to_top
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\Navbar|boolean
+     */
+    public function setFixed($position = 'top')
     {
-        if (isset($static)) {
-            $this->static = (bool) $static;
-            return $this;
+        $positions = [
+            'top',
+            'bottom'
+        ];
+
+        if (!in_array($position, $positions)) {
+            Throw new HtmlException(sprintf('They type "%s" is not a valid navbar elementtype. Allowed are %s.', $position, implode(', ', $positions)));
         }
-        else {
-            return $this->static;
-        }
+
+        $this->fixed = $position;
+
+        return $this;
     }
 
+    /**
+     * Sets or gets fluid container flag.
+     *
+     * @param bool $fluid
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\Navbar|boolean
+     */
     public function isFluid($fluid = null)
     {
         if (isset($fluid)) {
@@ -84,6 +96,13 @@ class Navbar extends Nav
         }
     }
 
+    /**
+     * Sets or gets collapsible flag.
+     *
+     * @param bool $collapsible
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Navbar\Navbar|boolean
+     */
     public function isCollapsible($collapsible = null)
     {
         if (isset($collapsible)) {
@@ -95,7 +114,14 @@ class Navbar extends Nav
         }
     }
 
-
+    /**
+     * Adds a navbarelement to the elements stack.
+     * Requesting a no allowed elementtype will cause a HtmlException.
+     *
+     * @param NavbarElementAbstract $element
+     *
+     * @throws HtmlException
+     */
     public function addNavbarElement(NavbarElementAbstract $element)
     {
         if (! in_array($element->getType(), $this->element_types)) {
@@ -105,6 +131,16 @@ class Navbar extends Nav
         $this->elements[] = $element;
     }
 
+    /**
+     * Creates a navbarelement, adds it to the elements stack and returns a reference on it.
+     * Requesting a no allowed elementtype will cause a HtmlException.
+     *
+     * @param string $type
+     *
+     * @throws HtmlException
+     *
+     * @return \Core\Lib\Content\Html\HtmlAbstract
+     */
     public function &createNavbarElement($type)
     {
         if (! in_array($type, $this->element_types)) {
@@ -121,7 +157,7 @@ class Navbar extends Nav
      */
     public function build()
     {
-        if ($this->static) {
+        if ($this->fixed_to_top) {
             $this->css[] = 'navbar-static-top';
         }
 
@@ -142,7 +178,7 @@ class Navbar extends Nav
             $this->inner .= '<a href="' . $this->home_url . '" class="navbar-brand">' . $this->brand . '</a>';
         }
 
-        $this->inner .= '
+        $this->inner .= 's
 		</div>
 		<nav class="collapse navbar-collapse main-menu-collapse" role="navigation">
 			<ul class="nav navbar-nav">';
