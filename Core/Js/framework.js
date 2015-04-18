@@ -3,12 +3,16 @@
 // ----------------------------------------------------------------------------
 function webReadyAndAjax() {
     
+    
     // Bind datepicker
     $('.form-datepicker').webDatepicker();
 
     // Bind error popover
     $('.form-control[data-error]').webErrorPop();
 
+    // Bind selectpicker
+    $('.selectpicker').selectpicker();
+    
     // beautifiying xdebug oputput including ajax return values add styling
     // hooks to any XDEBUG output
     $('font>table').addClass('xdebug-error');
@@ -77,8 +81,9 @@ $(document).on('keyup input paste', 'textarea[maxlength]', function() {
         }
         var counterid = $(this).data('counter');
 
-        if ($(counterid).length > 0)
+        if ($(counterid).length > 0) {
             $(counterid).text(limit - chars);
+        }
     }
 });
 
@@ -114,14 +119,16 @@ $(document).on('click', '.btn-back', function(event) {
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-confirm]', function(event) {
 
-    if ($(this).data('ajax') !== undefined)
+    if ($(this).data('ajax') !== undefined) {
         return;
+    }
 
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
         var result = confirm($(this).data('confirm'));
-        if (!result)
+        if (!result) {
             return false;
+        }
     }
 });
 
@@ -199,7 +206,8 @@ $(document).on('click', '*[data-ajax]', function(event) {
 
     // Add error handler
     ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-        $('#message').append('<div class="panel panel-danger">' + XMLHttpRequest.responseText + '</div>');
+        var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText : 'Ajax Request Error: ' + textStatus;
+        console.log(errortext);
     };
 
     // Fire ajax request!
