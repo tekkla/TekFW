@@ -2,12 +2,11 @@
 namespace Core\Lib\Errors\Exceptions;
 
 /**
- *
- * @author Michael
- *        
+ * WarningException.php
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class WarningException extends \ErrorException
 {
 }
-
-?>

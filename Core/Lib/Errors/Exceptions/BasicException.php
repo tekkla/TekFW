@@ -27,6 +27,30 @@ class BasicException extends \ErrorException
     protected $public = false;
 
     /**
+     *
+     * @var boolean
+     */
+    protected $error_log = true;
+
+    /**
+     *
+     * @var boolean
+     */
+    protected $clean_buffer = false;
+
+    /**
+     *
+     * @var boolean
+     */
+    protected $send_mail = false;
+
+    /**
+     *
+     * @var boolean
+     */
+    protected $to_db = true;
+
+    /**
      * Is this a fatal exception?
      *
      * @return boolean
@@ -44,5 +68,45 @@ class BasicException extends \ErrorException
     public function getPublic()
     {
         return is_bool($this->public) ? $this->public : false;
+    }
+
+    /**
+     * Is errorlogging active on this exception?
+     *
+     * @return boolean
+     */
+    public function getErrorLog()
+    {
+        return is_bool($this->error_log) ? $this->error_log : false;
+    }
+
+    /**
+     * Should output buffer be cleaned before error output?
+     *
+     * @return boolean
+     */
+    public function getCleanBuffer()
+    {
+        return is_bool($this->clean_buffer) ? $this->clean_buffer : false;
+    }
+
+    /**
+     * Send mail to inform admin about error?
+     *
+     * @return boolean
+     */
+    public function getSendMail()
+    {
+        return is_bool($this->send_mail) ? $this->send_mail : false;
+    }
+
+    /**
+     * Write error to db driven errorlog?
+     *
+     * @return boolean
+     */
+    public function getToDb()
+    {
+        return is_bool($this->to_db) ? $this->to_db : false;
     }
 }
