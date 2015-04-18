@@ -72,6 +72,7 @@ class DataSelect extends Select
     public function setSelectedValue($selected)
     {
         $this->selected = $selected;
+
         return $this;
     }
 
@@ -82,28 +83,28 @@ class DataSelect extends Select
      */
     public function build()
     {
-        foreach ($this->datasource as $val => $inner) {
+        foreach ($this->datasource as $row) {
 
             $option = $this->createOption();
 
             // inner will always be used
-            $option->setInner($inner);
+            $option->setInner($row[1]);
 
             // if we have an assoc datasource we use the value attribute
             if ($this->datatype == 'assoc') {
-                $option->setValue($val);
+                $option->setValue($row[0]);
             }
 
             // in dependence of the data type is value to be selected $val or $inner
             if (isset($this->selected)) {
                 // A list of selected?
                 if (is_array($this->selected)) {
-                    if (array_search(($this->datatype == 'assoc' ? $val : $inner), $this->selected)) {
+                    if (array_search(($this->datatype == 'assoc' ? $row[0] : $row[1]), $this->selected)) {
                         $option->isSelected(1);
                     }
                 } // Or a value to look for?
                 else {
-                    if ($this->selected == ($this->datatype == 'assoc' ? $val : $inner)) {
+                    if ($this->selected == ($this->datatype == 'assoc' ? $row[0] : $row[1])) {
                         $option->isSelected(1);
                     }
                 }
