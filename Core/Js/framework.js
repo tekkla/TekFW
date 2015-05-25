@@ -232,9 +232,11 @@ function parseJson(json) {
                 
                 var selector = $(id);
                 
-                $.each(cmd, function(i, x) {
-                    selector = selector[x.f](x.a);
-                });
+                if (selector !== undefined) {
+                    $.each(cmd, function(i, x) {
+                        selector = selector[x.f](x.a);
+                    });
+                }
             });
         }
         
