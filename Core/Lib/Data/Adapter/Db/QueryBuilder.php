@@ -414,20 +414,25 @@ class QueryBuilder
 
     private function processQueryDefinition($def)
     {
+        // Store defintion
+        $this->definition = $def;
+
         // Use set query type or use 'row' as default
-        if (isset($def['method'])) {
-            $this->method = strtoupper($def['method']);
-            unset($def['method']);
+        if (isset($this->definition['method'])) {
+            $this->method = strtoupper($this->definition['method']);
+            unset($this->definition['method']);
         }
         else {
             $this->method = 'SELECT';
         }
 
-        // Store defintion
-        $this->definition = $def;
-
         // All methods need the table defintion
         $this->processTblDefinition();
+
+        // Process data definition?
+        if (isset($this->definition['data'])) {
+            $this->processDataDefinition();
+        }
 
         switch ($this->method) {
 
@@ -477,29 +482,33 @@ class QueryBuilder
      */
     private function processInsert()
     {
-        if (isset($this->definition['data'])) {
-            $this->processDataDefinition();
+        if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
+            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
         }
-        else {
-            if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
-                Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
-            }
-            if (! isset($this->definition['params'])) {
-                Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
-            }
 
-            $this->processFieldDefinition();
-            $this->processParamsDefinition();
+        if (! isset($this->definition['params'])) {
+            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
         }
+
+        $this->processFieldDefinition();
+        $this->processParamsDefinition();
     }
 
     private function processUpdate()
     {
+        if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
+            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
+        }
+        if (! isset($this->definition['params'])) {
+            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
+        }
+
         $this->processFieldDefinition();
         $this->processFilterDefinition();
-        $this->processOrderDefinition();
-        $this->processLimitDefinition();
         $this->processParamsDefinition();
+
+        $this->processLimitDefinition();
+        $this->processOrderDefinition();
     }
 
     private function processDelete()
@@ -554,34 +563,74 @@ class QueryBuilder
      */
     private function processDataDefinition()
     {
-        switch (true) {
-            case ($this->definition['data'] instanceof Container):
-                foreach ($this->definition['data'] as $field_name => $field) {
-                    $this->fields[] = $field_name;
+        // Data definition only as \Core\Lib\Data\Container ever<thing else causes an exception
+        if (! $this->definition['data'] instanceof Container) {
+            Throw new \RuntimeException('QueryBuilder can only process data attributes of type \Core\Lib\Data\Container.');
+        }
 
-                    $value = $field->get();
+        // Autodetection of method when none is set e.g. SELECT is set.
+        if ($this->method == 'SELECT') {
 
-                    if ($field->getSerialize()) {
-                        $value = serialize($value);
-                    }
+            // Get name of primary field. Is false when no primary field exists.
+            $primary = $this->definition['data']->getPrimary();
 
-                    $this->params[':' . $field_name] = $value;
+            // Update mathod to UPDATE when primary exists and has a value. Otherwise we insert a new record.
+            $this->method = ($primary !== false && !empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
+        }
+
+        // Check for allowed querymethods
+        $allowed_methods = [
+            'UPDATE',
+            'INSERT',
+            'REPLACE'
+        ];
+
+        if (! in_array($this->method, $allowed_methods)) {
+            Throw new \RuntimeException('QueryBuilder can only process querymethods of type "update", "insert" or "replace".');
+        }
+
+        /* @var $field \Core\Lib\Data\Field */
+        foreach ($this->definition['data'] as $field_name => $field) {
+
+            // Value handling
+            $value = $field->get();
+
+            // Field is flagged as serialized?
+            if ($field->getSerialize()) {
+                $value = serialize($value);
+            }
+
+            // Handle fields flagged as primary
+            if ($field->getPrimary()) {
+
+                // Different modes need different handlings
+                switch ($this->method) {
+
+                    // Ignore field when mode is insert
+                    case 'INSERT':
+                        continue;
+                        break;
+
+                    // Use field as filter on update
+                    case 'UPDATE':
+                        $this->definition['filter'] = $field_name . ' = :__primary_' . $field_name;
+                        $this->definition['params'][':__primary_' . $field_name] = $value;
+                        break;
+
+                    // Add field to fieldlist on replace
+                    case 'REPLACE':
+                    default:
+                        $this->definition['fields'][] = $field_name;
+                        $this->definition['params'][':' . $field_name] = $value;
+                        break;
                 }
-                break;
+            }
+            else {
 
-            case (is_array($this->definition['data'])):
-            default:
-
-                if (! $this->isAssoc($this->definition['data'])) {
-                    Throw new \RuntimeException('QueryBuilder can only use assoc arrayed data to process fieldlist');
-                }
-
-                foreach ($this->definition['data'] as $field_name => $value) {
-                    $this->fields[] = $field_name;
-                    $this->params[':' . $field_name] = $value;
-                }
-
-                break;
+                // Simple field and value
+                $this->definition['fields'][] = $field_name;
+                $this->definition['params'][':' . $field_name] = $value;
+            }
         }
     }
 
