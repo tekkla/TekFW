@@ -42,7 +42,14 @@ class Database extends AdapterAbstract
      *
      * @var string
      */
-    private $sql;
+    private $sql = '';
+
+    /**
+     * Used parameters
+     *
+     * @var array
+     */
+    private $params = [];
 
     /**
      * Table name
@@ -188,32 +195,32 @@ class Database extends AdapterAbstract
      */
     public function query($sql, $params = [], $autoexec = false)
     {
+        // Store Sql / definition and parameter
+        $this->sql = $sql;
+        $this->params = $params;
+
+        // Reset PDO statement
         $this->stmt = null;
 
-        if (is_array($sql)) {
+        if (is_array($this->sql)) {
 
-            $builder = new QueryBuilder($sql);
-            $sql = $builder->build();
+            $builder = new QueryBuilder($this->sql);
+            $this->sql = $builder->build();
 
             // Params?
-            $params = $builder->getParams();
+            $this->params = $builder->getParams();
         }
 
-        $this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $sql));
+        $this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $this->sql));
 
-        #if ($this->di->get('core.cfg')->get('Core', 'log_db')) {
-        #    $this->fbLog($sql);
-        #}
+        if (! empty($this->params)) {
 
-        if (!empty($params)) {
-
-            foreach ($params as $parameter => $value) {
+            foreach ($this->params as $parameter => $value) {
                 $this->stmt->bindValue($parameter, $value);
             }
         }
 
-        if ($autoexec == true)
-        {
+        if ($autoexec == true) {
             return $this->stmt->execute();
         }
         else {
@@ -300,7 +307,6 @@ class Database extends AdapterAbstract
         return $this->stmt->execute();
     }
 
-
     /**
      * Returns all queried data.
      *
@@ -354,6 +360,7 @@ class Database extends AdapterAbstract
 
         return $data;
     }
+
     /**
      * PDO fetch.
      *
@@ -395,9 +402,21 @@ class Database extends AdapterAbstract
     }
 
     /**
+     * Shorthand method for row count.
+     * Same as rowCount() method.
      * Returns number or rows in resultset.
      *
-     * @return number
+     * @return int
+     */
+    public function count()
+    {
+        return $this->rowCount();
+    }
+
+    /**
+     * Returns number or rows in resultset.
+     *
+     * @return int
      */
     public function rowCount()
     {
@@ -613,5 +632,17 @@ class Database extends AdapterAbstract
     public function getQueryBuilder()
     {
         return new QueryBuilder();
+    }
+
+    /**
+     * Returns current sql string and parameter array.
+     *
+     * @return multitype:string array
+     */
+    public function getSqlAndParams() {
+        return [
+            'sql' => $this->sql,
+            'params' => $this->params
+        ];
     }
 }
