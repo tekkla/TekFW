@@ -106,8 +106,9 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
     /**
      * Parses a field definition array and created container fields from it.
-     * A field withou type attribute is treated as
-     * string. You can use the following attributes:
+     * A field withou type attribute is treated as string.
+     *
+     * You can use the following attributes:
      *
      * type => String, integer, float or any other datatype you want to use. Be sure a componenten like
      * DataAdapter can handle this datatype. Default: string
@@ -130,7 +131,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         }
 
         // When there is no field definition, than try to load this defintions
-        if (empty($fields) && !empty($this->available) && is_array($this->available)) {
+        if (empty($fields) && ! empty($this->available) && is_array($this->available)) {
 
             // The field defintion list can be stored in use property
             $fields = $this->available;
@@ -286,7 +287,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         /* @var $field \Core\Lib\Data\Field */
         foreach ($this->fields as $field) {
 
-            /* @todo CHECK THIS TO APPLY RULES FOR PK NEEDED? */
+            /* @TODO CHECK THIS TO APPLY RULES FOR PK NEEDED? */
             if ($field->getPrimary()) {
                 continue;
             }
@@ -331,21 +332,6 @@ class Container implements \IteratorAggregate, \ArrayAccess
         }
 
         return $this;
-    }
-
-    /**
-     * Sets a field related error message.
-     *
-     * @param string $field Fieldname
-     * @param string $error Errortext
-     *
-     * @deprecated
-     *
-     * @return \Core\Lib\Data\DataContainer
-     */
-    public function setError($field, $error)
-    {
-        return $this->addError($field, $error);
     }
 
     /**
