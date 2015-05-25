@@ -100,10 +100,6 @@ class Editbox extends Panel
             Throw new HtmlException('Editbox control needs a form object.');
         }
 
-        if (empty($this->cancel_action)) {
-            Throw new HtmlException('Editbox control needs a cancel action to bind on cancel button.');
-        }
-
         // Editbox CSS class needed
         $this->css[] = 'editbox';
 
@@ -131,12 +127,20 @@ class Editbox extends Panel
             </li>
             <li>
                 <strong>' . $this->caption . '</strong>
-            </li>
+            </li>';
+
+            if (!empty($this->cancel_action)) {
+
+            $heading .= '
             <li class="pull-right">
                 <a class="btn btn-sm btn-' . $this->getContext() . '" href="' . $this->cancel_action . '"' . ($this->is_ajax ? ' data-ajax' : '') . '>
                     <i class="fa fa-times"></i>
                 </a>
-            </li>
+            </li>';
+
+            }
+
+            $heading .= '
         </ul>';
 
         $this->setHeading($heading);
