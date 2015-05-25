@@ -279,13 +279,18 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return boolean
      */
-    public function validate()
+    public function validate($options = [])
     {
         /* @var $validator \Core\Lib\Data\Validator\Validator */
         $validator = $this->di->get('core.data.validator');
 
         /* @var $field \Core\Lib\Data\Field */
         foreach ($this->fields as $field) {
+
+            // Skip field?
+            if (isset($options['skip']) && in_array($field->getName(), $options['skip'])) {
+                continue;
+            }
 
             /* @TODO CHECK THIS TO APPLY RULES FOR PK NEEDED? */
             if ($field->getPrimary()) {
@@ -493,8 +498,25 @@ class Container implements \IteratorAggregate, \ArrayAccess
         return $this;
     }
 
-    public function getColumn($field)
-    {}
+    /**
+     * Checks fields in container for a primary field and return the name of the field when found.
+     * Returns boolean false when no such field exists.
+     *
+     * @return string|bool
+     */
+    public function getPrimary()
+    {
+        $primary = false;
+
+        foreach ($this->fields as $field) {
+            if ($field->getPrimary()) {
+                $primary = $field->getName();
+                break;
+            }
+        }
+
+        return $primary;
+    }
 
     /**
      * (non-PHPdoc)
