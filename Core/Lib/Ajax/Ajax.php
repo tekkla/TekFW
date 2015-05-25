@@ -87,11 +87,29 @@ final class Ajax
 
         if ($messages) {
 
-            foreach ($messages as $message) {
+            foreach ($messages as $msg) {
 
-                $this->ajax['dom']['#message'] = [
-                    'a' => $message->build(),
-                    'f' => 'append'
+                $html = PHP_EOL . '<div class="alert alert-' . $msg->getType();
+
+                // Message dismissable?
+                if ($msg->getDismissable()) {
+                   $html .= ' alert-dismissable';
+                }
+
+                // Fadeout message?
+                if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                    $html .= ' fadeout';
+                }
+
+                 $html .= '">
+				    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+				    ' . $msg->getMessage() . '
+			    </div>';
+
+
+                $this->ajax['dom']['#message'][] = [
+                    'f' => 'append',
+                    'a' => $html,
                 ];
             }
         }
