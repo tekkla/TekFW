@@ -220,7 +220,7 @@ class Database extends AdapterAbstract
             }
         }
 
-        if ($autoexec == true) {
+        if ($autoexec === true) {
             return $this->stmt->execute();
         }
         else {
@@ -444,8 +444,6 @@ class Database extends AdapterAbstract
      */
     public function lastInsertId()
     {
-        $this->stmt->execute();
-
         return $this->dbh->lastInsertId();
     }
 
@@ -460,7 +458,7 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * Commits PDO transaction
+     * Commits PDO transaction.
      *
      * @return boolean
      */
