@@ -136,13 +136,18 @@ $(document).on('click', '*[data-confirm]', function(event) {
 // Ajax based click-handler to links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-ajax]', function(event) {
+    loadAjax(this);
+});
 
+function loadAjax(element) {
+    
+    
     // confirmation wanted?
-    if ($(this).data('confirm') !== undefined) {
-        var result = confirm($(this).data('confirm'));
+    if ($(element).data('confirm') !== undefined) {
+        var result = confirm($(element).data('confirm'));
         if (!result) {
             return false;
-    	}
+        }
     }
 
     // Prepare options object
@@ -159,16 +164,16 @@ $(document).on('click', '*[data-ajax]', function(event) {
     // indicates that we are going to send a
     // form. Without this, it is a normal link, that we are
     // going to load.
-    if ($(this).data('form') === undefined) {
+    if ($(element).data('form') === undefined) {
 
         // Ext links will be handled by GET
         ajaxOptions.type = 'GET';
 
         // Try to get url either from links href attribute or
-        if ($(this).attr('href') !== undefined) {
-            var url = $(this).attr('href');
-        } else if ($(this).data('href') !== undefined) {
-            var url = $(this).data('href');
+        if ($(element).attr('href') !== undefined) {
+            var url = $(element).attr('href');
+        } else if ($(element).data('href') !== undefined) {
+            var url = $(element).data('href');
         } else {
             alert('Ext Ajax: No URI to query found. Neither as "href" nor as "data-href". Aborting request.');
             return false;
@@ -180,7 +185,7 @@ $(document).on('click', '*[data-ajax]', function(event) {
         ajaxOptions.type = 'POST';
 
         // Get the form ID from the clicked link
-        var id = $(this).data('form');
+        var id = $(element).data('form');
 
         // Get action url
         var url = $('#' + id).attr('action');
@@ -190,9 +195,9 @@ $(document).on('click', '*[data-ajax]', function(event) {
         // control the hidden form where we put the content
         // before serialization gathers the form data
         // for ajax post.
-        if ($(this).data('inline-id') !== undefined && $(this).data('inline-control') !== undefined) {
-            var control = $(this).data('inline-control');
-            var content = $('#' + $(this).data('inline-id')).html();
+        if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
+            var control = $(element).data('inline-control');
+            var content = $('#' + $(element).data('inline-id')).html();
             $('#' + control).val(content);
         }
 
@@ -213,8 +218,8 @@ $(document).on('click', '*[data-ajax]', function(event) {
     // Fire ajax request!
     $.ajax(ajaxOptions);
     
-    event.preventDefault();
-});
+    event.preventDefault();    
+}
 
 // ----------------------------------------------------------------------------
 // Json parser for Ext ajax response
@@ -236,6 +241,9 @@ function parseJson(json) {
                     $.each(cmd, function(i, x) {
                         selector = selector[x.f](x.a);
                     });
+                }
+                else {
+                    console.log('Selector "' + id + '" not found.');
                 }
             });
         }

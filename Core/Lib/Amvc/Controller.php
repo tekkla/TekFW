@@ -274,15 +274,15 @@ class Controller extends MvcAbstract
     {
         $this->is_ajax = true;
 
-        $this->ajax = $this->di['core.ajax.cmd'];
+        $this->ajax = $this->di->get('core.ajax')->createCommand('Dom\Html');
+
+        $this->ajax->setArgs($this->run($action, $params));
+        $this->ajax->setId(get_called_class() . '::' . $action);
 
         if ($selector) {
             $this->ajax->setSelector($selector);
         }
 
-        $content = $this->run($action, $params);
-
-        $this->ajax->setArgs($content);
         $this->ajax->send();
 
         return $this;
@@ -619,6 +619,34 @@ class Controller extends MvcAbstract
         }
 
         return $this;
+    }
+
+    /**
+     * Sets the function to use when result is returned.
+     *
+     * @param string $function
+     *
+     * @return \Core\Lib\Amvc\Controller
+     */
+    final protected function setAjaxFunction($function)
+    {
+        if ($this->is_ajax) {
+            $this->ajax->setFunction($function);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns an empty ajax command object
+     *
+     * @param string $command_name Name of command to get. Default: Dom\Html
+     *
+     * @return \Core\Lib\Ajax\AjaxCommand
+     */
+    public function getAjaxCommand($command_name = 'Dom\Html')
+    {
+        return $this->di->get('core.ajax')->createCommand($command_name);
     }
 
     /**

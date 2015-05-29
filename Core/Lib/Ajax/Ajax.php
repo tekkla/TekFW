@@ -57,8 +57,16 @@ final class Ajax
         // Create alert on missing target when type is in need-target list
         if ($cmd->getType() == 'dom' && ! $cmd->getSelector()) {
 
-            $this->fnConsole('Your DOM ajax response needs a selector but none is set. Aborting.');
-            $this->fnConsole($cmd->getArgs());
+            $this->ajax['act'][] = [
+                'f' => 'console',
+                'a' => 'Your DOM ajax response from "' . $cmd->getId() . '" needs a selector but none is set'
+            ];
+
+            $this->ajax['act'][] = [
+                'f' => 'console',
+                'a' => $cmd->getArgs()
+            ];
+
             return;
         }
 
@@ -83,17 +91,18 @@ final class Ajax
     {
 
         // Add messages
-        $messages = $this->di['core.content.message']->getMessages();
+        $messages = $this->di->get('core.content.message')->getMessages();
 
         if ($messages) {
 
             foreach ($messages as $msg) {
 
-                $html = PHP_EOL . '<div class="alert alert-' . $msg->getType();
+                $html = '
+                <div class="alert alert-' . $msg->getType();
 
                 // Message dismissable?
                 if ($msg->getDismissable()) {
-                   $html .= ' alert-dismissable';
+                    $html .= ' alert-dismissable';
                 }
 
                 // Fadeout message?
@@ -101,15 +110,14 @@ final class Ajax
                     $html .= ' fadeout';
                 }
 
-                 $html .= '">
-				    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-				    ' . $msg->getMessage() . '
-			    </div>';
-
+                $html .= '">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    ' . $msg->getMessage() . '
+                    </div>';
 
                 $this->ajax['dom']['#message'][] = [
                     'f' => 'append',
-                    'a' => $html,
+                    'a' => $html
                 ];
             }
         }
@@ -128,158 +136,22 @@ final class Ajax
         return $this->ajax;
     }
 
-    // # PREDEFINED METHODS ##############################################################################################
-
     /**
-     * Create an msgbox in browser
+     * Creates and returns a named ajax command.
+     * Commands are split into DOM (Dom) manipulation and predifined actions (Act) to call.
      *
-     * @param $msg
-     */
-    public function fnAlert($msg)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'alert',
-            'a' => $msg
-        ];
-    }
-
-    /**
-     * Create a HTML ajax which changes the html of target selector
+     * @param string $command_name Name of command to create. Default: Dom\Html
      *
-     * @param $target Selector to be changed
-     * @param $content Content be used
-     * @param $mode Optional mode how to change the selected element. Can be: replace(default) | append | prepend | remove | after | before
+     * @return \Core\Lib\Ajax\Command
      */
-    public function fnHtml($selector, $content)
+    public function createCommand($command_name = 'Dom\Html')
     {
-        $this->ajax['dom'][$selector][] = [
-            'f' => 'html',
-            'a' => $content
-        ];
-    }
+        if (empty($command_name)) {
+            $command_name = 'Dom\Html';
+        }
 
-    /**
-     * Send an error to the error div
-     *
-     * @param unknown_type $error
-     */
-    public function fnError($error, $id)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'error',
-            'a' => [
-                $error,
-                $id
-            ]
-        ];
-    }
+        $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
-    /**
-     * Change a DOM attribute
-     */
-    public function fnAttrib($selector, $attribute, $value)
-    {
-        $this->ajax['dom'][$selector][] = [
-            'f' => 'attr',
-            'a' => array(
-                $attribute,
-                $value
-            )
-        ];
-    }
-
-    /**
-     * Change css property of dom element
-     */
-    public function fnCss($selector, $property, $value)
-    {
-        $this->ajax['dom'][$selector][] = [
-            'f' => 'css',
-            'a' => array(
-                $property,
-                $value
-            )
-        ];
-    }
-
-    /**
-     * Change css property of dom element
-     */
-    public function fnAddClass($selector, $class)
-    {
-        $this->ajax['dom'][$selector][] = [
-            'f' => 'addClass',
-            'a' => $class
-        ];
-    }
-
-    /**
-     * Calls a page refresh by loading the provided url.
-     * Calls location.href="url" in page.
-     *
-     * @param string|Url $url Can be an url as string or an Url object on which the getUrl() method is called
-     */
-    public function fnRefresh($url)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'refresh',
-            'a' => $url
-        ];
-    }
-
-    /**
-     * Creates ajax response to load a js file.
-     *
-     * @param string $file Complete url of file to load
-     */
-    public function fnLoadScript($file)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'load_script',
-            'a' => $file
-        ];
-    }
-
-    /**
-     * Create console log output
-     *
-     * @param string $msg
-     */
-    public function fnConsole($msg)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'console',
-            'a' => $msg
-        ];
-    }
-
-    /**
-     * Creates a print_r console output of provided $var
-     *
-     * @param mixed $var
-     */
-    public function fnPrintVar($var)
-    {
-        $this->ajax['act'][] = [
-            'f' => 'dump',
-            'a' => print_r($var, true)
-        ];
-    }
-
-    /**
-     * Creates a var_dump console output of provided $var
-     *
-     * @param mixed $var
-     */
-    public function fnDumpVar($var)
-    {
-        ob_start();
-
-        var_dump($var);
-
-        $this->ajax['act'][] = [
-            'f' => 'dump',
-            'a' => ob_get_clean(),
-        ];
+        return $this->di->instance($class);
     }
 }

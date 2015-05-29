@@ -16,28 +16,35 @@ class AjaxCommand
      *
      * @var string
      */
-    private $type = 'dom';
+    protected $type = 'dom';
 
     /**
      * The documents DOM ID the ajax content should go in
      *
      * @var string
      */
-    private $selector = '';
+    protected $selector = '';
 
     /**
      * Parameters to pass into the controlleraction
      *
      * @var array
      */
-    private $args = [];
+    protected $args = [];
 
     /**
      * The type of the current ajax.
      *
      * @var string
      */
-    private $fn = 'html';
+    protected $fn = 'html';
+
+    /**
+     * Identifier settable to use mainly on debugging.
+     *
+     * @var string
+     */
+    protected $id = '';
 
     /**
      * Constructor with option to parse command from definition array
@@ -144,7 +151,7 @@ class AjaxCommand
     /**
      * Returns ajax command arguments
      *
-     * @return the $args
+     * @return mixed $args
      */
     public function getArgs()
     {
@@ -162,11 +169,30 @@ class AjaxCommand
     }
 
     /**
+     * Sets an identifier for this command.
+     *
+     * @param string $id
+     *
+     * @return \Core\Lib\Ajax\AjaxCommand
+     */
+    public function setId($id) {
+
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
      * Send ajax command to output queue
      */
     public function send()
     {
-        $this->di['core.ajax']->add($this);
+        $this->di->get('core.ajax')->add($this);
     }
 
     /**

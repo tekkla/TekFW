@@ -204,7 +204,7 @@ class Error
         }
 
         // Append more informations for admin users
-        if ($this->user->isGuest() == true || $this->user->isAdmin() == false) {
+        if ($this->user->isGuest() == true || $this->user->isAdmin() == false || $this->cfg->get('Core', 'skip_security_check') == true) {
 
             $this->error_html .= '
             <h3 class="no-top-margin">Error</h3>
@@ -256,6 +256,7 @@ class Error
 
         // Always send mail on
         if ($this->exception instanceof \PDOException) {
+
             $error_log = true;
             $send_mail = true;
 
@@ -319,7 +320,9 @@ class Error
         // Ajax output
         if ($this->router->isAjax()) {
 
-            $this->ajax->fnError($this->createErrorHtml(true), uniqid());
+            $command = $this->ajax->createCommand('Act\Error');
+            $command->error($this->createErrorHtml(true), uniqid());
+            $command->send();
 
             return false;
         }
