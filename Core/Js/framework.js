@@ -42,7 +42,7 @@ $(document).ready(function() {
     });
 
     // Run function with commands to be used on "ready" and "ajaxComplete"
-    webReadyAndAjax()
+    webReadyAndAjax();
 });
 
 // ----------------------------------------------------------------------------
@@ -71,14 +71,15 @@ $(document).ajaxStop(function(event) {
 $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 
     if ($(this).data('counter') !== undefined) {
+        
         var limit = parseInt($(this).attr('maxlength'));
         var text = $(this).val();
         var chars = text.length;
 
         if (chars > limit) {
-            var new_text = text.substr(0, limit);
-            $(this).val(new_text);
+            $(this).val(text.substr(0, limit));
         }
+        
         var counterid = $(this).data('counter');
 
         if ($(counterid).length > 0) {
@@ -93,8 +94,7 @@ $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 $(document).on('click', '#scrolltotop', function(event) {
 
     if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {           
-        window.scrollTo(0,0) // first value for left offset, second value for
-								// top offset
+        window.scrollTo(0,0); 
     } else {
         $('html,body').animate({
             scrollTop: 0,
@@ -125,8 +125,8 @@ $(document).on('click', '*[data-confirm]', function(event) {
 
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
-        var result = confirm($(this).data('confirm'));
-        if (!result) {
+        
+        if (! confirm($(this).data('confirm')) {
             return false;
         }
     }
@@ -141,13 +141,9 @@ $(document).on('click', '*[data-ajax]', function(event) {
 
 function loadAjax(element) {
     
-    
     // confirmation wanted?
-    if ($(element).data('confirm') !== undefined) {
-        var result = confirm($(element).data('confirm'));
-        if (!result) {
-            return false;
-        }
+    if ($(element).data('confirm') !== undefined && ! confirm($(element).data('confirm')) {
+         return false;
     }
 
     // Prepare options object
@@ -175,7 +171,7 @@ function loadAjax(element) {
         } else if ($(element).data('href') !== undefined) {
             var url = $(element).data('href');
         } else {
-            alert('Ext Ajax: No URI to query found. Neither as "href" nor as "data-href". Aborting request.');
+            console.log('No URI to query found. Neither as "href" nor as "data-href". Aborting request.');
             return false;
         }
     } 
@@ -232,14 +228,13 @@ function parseJson(json) {
         if (type=='dom')
         {
             $.each(stack, function(id, cmd) {
-                
+
                 if ( $(id).length) {
                 
-                    var selector = $(id);
-                
                     $.each(cmd, function(i, x) {
-                        selector = selector[x.f](x.a);
-                    });             
+                        selector = $(id)[x.f](x.a);
+                    });
+                    
                 }
                 else {
                     console.log('Selector "' + id + '" not found.');       
