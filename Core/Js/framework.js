@@ -126,7 +126,7 @@ $(document).on('click', '*[data-confirm]', function(event) {
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
         
-        if (! confirm($(this).data('confirm')) {
+        if (! confirm($(this).data('confirm'))) {
             return false;
         }
     }
@@ -142,7 +142,7 @@ $(document).on('click', '*[data-ajax]', function(event) {
 function loadAjax(element) {
     
     // confirmation wanted?
-    if ($(element).data('confirm') !== undefined && ! confirm($(element).data('confirm')) {
+    if ($(element).data('confirm') !== undefined && ! confirm($(element).data('confirm'))) {
          return false;
     }
 
