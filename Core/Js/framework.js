@@ -226,8 +226,6 @@ function loadAjax(element) {
 // ----------------------------------------------------------------------------
 function parseJson(json) {
     
-    console.log(json);
-    
     $.each(json, function(type, stack) {
         
         // DOM manipulations
