@@ -235,15 +235,16 @@ function parseJson(json) {
         {
             $.each(stack, function(id, cmd) {
                 
-                var selector = $(id);
+                if ( $(id).length) {
                 
-                if (selector !== undefined) {
+                    var selector = $(id);
+                
                     $.each(cmd, function(i, x) {
                         selector = selector[x.f](x.a);
-                    });
+                    });             
                 }
                 else {
-                    console.log('Selector "' + id + '" not found.');
+                    console.log('Selector "' + id + '" not found.');       
                 }
             });
         }
