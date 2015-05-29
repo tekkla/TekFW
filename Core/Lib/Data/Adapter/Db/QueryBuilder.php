@@ -468,6 +468,10 @@ class QueryBuilder
 
         $this->processParamsDefinition();
 
+        $this->processGroupByDefinition();
+
+        $this->processHavingDefinition();
+
         $this->processJoinDefinition();
 
         $this->processOrderDefinition();
