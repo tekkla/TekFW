@@ -60,7 +60,13 @@ final class FormDesigner extends Form
      *
      * @var string
      */
-    private $control_name_prefix;
+    private $control_name_prefix = '';
+
+    /**
+     *
+     * @var string
+     */
+    private $label_prefix = '';
 
     /**
      *
@@ -213,6 +219,21 @@ final class FormDesigner extends Form
     public function setApp($app_name)
     {
         $this->app_name = (string) $app_name;
+
+        return $this;
+    }
+
+    /**
+     * Set prefix tp be used when creating label for a control.
+     * Useful for categorized language strings.
+     *
+     * @param string $label_prefix
+     *
+     * @return \Core\Lib\Content\Html\Elements\FormDesigner
+     */
+    public function setLabelPrefix($label_prefix)
+    {
+        $this->label_prefix = $this->uncamelizeString($label_prefix);
 
         return $this;
     }
@@ -512,8 +533,6 @@ final class FormDesigner extends Form
      */
     private function handleButtons()
     {
-
-
         if (! $this->no_buttons && ! empty($this->buttons)) {
 
             /* @var $group \Core\Lib\Content\Html\FormDesigner\FormGroup */
@@ -624,6 +643,7 @@ final class FormDesigner extends Form
                     $builder->setAppName($this->app_name);
                     $builder->setNamePrefix($this->control_name_prefix);
                     $builder->setIdPrefix($this->control_id_prefix);
+                    $builder->setLabelPrefix($this->label_prefix);
 
                     // Any errors in container
                     if (isset($this->container)) {
@@ -639,7 +659,6 @@ final class FormDesigner extends Form
 
                     $builder->setControl($content);
                     $builder->setDisplayMode($this->display_mode);
-
 
                     // Build control
                     $html .= $builder->build();

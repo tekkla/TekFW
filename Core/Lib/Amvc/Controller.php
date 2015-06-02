@@ -276,14 +276,19 @@ class Controller extends MvcAbstract
 
         $this->ajax = $this->di->get('core.ajax')->createCommand('Dom\Html');
 
-        $this->ajax->setArgs($this->run($action, $params));
-        $this->ajax->setId(get_called_class() . '::' . $action);
+        $content = $this->run($action, $params);
 
-        if ($selector) {
-            $this->ajax->setSelector($selector);
+        if ($content !== false) {
+
+            $this->ajax->setArgs($content);
+            $this->ajax->setId(get_called_class() . '::' . $action);
+
+            if ($selector) {
+                $this->ajax->setSelector($selector);
+            }
+
+            $this->ajax->send();
         }
-
-        $this->ajax->send();
 
         return $this;
     }
@@ -506,6 +511,7 @@ class Controller extends MvcAbstract
 
         $form->setAppName($this->app->getName());
         $form->setControlName($this->name);
+        $form->setLabelPrefix($this->getName() . '_');
 
         if ($container !== null) {
             $form->attachContainer($container);

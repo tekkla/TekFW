@@ -28,6 +28,8 @@ class ControlBuilder
 
     private $id_prefix = '';
 
+    private $label_prefix = '';
+
     private $errors = [];
 
     private $display_mode = 'v';
@@ -73,6 +75,13 @@ class ControlBuilder
     public function setIdPrefix($id_prefix)
     {
         $this->id_prefix = $id_prefix;
+
+        return $this;
+    }
+
+    public function setLabelPrefix($label_prefix)
+    {
+        $this->label_prefix = $label_prefix;
 
         return $this;
     }
@@ -198,7 +207,7 @@ class ControlBuilder
 
             // Try to find a suitable text as label in our languagefiles
             if (! $this->control->getLabel()) {
-                $this->control->setLabel($this->txt($field_name, $this->app_name));
+                $this->control->setLabel($this->txt($this->label_prefix . $field_name, $this->app_name));
             }
 
             // Attach to control id
