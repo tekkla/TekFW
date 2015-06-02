@@ -511,7 +511,7 @@ class Controller extends MvcAbstract
 
         $form->setAppName($this->app->getName());
         $form->setControlName($this->name);
-        $form->setLabelPrefix($this->getName() . '_');
+        $form->setLabelPrefix($this->uncamelizeString($this->getName()) . '_');
 
         if ($container !== null) {
             $form->attachContainer($container);

@@ -218,7 +218,7 @@ final class FormDesigner extends Form
      */
     public function setLabelPrefix($label_prefix)
     {
-        $this->label_prefix = $this->uncamelizeString($label_prefix);
+        $this->label_prefix = $label_prefix;
 
         return $this;
     }
