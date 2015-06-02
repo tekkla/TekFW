@@ -229,7 +229,7 @@ class ControlBuilder
 
             // Checkboxes are wrapped by label tags, so we need only the text
             if (empty($label)) {
-                $label = $this->txt($this->uncamelizeString($field_name), $this->app_name);
+                $label = $this->txt($this->label_prefix . $field_name, $this->app_name);
             }
         }
         else {
