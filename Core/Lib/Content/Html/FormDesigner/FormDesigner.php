@@ -209,21 +209,6 @@ final class FormDesigner extends Form
     }
 
     /**
-     * Set the name of the related app.
-     *
-     * @param string $app_name
-     * @deprecated
-     *
-     * @return \Core\Lib\Content\Html\Elements\FormDesigner
-     */
-    public function setApp($app_name)
-    {
-        $this->app_name = (string) $app_name;
-
-        return $this;
-    }
-
-    /**
      * Set prefix tp be used when creating label for a control.
      * Useful for categorized language strings.
      *
