@@ -30,8 +30,6 @@ class FormGroup
      * @param string $type The type of control to create
      * @param string $name Name of the control. Ths name is used to bind the control to a model field.
      *
-     * @throws \InvalidArgumentException
-     *
      * @return HtmlAbstract
      */
     public function &addControl($control, $name, $autobind = true, Container $container = null)
