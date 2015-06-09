@@ -36,14 +36,32 @@ class Input extends FormAbstract
     public function setType($type)
     {
         $types = [
-            'text',
-            'hidden',
             'button',
+            'checkbox',
+            'color',
+            'date',
+            'datetime',
+            'datetime-local',
+            'email',
+            'file',
+            'hidden',
+            'image',
+            'month',
+            'number',
+            'password',
+            'radio',
+            'range',
+            'reset',
+            'search',
             'submit',
-            'password'
+            'tel',
+            'text',
+            'time',
+            'url',
+            'week '
         ];
 
-        if (!in_array($type, $types)) {
+        if (! in_array($type, $types)) {
             Throw new \InvalidArgumentException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
         }
 
