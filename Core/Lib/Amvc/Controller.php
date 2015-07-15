@@ -66,13 +66,6 @@ class Controller extends MvcAbstract
     protected $events = [];
 
     /**
-     * The View object
-     *
-     * @var View
-     */
-    public $view = false;
-
-    /**
      * Storage for parameter
      *
      * @var Data
@@ -83,9 +76,15 @@ class Controller extends MvcAbstract
      * Stores the controller bound Model object.
      * Is false when controller has no model.
      *
-     * @var Model
+     * @var \Core\Lib\Amvc\Model
      */
     public $model;
+
+    /**
+     *
+     * @var \Core\Lib\Amvc\View
+     */
+    private $view;
 
     /**
      * Falg to signal that this controller is in ajax mode
@@ -96,43 +95,44 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var Router
-     */
-    protected $router;
-
-    /**
-     *
-     * @var Security
+     * @var \Core\Lib\Security\Security
      */
     protected $security;
 
     /**
      *
-     * @var Message
-     */
-    protected $message;
-
-    /**
-     *
-     * @var Content
-     */
-    protected $content;
-
-    /**
-     *
-     * @var Post
+     * @var\Core\Lib\Http\Post
      */
     protected $post;
 
     /**
      *
-     * @var Menu
+     * @var \Core\Lib\Http\Router
+     */
+    protected $router;
+
+    /**
+     *
+     * @var \Core\Lib\Content\Message
+     */
+    protected $message;
+
+    /**
+     *
+     * @var \Core\Lib\Content\Content
+     */
+    protected $content;
+
+
+    /**
+     *
+     * @var \Core\Lib\Content\Menu
      */
     protected $menu;
 
     /**
      *
-     * @var HtmlFactory
+     * @var \Core\Lib\Content\Html\HtmlFactory
      */
     protected $html;
 
@@ -225,9 +225,23 @@ class Controller extends MvcAbstract
         // run possible after event handler
         $this->runEvent('after');
 
-        // No result to return? Return false
-        if (isset($return) && $return == false) {
-            return false;
+        // Do we have a result?
+        if (isset($return)) {
+
+            // Boolean false result means to stop work for controller
+            if ($return == false) {
+                return false;
+            }
+
+            // Control rendering by requested output format
+            switch ($this->router->getFormat()) {
+
+                // Turn rendering off on json and xml format
+                case 'json':
+                case 'xml':
+                    $this->render = false;
+                    break;
+            }
         }
 
         // Render the view and return the result
@@ -650,7 +664,7 @@ class Controller extends MvcAbstract
      *
      * @return \Core\Lib\Ajax\AjaxCommand
      */
-    public function getAjaxCommand($command_name = 'Dom\Html')
+    final public function getAjaxCommand($command_name = 'Dom\Html')
     {
         return $this->di->get('core.ajax')->createCommand($command_name);
     }
@@ -677,9 +691,18 @@ class Controller extends MvcAbstract
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
 
+
+    final public function setFormat($format)
+    {
+        $this->router->setFormat($format);
+
+        return $this;
+    }
+    
     /**
      * Dummy method for those who forget to create such method in their controller
      */
     public function Index()
     {}
+    
 }
