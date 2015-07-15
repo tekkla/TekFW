@@ -120,9 +120,9 @@ final class Validator
                 // Get msg from rule
                 $msg = $rule->getMsg();
 
-                // If no error message is set, use the default validato error
+                // If no error message is set, use the default validator error
                 if (empty($msg)) {
-                   $this->msg[] = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
+                    $this->msg[] = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
                 }
 
                 $this->msg[] = $msg;
@@ -163,15 +163,16 @@ final class Validator
     {
         // Rules are singletons
         if (! array_key_exists($rule_name, $this->rules)) {
+
             $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
+
             $this->rules[$rule_name] = $this->di->instance($rule_class, 'core.data.validator');
-        } else {
+        }
+        else {
 
             // Reset existing rules
             $this->rules[$rule_name]->reset();
-
         }
-
 
         return $this->rules[$rule_name];
     }
