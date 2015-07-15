@@ -106,7 +106,6 @@ class Database extends AdapterAbstract
     public function __construct(array $options)
     {
         if (! isset($options['conn'])) {
-
             Throw new \InvalidArgumentException('No connection option found in database options');
         }
 
@@ -411,6 +410,20 @@ class Database extends AdapterAbstract
     public function count()
     {
         return $this->rowCount();
+    }
+
+    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC) {
+        $query = [
+            'table' => $tbl,
+            'filter' => $key_field . '=:' . $key_field,
+            'params' => [
+                ':' . $key_field => $value
+            ]
+        ];
+
+        $this->query($query);
+
+        return $this->single($fetch_mode);
     }
 
     /**
