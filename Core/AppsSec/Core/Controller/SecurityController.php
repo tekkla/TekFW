@@ -7,7 +7,7 @@ use Core\Lib\Amvc\Controller;
  * Appsec/Core/SecurityController
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class SecurityController extends Controller
@@ -15,6 +15,11 @@ class SecurityController extends Controller
 
     public function Login()
     {
+        if ($this->security->loggedIn()) {
+            echo 'Already logged in.';
+            return false;
+        }
+
         $data = $this->post->get();
 
         if ($data) {
@@ -24,6 +29,7 @@ class SecurityController extends Controller
 
             if ($data['logged_in'] === true) {
                 $this->redirectExit();
+                return;
             }
         }
         else {
@@ -33,11 +39,7 @@ class SecurityController extends Controller
 
         $form = $this->getFormDesigner($data);
 
-        $form->setApp('Core');
-        $form->setModelName('Security');
-
-        $action = $this->router->url('core_login');
-        $form->setAction($action);
+        $form->setAction($this->router->url('core_login'));
 
         // Form save button
         $form->setSaveButtonText($this->txt('login'));
@@ -72,8 +74,8 @@ class SecurityController extends Controller
         $this->redirectExit($this->router->url('core_index'));
     }
 
-    public function Register() {
-
+    public function Register()
+    {
         $data = $this->post->get();
 
         if ($data) {
@@ -81,10 +83,13 @@ class SecurityController extends Controller
             // Do login procedure
             $data = $this->model->saveUser($data);
 
-            if (!$data->hasErrors()) {
+            if (! $data->hasErrors()) {
                 $this->content->msg->success($this->txt('login_ok'));
-                $this->redirectExit($this->url('core_user', [$data['id_user']]));
-            } else {
+                $this->redirectExit($this->url('core_user', [
+                    $data['id_user']
+                ]));
+            }
+            else {
                 $this->content->msg->danger($this->txt('login_failed'));
             }
         }
@@ -92,5 +97,4 @@ class SecurityController extends Controller
             $data = $this->model->getRegister($id_user);
         }
     }
-
 }

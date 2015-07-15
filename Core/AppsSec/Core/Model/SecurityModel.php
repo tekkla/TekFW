@@ -16,11 +16,7 @@ class SecurityModel extends Model
 
     public function getEmptyLogin()
     {
-        $data = $this->getGenericContainer();
-
-        $data->createField('login', 'string');
-        $data->createField('password', 'string');
-        $data->createField('remember', 'int');
+        $data = $this->getContainer('Core', 'Security');
 
         $data['remember'] = 1;
 
@@ -30,16 +26,6 @@ class SecurityModel extends Model
     public function doLogin(Container $data)
     {
         // Set validation rules and validate data
-        $data->setValidation('login', [
-            'required',
-            'empty'
-        ]);
-
-        $data->setValidation('password', [
-            'required',
-            'empty'
-        ]);
-
         $data->validate();
 
         // End on validation errors and return data container
@@ -47,13 +33,9 @@ class SecurityModel extends Model
             return $data;
         }
 
-        // Acces security lib and do login
-
         /* @var $security \Core\Lib\Security\Security */
         $security = $this->di->get('core.sec.security');
         $security->login($data['login'], $data['password'], isset($data['remember']));
-
-        $data->createField('logged_in', 'boolean');
 
         if ($security->loggedIn() === true) {
             $data['logged_in'] = true;
