@@ -124,8 +124,15 @@ class Container implements \IteratorAggregate, \ArrayAccess
      */
     public function parseFields(Array $fields = [])
     {
-        if (empty($fields) && ! empty($this->use)) {
-            foreach ($this->use as $fld_name) {
+        if (empty($fields)) {
+
+            $src = empty($this->use) ? 'available' : 'use';
+
+            if (empty($this->$src)) {
+                Throw new \RuntimeException('The called container has no field definitions set.');
+            }
+
+            foreach ($this->$src as $fld_name) {
                 $fields[$fld_name] = $this->available[$fld_name];
             }
         }
