@@ -327,7 +327,7 @@ class QueryBuilder
         $filter = $this->filter ? ' WHERE ' . $this->filter : '';
 
         // Create group by statement
-        $group_by = ''
+        $group_by = '';
 
         if ($this->group_by) {
 
