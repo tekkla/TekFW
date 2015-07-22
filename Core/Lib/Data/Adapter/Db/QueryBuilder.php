@@ -327,7 +327,16 @@ class QueryBuilder
         $filter = $this->filter ? ' WHERE ' . $this->filter : '';
 
         // Create group by statement
-        $group_by = $this->group_by ? ' GROUP BY ' . $this->group_by : '';
+        $group_by = ''
+
+        if ($this->group_by) {
+
+            if (is_array($this->group_by)) {
+                $this->group_by = implode(', ', $this->group_by);
+            }
+
+            $group_by = ' GROUP BY ' . $this->group_by;
+        }
 
         // Create having statement
         $having = $this->having ? ' HAVING ' . $this->having : '';
