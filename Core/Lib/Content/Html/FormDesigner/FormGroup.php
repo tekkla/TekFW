@@ -1,9 +1,10 @@
 <?php
 namespace Core\Lib\Content\Html\FormDesigner;
 
-use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Container;
+use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
  *
@@ -30,7 +31,7 @@ class FormGroup
      * @param string $type The type of control to create
      * @param string $name Name of the control. Ths name is used to bind the control to a model field.
      *
-     * @return HtmlAbstract
+     * @return FormAbstract
      */
     public function &addControl($control, $name, $autobind = true, Container $container = null)
     {
