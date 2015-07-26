@@ -2,19 +2,18 @@
 namespace Core\Lib\Http;
 
 use Core\Lib\Data\Container;
+use Core\Lib\Traits\StringTrait;
 
 /**
- * Http POST processor
- *
+ * Post.php
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014
- * @version 1.0
  */
 class Post
 {
 
-    use\Core\Lib\Traits\StringTrait;
+    use StringTrait;
 
     /**
      *
@@ -73,6 +72,14 @@ class Post
     }
 
     /**
+     * Cleans the global $_POST variable by setting an empty array
+     */
+    public function clean()
+    {
+        $_POST = [];
+    }
+
+    /**
      * Returns POST data as a container
      *
      * @param string $app
@@ -82,6 +89,7 @@ class Post
      */
     public function getContainer($app = '', $key = '')
     {
+        // Checks for posted data.
         $post = $this->checkPost($app, $key);
 
         if (! $post) {
@@ -90,8 +98,8 @@ class Post
 
         // Get container from matching app
         $container = $this->di->get('core.amvc.creator')
-            ->create($this->app)
-            ->getContainer($this->key);
+            ->create($app)
+            ->getContainer($key);
 
         if (! $container) {
             $container = $this->di->get('core.data.container');
@@ -116,7 +124,7 @@ class Post
         return $this->checkPost($app, $key);
     }
 
-    private function checkPost($app = '', $key = '')
+    private function checkPost(&$app = '', &$key = '')
     {
         // Do only react on POST requests
         if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
@@ -125,12 +133,12 @@ class Post
 
         // Use values provided by request for missing app and model name
         if (empty($app) || empty($key)) {
-            $this->app = $this->router->getApp();
-            $this->key = $this->router->getController();
+            $app = $this->router->getApp();
+            $key = $this->router->getController();
         }
 
-        $app_small = $this->uncamelizeString($this->app);
-        $key_small = $this->uncamelizeString($this->key);
+        $app_small = $this->uncamelizeString($app);
+        $key_small = $this->uncamelizeString($key);
 
         // Return false on missing data
         if (! isset($_POST[$app_small][$key_small])) {
