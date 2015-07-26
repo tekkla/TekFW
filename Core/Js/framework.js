@@ -32,8 +32,6 @@ var coreFw = {
 
     loadAjax : function(element) {
 
-        console.log(element);
-
         // confirmation wanted?
         if ($(element).data('confirm') !== undefined
                 && !confirm($(element).data('confirm'))) {
@@ -118,8 +116,6 @@ var coreFw = {
     // ----------------------------------------------------------------------------
     parseJSON : function(json) {
 
-        console.log(json);
-
         $.each(json, function(type, stack) {
 
             // DOM manipulations
@@ -179,6 +175,8 @@ var coreFw = {
                 });
             }
         });
+        
+        this.readyAndAjax();
     }
 
 }
