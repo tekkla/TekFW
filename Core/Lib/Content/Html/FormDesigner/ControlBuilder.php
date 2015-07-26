@@ -161,7 +161,9 @@ class ControlBuilder
         }
 
         // create control id {app}_{model}_{existing id}
-        $this->control->setId(str_replace('_', '-', $this->id_prefix . '-' . $field_name));
+        if (!$this->control->getId()) {
+            $this->control->setId(str_replace('_', '-', $this->id_prefix . '-' . $field_name));
+        }
 
         // Set BS group class
         switch ($type) {
