@@ -72,7 +72,7 @@ class Post
     }
 
     /**
-     * Cleans the global $_POST variable by setting an empty array
+     * Cleans the global $_POST variable by setting an empty array.
      */
     public function clean()
     {
