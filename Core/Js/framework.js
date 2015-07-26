@@ -12,8 +12,6 @@ var coreFw = {
         // Bind error popover
         $('.form-control[data-error]').coreErrorPop();
 
-        $('.form-suggest').coreMagicSuggest();
-
         // Bind selectpicker
         $('.selectpicker').selectpicker();
 
@@ -176,7 +174,7 @@ var coreFw = {
             }
         });
         
-        this.readyAndAjax();
+        coreFw.readyAndAjax();
     }
 
 }
