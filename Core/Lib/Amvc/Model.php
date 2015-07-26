@@ -104,7 +104,10 @@ class Model extends MvcAbstract implements \ArrayAccess
     final public function getGenericContainer($fields = [])
     {
         $container = $this->di->get('core.data.container');
-        $container->parseFields($fields);
+
+        if (!empty($fields)) {
+            $container->parseFields($fields);
+        }
 
         return $container;
     }
