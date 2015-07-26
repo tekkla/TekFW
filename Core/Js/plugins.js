@@ -169,7 +169,7 @@ Uses other plugins, so put this always at the end of this file!
     /**
      * WebExt Datepicker plugin bindings
      */
-    $.fn.webDatepicker = function() {
+    $.fn.coreDatepicker = function() {
     
         return this.each(function() {
             
@@ -187,7 +187,7 @@ Uses other plugins, so put this always at the end of this file!
     /**
      * WebExt Bootstrap popover bindings
      */
-    $.fn.webErrorPop = function() {
+    $.fn.coreErrorPop = function() {
         
         return this.each(function(){
             $(this).popover({
