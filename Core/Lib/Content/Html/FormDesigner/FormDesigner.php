@@ -637,7 +637,8 @@ final class FormDesigner extends Form
                             $builder->setErrors($this->container->getErrors($content->getName()));
                         }
 
-                        if (isset($this->container[$content->getName()])) {
+                        // Try to get value from container when control has no content set
+                        if (! $content && isset($this->container[$content->getName()])) {
                             $content->setValue($this->container[$content->getName()]);
                         }
                     }
