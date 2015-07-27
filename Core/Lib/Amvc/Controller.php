@@ -691,18 +691,23 @@ class Controller extends MvcAbstract
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
 
-
+    /**
+     * Sets the output format.
+     * Allowedformats are json, xml and html.
+     *
+     * @param string $format
+     */
     final public function setFormat($format)
     {
         $this->router->setFormat($format);
 
         return $this;
     }
-    
+
     /**
-     * Dummy method for those who forget to create such method in their controller
+     * Dummy method for those who forget to create such method in their controller.
      */
     public function Index()
     {}
-    
+
 }
