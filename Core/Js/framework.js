@@ -31,8 +31,7 @@ var coreFw = {
     loadAjax : function(element) {
 
         // confirmation wanted?
-        if ($(element).data('confirm') !== undefined
-                && !confirm($(element).data('confirm'))) {
+        if ($(element).data('confirm') !== undefined && !confirm($(element).data('confirm'))) {
             return false;
         }
 
@@ -60,9 +59,11 @@ var coreFw = {
                 var url = $(element).attr('href');
             } else if ($(element).data('href') !== undefined) {
                 var url = $(element).data('href');
+            }
+            else if ($(element).data('url') !== undefined) {
+                var url = $(element).data('url');                
             } else {
-                console
-                        .log('No URI to query found. Neither as "href" nor as "data-href". Aborting request.');
+                console.log('No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
                 return false;
             }
         } else {
@@ -81,10 +82,11 @@ var coreFw = {
             // control the hidden form where we put the content
             // before serialization gathers the form data
             // for ajax post.
-            if ($(element).data('inline-id') !== undefined
-                    && $(element).data('inline-control') !== undefined) {
+            if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
+                
                 var control = $(element).data('inline-control');
                 var content = $('#' + $(element).data('inline-id')).html();
+                
                 $('#' + control).val(content);
             }
 
