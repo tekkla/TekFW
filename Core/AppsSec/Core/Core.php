@@ -219,6 +219,12 @@ final class Core extends App
             'control' => 'switch',
             'default' => 1
         ],
+        'skip_security_check' => [
+            'group' => 'error',
+            'control' => 'switch',
+            'default' => 0
+        ],
+
 
         // Logging
         'log' => [
