@@ -89,7 +89,7 @@ class Input extends FormAbstract
 
     public function getValue()
     {
-        return $this->getAttribute('value');
+        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
     }
 
     public function setSize($size)

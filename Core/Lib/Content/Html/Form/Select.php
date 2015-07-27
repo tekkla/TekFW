@@ -23,7 +23,7 @@ class Select extends FormAbstract
         'control' => 'select'
     ];
 
-    private $value = [];
+    private $value = null;
 
     /**
      * Creates an Option object and returns it
@@ -86,7 +86,7 @@ class Select extends FormAbstract
             Throw new \InvalidArgumentException('A html form selects size attribute needs to be an integer.');
         }
 
-        $this->addAttribute('size', $size);
+        $this->attribute['size'] = $size;
 
         return $this;
     }
@@ -96,14 +96,14 @@ class Select extends FormAbstract
         $attrib = 'multiple';
 
         if (! isset($state)) {
-            return $this->checkAttribute($attrib);
+            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
         }
 
         if ($state == 0) {
-            $this->removeAttribute($attrib);
+            unset($this->attribute[$attrib]);
         }
         else {
-            $this->addAttribute($attrib, $attrib);
+            $this->attribute[$attrib] = $attrib;
         }
 
         return $this;
@@ -122,16 +122,7 @@ class Select extends FormAbstract
 
     public function getValue()
     {
-        $values = [];
-
-        /* @var $option \Core\Lib\Content\Html\Form\Option */
-        foreach ($this->options as $option) {
-            if ($option->isSelected()) {
-                $values[] = $option->getValue();
-            }
-        }
-
-        return implode(',', $values);
+        return $this->value;
     }
 
     public function build()
@@ -142,7 +133,7 @@ class Select extends FormAbstract
 
         foreach ($this->options as $option) {
 
-            if (in_array($option->getValue(), $this->value)) {
+            if ($this->value !== null && in_array($option->getValue(), $this->value)) {
                 $option->isSelected(1);
             }
 

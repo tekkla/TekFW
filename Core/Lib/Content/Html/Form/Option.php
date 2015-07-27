@@ -6,11 +6,9 @@ use Core\Lib\Content\Html\FormAbstract;
 /**
  * Option Form Element
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Form
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
- * @copyright 2014 by author
+ * @copyright 2015 by author
  */
 class Option extends FormAbstract
 {
@@ -36,14 +34,14 @@ class Option extends FormAbstract
         $attrib = 'selected';
 
         if (! isset($state)) {
-            return $this->checkAttribute($attrib);
+            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
         }
 
         if ($state == 0) {
-            $this->removeAttribute($attrib);
+            unset($this->attribute[$attrib]);
         }
         else {
-            $this->addAttribute($attrib, false);
+            $this->attribute[$attrib] = false;
         }
 
         return $this;
@@ -61,7 +59,7 @@ class Option extends FormAbstract
             Throw new \InvalidArgumentException('Your are not allowed to set a NULL as value for a html option.');
         }
 
-        $this->addAttribute('value', $value);
+        $this->attribute['value'] = $value;
 
         return $this;
     }
@@ -73,13 +71,13 @@ class Option extends FormAbstract
      */
     public function getValue()
     {
-        return $this->getAttribute('value');
+        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
     }
 
     public function build()
     {
         if (!$this->checkAttribute('value') && !empty($this->inner)) {
-            $this->addAttribute('value', $this->inner);
+            $this->attribute['value'] = $this->inner;
         }
 
         if ($this->checkAttribute('value') && empty($this->inner)) {

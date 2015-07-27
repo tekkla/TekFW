@@ -73,6 +73,16 @@ class Button extends FormAbstract
     }
 
     /**
+     * Returns button value.
+     *
+     * @return null|string
+     */
+    public function getValue()
+    {
+        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
+    }
+
+    /**
      * Sets name of the fontawesome icon to use with the button.
      *
      * @param string $$button_icon Name of the icon without the leadin "fa-"

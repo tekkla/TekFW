@@ -638,7 +638,7 @@ final class FormDesigner extends Form
                         }
 
                         // Try to get value from container when control has no content set
-                        if (! $content && isset($this->container[$content->getName()])) {
+                        if ($content->getValue() === null && $this->container[$content->getName()]) {
                             $content->setValue($this->container[$content->getName()]);
                         }
                     }
