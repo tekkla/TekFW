@@ -587,7 +587,7 @@ class QueryBuilder
             // Get name of primary field. Is false when no primary field exists.
             $primary = $this->definition['data']->getPrimary();
 
-            // Update mathod to UPDATE when primary exists and has a value. Otherwise we insert a new record.
+            // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record.
             $this->method = ($primary !== false && !empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
         }
 
