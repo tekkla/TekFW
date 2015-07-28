@@ -321,7 +321,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
             $this->addError($field->getName(), $result);
         }
 
-        return $this->hasErrors();
+        return $this->hasErrors() ? false : true;
     }
 
     /**
