@@ -677,7 +677,7 @@ class Controller extends MvcAbstract
      */
     final protected function redirectExit($location = '', $permanent = false)
     {
-        if (! $location) {
+        if (empty($location)) {
             $location = BASEURL;
         }
 
