@@ -66,28 +66,21 @@ final class Core extends App
             ]
         ],
 
-        /* Group: Global
-        'default_action' => [
-            'group' => 'global',
-            'control' => 'input',
-            'default' => 'forum'
-        ],
+        // Group: Execute
+
         'default_app' => [
-            'group' => 'global',
+            'group' => 'execute',
             'control' => 'input'
         ],
-        'default_ctrl' => [
-            'group' => 'global',
+        'default_controller' => [
+            'group' => 'execute',
             'control' => 'input'
         ],
-        'content_handler' => [
-            'group' => 'global',
-            'control' => 'input'
+        'default_action' => [
+            'group' => 'execute',
+            'control' => 'input',
         ],
-        'menu_handler' => [
-            'group' => 'global',
-            'control' => 'input'
-        ],*/
+
 
         // Group: JS
         'js_default_position' => [
@@ -268,52 +261,52 @@ final class Core extends App
         [
             'name' => 'index',
             'route' => '../',
-            'ctrl' => 'Index',
+            'controller' => 'Index',
             'action' => 'Index'
         ],
         [
             'name' => 'login',
             'method' => 'GET|POST',
             'route' => '../login',
-            'ctrl' => 'Security',
+            'controller' => 'Security',
             'action' => 'Login'
         ],
         [
             'name' => 'logout',
             'method' => 'GET',
             'route' => '../logout',
-            'ctrl' => 'Security',
+            'controller' => 'Security',
             'action' => 'Logout'
         ],
         [
             'name' => 'admin',
             'route' => '../admin',
-            'ctrl' => 'admin',
+            'controller' => 'admin',
             'action' => 'index'
         ],
         [
             'name' => 'install',
             'route' => '../admin/[a:app_name]/install',
-            'ctrl' => 'config',
+            'controller' => 'config',
             'action' => 'install'
         ],
         [
             'name' => 'remove',
             'route' => '../admin/[a:app_name]/remove',
-            'ctrl' => 'config',
+            'controller' => 'config',
             'action' => 'remove'
         ],
         [
             'name' => 'config',
             'method' => 'GET|POST',
             'route' => '../admin/[a:app_name]/config',
-            'ctrl' => 'config',
+            'controller' => 'config',
             'action' => 'config'
         ],
         [
             'name' => 'reconfig',
             'route' => '../admin/[a:app_name]/reconfig',
-            'ctrl' => 'config',
+            'controller' => 'config',
             'action' => 'reconfigure'
         ]
     ];
