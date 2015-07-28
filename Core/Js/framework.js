@@ -30,11 +30,6 @@ var coreFw = {
 
     loadAjax : function(element) {
 
-        // confirmation wanted?
-        if ($(element).data('confirm') !== undefined && !confirm($(element).data('confirm'))) {
-            return false;
-        }
-
         // Prepare options object
         var ajaxOptions = {
 
@@ -100,6 +95,7 @@ var coreFw = {
 
         // Add error handler
         ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
+            
             var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText
                     : 'Ajax Request Error: ' + textStatus;
             console.log(errortext);
@@ -107,8 +103,6 @@ var coreFw = {
 
         // Fire ajax request!
         $.ajax(ajaxOptions);
-
-        event.preventDefault();
     },
 
     // ----------------------------------------------------------------------------
@@ -272,16 +266,13 @@ $(document).on('click', '.btn-back', function(event) {
 // ----------------------------------------------------------------------------
 // ClickHandler for confirms
 // ----------------------------------------------------------------------------
-$(document).on('click', '*[data-confirm]', function(event) {
-
-    if ($(this).data('ajax') !== undefined) {
-        return;
-    }
-
+$(document).on('click', '*[data-confirm] + *:not([data-ajax])', function(event) {
+    
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
 
         if (!confirm($(this).data('confirm'))) {
+            event.preventDefault();
             return false;
         }
     }
@@ -291,5 +282,15 @@ $(document).on('click', '*[data-confirm]', function(event) {
 // Ajax based click-handler to links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-ajax]', function(event) {
-    coreFw.loadAjax(this);
+    
+    if ($(this).data('confirm') !== undefined) {
+        
+        if (!confirm($(this).data('confirm'))) {
+            return false;
+        }
+    }
+    
+    coreFw.loadAjax(this);  
+    
+    event.preventDefault();
 });
