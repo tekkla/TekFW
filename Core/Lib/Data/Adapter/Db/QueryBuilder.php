@@ -300,6 +300,12 @@ class QueryBuilder
             // Add `` to some field names as reaction to those stupid developers who chose systemnames as fieldnames
             foreach ($this->fields as $key_field => $field) {
 
+                // Subquery?
+                if (is_array($field)) {
+                    $builder = new QueryBuilder($this->sql);
+                    $field = '(' . PHP_EOL . $builder->build() . PHP_EOL . ')';
+                }
+
                 $fields_to_quote = [
                     'date',
                     'time'
@@ -510,10 +516,10 @@ class QueryBuilder
     private function processUpdate()
     {
         if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
-            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
+            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "UPDATE" definition.');
         }
         if (! isset($this->definition['params'])) {
-            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
+            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "UPDATE" definition.');
         }
 
         $this->processFieldDefinition();
