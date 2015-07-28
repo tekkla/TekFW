@@ -215,7 +215,8 @@ class Database extends AdapterAbstract
         if (! empty($this->params)) {
 
             foreach ($this->params as $parameter => $value) {
-                $this->stmt->bindValue($parameter, $value);
+                $data_type = $value === null ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+                $this->stmt->bindValue($parameter, $value, $data_type);
             }
         }
 
