@@ -393,6 +393,36 @@ final class Router extends \AltoRouter
     }
 
     /**
+     * Sets one or more router parameter.
+     *
+     * @param string $param
+     *
+     * @param mnixed $value
+     *
+     * @throws \RuntimeException
+     *
+     * @return \Core\Lib\Router
+     */
+    public function setParam($param, $value=null) {
+
+        if (!is_array($param) && $value === null) {
+            Throw new \RuntimeException('Setting router parameter with NULL value is not allowed');
+        }
+
+        if (!is_array($param)) {
+            $param = [
+                $param => $value
+            ];
+        }
+
+        foreach ($param as $key => $value ) {
+            $this->params[$param] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
      * Returns the requested outputformat.
      *
      * @return string
@@ -423,6 +453,6 @@ final class Router extends \AltoRouter
 
     public function clearPost()
     {
-        unset($_POST);
+        $_POST = [];
     }
 }
