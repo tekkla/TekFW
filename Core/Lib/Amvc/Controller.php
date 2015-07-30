@@ -308,17 +308,21 @@ class Controller extends MvcAbstract
     }
 
     /**
-     * Redirects from one action to another
-     * When redirecting is used the attached models data will be reset and all
-     * post data from the request handler.
+     * Redirects from one action to another.
+     * When redirecting is used the post data will be cleared by default.
      *
      * @param string $action
      * @param array $param
+     * @param bool $clear_post
+     *
+     * @return mixed
      */
-    final protected function redirect($action, $params = [])
+    final protected function redirect($action, $params = [], $clear_post = true)
     {
         // Clean data
-        $this->router->clearPost();
+        if ($clear_post) {
+            $this->router->clearPost();
+        }
 
         // Run redirect method
         return $this->run($action, $params);
@@ -588,13 +592,13 @@ class Controller extends MvcAbstract
      *
      * @return \Core\Lib\Data\Container
      */
-    final public function getContainer($container_name = null, $auto_init = true)
+    final public function getContainer($container_name = null, $init = true)
     {
         if (empty($container_name)) {
             $container_name = $this->getName();
         }
 
-        return $this->app->getContainer($container_name, $auto_init);
+        return $this->app->getContainer($container_name, $init);
     }
 
     /**
