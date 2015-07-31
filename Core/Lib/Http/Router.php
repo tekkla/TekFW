@@ -416,7 +416,7 @@ final class Router extends \AltoRouter
         }
 
         foreach ($param as $key => $value ) {
-            $this->params[$param] = $value;
+            $this->params[$key] = $value;
         }
 
         return $this;
