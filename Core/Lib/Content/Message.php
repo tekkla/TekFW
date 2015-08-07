@@ -64,19 +64,6 @@ class Message
     }
 
     /**
-     * Creates "primary" message and returns reference to this messages.
-     *
-     * @param string $message Message content
-     * @param bool $fadeout Automatic fadeout. Set to false dto disable.
-     *
-     * @return MessageObject
-     */
-    public function primary($message, $fadeout = true)
-    {
-        return $this->generic('primary', $message, $fadeout);
-    }
-
-    /**
      * Creates "succcess" message and returns reference to this messages.
      *
      * @param string $message Message content
