@@ -336,23 +336,24 @@ class App
     }
 
     /**
-     * Creates an app related model object
+     * Creates an app related model object.
      *
      * @param string $name The models name
      * @param string $db_container Name of the db container to use with this model
      *
      * @return Model
      */
-    public function getModel($name = '', $db_container = 'db.default')
+    public function getModel($name='')
     {
-        if (! $name) {
+        if (empty($name)) {
             $name = $this->getComponentsName();
         }
 
-        return $this->MVCFactory($name, 'Model', [
-            $db_container,
-            'core.cfg'
-        ]);
+        $args = [
+            'core.data.vars'
+        ];
+
+        return $this->MVCFactory($name, 'Model', $args);
     }
 
     /**
@@ -362,9 +363,9 @@ class App
      *
      * @return Controller
      */
-    final public function getController($name)
+    final public function getController($name='')
     {
-        if (! $name) {
+        if (empty($name)) {
             $name = $this->getComponentsName();
         }
 
@@ -375,7 +376,8 @@ class App
             'core.content.message',
             'core.content',
             'core.content.menu',
-            'core.content.html.factory'
+            'core.content.html.factory',
+            'core.data.vars'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);
@@ -387,7 +389,7 @@ class App
      * @param string $name The viewss name
      * @return View
      */
-    final public function getView($name)
+    final public function getView($name='')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -403,7 +405,7 @@ class App
      *
      * @return Controller
      */
-    final public function getContainer($name, $auto_init = true)
+    final public function getContainer($name, $init = true)
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -415,10 +417,10 @@ class App
         $container = $this->MVCFactory($name, 'Container', $args);
 
         // Autoinit requested?
-        if ($container && $auto_init) {
+        if ($container && $init) {
 
-            // Get current action...
-            $action = $this->router->getAction();
+            // init by current action?
+            $action = $init === true ? $this->router->getAction() : $init;
 
             if (!method_exists($container, $action)) {
 

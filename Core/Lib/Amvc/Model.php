@@ -8,6 +8,7 @@ use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\ConvertTrait;
 use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Data\Vars;
 
 /**
  * Model class
@@ -36,13 +37,20 @@ class Model extends MvcAbstract implements \ArrayAccess
     protected $data = false;
 
     /**
+     *
+     * @var \Core\Lib\Data\Vars
+     */
+    protected $vars;
+
+    /**
      * Constructor
      */
-    final public function __construct($name, App $app)
+    final public function __construct($name, App $app, Vars $vars)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
+        $this->vars = $vars;
     }
 
     /**

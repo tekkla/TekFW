@@ -13,6 +13,7 @@ use Core\Lib\Content\Html\FormDesigner\FormDesigner;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\HtmlAbstract;
+use Core\Lib\Data\Vars;
 
 /**
  * Controllers parent class.
@@ -137,11 +138,17 @@ class Controller extends MvcAbstract
     protected $html;
 
     /**
+     *
+     * @var \Core\Lib\Data\Vars
+     */
+    protected $vars;
+
+    /**
      * Hidden constructor.
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars)
     {
         // Store name
         $this->name = $name;
@@ -153,6 +160,7 @@ class Controller extends MvcAbstract
         $this->content = $content;
         $this->menu = $menu;
         $this->html = $html;
+        $this->vars = $vars;
 
         // Model to bind?
         $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
@@ -239,6 +247,7 @@ class Controller extends MvcAbstract
                 // Turn rendering off on json and xml format
                 case 'json':
                 case 'xml':
+                case 'pdf':
                     $this->render = false;
                     break;
             }
