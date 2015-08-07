@@ -77,7 +77,8 @@ class MessageObject
             'info',
             'warning',
             'danger',
-            'default'
+            'default',
+            'clear'
         ];
 
         if (! in_array($type, $types)) {

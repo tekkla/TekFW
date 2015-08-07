@@ -97,6 +97,14 @@ final class Ajax
 
             foreach ($messages as $msg) {
 
+                if ($msg->getType() == 'clear') {
+                    $this->ajax['dom']['#message'][] = [
+                        'f' => 'html',
+                        'a' => ''
+                    ];
+                    continue;
+                }
+
                 $html = '
                 <div class="alert alert-' . $msg->getType();
 

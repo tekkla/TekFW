@@ -54,6 +54,23 @@ class Message
     }
 
     /**
+     * Clears message area.
+     *
+     * @return MessageObject
+     */
+    public function clear()
+    {
+
+        $msg = new MessageObject();
+
+        $msg->setType('clear');
+
+        $this->add($msg);
+
+        return $msg;
+    }
+
+    /**
      * Adds a message object to the message storage in session
      *
      * @param MessageObject $msg
