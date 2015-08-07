@@ -131,6 +131,7 @@ class DI implements \ArrayAccess
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
         $this->mapFactory('core.data.container', '\Core\Lib\Data\Container');
+        $this->mapFactory('core.data.vars', '\Core\Lib\Data\Vars');
 
         // == CONTENT =======================================================
         $this->mapService('core.content', '\Core\Lib\Content\Content', [
