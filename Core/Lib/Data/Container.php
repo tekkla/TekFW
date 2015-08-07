@@ -283,6 +283,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
     /**
      * Validates container data against the set validation rules.
+     * Returns boolean true when successful validate without errors.
      *
      * @return boolean
      */
