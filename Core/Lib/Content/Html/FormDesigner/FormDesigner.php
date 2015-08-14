@@ -6,6 +6,8 @@ use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\AnalyzeVarTrait;
 use Core\Lib\Content\Html\Form\Form;
+use Core\Lib\Content\Html\Form\Option;
+use Core\Lib\Content\Html\Form\Checkbox;
 
 /**
  * FormDesigner
@@ -637,9 +639,18 @@ final class FormDesigner extends Form
                             $builder->setErrors($this->container->getErrors($content->getName()));
                         }
 
+                        // Is control checkable (checkbox eg option)?
+                        if ($content instanceof Checkbox || $content instanceof  Option) {
+
+                            // Set control checked when it's value = container field value
+                            if ($content->getValue() == $this->container[$content->getName()]) {
+                                $content->addAttribute('checked');
+                            }
+                        }
+
                         // Try to get value from container when control has no content set
-                        if ($content->getValue() === null && $this->container[$content->getName()]) {
-                            $content->setValue($this->container[$content->getName()]);
+                        elseif ($content->getValue() === null && $this->container[$content->getName()]) {
+                           $content->setValue($this->container[$content->getName()]);
                         }
                     }
 
