@@ -292,5 +292,9 @@ $(document).on('click', '*[data-ajax]', function(event) {
     
     coreFw.loadAjax(this);  
     
+    if ($(this).data('to-top') !== undefined) {
+        window.scrollTo(0, 0);
+    }
+    
     event.preventDefault();
 });
