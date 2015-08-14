@@ -1,5 +1,5 @@
 <?php
-namespace Core\AppsSec\Admin\View;
+namespace Core\AppsSec\Core\View;
 
 use Core\Lib\Amvc\View;
 

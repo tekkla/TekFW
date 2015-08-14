@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Select Form Element
@@ -12,132 +12,138 @@ use Core\Lib\Content\Html\FormElementAbstract;
  * @license MIT
  * @copyright 2014 by author
  */
-class Select extends FormElementAbstract
+class Select extends FormAbstract
 {
 
-	private $options = [];
+    private $options = [];
 
-	protected $element = 'select';
+    protected $element = 'select';
 
-	protected $data = [
-		'control' => 'select'
-	];
+    protected $data = [
+        'control' => 'select'
+    ];
 
-	/**
-	 * Creates an Option object and returns it
-	 *
-	 * @return \Core\Lib\Content\Html\Form\Option
-	 */
-	public function &createOption()
-	{
-		$option = $this->factory->create('Form\Option');
+    private $value = null;
 
-		return $this->addOption($option);
-	}
+    /**
+     * Creates an Option object and returns it
+     *
+     * @return \Core\Lib\Content\Html\Form\Option
+     */
+    public function &createOption()
+    {
+        $option = $this->factory->create('Form\Option');
 
-	/**
-	 * Add an Option object to the options array.
-	 * Use parameters to predefine
-	 * the objects settings. If inner parameter is not set, the value is the inner
-	 * content of option and has no value attribute.
-	 *
-	 * @param string|int $value
-	 * @param string|int Optional $inner
-	 * @param number $selected
-	 * @return \Core\Lib\Content\Html\Form\Select
-	 */
-	public function &newOption($value = null, $inner = null, $selected = 0)
-	{
-		$option = $this->factory->create('Form\Option');
+        return $this->addOption($option);
+    }
 
-		$option->isSelected($selected);
+    /**
+     * Add an Option object to the options array.
+     * Use parameters to predefine
+     * the objects settings. If inner parameter is not set, the value is the inner
+     * content of option and has no value attribute.
+     *
+     * @param string|int $value
+     * @param string|int Optional $inner
+     * @param number $selected
+     * @return \Core\Lib\Content\Html\Form\Select
+     */
+    public function &newOption($value = null, $inner = null, $selected = 0)
+    {
+        $option = $this->factory->create('Form\Option');
 
-		if (isset($value)) {
-			$option->setValue($value);
-		}
+        $option->isSelected($selected);
 
-		if (isset($inner)) {
-			$option->setInner($inner);
-		}
+        if (isset($value)) {
+            $option->setValue($value);
+        }
 
-		return $this->addOption($option);
-	}
+        if (isset($inner)) {
+            $option->setInner($inner);
+        }
 
-	/**
-	 * Add an html option object to the optionlist
-	 *
-	 * @param Option $option
-	 *
-	 * @return \Core\Lib\Content\Html\Form\Select
-	 */
-	public function &addOption(Option $option)
-	{
-		$uniqeid = uniqid($this->getName() . '_option_');
-		$this->options[$uniqeid] = $option;
+        return $this->addOption($option);
+    }
 
-		return $this->options[$uniqeid];
-	}
+    /**
+     * Add an html option object to the optionlist
+     *
+     * @param Option $option
+     *
+     * @return \Core\Lib\Content\Html\Form\Select
+     */
+    public function &addOption(Option $option)
+    {
+        $uniqeid = uniqid($this->getName() . '_option_');
+        $this->options[$uniqeid] = $option;
 
-	public function setSize($size)
-	{
-		if (! is_int($size)) {
-			Throw new \InvalidArgumentException('A html form selects size attribute needs to be an integer.');
-		}
+        return $this->options[$uniqeid];
+    }
 
-		$this->addAttribute('size', $size);
+    public function setSize($size)
+    {
+        if (! is_int($size)) {
+            Throw new \InvalidArgumentException('A html form selects size attribute needs to be an integer.');
+        }
 
-		return $this;
-	}
+        $this->attribute['size'] = $size;
 
-	public function isMultiple($state = null)
-	{
-		$attrib = 'multiple';
+        return $this;
+    }
 
-		if (! isset($state)) {
-			return $this->checkAttribute($attrib);
-		}
+    public function isMultiple($state = null)
+    {
+        $attrib = 'multiple';
 
-		if ($state == 0) {
-			$this->removeAttribute($attrib);
-		}
-		else {
-			$this->addAttribute($attrib, $attrib);
-		}
+        if (! isset($state)) {
+            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
+        }
 
-		return $this;
-	}
+        if ($state == 0) {
+            unset($this->attribute[$attrib]);
+        }
+        else {
+            $this->attribute[$attrib] = $attrib;
+        }
 
-	public function getValue()
-	{
-		$values = [];
+        return $this;
+    }
 
-		/**
-		 *
-		 * @var Option $Option
-		 */
-		foreach ($this->options as $option) {
-			if ($option->isSelected()) {
-				$values[] = $option->getValue();
-			}
-		}
+    public function setValue($value)
+    {
+        if (!is_array($value)) {
+            $value = (array) $value;
+        }
 
-		return implode(',', $values);
-	}
+        $this->value = $value;
 
-	public function build()
-	{
-		$inner = '';
+        return $this;
+    }
 
-		foreach ($this->options as $option) {
-			$inner .= $option->build();
-		}
+    public function getValue()
+    {
+        return $this->value;
+    }
 
-		$this->setInner($inner);
+    public function build()
+    {
+        if (count($this->value) > 1) {
+            $this->isMultiple(1);
+        }
 
-		if ($this->isMultiple()) {
-			$this->setName($this->getName() . '[]');
-		}
+        foreach ($this->options as $option) {
 
-		return parent::build();
-	}
+            if ($this->value !== null && in_array($option->getValue(), $this->value)) {
+                $option->isSelected(1);
+            }
+
+            $this->inner .= $option->build();
+        }
+
+        if ($this->isMultiple()) {
+            $this->setName($this->getName() . '[]');
+        }
+
+        return parent::build();
+    }
 }

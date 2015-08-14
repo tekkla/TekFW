@@ -1,22 +1,26 @@
 <?php
-namespace Lib\Data\Rules;
+namespace Core\Lib\Data\Validator\Rules;
 
 /**
+ * Validator Rule: Required
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *
+ * Checks for a field to be set and empty.
+ * Note: Same as EmptyRule only with different errortext.
  */
-class RequiredRule
+class RequiredRule extends RuleAbstract
 {
 
     /**
-     * Checks for a field to be set and empty.
+     * (non-PHPdoc)
+     *
+     * @see \Core\Lib\Data\Validator\Rules\RuleAbstract::execute()
      */
-    private function validate()
+    public function execute()
     {
-        $this->result = isset($this->model->data->{$this->field});
-        $this->error = $this->txt('web_validator_required');
+        $result = ! empty($this->value);
+
+        if (! $result) {
+            $this->msg = $this->txt('validator_required');
+        }
     }
 }
-
-?>

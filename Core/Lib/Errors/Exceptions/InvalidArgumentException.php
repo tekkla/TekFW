@@ -1,29 +1,14 @@
 <?php
-namespace Core\Lib\Exceptions;
+namespace Core\Lib\Errors\Exceptions;
 
 /**
+ * InvalidArgumentException
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *
+ * @category 2014
+ * @license MIT
  */
-class InvalidArgumentException extends \InvalidArgumentException
+class InvalidArgumentException extends \ErrorException
 {
-
-	/**
-	 * => *
-	 * => * @param => message[optional]
-	 *
-	 * => * @param => code[optional]
-	 *
-	 * => * @param => previous[optional]
-	 *
-	 * => =>
-	 */
-	public function __construct($message, $code, $params = array(), $previous)
-	{
-		$message .= '';
-
-		parent::__construct($message, $code, $previous);
-	}
 }
 

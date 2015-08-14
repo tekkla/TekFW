@@ -15,8 +15,12 @@ class Checkbox extends Input
 
     protected $element = 'input';
 
-    protected $data = array(
+    protected $data = [
         'control' => 'checkbox'
-    );
+    ];
+
+    protected $attribute = [
+        'value' => 1,
+    ];
 }
 

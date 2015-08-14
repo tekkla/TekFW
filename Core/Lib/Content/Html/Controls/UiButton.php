@@ -15,7 +15,7 @@ use Core\Lib\Content\Html\Elements\A;
  * @final
  *
  */
-final class UiButton extends A
+class UiButton extends A
 {
 
 	/**
@@ -30,41 +30,41 @@ final class UiButton extends A
 	 *
 	 * @var string
 	 */
-	private $type = 'text';
+	protected $type = 'text';
 
 	/**
 	 *
 	 * @var bool
 	 */
-	private $modal = false;
+	protected $modal = false;
 
 	/**
 	 * Accessmode
 	 *
 	 * @var string
 	 */
-	private $mode = 'full';
+	protected $mode = 'full';
 
 	/**
 	 * Link title
 	 *
 	 * @var string
 	 */
-	private $title = '';
+	protected $title = '';
 
 	/**
 	 * img object
 	 *
 	 * @var Icon
 	 */
-	public $icon = false;
+	 protected $icon = false;
 
 	/**
 	 * button text
 	 *
 	 * @var string
 	 */
-	private $text = '';
+	protected $text = '';
 
 	/**
 	 * Sets buttonmode to: ajax

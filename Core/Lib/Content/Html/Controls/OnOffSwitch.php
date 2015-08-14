@@ -2,6 +2,7 @@
 namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Select;
+use Core\Lib\Traits\TextTrait;
 
 /**
  * Creates a on/off switch control
@@ -12,7 +13,7 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class OnOffSwitch extends Select
 {
-    use \Core\Lib\Traits\TextTrait;
+    use TextTrait;
 
     // array with option objects
     private $switch = [];
@@ -26,17 +27,17 @@ class OnOffSwitch extends Select
             return;
         }
 
-        // Add on option
-        $option = $this->factory->create('Form\Option');
-        $option->setValue(1);
-        $option->setInner($this->txt('on'));
-        $this->switch['on'] = $option;
-
         // Add off option
         $option = $this->factory->create('Form\Option');
         $option->setValue(0);
         $option->setInner($this->txt('off'));
         $this->switch['off'] = $option;
+
+        // Add on option
+        $option = $this->factory->create('Form\Option');
+        $option->setValue(1);
+        $option->setInner($this->txt('on'));
+        $this->switch['on'] = $option;
     }
 
     /**
@@ -111,6 +112,8 @@ class OnOffSwitch extends Select
      */
     public function build()
     {
+        $this->createSwitches();
+
         foreach ($this->switch as $option) {
             $this->addOption($option);
         }

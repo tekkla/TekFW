@@ -1,25 +1,178 @@
 // ---------------------------------------------------------------------------- 
 // Function with commands to use on "ready" and in/after ajax requests
 // ----------------------------------------------------------------------------
-function webReadyAndAjax() {
-    
-    // Bind datepicker
-    $('.form-datepicker').webDatepicker();
 
-    // Bind error popover
-    $('.form-control[data-error]').webErrorPop();
+var coreFw = {
 
-    // beautifiying xdebug oputput including ajax return values add styling
-    // hooks to any XDEBUG output
-    $('font>table').addClass('xdebug-error');
-    $('font>table *').removeAttr('style').removeAttr('bgcolor');
-    $('font>table tr:first-child').addClass('xdebug-error_description');
-    $('font>table tr:nth-child(2)').addClass('xdebug-error_callStack');
+    readyAndAjax : function() {
 
-    // Fade out elements
-    $('.fadeout').delay(fadeout_time).slideUp(800, function() {
-        $(this).remove();
-    });
+        // Bind datepicker
+        $('.form-datepicker').coreDatepicker();
+
+        // Bind error popover
+        $('.form-control[data-error]').coreErrorPop();
+
+        // Bind selectpicker
+        $('.selectpicker').selectpicker();
+
+        // beautifiying xdebug oputput including ajax return values add styling
+        // hooks to any XDEBUG output
+        $('font>table').addClass('xdebug-error');
+        $('font>table *').removeAttr('style').removeAttr('bgcolor');
+        $('font>table tr:first-child').addClass('xdebug-error_description');
+        $('font>table tr:nth-child(2)').addClass('xdebug-error_callStack');
+
+        // Fade out elements
+        $('.fadeout').delay(fadeout_time).slideUp(800, function() {
+            $(this).remove();
+        });
+    },
+
+    loadAjax : function(element) {
+
+        // Prepare options object
+        var ajaxOptions = {
+
+            // On success the response parser is called
+            success : this.parseJSON,
+
+            // Returntype is JSON
+            dataType : 'json'
+        };
+
+        // Which url to reqest? The data attribute "form"
+        // indicates that we are going to send a
+        // form. Without this, it is a normal link, that we are
+        // going to load.
+        if ($(element).data('form') === undefined) {
+
+            // Ext links will be handled by GET
+            ajaxOptions.type = 'GET';
+
+            // Try to get url either from links href attribute or
+            if ($(element).attr('href') !== undefined) {
+                var url = $(element).attr('href');
+            } else if ($(element).data('href') !== undefined) {
+                var url = $(element).data('href');
+            }
+            else if ($(element).data('url') !== undefined) {
+                var url = $(element).data('url');                
+            } else {
+                console.log('No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
+                return false;
+            }
+        } else {
+
+            // Ext forms will be handled py POST
+            ajaxOptions.type = 'POST';
+
+            // Get the form ID from the clicked link
+            var id = $(element).data('form');
+
+            // Get action url
+            var url = $('#' + id).attr('action');
+
+            // experimental usage of ckeditor 4 inline editor. id is
+            // the div where the content is present
+            // control the hidden form where we put the content
+            // before serialization gathers the form data
+            // for ajax post.
+            if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
+                
+                var control = $(element).data('inline-control');
+                var content = $('#' + $(element).data('inline-id')).html();
+                
+                $('#' + control).val(content);
+            }
+
+            // Since this is a form post, get the data to send to
+            // server
+            ajaxOptions.data = $('#' + id).serialize();
+        }
+
+        // Set the url to use
+        ajaxOptions.url = url + '/ajax';
+
+        // Add error handler
+        ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
+            
+            var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText
+                    : 'Ajax Request Error: ' + textStatus;
+            console.log(errortext);
+        };
+
+        // Fire ajax request!
+        $.ajax(ajaxOptions);
+    },
+
+    // ----------------------------------------------------------------------------
+    // Json parser for Ext ajax response
+    // ----------------------------------------------------------------------------
+    parseJSON : function(json) {
+
+        $.each(json, function(type, stack) {
+
+            // DOM manipulations
+            if (type == 'dom') {
+                $.each(stack, function(id, cmd) {
+
+                    if ($(id).length) {
+
+                        $.each(cmd, function(i, x) {
+                            selector = $(id)[x.f](x.a);
+                        });
+
+                    } else {
+                        console.log('Selector "' + id + '" not found.');
+                    }
+                });
+            }
+
+            // Specific actions
+            if (type == 'act') {
+                $.each(stack, function(i, cmd) {
+
+                    switch (cmd.f) {
+                    case "alert":
+                        bootbox.alert(cmd.a[0]);
+                        break;
+                    case "error":
+                        $('#message').addClass('fade in').append(cmd.a[0]);
+                        $('#message').bind(
+                                'closed.bs.alert',
+                                function() {
+                                    $(this).removeClass().html('').unbind(
+                                            'closed.bs.alert');
+                                });
+                        break;
+                    case "dump":
+                    case "log":
+                    case "console":
+                        console.log(cmd.a);
+                        break;
+                    case "modal":
+
+                        // fill dialog with content
+                        $('#modal').html(cmd.a).modal({
+                            keyboard : false
+                        });
+                        break;
+
+                    case 'load_script':
+                        $.getScript(cmd.a);
+                        break;
+
+                    case 'href':
+                        window.location.href = cmd.a;
+                        return;
+                    }
+                });
+            }
+        });
+        
+        coreFw.readyAndAjax();
+    }
+
 }
 
 // ----------------------------------------------------------------------------
@@ -38,7 +191,7 @@ $(document).ready(function() {
     });
 
     // Run function with commands to be used on "ready" and "ajaxComplete"
-    webReadyAndAjax()
+    coreFw.readyAndAjax();
 });
 
 // ----------------------------------------------------------------------------
@@ -47,7 +200,7 @@ $(document).ready(function() {
 $(document).ajaxStart(function() {
 
     // Show loading circle on ajax loads
-    $('body').addClass("loading");
+    // $('body').addClass("loading");
 });
 
 // ----------------------------------------------------------------------------
@@ -56,9 +209,9 @@ $(document).ajaxStart(function() {
 $(document).ajaxStop(function(event) {
 
     // Hide loading circle
-    $('body').removeClass("loading");
-    
-    webReadyAndAjax();
+    // $('body').removeClass("loading");
+
+    coreFw.readyAndAjax();
 });
 
 // ----------------------------------------------------------------------------
@@ -67,18 +220,20 @@ $(document).ajaxStop(function(event) {
 $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 
     if ($(this).data('counter') !== undefined) {
+
         var limit = parseInt($(this).attr('maxlength'));
         var text = $(this).val();
         var chars = text.length;
 
         if (chars > limit) {
-            var new_text = text.substr(0, limit);
-            $(this).val(new_text);
+            $(this).val(text.substr(0, limit));
         }
+
         var counterid = $(this).data('counter');
 
-        if ($(counterid).length > 0)
+        if ($(counterid).length > 0) {
             $(counterid).text(limit - chars);
+        }
     }
 });
 
@@ -87,17 +242,16 @@ $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 // ----------------------------------------------------------------------------
 $(document).on('click', '#scrolltotop', function(event) {
 
-    if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {           
-        window.scrollTo(0,0) // first value for left offset, second value for
-								// top offset
+    if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {
+        window.scrollTo(0, 0);
     } else {
         $('html,body').animate({
-            scrollTop: 0,
-            scrollLeft: 0
-        }, 800, function(){
+            scrollTop : 0,
+            scrollLeft : 0
+        }, 800, function() {
             $('html,body').clearQueue();
         });
-    }    
+    }
 
     return false;
 });
@@ -112,16 +266,15 @@ $(document).on('click', '.btn-back', function(event) {
 // ----------------------------------------------------------------------------
 // ClickHandler for confirms
 // ----------------------------------------------------------------------------
-$(document).on('click', '*[data-confirm]', function(event) {
-
-    if ($(this).data('ajax') !== undefined)
-        return;
-
+$(document).on('click', '*[data-confirm] + *:not([data-ajax])', function(event) {
+    
     // confirmation wanted?
     if ($(this).data('confirm') !== undefined) {
-        var result = confirm($(this).data('confirm'));
-        if (!result)
+
+        if (!confirm($(this).data('confirm'))) {
+            event.preventDefault();
             return false;
+        }
     }
 });
 
@@ -129,143 +282,19 @@ $(document).on('click', '*[data-confirm]', function(event) {
 // Ajax based click-handler to links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-ajax]', function(event) {
-
-    // confirmation wanted?
+    
     if ($(this).data('confirm') !== undefined) {
-        var result = confirm($(this).data('confirm'));
-        if (!result) {
-            return false;
-    	}
-    }
-
-    // Prepare options object
-    var ajaxOptions = {
-
-        // On success the response parser is called
-        success : parseJson,
-
-        // Returntype is JSON
-        dataType : 'json'
-    };
-
-    // Which url to reqest? The data attribute "form"
-    // indicates that we are going to send a
-    // form. Without this, it is a normal link, that we are
-    // going to load.
-    if ($(this).data('form') === undefined) {
-
-        // Ext links will be handled by GET
-        ajaxOptions.type = 'GET';
-
-        // Try to get url either from links href attribute or
-        if ($(this).attr('href') !== undefined) {
-            var url = $(this).attr('href');
-        } else if ($(this).data('href') !== undefined) {
-            var url = $(this).data('href');
-        } else {
-            alert('Ext Ajax: No URI to query found. Neither as "href" nor as "data-href". Aborting request.');
+        
+        if (!confirm($(this).data('confirm'))) {
             return false;
         }
-    } 
-    else {
-
-        // Ext forms will be handled py POST
-        ajaxOptions.type = 'POST';
-
-        // Get the form ID from the clicked link
-        var id = $(this).data('form');
-
-        // Get action url
-        var url = $('#' + id).attr('action');
-
-        // experimental usage of ckeditor 4 inline editor. id is
-        // the div where the content is present
-        // control the hidden form where we put the content
-        // before serialization gathers the form data
-        // for ajax post.
-        if ($(this).data('inline-id') !== undefined && $(this).data('inline-control') !== undefined) {
-            var control = $(this).data('inline-control');
-            var content = $('#' + $(this).data('inline-id')).html();
-            $('#' + control).val(content);
-        }
-
-        // Since this is a form post, get the data to send to
-        // server
-        ajaxOptions.data = $('#' + id).serialize();
     }
-
-    // Set the url to use
-    ajaxOptions.url = url + '/ajax';
-
-    // Add error handler
-    ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-        $('#message').append('<div class="panel panel-danger">' + XMLHttpRequest.responseText + '</div>');
-    };
-
-    // Fire ajax request!
-    $.ajax(ajaxOptions);
+    
+    coreFw.loadAjax(this);  
+    
+    if ($(this).data('to-top') !== undefined) {
+        window.scrollTo(0, 0);
+    }
     
     event.preventDefault();
 });
-
-// ----------------------------------------------------------------------------
-// Json parser for Ext ajax response
-// ----------------------------------------------------------------------------
-function parseJson(json) {
-    
-    console.log(json);
-    
-    $.each(json, function(type, stack) {
-        
-        // DOM manipulations
-        if (type=='dom')
-        {
-            $.each(stack, function(id, cmd) {
-                
-                var selector = $(id);
-                
-                $.each(cmd, function(i, x) {
-                    selector = selector[x.f](x.a);
-                });
-            });
-        }
-        
-        // Specific actions
-        if (type=='act')
-        {
-            $.each(stack, function(i, cmd) {
-              
-                switch (cmd.f) {
-                    case "alert":
-                        bootbox.alert(cmd.a[0]);
-                        break;
-                    case "error":
-                        $('#message').addClass('fade in').append(cmd.a[0]);
-                        $('#message').bind('closed.bs.alert', function() {
-                            $(this).removeClass().html('').unbind('closed.bs.alert');
-                        });
-                        break;
-                    case "log":
-                    case "console":
-                        console.log(cmd.a);
-                        break;
-                    case "modal":
-
-                        // fill dialog with content
-                        $('#modal').html(cmd.a).modal({
-                            keyboard : false
-                        });
-                        break;
-
-                    case 'load_script':
-                        $.getScript(cmd.a);
-                        break;
-                    
-                    case 'href':
-                        window.location.href = cmd.a;
-                        return;
-                }
-            });
-        }
-    });
-}

@@ -3,55 +3,125 @@ namespace Core\Lib\Utilities;
 
 /**
  * Timer class for time measurement
- * 
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Timer
 {
 
+    /**
+     *
+     * @var integer
+     */
     private $start;
 
+    /**
+     *
+     * @var integer
+     */
     private $end;
 
+    /**
+     *
+     * @var bool
+     */
+    private $running = false;
+
+    /**
+     *
+     * @var array
+     */
+    private $checkpoints = [];
+
+    /**
+     * Starts timer and creates first checkpoint
+     *
+     * @throws \RuntimeException
+     *
+     * @return \Core\Lib\Utilities\Timer
+     */
     public function start()
     {
+        if ($this->running) {
+            Throw new \RuntimeException('Timer is already running.');
+        }
+
         $this->start = microtime(true);
+        $this->checkpoints['start'] = $this->start;
+        $this->running = true;
+
+        return $this;
     }
 
+
+    /**
+     * Stopps timer and returns difference from start
+     */
     public function stop()
     {
+        if (!$this->running) {
+            Throw new \RuntimeException('Timer is not running.');
+        }
+
         $this->end = microtime(true);
-        return $this->GetDiff();
+        $this->checkpoints['end'] = $this->end;
+        $this->running = false;
+
+        return  $this->getDiff();
     }
 
+    /**
+     * Adds a new named checkpoint which measures the time between now and the last checkpooint.
+     *
+     * @param string $name
+     */
+    public function checkpoint($name)
+    {
+        $this->checkpoints[$name] = microtime(true) - end($this->checkpoints);
+    }
+
+    /**
+     * Returns the start time.
+     *
+     * @return integer
+     */
     private function getStart()
     {
-        if (isset($this->start))
-            return $this->start;
-        else
-            return false;
+        return $this->start;
     }
 
+    /**
+     * Stopps timer and returns it's ending time.
+     * Sets also endcheckpoint
+     *
+     * @return mixed
+     */
     private function getEnd()
     {
-        if (isset($this->end))
-            return $this->end;
-        else
-            return false;
+        if ($this->running) {
+            $this->stop();
+        }
+
+        return $this->end;
     }
 
+    /**
+     * Calculates and returns the time between start and end.
+     *
+     * @return number
+     */
     public function getDiff()
     {
         return $this->getEnd() - $this->getStart();
     }
 
+    /**
+     * Resets timer to current time.
+     */
     public function reset()
     {
-        $this->start = microtime(true);
+        $this->start = 0;
     }
 }
-

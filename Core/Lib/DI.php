@@ -4,28 +4,43 @@ namespace Core\Lib;
 use Core\Lib\Amvc\App;
 
 /**
- *  DI Container
+ * DI Container
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2014
  * @license MIT
- *
  */
 class DI implements \ArrayAccess
 {
 
+    /**
+     * Mapped services, factories and values
+     *
+     * @var array
+     */
     private $map = [];
 
-    private $services = [];
+    /**
+     * Singleton service storage
+     *
+     * @var array
+     */
+    private $names = [];
 
+    /**
+     * Constructor
+     *
+     * @param boolean $defaults Optional flag to map default services, factories and values. Default: true
+     */
     public function __construct($defaults = true)
     {
-        if ($defaults == true)
+        if ($defaults == true) {
             $this->mapDefaults();
+        }
     }
 
     /**
-     * Maps some core default services, factories and values
+     * Maps default services, factories and values
      */
     private function mapDefaults()
     {
@@ -114,11 +129,12 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
         // == DATA ==========================================================
-        $this->mapFactory('core.data.validator', '\Core\Lib\Data\Validator\Validator');
+        $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
         $this->mapFactory('core.data.container', '\Core\Lib\Data\Container');
+        $this->mapFactory('core.data.vars', '\Core\Lib\Data\Vars');
 
         // == CONTENT =======================================================
-        $this->mapService('core.content.content', '\Core\Lib\Content\Content', [
+        $this->mapService('core.content', '\Core\Lib\Content\Content', [
             'core.http.router',
             'core.cfg',
             'core.amvc.creator',
@@ -150,7 +166,8 @@ class DI implements \ArrayAccess
             'core.sec.user.current',
             'core.ajax',
             'core.content.message',
-            'db.default'
+            'db.default',
+            'core.cfg'
         ]);
     }
 
@@ -161,7 +178,7 @@ class DI implements \ArrayAccess
      * into the object instance. A so created object instance gets always the
      * di container object injected.
      *
-     * @param unknown $class_name
+     * @param string $class_name
      * @param string $arguments
      *
      * @return object
@@ -172,7 +189,7 @@ class DI implements \ArrayAccess
         $reflection = new \ReflectionClass($class_name);
 
         // Creating an instance of the class when no arguments provided
-        if ($arguments === null || count($arguments) == 0) {
+        if (empty($arguments) || count($arguments) == 0) {
             $obj = new $class_name();
         }
 
@@ -228,14 +245,12 @@ class DI implements \ArrayAccess
     /**
      * Maps a named value
      *
-     * @param string $key
-     *            Name of the value
-     * @param unknown $value
-     *            The value itself
+     * @param string $name Name of the value
+     * @param unknown $value The value itself
      */
-    public function mapValue($key, $value)
+    public function mapValue($name, $value)
     {
-        $this->map[$key] = [
+        $this->map[$name] = [
             'value' => $value,
             'type' => 'value'
         ];
@@ -246,16 +261,13 @@ class DI implements \ArrayAccess
      *
      * Requesting this service will result in returning always the same object.
      *
-     * @param string $key
-     *            Name of the service
-     * @param string $value
-     *            Class to use for object creation
-     * @param string $arguments
-     *            Arguments to provide on instance create
+     * @param string $name Name of the service
+     * @param string $value Class to use for object creation
+     * @param string $arguments Arguments to provide on instance create
      */
-    public function mapService($key, $value, $arguments = null)
+    public function mapService($name, $value, $arguments = null)
     {
-        $this->map[$key] = [
+        $this->map[$name] = [
             'value' => $value,
             'type' => 'service',
             'arguments' => $arguments
@@ -267,16 +279,13 @@ class DI implements \ArrayAccess
      *
      * Requestingthis class will result in new object.
      *
-     * @param string $key
-     *            Name to access object
-     * @param string $value
-     *            Classname of object
-     * @param string $arguments
-     *            Arguments to provide on instance create
+     * @param string $name Name to access object
+     * @param string $value Classname of object
+     * @param string $arguments Arguments to provide on instance create
      */
-    public function mapFactory($key, $value, $arguments = null)
+    public function mapFactory($name, $value, $arguments = null)
     {
-        $this->map[$key] = [
+        $this->map[$name] = [
             'value' => $value,
             'type' => 'factory',
             'arguments' => $arguments
@@ -286,12 +295,9 @@ class DI implements \ArrayAccess
     /**
      * Executes object method by using Reflection
      *
-     * @param $obj Object
-     *            to call parameter injected method
-     * @param $method Name
-     *            of method to call
-     * @param $params (Optional)
-     *            Array of parameters to inject into method
+     * @param $obj Object to call parameter injected method
+     * @param $method Name of method to call
+     * @param $params (Optional) Array of parameters to inject into method
      *
      * @throws MethodNotExistsError
      * @throws ParameterNotSetError
@@ -338,27 +344,61 @@ class DI implements \ArrayAccess
     }
 
     /**
-     * Checks for a registred service by it's name.
+     * Returns the requested SFV (Service/Factory/Value).
      *
-     * @param string $service
-     *            Name of service to check for
+     * @param string $name Name of the Service, Factory or Value to return
      *
-     * @return boolean
+     * @return unknown|Ambigous
      */
-    public function exists($service)
+    private function getSFV($name)
     {
-        return $this->offsetExists($service);
+        if (! $this->offsetExists($name)) {
+            Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
+        }
+
+        $type = $this->map[$name]['type'];
+        $value = $this->map[$name]['value'];
+
+        if ($type == 'value') {
+            return $value;
+        }
+        elseif ($type == 'factory') {
+            return $this->instance($value, $this->map[$name]['arguments']);
+        }
+        else {
+
+            if (! isset($this->services[$name])) {
+                $this->services[$name] = $this->instance($value, $this->map[$name]['arguments']);
+            }
+
+            return $this->services[$name];
+        }
     }
 
     /**
-     * Returns requested service, class or value
+     * Checks for a registred SFV.
      *
-     * @param string $service
-     *            Name of registered service, class or value
+     * @param string $name Name of service, factory or value to check
+     *
+     * @return boolean
      */
-    public function get($service)
+    public function exists($name)
     {
-        return $this->offsetGet($service);
+        return $this->offsetExists($name);
+    }
+
+    /**
+     * Returns requested service, factory or value
+     *
+     * @param string $name Name of registered service, class or value
+     */
+    public function get($name)
+    {
+        return $this->getSFV($name);
+    }
+
+    public function log($var) {
+        $this->get('core.util.fire')->log($var);
     }
 
     /**
@@ -366,9 +406,9 @@ class DI implements \ArrayAccess
      *
      * @see ArrayAccess::offsetExists()
      */
-    public function offsetExists($service)
+    public function offsetExists($name)
     {
-        return array_key_exists($service, $this->map);
+        return array_key_exists($name, $this->map);
     }
 
     /**
@@ -376,27 +416,9 @@ class DI implements \ArrayAccess
      *
      * @see ArrayAccess::offsetGet()
      */
-    public function offsetGet($service)
+    public function offsetGet($name)
     {
-        if (! $this->offsetExists($service)) {
-            Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $service));
-        }
-
-        $type = $this->map[$service]['type'];
-        $value = $this->map[$service]['value'];
-
-        if ($type == 'value') {
-            return $value;
-        } elseif ($type == 'factory') {
-            return $this->instance($value, $this->map[$service]['arguments']);
-        } else {
-
-            if (! isset($this->services[$service])) {
-                $this->services[$service] = $this->instance($value, $this->map[$service]['arguments']);
-            }
-
-            return $this->services[$service];
-        }
+        return $this->getSFV($name);
     }
 
     /**
@@ -404,9 +426,10 @@ class DI implements \ArrayAccess
      *
      * @see ArrayAccess::offsetSet()
      */
-    public function offsetSet($service, $value)
+    public function offsetSet($name, $value)
     {
-        $this->map[$service] = $value;
+        // No mapping through this way.
+        Throw new \InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
     }
 
     /**
@@ -414,10 +437,10 @@ class DI implements \ArrayAccess
      *
      * @see ArrayAccess::offsetUnset()
      */
-    public function offsetUnset($service)
+    public function offsetUnset($name)
     {
-        if ($this->offsetExists($service)) {
-            unset($this->map[$service]);
+        if ($this->offsetExists($name)) {
+            unset($this->map[$name]);
         }
     }
 }

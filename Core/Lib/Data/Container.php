@@ -1,20 +1,48 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Traits\DebugTrait;
+
 /**
  * Container Object
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015 by author
  * @license MIT
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
 
-    use \Core\Lib\Traits\SerializeTrait;
+    use SerializeTrait;
+    use DebugTrait;
 
+    /**
+     * Optional name of fieldlist to load
+     *
+     * @var string
+     */
+    protected $available = '';
+
+    /**
+     * List of fieldnames to use from available fields
+     *
+     * @var array
+     */
+    protected $use = [];
+
+    /**
+     * Storage for field objects
+     *
+     * @var array
+     */
     private $fields = [];
 
+    /**
+     * Storage of container error messages
+     *
+     * @var array
+     */
     private $errors = [];
 
     /**
@@ -22,18 +50,13 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @param array $fields
      */
-    public function __construct(array $fields = [])
-    {
-        if ($fields) {
-            $this->parseFields($fields);
-        }
-    }
+    public function __construct()
+    {}
 
     /**
      * Access on field.
      *
-     * @param string $name
-     *            Name of field
+     * @param string $name Name of field
      *
      * @return mixed
      */
@@ -43,7 +66,8 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
         if (isset($this->fields[$name])) {
             return $this->fields[$name];
-        } else {
+        }
+        else {
             return $null;
         }
     }
@@ -82,21 +106,45 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
     /**
      * Parses a field definition array and created container fields from it.
-     * A field withou type attribute is treated as
-     * string. You can use the following attributes:
+     * A field withou type attribute is treated as string.
+     *
+     * You can use the following attributes:
      *
      * type => String, integer, float or any other datatype you want to use. Be sure a componenten like
      * DataAdapter can handle this datatype. Default: string
      * primary => Flag to show that this field contains the value of a primary key. Default: false
      * serialize => Flag that says the Data needs to be serialized before saving and to be unserialized before
      * fillig the field. Default: false
-     * validate => Array of rules to validate the field value angainst. Default: []
+     * validate => Array of rules to validate the field value angainst when calling containers validate() method. Default: []
      * size => Max contentsize of field. Defaul: null
+     * control => Name of controltype to use when container is used in forms or within FormDesinger lib.
+     * default => Defaultvalue for this field.
      *
      * @param array $fields
      */
-    public function parseFields(Array $fields)
+    public function parseFields(Array $fields = [])
     {
+        if (empty($fields)) {
+
+            $src = empty($this->use) ? 'available' : 'use';
+
+            if (empty($this->$src)) {
+                Throw new \RuntimeException('The called container has no field definitions set.');
+            }
+
+            foreach ($this->$src as $fld_name) {
+                $fields[$fld_name] = $this->available[$fld_name];
+            }
+        }
+
+        // When there is no field definition, than try to load this defintions
+        if (empty($fields) && ! empty($this->available) && is_array($this->available)) {
+
+            // The field defintion list can be stored in use property
+            $fields = $this->available;
+        }
+
+        // Field creation process
         foreach ($fields as $name => $field) {
 
             if (! isset($field['type'])) {
@@ -112,49 +160,69 @@ class Container implements \IteratorAggregate, \ArrayAccess
                 $field['validate'][] = 'empty';
             }
 
-            if (! isset($field['size'])) {
-                $field['size'] = null;
+            // Nullify fields when not set
+            $null_fields = [
+                'size',
+                'control',
+                'default'
+            ];
+
+            foreach ($null_fields as $to_check) {
+                if (! isset($field[$to_check])) {
+                    $field[$to_check] = null;
+                }
             }
 
-            $this->createField($name, $field['type'], $field['primary'], $field['size'], $field['serialize'], $field['validate']);
+            $this->createField($name, $field['type'], $field['size'], $field['primary'], $field['serialize'], $field['validate'], $field['control'], $field['default']);
         }
     }
 
     /**
      * Creates a container field and adds it to the container
      *
-     * @param string $name
-     *            Fieldname
-     * @param string $type
-     *            Fieldtype
-     * @param boolean $primary
-     *            Primary key flag
-     * @param boolean $serialize
-     *            Serialize flag
-     * @param string|array $validate
-     *            One or more validation rules
+     * @param string $name Fieldname
+     * @param string $type Fieldtype
+     * @param boolean $primary Primary key flag
+     * @param boolean $serialize Serialize flag
+     * @param string|array $validate One or more validation rules
      *
      * @return \Core\Lib\Data\Container
      */
-    public function createField($name, $type = 'string', $size = null, $primary = false, $serialize = false, $validate = [])
+    public function createField($name, $type = 'variant', $size = null, $primary = false, $serialize = false, $validate = [], $control = null, $default = null)
     {
-        $data_field = new Field();
-        $data_field->setName($name);
-        $data_field->setType($type);
+        $field = new Field();
+
+        $field->setName($name);
+        $field->setType($type);
 
         if ($size !== null) {
-            $data_field->setSize($size);
+            $field->setSize($size);
         }
 
-        $data_field->setPrimary($primary);
-        $data_field->setSerialize($serialize);
-        $data_field->setValidation($validate);
+        if ($control !== null) {
+            $field->setControl($control);
+        }
 
-        $this->fields[$name] = $data_field;
+        if ($default !== null) {
+            $field->setDefault($default);
+        }
+
+        $field->setPrimary($primary);
+        $field->setSerialize($serialize);
+        $field->setValidation($validate);
+
+        $this->fields[$name] = $field;
 
         return $this;
     }
 
+    /**
+     * Adds a Field object to the fieldlist.
+     *
+     * @param Field $field
+     *
+     * @return \Core\Lib\Data\Container
+     */
     public function addField(Field $field)
     {
         $this->fields[$field->getName()] = $field;
@@ -163,12 +231,42 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
+     * Removes a field by it's name from the fieldlist.
+     *
+     * @param string $name
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    public function removeField($name)
+    {
+        if (isset($this->fields[$name])) {
+            unset($this->fields[$name]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds validation rules by providing a complete stack of rules for more than one field.
+     *
+     * @param array $validationset
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    public function setValidationset(Array $validationset)
+    {
+        foreach ($validationset as $field => $rule) {
+            $this->setValidation($field, $rule);
+        }
+
+        return $this;
+    }
+
+    /**
      * Sets one or more validation rule for a specific field.
      *
-     * @param string $field
-     *            Fieldname
-     * @param string|array $rule
-     *            Rulename or an array of rulenames
+     * @param string $field Fieldname
+     * @param string|array $rule Rulename or an array of rulenames
      *
      * @return \Core\Lib\Data\DataContainer
      */
@@ -184,47 +282,69 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Validates container data against the set validation rules
+     * Validates container data against the set validation rules.
+     * Returns boolean true when successful validate without errors.
+     *
+     * @return boolean
      */
-    public function validate()
+    public function validate($options = [])
     {
+        /* @var $validator \Core\Lib\Data\Validator\Validator */
         $validator = $this->di->get('core.data.validator');
-        $validator->setContainer($this);
-        $validator->validate();
+
+        /* @var $field \Core\Lib\Data\Field */
+        foreach ($this->fields as $field) {
+
+            // Skip field?
+            if (isset($options['skip']) && in_array($field->getName(), $options['skip'])) {
+                continue;
+            }
+
+            /* @TODO CHECK THIS TO APPLY RULES FOR PK NEEDED? */
+            if ($field->getPrimary()) {
+                continue;
+            }
+
+            // Get rules from field
+            $rules = $field->getValidation();
+
+            // No rules no valiadtion for this field
+            if (empty($rules)) {
+                continue;
+            }
+
+            $result = $validator->validate($field->getValue(), $rules);
+
+            if (empty($result)) {
+                continue;
+            }
+
+            $this->addError($field->getName(), $result);
+        }
+
+        return $this->hasErrors() ? false : true;
     }
 
     /**
      * Adds a field related error message.
      *
-     * @param string $field
-     *            Fieldname
-     * @param string $error
-     *            Errortext
+     * @param string $field Fieldname
+     * @param string|array $error Errortext
      *
      * @return \Core\Lib\Data\DataContainer
      */
     public function addError($field, $error)
     {
-        $this->errors[$field][] = $error;
+        if (is_array($error)) {
+            foreach ($error as $msg) {
+                $this->errors[$field][] = $msg;
+            }
+        }
+        else {
+            $this->errors[$field][] = $error;
+        }
 
         return $this;
-    }
-
-    /**
-     * Sets a field related error message.
-     *
-     * @param string $field
-     *            Fieldname
-     * @param string $error
-     *            Errortext
-     *
-     * @deprecated
-     *
-     * @return \Core\Lib\Data\DataContainer
-     */
-    public function setError($field, $error)
-    {
-        return $this->addError($field, $error);
     }
 
     /**
@@ -236,15 +356,25 @@ class Container implements \IteratorAggregate, \ArrayAccess
      */
     public function getErrors($field = '')
     {
-        if (! $field) {
+        if (empty($field)) {
             return $this->errors;
         }
 
-        return isset($this->errors[$field]) ? $this->errors[$field] : [];
+        return isset($this->errors[$field]) ? $this->errors[$field] : false;
     }
 
-    public function hasErrors()
+    /**
+     * Checks for errors in the container
+     *
+     * @return boolean
+     */
+    public function hasErrors($field = '')
     {
+        // Check field specific error
+        if (! empty($field) && ! empty($this->errors)) {
+            return isset($this->errors[$field]);
+        }
+
         return $this->errors ? true : false;
     }
 
@@ -252,14 +382,17 @@ class Container implements \IteratorAggregate, \ArrayAccess
      * Fills container with data.
      *
      * Tries to use an existing field and creates a generic string field when no matching field is found.
+     * Important: The filled in data will be converted explicite into the type the field is set to.
      *
      * @param array $data
+     * @param array $validationset
+     * @param array $serialize Array of fieldnames to
      *
      * @throws \RuntimeException
      *
      * @return \Core\Lib\Data\DataContainer
      */
-    public function fill(array $data)
+    public function fill(Array $data, Array $validationset = [], Array $serialize = [])
     {
         foreach ($data as $name => $value) {
 
@@ -268,6 +401,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
                 $this->createField($name, 'string');
             }
 
+            // Important: Explicite txype conversion!
             if (! $value instanceof Container && ! is_object($value) && ! is_array($value) && ! is_null($value)) {
                 settype($value, $this->fields[$name]->getType());
             }
@@ -278,7 +412,20 @@ class Container implements \IteratorAggregate, \ArrayAccess
                 $this->fields[$name]->setSerialize(true);
             }
 
+            if ($value instanceof Container) {
+                $this->fields[$name]->setType('container');
+                $this->fields[$name]->setSerialize(true);
+            }
+
             $this->fields[$name]->setValue($value);
+        }
+
+        if ($validationset) {
+            $this->setValidationset($validationset);
+        }
+
+        if ($serialize) {
+            $this->setSerialize($serialize);
         }
 
         return $this;
@@ -292,6 +439,22 @@ class Container implements \IteratorAggregate, \ArrayAccess
     public function get()
     {
         return $this->fields;
+    }
+
+    /**
+     * Returns the fields by their names their values as assoc array.
+     *
+     * @return array
+     */
+    public function getArray()
+    {
+        $out = [];
+
+        foreach ($this->fields as $name => $field) {
+            $out[$name] = $field->getValue();
+        }
+
+        return $out;
     }
 
     /**
@@ -319,8 +482,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
     /**
      * Sets serialize flag on fields provided by fields argument.
      *
-     * @param string|array $fields
-     *            One field or list of fields to set flag
+     * @param string|array $fields One field or list of fields to set flag
      *
      * @return \Core\Lib\Data\Container
      */
@@ -337,8 +499,32 @@ class Container implements \IteratorAggregate, \ArrayAccess
         return $this;
     }
 
-    public function getColumn($field)
-    {}
+    public function useAllFields()
+    {
+        $this->use = array_keys($this->available);
+
+        return $this;
+    }
+
+    /**
+     * Checks fields in container for a primary field and return the name of the field when found.
+     * Returns boolean false when no such field exists.
+     *
+     * @return string|bool
+     */
+    public function getPrimary()
+    {
+        $primary = false;
+
+        foreach ($this->fields as $field) {
+            if ($field->getPrimary()) {
+                $primary = $field->getName();
+                break;
+            }
+        }
+
+        return $primary;
+    }
 
     /**
      * (non-PHPdoc)
@@ -352,6 +538,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         }
 
         if (! isset($this->fields[$offset])) {
+
             switch (true) {
 
                 case (is_array($value)):
@@ -361,8 +548,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
                     $type = 'array';
                     $value = $value->get();
                     break;
-                default:
+                case (is_string($value)):
                     $type = 'string';
+                    break;
+                default:
+                    $type = 'variant';
                     break;
             }
 

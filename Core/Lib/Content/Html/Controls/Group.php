@@ -12,7 +12,7 @@ use Core\Lib\Content\Html\Elements\Div;
  * @license MIT
  * @copyright 2014 by author
  */
-final class Group extends Div
+class Group extends Div
 {
 
     private $new_row = false;
@@ -183,33 +183,33 @@ final class Group extends Div
 
             $this->inner .= '<div class="panel-body">';
 
-            if (isset($this->description)){
+            if (isset($this->description)) {
                 $this->inner .= '{description}';
             }
 
-            if ($this->row){
+            if ($this->row) {
                 $this->inner .= '<div class="row">';
             }
 
             $this->inner .= '{content}</div>';
 
-            if ($this->row){
+            if ($this->row) {
                 $this->inner .= '</div>';
             }
 
-            if (isset($this->footer)){
+            if (isset($this->footer)) {
                 $this->inner .= '{footer}';
             }
 
             $this->inner .= '</div>';
-
-        } else {
+        }
+        else {
 
             if ($this->row) {
                 $this->inner .= '<div class="row';
             }
 
-            if (isset($this->heading_text)){
+            if (isset($this->heading_text)) {
                 $this->inner .= '{heading}';
             }
 

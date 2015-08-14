@@ -111,6 +111,22 @@ class Javascript
      */
     public function &add(JavascriptObject $js)
     {
+        if ($this->router->isAjax()) {
+
+            /* @var $ajax \Core\Lib\Ajax\Ajax */
+            $ajax = $this->di->get('core.ajax');
+
+            switch ($js->getType()) {
+                case 'file':
+                    $ajax->fnLoadScript($js->getScript());
+                    break;
+            }
+
+            $return = null;
+
+            return $return;
+        }
+
         $area = $js->getDefer() ? 'below' : 'top';
 
         if ($this->mode == 'core') {

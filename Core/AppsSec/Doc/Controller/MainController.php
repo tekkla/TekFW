@@ -19,6 +19,6 @@ class MainController extends Controller
     {
         $this->setVar('content', 'start');
         
-        $this->setVar('menu', $this->model->createMenu($this->request->getParam('page')));
+        $this->setVar('menu', $this->model->createMenu($this->router->getParam('page')));
     }
 }

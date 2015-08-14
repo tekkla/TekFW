@@ -7,6 +7,9 @@ use Core\Lib\Content\Content;
 use Core\Lib\Security\Security;
 use Core\Lib\Http\Router;
 use Core\Lib\DI;
+use Core\Lib\Traits\StringTrait;
+use Core\Lib\Traits\TextTrait;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Parent class for all apps
@@ -17,8 +20,10 @@ use Core\Lib\DI;
  */
 class App
 {
-    use \Core\Lib\Traits\StringTrait;
-    use \Core\Lib\Traits\TextTrait;
+    use StringTrait;
+    use TextTrait;
+
+    use DebugTrait;
 
     /**
      * List of appnames which are already initialized
@@ -131,7 +136,6 @@ class App
      */
     protected $di;
 
-
     /**
      * Constructor
      *
@@ -143,15 +147,7 @@ class App
      * @param Security $security
      * @param DI $di
      */
-    final public function __construct(
-        $app_name,
-        Cfg $cfg,
-        Router $router,
-        Content $content,
-        Permission $permission,
-        Security $security,
-        DI $di
-    )
+    final public function __construct($app_name, Cfg $cfg, Router $router, Content $content, Permission $permission, Security $security, DI $di)
     {
         // Setting properties
         $this->name = $app_name;
@@ -271,12 +267,10 @@ class App
     /**
      * Hidden method to factory mvc components like models, views or controllers.
      *
-     * @param string $name
-     *            Components name
-     * @param string $type
-     *            Components type
+     * @param string $name Components name
+     * @param string $type Components type
      *
-     * @return Model|View|Controller
+     * @return Model|View|Controller|Container
      */
     final private function MVCFactory($name, $type, $arguments = null)
     {
@@ -295,6 +289,16 @@ class App
 
         // Create classname of component to create
         $class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
+
+        // Check existance of container objects becaus they are optional.
+        if ($type == 'Container') {
+
+            $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
+
+            if (! file_exists($container_class_path)) {
+                return false;
+            }
+        }
 
         // By default each MVC component constructor needs at least a name and
         // this app object as argument
@@ -332,38 +336,36 @@ class App
     }
 
     /**
-     * Creates an app related model object
+     * Creates an app related model object.
      *
-     * @param string $name
-     *            The models name
-     * @param string $db_container
-     *            Name of the db container to use with this model
+     * @param string $name The models name
+     * @param string $db_container Name of the db container to use with this model
      *
      * @return Model
      */
-    public function getModel($name = '', $db_container = 'db.default')
+    public function getModel($name='')
     {
-        if (! $name) {
+        if (empty($name)) {
             $name = $this->getComponentsName();
         }
 
-        return $this->MVCFactory($name, 'Model', [
-            $db_container,
-            'core.cfg'
-        ]);
+        $args = [
+            'core.data.vars'
+        ];
+
+        return $this->MVCFactory($name, 'Model', $args);
     }
 
     /**
      * Creates an app related controller object.
      *
-     * @param string $name
-     *            The controllers name
+     * @param string $name The controllers name
      *
      * @return Controller
      */
-    final public function getController($name)
+    final public function getController($name='')
     {
-        if (! $name) {
+        if (empty($name)) {
             $name = $this->getComponentsName();
         }
 
@@ -372,9 +374,10 @@ class App
             'core.http.post',
             'core.sec.security',
             'core.content.message',
-            'core.content.content',
+            'core.content',
             'core.content.menu',
-            'core.content.html.factory'
+            'core.content.html.factory',
+            'core.data.vars'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);
@@ -383,17 +386,62 @@ class App
     /**
      * Creates an app related view object.
      *
-     * @param string $name
-     *            The viewss name
+     * @param string $name The viewss name
      * @return View
      */
-    final public function getView($name)
+    final public function getView($name='')
     {
-        if (! $name) {
+        if (empty($name)) {
             $name = $this->getComponentsName();
         }
 
         return $this->MVCFactory($name, 'View');
+    }
+
+    /**
+     * Creates an app related container object.
+     *
+     * @param string $name The controllers name
+     *
+     * @return Controller
+     */
+    final public function getContainer($name, $init = true)
+    {
+        if (empty($name)) {
+            $name = $this->getComponentsName();
+        }
+
+        $args = [];
+
+        /* @var $container \Core\Lib\Data\Container */
+        $container = $this->MVCFactory($name, 'Container', $args);
+
+        // Autoinit requested?
+        if ($container && $init) {
+
+            // init by current action?
+            $action = $init === true ? $this->router->getAction() : $init;
+
+            if (!method_exists($container, $action)) {
+
+                // ... and try to find and run Index method when no matching action is found
+                $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
+
+            }
+
+            // ... and call matching container action when method exists
+            $container->$action();
+
+            // finally try to parse field defintion
+            $container->parseFields();
+        }
+        else {
+
+            // Forget the exception. Create a generic container instead.
+            $container = $this->di->get('core.data.container');
+        }
+
+        return $container;
     }
 
     /**
@@ -404,6 +452,16 @@ class App
     final public function getConfig()
     {
         return $this->config;
+    }
+
+    /**
+     * Boolean check for existing app config.
+     *
+     * @return boolean
+     */
+    final public function hasConfig()
+    {
+        return !empty($this->config);
     }
 
     /**
@@ -455,7 +513,13 @@ class App
 
             // When there is no config set but a default value defined for the app,
             // the default value will be used then
-            if (! $this->cfg->exists($this->name, $key) && isset($cfg_def['default'])) {
+            if (! $this->cfg->exists($this->name, $key)) {
+
+                // Set missing default value to empty string
+                if (!isset($cfg_def['default'])) {
+                    $cfg_def['default'] = '';
+                }
+
                 $this->cfg->set($this->name, $key, $cfg_def['default']);
             }
         }
@@ -621,7 +685,7 @@ class App
      */
     private final function initRoutes()
     {
-        // routes already initiated? Do nothing if so.
+        // Initiate routs only once regardless how many innstances of the app are created
         if (self::$init_stages[$this->name]['routes'] == true) {
             return;
         }
@@ -633,7 +697,7 @@ class App
             // No routes set? Map at least index as default route
             $target = [
                 'app' => $this->name,
-                'ctrl' => 'Index',
+                'controller' => 'Index',
                 'action' => 'Index'
             ];
 
@@ -648,31 +712,36 @@ class App
         $app_name = $this->uncamelizeString($this->name);
 
         // Map routes to request handler router
-        foreach ($this->routes as $route) {
+        foreach ($this->routes as $def) {
 
             // Create route string
-            $route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
+            $route = $def['route'] == '/' ? '/' . $app_name : '/' . (strpos($def['route'], '../') === false ? $app_name . $def['route'] : str_replace('../', '', $def['route']));
 
             // Create target
-            $route['target'] = [
+            $target = [
                 // App not set means app will be set automatic.
-                'app' => ! isset($route['app']) ? $app_name : $route['app'],
-                'ctrl' => empty($route['ctrl']) ? 'Index' : $route['ctrl'],
-                'action' => empty($route['action']) ? 'Index' : $route['action']
+                'app' => ! isset($def['app']) ? $app_name : $def['app'],
             ];
+
+            // is there a defined controller?
+            if (!empty($def['controller'])) {
+                $target['controller'] = $def['controller'];
+            }
+
+            if (!empty($def['action'])) {
+                $target['action'] = $def['action'];
+            }
 
             // The name of the route is set by the key in the routes array.
             // Is the name of type string it will be extended by the current
             // apps name.
-            if (isset($route['name'])) {
-                $route['name'] = (! isset($route['app']) ? $app_name : $route['app']) . '_' . $route['name'];
+            if (isset($def['name'])) {
+                $name = (! isset($def['app']) ? $app_name : $def['app']) . '_' . $def['name'];
             }
 
-            if (! isset($route['method'])) {
-                $route['method'] = 'GET';
-            }
+            $method = isset($def['method']) ? $def['method'] : 'GET';
 
-            $this->router->map($route['method'], $route['route'], $route['target'], isset($route['name']) ? $route['name'] : null);
+            $this->router->map($method, $route, $target, isset($name) ? $name : null);
         }
 
         self::$init_stages[$this->name]['routes'] = true;
@@ -733,12 +802,9 @@ class App
     /**
      * Registers an app related service to di container.
      *
-     * @param string $name
-     *            Name of service
-     * @param string $class
-     *            Class name this service uses
-     * @param array $args
-     *            Optional arguments
+     * @param string $name Name of service
+     * @param string $class Class name this service uses
+     * @param array $args Optional arguments
      *
      * @return \Core\Lib\Amvc\App
      */
@@ -752,12 +818,9 @@ class App
     /**
      * Registers an app related class factor to di container.
      *
-     * @param string $name
-     *            Name of factory
-     * @param string $class
-     *            Class name this service uses
-     * @param array $args
-     *            Optional arguments
+     * @param string $name Name of factory
+     * @param string $class Class name this service uses
+     * @param array $args Optional arguments
      *
      * @return \Core\Lib\Amvc\App
      */
@@ -771,10 +834,8 @@ class App
     /**
      * Registers an app related value to di container
      *
-     * @param string $name
-     *            Name of value
-     * @param string $value
-     *            The value itsel
+     * @param string $name Name of value
+     * @param string $value The value itsel
      *
      * @return \Core\Lib\Amvc\App
      */

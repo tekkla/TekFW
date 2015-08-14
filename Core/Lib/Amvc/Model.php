@@ -3,161 +3,201 @@ namespace Core\Lib\Amvc;
 
 use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Traits\UrlTrait;
+use Core\Lib\Traits\ConvertTrait;
+use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Data\Vars;
 
 /**
  * Model class
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014  by author
+ * @copyright 2015 by author
  * @license MIT
- * @version 1.0
  */
-class Model extends MvcAbstract
+class Model extends MvcAbstract implements \ArrayAccess
 {
-	use \Core\Lib\Traits\SerializeTrait;
-	use \Core\Lib\Traits\ArrayTrait;
-	use \Core\Lib\Traits\ConvertTrait {
-		\Core\Lib\Traits\SerializeTrait::isSerialized insteadof \Core\Lib\Traits\ConvertTrait;
-	}
 
-	/**
-	 * MVC component type
-	 *
-	 * @var string
-	 */
-	protected $type = 'Model';
+    use SerializeTrait;
+    use ArrayTrait;
+    use UrlTrait;
+    use ConvertTrait {
+        SerializeTrait::isSerialized insteadof ConvertTrait;
+    }
 
-	/**
-	 * Constructor
-	 */
-	final public function __construct($name, App $app)
-	{
-		// Set Properties
-		$this->name = $name;
-		$this->app = $app;
-	}
+    /**
+     * MVC component type
+     *
+     * @var string
+     */
+    protected $type = 'Model';
 
-	/**
-	 * Access to the apps config.
-	 * Without any paramter set this method returns the complete config.
-	 * With only key set, it returns the value associated with it.
-	 * Set key and value, and the config will be updated.
-	 *
-	 * @param string $key
-	 * @param string $val
-	 */
-	public final function cfg($key = null, $val = null)
-	{
-		return $this->app->cfg($key, $val);
-	}
+    protected $data = false;
 
-	/**
-	 * Add an error to the models errorlist.
-	 * If you want do set global and not field related errors, set $fld to '@'.
-	 *
-	 * @param string $fld
-	 * @param string $msg
-	 */
-	public final function addError($fld, $msg)
-	{
-		if (! isset($this->errors[$fld])) {
-			$this->errors[$fld] = [];
-		}
+    /**
+     *
+     * @var \Core\Lib\Data\Vars
+     */
+    protected $vars;
 
-		if (! is_array($msg)) {
-			$msg = (array) $msg;
-		}
+    /**
+     * Constructor
+     */
+    final public function __construct($name, App $app, Vars $vars)
+    {
+        // Set Properties
+        $this->name = $name;
+        $this->app = $app;
+        $this->vars = $vars;
+    }
 
-		foreach ($msg as $val) {
-			$this->errors[$fld][] = $val;
-		}
+    /**
+     * Access to the apps config.
+     * Without any paramter set this method returns the complete config.
+     * With only key set, it returns the value associated with it.
+     * Set key and value, and the config will be updated.
+     *
+     * @param string $key
+     * @param string $val
+     *
+     * @return mixed
+     */
+    final public function cfg($key = null, $val = null)
+    {
+        return $this->app->cfg($key, $val);
+    }
 
-		return $this;
-	}
+    /**
+     * Wrapper function for $this->appgetModel($model_name).
+     * There is a little difference in using this method than the long term. Not setting a model name
+     * means, that you get a new instance of the currently used model.
+     *
+     * @param string $model_name Optional: When not set the name of the current model will be used
+     *
+     * @return Model
+     */
+    final public function getModel($model_name = null)
+    {
+        if (empty($model_name)) {
+            $model_name = $this->getName();
+        }
 
-	/**
-	 * Checks errors in the model and returns true or false
-	 *
-	 * @return boolean
-	 */
-	public final function hasErrors()
-	{
-		return ! empty($this->errors);
-	}
+        return $this->app->getModel($model_name);
+    }
 
-	/**
-	 * Checks for no errors in the model and returns true or false
-	 *
-	 * @return boolean
-	 */
-	public final function hasNoErrors()
-	{
-		return empty($this->errors);
-	}
+    /**
+     * Creates an app related container
+     *
+     * @param string $container_name Optional: Name of the container to load. When no name is given the name of the current model will be used.
+     * @param bool $auto_init Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    final public function getContainer($container_name = null, $auto_init = true)
+    {
+        if (empty($container_name)) {
+            $container_name = $this->getName();
+        }
 
-	/**
-	 * Returns the models errorlist
-	 *
-	 * @return array
-	 */
-	public final function getErrors()
-	{
-		return $this->errors;
-	}
+        return $this->app->getContainer($container_name, $auto_init);
+    }
 
-	/**
-	 * Wrapper function for $this->appgetModel($model_name).
-	 * There is a little
-	 * difference in using this method than the long term. Not setting a model name
-	 * means, that you get a new instance of the currently used model.
-	 *
-	 * @param string $model_name Optional: When not set the name of the current model will be used
-	 * @return Model
-	 */
-	public final function getModel($model_name = null)
-	{
-		if (! isset($model_name)) {
-			$model_name = $this->getName();
-		}
+    /**
+     * Creates an generic container object.
+     *
+     * @return \Core\Lib\Data\Container
+     */
+    final public function getGenericContainer($fields = [])
+    {
+        $container = $this->di->get('core.data.container');
 
-		return $this->app->getModel($model_name);
-	}
+        if (!empty($fields)) {
+            $container->parseFields($fields);
+        }
 
-	/**
-	 * Creates a database Dataadapter object
-	 *
-	 * Uses default db DataAdapter when no Connection object is set.
-	 *
-	 * @param Connection $conn Optional Connection object
-	 * @param string $prefix Optional table prefix.
-	 * @param array $fields Optional field definition list to be used as container scheme
-	 *
-	 * @return \Core\Lib\Data\DataAdapter
-	 */
-	protected final function getDbAdapter(Connection $conn = null, $prefix = '', array $fields = [])
-	{
-		if ($conn === null) {
-			$adapter = $this->di->get('db.default');
+        return $container;
+    }
 
-			if ($prefix) {
-				$adapter->setPrefix($prefix);
-			}
-		} else {
+    /**
+     * Creates a database Dataadapter object
+     *
+     * Uses default db DataAdapter when no Connection object is set.
+     *
+     * @param Connection $conn Optional Connection object
+     * @param string $prefix Optional table prefix.
+     * @param array $fields Optional field definition list to be used as container scheme
+     *
+     * @return Database
+     */
+    final protected function getDbAdapter(Connection $conn = null, $prefix = '', array $fields = [])
+    {
+        if ($conn === null) {
+            $adapter = $this->di->get('db.default');
 
-			if (! $prefix) {
-				$prefix = $this->di->get('db.default.prefix');
-			}
+            if ($prefix) {
+                $adapter->setPrefix($prefix);
+            }
+        }
+        else {
 
-			$adapter = new DataAdapter('db', [
-				'conn' => $conn,
-				'prefix' => $prefix
-			]);
-		}
+            if (! $prefix) {
+                $prefix = $this->di->get('db.default.prefix');
+            }
 
-		if ($fields) {
-			$adapter->createContainer($fields);
-		}
+            $adapter = new DataAdapter('db', [
+                'conn' => $conn,
+                'prefix' => $prefix
+            ]);
+        }
 
-		return $adapter;
-	}
+        if ($fields) {
+            $adapter->createContainer($fields);
+        }
+
+        return $adapter;
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetSet()
+     */
+    public function offsetSet($offset, $value)
+    {
+        if (! is_null($offset)) {
+            $this->data[$offset] = $value;
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetExists()
+     */
+    public function offsetExists($offset)
+    {
+        return isset($this->data[$offset]);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetUnset()
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->data[$offset]);
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see ArrayAccess::offsetGet()
+     */
+    public function offsetGet($offset)
+    {
+        return isset($this->data[$offset]) ? $this->data[$offset] : null;
+    }
 }

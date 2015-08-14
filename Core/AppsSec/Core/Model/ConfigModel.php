@@ -2,200 +2,187 @@
 namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
-use Core\Lib\Data\Data;
+use Core\Lib\Data\Container;
 
 /**
- * Description
+ * Config model
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package AppSec Admin
- * @subpackage Model/Config
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
- * @copyright 2014 by author
+ * @copyright 2015 by author
  */
 final class ConfigModel extends Model
 {
 
-	protected $tbl = 'config';
+    public function loadByApp($app_name)
+    {
+        // Try to get a config defintion from the app
+        $cfg = $this->di->get('core.amvc.creator')->getAppInstance($app_name)->getConfig();
 
-	protected $alias = 'cfg';
+        // Do we have a defintion?
+        if ($cfg) {
 
-	protected $pk = 'id_config';
+            // Output needs to be a container which will be used in FormDesigner
+            $data = $this->getGenericContainer();
 
-	public function loadConfig()
-	{
-		return $this->read('config');
-	}
+            // Add a field for a hidden control containing the app name
+            $data->createField('app_name', 'string', null, false, false, null, 'Hidden', $app_name);
+            $data['app_name'] = $app_name;
 
-	public function loadByApp($app_name)
-	{
-		// get config structure from app
-		$app = $this->di['core.amvc.creator']->create($app_name);
-		$cfg_def = $app->getConfigDefinition();
+            // ... use those keys to check each one ...
+            foreach ($cfg as $key => &$def) {
 
-		if ($cfg_def) {
+                // ... to get the config value either from config storage ...
+                $val = $this->di->get('core.cfg')->get($app_name, $key);
 
-			$this->data = new Data();
+                // check
+                $control = isset($def['control']) ? $def['control'] : 'Text';
 
-			$cfg_def_keys = array_keys($cfg_def);
+                if (is_string($control)) {
+                    $control = $this->camelizeString($control);
+                }
 
-			// set config values to app config structure
-			foreach ($cfg_def_keys as $key) {
+                switch ($control) {
+                    case 'Number':
+                    case 'Switch':
+                        $def['type'] = 'int';
+                        break;
 
-				if ($this->cfg->exists($app_name, $key)) {
-					$val = $this->cfg->get($app_name, $key);
-				}
-				else{
-					$val = isset($cfg_def[$key]['default']) && $cfg_def[$key]['default'] !== '' ? $cfg_def[$key]['default'] : '';
-				}
+                    case 'Optiongroup':
+                    case 'Multiselect':
+                        $def['type'] = 'array';
+                        break;
 
-				$this->data->{$key} = $val;
-			}
+                    default:
+                        $def['type'] = 'string';
+                        break;
+                }
 
-			return $this->data;
-		}
+                // Generate container field
+                $data->createField($key, $def['type'], null, false, false, null, $control);
 
-		// return structure
-		return false;
-	}
+                if (isset($cfg['serialize']) && $cfg['serialize'] == true) {
+                    $val = unserialize($val);
+                }
 
-	public function loadAsTree()
-	{
-		$apps = $this->setField('app')
-			->isDistinct()
-			->setOrder('app')
-			->read('keysonly');
+                // Set value
+                $data[$key] = $val;
+            }
 
-		$out = [];
+            return $data;
+        }
 
-		foreach ($apps as $app) {
-			$out[$app] = $this->loadByApp($app);
-		}
+        // return structure
+        return false;
+    }
 
-		return $out;
-	}
+    public function saveConfig(Container $data)
+    {
+        // Store the appname this config is for
+        $app_name = $data['app_name'];
 
-	/**
-	 * Rewrites the config in DB with the config definition of the app.
-	 * New configs will be saved to db and obsolete entries will be removed from db
-	 *
-	 * @param string $app
-	 */
-	public function rewriteConfig($app_name)
-	{
-		// app names are in config db always with underscores and not camelized
-		$app_name = $this->uncamelizeString($app_name);
+        // Remove appname and btn values from data
+        unset($data['app_name'], $data['btn_submit']);
 
-		// get config definition from app
-		$app_default_config = $this->di['core.amvc.creator']->create($app_name)->getConfigDefinition();
+        // Get config definition from app
+        $app_cfg = $this->di->get('core.amvc.creator')->create($app_name)->getConfig();
 
-		// load app config from db
-		$this->setFilter('app={string:app}', [
-			'app' => $app_name
-		]);
-		$current_config = $this->read('*');
+        // Add validation rules to fields in data container
+        foreach ($data as $key => $fld) {
 
-		// compare current config with default config
-		foreach ($current_config as $cfg) {
+            $cfg = $app_cfg[$key];
 
-			// is this config still in the default config of this app?
-			if (! isset($app_default_config[$cfgcfg])) {
+            // Validation rules?
+            if (isset($cfg['validate'])) {
+                $data->setValidation($fld->getName(), $cfg['validate']);
+            }
+        }
 
-				// no, then remove it
-				$this->setFilter('app={string:app} AND cfg={string:cfg}');
-				$this->setParameter([
-					'app' => $app_name,
-					'cfg' => $cfg->cfg
-				]);
-				$this->delete();
+        // Validate!
+        $data->validate();
 
-				echo 'Delete: ' . $app_name . ' => ' . $cfg->cfg . '<b';
-			}
+        // Was walidation a success or did we get some errors?
+        if ($data->hasErrors()) {
 
-			// this is a valif config, so remove it from the list of possible new configs
-			unset($app_default_config[$cfgcfg]);
-		}
+            $this->extendContainer($data, $app_name);
 
-		// reset set model filter
-		$this->resetFilter();
+            return $data;
+        }
 
-		// insert the remaining new configs from default config app
-		foreach ($app_default_config as $cfg_key => $cfg) {
-			$data = new \stdClass();
-			$data->app = $app_name;
-			$data->cfg = $cfg_key;
-			$data->val = $cfg[1];
+        // Data validated successfully. Go on and store config
 
-			$this->addData($data);
-		}
+        $fld_list = array_keys($app_cfg);
 
-		// insert new configs
-		$this->save();
-	}
+        $adapter = $this->getDbAdapter();
 
-	public function saveConfig($data)
-	{
-		// Store the appname this config is for
-		$app_name = $data->app;
+        // Start transaction
+        $adapter->beginTransaction();
 
-		// Get config definition from app
-		$app_config_def = $this->di['core.amvc.creator']->create($app_name)->getConfigDefinition();
+        // Delete current config
+        $adapter->query("DELETE FROM {db_prefix}config WHERE app=:app_name");
+        $adapter->bindValue(':app_name', $app_name);
+        $adapter->execute();
 
+        // Prepare insert query
+        $adapter->query("INSERT INTO {db_prefix}config SET app=:app_name, cfg=:key, val=:val");
+        $adapter->bindValue(':app_name', $app_name);
 
-		// Remove appname and btn values from data
-		unset($data->app, $data->btn_submit);
+        // Create config entries
+        foreach ($fld_list as $key) {
 
-		// From here the app name is needed as underscored string
-		$app_name = $this->uncamelizeString($app_name);
+            $adapter->bindValue(':key', $key);
 
-		// Set data to model so the validator has work to do
-		$this->data = $data;
+            $val = $data->getField($key)->getValue();
 
-		// Get the keys from send data as fieldnames to check on validator
-		$data_fld_list = array_keys(get_object_vars($data));
+            if (isset($app_cfg[$key]['serialize']) && $app_cfg[$key]['serialize'] == true) {
+                $val = serialize($val);
+            }
 
-		// Add possible validatipons rules
-		foreach ($data_fld_list as $fld) {
-			// try to get validation rules from config definition
-			if (isset($app_config_def[$fld]['validate'])) {
-				$this->addValidationRule($fld, $app_config_def[$fld]['validate']);
-			}
-		}
+            $adapter->bindValue(':val', $val);
+            $adapter->execute();
+        }
 
-		// Validate!
-		$this->validate();
+        $adapter->endTransaction();
+    }
 
-		// Was walidation a success or did we get some errors?
-		if ($this->hasErrors()) {
-			return;
-		}
+    private function extendContainer(Container $data, $app_name)
+    {
+        // Try to get a config defintion from the app
+        $cfg = $this->di->gt('core.amvc.creator')->getAppInstance($app_name)->getConfig();
 
-		// No errors found. Delete the current app config from db
-		$this->setFilter('app={string:app}', [
-			'app' => $app_name == 'admin' ? 'core' : $app_name
-		]);
+        // Do we have a defintion?
+        if ($cfg) {
 
-		$this->delete();
+            // Add a field for a hidden control containing the app name
+            $data->createField('app_name', 'string', null, false, false, null, 'Hidden', $app_name);
+            $data['app_name'] = $app_name;
 
-		// The real config model is needed. ;)
-		$config_model = $this->getModel($this->name);
+            // ... use those keys to check each one ...
+            foreach ($cfg as $key => $def) {
 
-		// and now save the config values
-		foreach ($data as $fld => $val) {
-			if ($val === '' && (! isset($app_config_def[$fld]['default']) || (isset($app_config_def[$fld]['default']) && $app_config_def[$fld]['default'] === ''))) {
-				continue;
-			}
+                // check
+                $control = isset($def['control']) ? $def['control'] : 'Text';
 
-			$cfg_data = new Data();
+                if (is_string($control)) {
+                    $control = $this->camelizeString($control);
+                }
 
-			$cfg_data->app = $app_name;
-			$cfg_data->cfg = $fld;
-			$cfg_data->val = $val;
+                // When a field type is not set explicitly
+                // if (empty($def['type'])) {
 
-			// Save config without further validation
-			$config_model->setData($cfg_data);
+                switch ($control) {
+                    case 'Number':
+                    case 'Switch':
+                        $type = 'int';
+                        break;
 
-			$this->save(false);
-		}
-	}
+                    default:
+                        $type = 'string';
+                        break;
+                }
+
+                $data->getField($key)->setType($type);
+            }
+        }
+    }
 }

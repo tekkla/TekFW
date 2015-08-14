@@ -18,7 +18,7 @@ final class DocumentModel extends Model
         return $this->read(array(
             'type' => '*',
             'filter' => 'id_group={int:id_group}',
-            'param' => array(
+            'params' => array(
                 'id_group' => $id_group
             ),
             'order' => 'position'

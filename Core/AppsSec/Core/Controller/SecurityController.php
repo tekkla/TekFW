@@ -4,64 +4,97 @@ namespace Core\AppsSec\Core\Controller;
 use Core\Lib\Amvc\Controller;
 
 /**
+ * Appsec/Core/SecurityController
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class SecurityController extends Controller
 {
 
-	public $has_no_model;
+    public function Login()
+    {
+        if ($this->security->loggedIn()) {
+            echo 'Already logged in.';
+            return false;
+        }
 
-	public function Login()
-	{
-		$post = $this->post->get();
+        $data = $this->post->get();
 
-		if ($post) {
+        if ($data) {
 
-			// Do login procedure
-			$this->security->login($post->login, $post->password);
+            // Do login procedure
+            $data = $this->model->doLogin($data);
 
-			if ($this->security->loggedIn()) {
-				$this->message->success('Login OK!');
-				$this->redirectExit();
-			} else {
-				$this->message->error('Login Failed');
-			}
-		}
+            if ($data['logged_in'] === true) {
+                $this->redirectExit();
+                return;
+            }
+        }
+        else {
 
-		$form = $this->getFormDesigner();
+            $data = $this->model->getEmptyLogin();
+        }
 
-		$form->setApp('Core');
-		$form->setModelName('Security');
+        $form = $this->getFormDesigner($data);
 
-		$action = $this->router->url('core_login');
-		$form->setAction($action);
+        $form->setAction($this->router->url('core_login'));
 
-		/* @var $control \Core\Lib\Content\Html\Form\Input */
-		$control = $form->createElement('input', 'login');
-		$control->noLabel();
-		$control->setPlaceholder('Username');
+        // Form save button
+        $form->setSaveButtonText($this->txt('login'));
+        $form->setIcon('submit', 'key');
 
-		/* @var $control \Core\Lib\Content\Html\Form\Input */
-		$control = $form->createElement('password', 'password');
-		$control->noLabel();
-		$control->setPlaceholder('Password');
+        // Create element group
+        $group = $form->addGroup();
 
-		/* @var $control \Core\Lib\Content\Html\Form\Checkbox */
-		$control = $form->createElement('checkbox', 'remember');
-		$control->setLabel('Remember me');
+        /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
+        $control = $group->addControl('Text', 'login');
+        $control->noLabel();
+        $control->setPlaceholder($this->txt('username'));
 
-		$form->setSaveButtonText('Login');
-		$form->setIcon('submit', 'key');
+        /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
+        $control = $group->addControl('Password', 'password');
+        $control->noLabel();
+        $control->setPlaceholder($this->txt('password'));
 
-		$this->setVar('form', $form);
+        /* @var $control \Core\Lib\Content\Html\Form\Checkbox */
+        $control = $group->addControl('Checkbox', 'remember');
+        $control->setValue(1);
+        $control->setLabel($this->txt('remember_me'));
 
-		$this->content->breadcrumbs->createActiveItem('login');
-	}
+        $this->setVar('form', $form);
 
-	public function Logout()
-	{
-		$this->security->logout();
-		$this->redirectExit($this->router->url('core_index'));
-	}
+        $this->content->breadcrumbs->createActiveItem($this->txt('login'));
+    }
+
+    public function Logout()
+    {
+        $this->model->doLogout();
+        $this->redirectExit($this->router->url('core_index'));
+    }
+
+    public function Register()
+    {
+        $data = $this->post->get();
+
+        if ($data) {
+
+            // Do login procedure
+            $data = $this->model->saveUser($data);
+
+            if (! $data->hasErrors()) {
+                $this->content->msg->success($this->txt('login_ok'));
+                $this->redirectExit($this->url('core_user', [
+                    $data['id_user']
+                ]));
+            }
+            else {
+                $this->content->msg->danger($this->txt('login_failed'));
+            }
+        }
+        else {
+            $data = $this->model->getRegister($id_user);
+        }
+    }
 }

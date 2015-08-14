@@ -1,37 +1,36 @@
 <?php
-namespace Core\AppsSec\Admin\Model;
+namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
-use Core\Lib\Amvc\App;
-use Core\Lib\Url;
-use Core\Lib\String;
 
 /**
  *
  * @author Michael "Tekkla" Zorn
- *        
+ *
  */
 class AdminModel extends Model
 {
 
     public function getApplist()
     {
-        $applist = App::getLoadedApps();
-        
+        // Get list of loaded apps
+        $applist = $this->di->get('core.amvc.creator')->getLoadedApps();
+
+        // Sort he list alphabetically
         sort($applist);
-        
-        $out = new \stdClass();
-        
+
+        $out = [];
+
+        // Walk through apps list and create app entry
         foreach ($applist as $app_name) {
-            $app = App::create($app_name);
-            
-            $app_data = new \stdClass();
-            
-            $app_dataconfig_link = isset($appconfig) ? Url::factory('admin_app_config')->setParameter('app_name', String::uncamelize($app_name))->getUrl() : false;
-            
-            $out{$app_name} = $app_data;
+
+            // Check app for existing config
+            $app = $this->di->get('core.amvc.creator')->getAppInstance($app_name);
+
+            // Link only when config for app exists
+            $out[$app_name] = $app->hasConfig() ? $this->url('core_config', ['app_name' => $this->uncamelizeString($app_name)]) : '';
         }
-        
+
         return $out;
     }
 }

@@ -2,17 +2,21 @@
 namespace Core\Lib\Traits;
 
 /**
+ * String Trait
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- *        
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2014 by author
+ * @license MIT
+ *
  */
 trait StringTrait
 {
 
     /**
      * Shortens a string to the given length and adds .
+     *
      * .. at the end of string
-     * 
+     *
      * @param string $string
      * @param int $length
      * @param string $addition
@@ -21,18 +25,19 @@ trait StringTrait
     function shortenString($string, $length, $addition = ' [...]')
     {
         // Shorten only what is longer than the length
-        if (strlen($string) < $length)
+        if (strlen($string) < $length) {
             return $string;
-            
-            // Shorten string by length
+        }
+
+        // Shorten string by length
         $string = substr($string, 0, $length);
-        
+
         // Shorten further until last occurence of a ' '
         $string = substr($string, 0, strrpos($string, ' '));
-        
+
         // Add addition
         $string .= $addition;
-        
+
         // Done.
         return $string;
     }
@@ -45,29 +50,28 @@ trait StringTrait
      *
      * @param string $val
      * @return string
-     * @tutorial <cod
-     *           => <?php
-     *          
-     *           => $string = 'my_name';
-     *           => $string = String::camelize($string);
-     *          
-     *           => echo $string;
-     *           =>
-     *           => </cod
-     *           => Result: MyName
+     * @tutorial <code>
+     *           <?php
+     *           $string = 'my_name';
+     *           $string = String::camelize($string);
+     *           echo $string;
+     *           </code>
+     *           Result: MyName
      */
     public function camelizeString($string, $upper_first = true)
     {
         // even if there is no underscore in string, the first char will be converted to uppercase
         if (strpos($string, '_') == 0 && $upper_first == true) {
             $string = ucwords($string);
-        } else {
-            $string = str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($string))));
-            
-            if ($upper_first == false)
-                $string = lcfirst($string);
         }
-        
+        else {
+            $string = str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($string))));
+
+            if ($upper_first == false) {
+                $string = lcfirst($string);
+            }
+        }
+
         return $string;
     }
 
@@ -84,25 +88,33 @@ trait StringTrait
      */
     public function uncamelizeString($string)
     {
+        if (empty($string)) {
+            Throw new \InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
+        }
+
+        if (! is_string($string)) {
+            Throw new \InvalidArgumentException('Only strings can be used to be uncamelized.', 1000);
+        }
+
         // set first letter to lowercase
         $string[0] = strtolower($string[0]);
-        
+
         $callback = function ($c)
         {
             return '_' . strtolower($c[1]);
         };
-        
+
         // replace all other with _{letter}
         $string = preg_replace_callback('/([A-Z])/', $callback, $string);
-        
+
         $string = trim(preg_replace('@[_]{2,}@', '_', $string), '_');
-        
+
         return $string;
     }
 
     /**
      * Normalizes a string
-     * 
+     *
      * @param string $string
      * @return string
      */
@@ -184,9 +196,9 @@ trait StringTrait
             'Ŕ' => 'R',
             'ŕ' => 'r'
         );
-        
+
         $string = strtr($string, $table);
-        
+
         return $string;
     }
 }

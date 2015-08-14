@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
-use Core\Lib\Content\Html\FormElementAbstract;
+use Core\Lib\Content\Html\FormAbstract;
 
 /**
  * Label Form Element
@@ -12,7 +12,7 @@ use Core\Lib\Content\Html\FormElementAbstract;
  * @license MIT
  * @copyright 2014 by author
  */
-class Label extends FormElementAbstract
+class Label extends FormAbstract
 {
 
     protected $element = 'label';
