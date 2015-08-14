@@ -19,6 +19,10 @@ class Option extends FormAbstract
         'control' => 'option'
     ];
 
+    protected $attribute = [
+        'value' => 1,
+    ];
+
     /**
      * Selected attribute setter and checker.
      * Accepts parameter "null", "0" and "1".
