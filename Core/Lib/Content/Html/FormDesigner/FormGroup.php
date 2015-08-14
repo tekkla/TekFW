@@ -2,9 +2,9 @@
 namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Traits\StringTrait;
-use Core\Lib\Data\Container;
 use Core\Lib\Content\Html\FormAbstract;
 use Core\Lib\Content\Html\HtmlAbstract;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  *
@@ -15,6 +15,7 @@ class FormGroup
 {
 
     use StringTrait;
+    use DebugTrait;
 
     /**
      * FormGroups element storage
@@ -31,27 +32,30 @@ class FormGroup
      * @param string $type The type of control to create
      * @param string $name Name of the control. Ths name is used to bind the control to a model field.
      *
-     * @return FormAbstract
+     * @return FormAbstract @TODO Check container and autobind param to be neccessary.
      */
-    public function &addControl($control, $name, $autobind = true, Container $container = null)
+    public function &addControl($control, $name = '', $label = '', $value = '')
     {
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->camelizeString($control) . 'Control');
-
-        $control->setName($name);
-
-        // And optionally bind this control to a field with  the same name
-        if ($autobind == true) {
-            $control->setField($name);
-        }
 
         // Inject html factory for controls which are creating html controls by themself
         $control->factory = $this->di->get('core.content.html.factory');
 
-        // is there a field matching the controlname in container?
-        if (isset($container) && isset($container[$name])) {
+        // set contols name
+        $control->setName($name);
 
-            // Inject field into control
-            $control->field = $container->getField($name);
+        // And optionally bind this control to a field with the same name
+        if (! empty($name) && method_exists($control, 'setField')) {
+            $control->setField($name);
+        }
+
+        // Label set?
+        if (! empty($label) && method_exists($control, 'setLabel')) {
+            $control->setLabel($label);
+        }
+
+        if (! empty($value) && method_exists($control, 'setValue')) {
+            $control->setValue($value);
         }
 
         // Create element
@@ -126,6 +130,7 @@ class FormGroup
 
     /**
      * Returns all element objects of the FormGroup
+     *
      * @return multitype:
      */
     public function getElements()
