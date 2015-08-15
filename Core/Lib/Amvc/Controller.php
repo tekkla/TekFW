@@ -247,7 +247,7 @@ class Controller extends MvcAbstract
                 // Turn rendering off on json and xml format
                 case 'json':
                 case 'xml':
-                case 'pdf':
+                case 'file':
                     $this->render = false;
                     break;
             }
