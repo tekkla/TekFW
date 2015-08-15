@@ -282,7 +282,8 @@ final class Router extends \AltoRouter
         $allowed = [
             'html',
             'xml',
-            'json'
+            'json',
+            'file'
         ];
 
         if (!in_array(strtolower($format), $allowed)) {
