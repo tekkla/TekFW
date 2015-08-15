@@ -96,6 +96,12 @@ class Creator
         // Create app namespace and take care of secured apps.
         $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
 
+        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+
+        if (!file_exists($filename)) {
+            throw new \RuntimeException('AMVC Creator Error: App class file "' . $filename . '" was not found.');
+        }
+
         // Check for already existing instance of app
         // and create new instance when none is found
         if (! array_key_exists($name, $this->instances)) {
