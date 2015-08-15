@@ -33,7 +33,6 @@ require_once (BASEDIR . '/Settings.php');
 // Include error handler
 require_once (COREDIR . '/Lib/Errors/Error.php');
 
-
 try {
 
     // Register composer classloader
@@ -143,9 +142,6 @@ try {
     /* @var $content \Core\Lib\Content\Content */
     $content = $di->get('core.content');
 
-    $content->css->init();
-    $content->js->init();
-
     // --------------------------------------
     // 6. Start app autodiscover process
     // --------------------------------------
@@ -155,6 +151,7 @@ try {
     // 7. Create content
     // --------------------------------------
     $content->create();
+
 
     // @TODO remove this later!
     $fb = [
