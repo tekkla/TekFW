@@ -301,6 +301,9 @@ class Content
             case 'html':
             default:
 
+                $this->css->init();
+                $this->js->init();
+
                 // Always use UTF-8
                 $this->headers[] ="Content-Type: text/html; charset=utf-8";
 
