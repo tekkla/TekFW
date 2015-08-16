@@ -10,14 +10,8 @@ namespace Core\Lib\Content;
  * @copyright 2014
  * @license MIT
  */
-class Menu
+class Menu extends MenuItemAbstract
 {
-
-    private $root_items = [];
-
-    public function __construct()
-    {}
-
     /**
      * Ajax refresh of menu
      */
@@ -30,63 +24,5 @@ class Menu
             'fn' => 'html',
             'type' => 'dom'
         ]);
-    }
-
-    public function createRootItem($name, $text, $url = null)
-    {
-        return $this->root_items[$name] = $this->createMenuItem($name, $text, $url, true);
-    }
-
-    /**
-     * Creates a new menu item with the given arguments, adds it to the menu item
-     * storage and returns a reference to the item in storage
-     *
-     * @param string $name
-     * @param string $text
-     * @param string $url
-     * @param boolean $is_root
-     *
-     * @return MenuItem
-     */
-    public function createMenuItem($name, $text, $url = null, $root = false)
-    {
-        $menu_item = new MenuItem();
-        $menu_item->setName($name);
-        $menu_item->setText($text);
-
-        if ($url !== null) {
-            $menu_item->setUrl($url);
-        }
-
-        $menu_item->isRoot(true);
-
-        return $menu_item;
-    }
-
-    /**
-     * Method to add a menu item to the appropriate item storage by checking
-     * the root property of the item.
-     *
-     * @param MenuItem $menu_item
-     * @return MenuItem
-     */
-    public function &addMenuItem(MenuItem &$menu_item)
-    {
-        // Determine which type of item we have. Root or child?
-        $storage = $menu_item->isRoot() ? 'root_items' : 'menu_items';
-
-        // Store menu item
-        $this->{$storage}[$menu_item->getName()] = $menu_item;
-
-        // And return a reference to the stored items
-        return $this->{$storage}[$menu_item->getName()];
-    }
-
-    /**
-     * Compiles the menu itemsand creates an html menu as output
-     */
-    public function getMenu()
-    {
-        return $this->root_items;
     }
 }
