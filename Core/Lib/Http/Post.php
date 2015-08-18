@@ -142,6 +142,10 @@ class Post
 
         // Validate posted data with session token
         if (!$this->security->validatePostToken()) {
+
+            // Log attempt and start ban process with max 3 tries.
+            $this->security->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
+
             return false;
         }
 

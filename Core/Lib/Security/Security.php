@@ -5,7 +5,9 @@ use Core\Lib\Cfg;
 use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Logging\Logging;
 use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Security
@@ -21,6 +23,8 @@ use Core\Lib\Data\Adapter\Database;
  */
 class Security
 {
+
+    use DebugTrait;
 
     /**
      * Cookiename
@@ -94,6 +98,12 @@ class Security
     private $permission;
 
     /**
+     *
+     * @var Logging
+     */
+    private $logging;
+
+    /**
      * Constructor
      *
      * @param DataAdapter $adapter
@@ -103,8 +113,9 @@ class Security
      * @param User $user
      * @param Group $group
      * @param Permission $permission
+     * @param Logging $logging
      */
-    public function __construct(DataAdapter $adapter, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission)
+    public function __construct(DataAdapter $adapter, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission, Logging $logging)
     {
         $this->adapter = $adapter;
         $this->cfg = $cfg;
@@ -113,6 +124,7 @@ class Security
         $this->user = $user;
         $this->group = $group;
         $this->permission = $permission;
+        $this->logging = $logging;
     }
 
     /**
@@ -238,7 +250,7 @@ class Security
             'table' => 'users',
             'fields' => [
                 'id_user',
-                'password',
+                'password'
             ],
             'filter' => 'username=:username',
             'params' => [
@@ -269,7 +281,7 @@ class Security
                     'table' => 'users',
                     'method' => 'UPDATE',
                     'fields' => [
-                        'password',
+                        'password'
                     ],
                     'filter' => 'id_user = :id_user',
                     'params' => [
@@ -287,7 +299,7 @@ class Security
             $this->session->set('id_user', $login['id_user']);
 
             // Remember for autologin?
-            if ($remember_me===true) {
+            if ($remember_me === true) {
                 $this->setAutoLoginCookies($login['id_user']);
             }
 
@@ -341,12 +353,12 @@ class Security
         }
 
         // No autologin cookie no autologin ;)
-        if (!$this->cookie->exists($cookie)) {
+        if (! $this->cookie->exists($cookie)) {
             return false;
         }
 
         // Let's find the user for the token in cookie
-        list($selector, $token) = explode(':', $this->cookie->get($cookie));
+        list ($selector, $token) = explode(':', $this->cookie->get($cookie));
 
         $query = [
             'table' => 'auth_tokens',
@@ -366,7 +378,7 @@ class Security
         $data = $this->adapter->all();
 
         // Create hash of token to compare with hash from db only when there is data
-        if (!$data) {
+        if (! $data) {
             $token = hash('sha256', hex2bin($token));
         }
 
@@ -468,7 +480,7 @@ class Security
                 'id_user',
                 'expires'
             ],
-            'params'=> [
+            'params' => [
                 ':selector' => $selector,
                 ':token' => hash('sha256', $token),
                 ':id_user' => $id_user,
@@ -655,5 +667,20 @@ class Security
 
             return true;
         }
+    }
+
+    /**
+     * Security method to log suspisious actions and start banning process.
+     *
+     * @param string $msg Message to log
+     * @param boolean|int $ban Set this to the number of tries the user is allowed to do other suspicious things until he gets banned.
+     *
+     * @return Security
+     */
+    public function logSuspicious($msg, $ban = false)
+    {
+        $this->logging->security($msg);
+
+        return $this;
     }
 }
