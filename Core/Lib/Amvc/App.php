@@ -10,6 +10,7 @@ use Core\Lib\DI;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\DebugTrait;
+use Core\Lib\Traits\UrlTrait;
 
 /**
  * Parent class for all apps
@@ -20,10 +21,15 @@ use Core\Lib\Traits\DebugTrait;
  */
 class App
 {
-    use StringTrait;
     use TextTrait;
-
+    use UrlTrait;
     use DebugTrait;
+    use StringTrait {
+        StringTrait::shortenString  insteadof UrlTrait;
+        StringTrait::camelizeString  insteadof UrlTrait;
+        StringTrait::uncamelizeString  insteadof UrlTrait;
+        StringTrait::normalizeString  insteadof UrlTrait;
+    }
 
     /**
      * List of appnames which are already initialized
@@ -191,17 +197,9 @@ class App
         $this->initPermissions();
         $this->initLanguage();
 
-        // Finally call a possible app related methods
-        $methods = [
-            'appInit',
-            'addHeaders',
-            'addMenuItems'
-        ];
-
-        foreach ($methods as $method) {
-            if (method_exists($this, $method)) {
-                $this->$method();
-            }
+        // Finally call a possible app specific Init() method
+        if (method_exists($this, 'Init')) {
+            $this->Init();
         }
     }
 
@@ -608,9 +606,13 @@ class App
      * Each app can have it's own css file. The css file needs to be placed in an Css folder within
      * the apps folder. App settings need a css flag, otherwise the css file won't be loaded.
      *
+     * By default this method is first and only once called when a MVC object is requested on non AJAX requests.
+     * In some cases the apps Css files has to be loaded even when no MVC object has been requested so far.
+     * Use the app specifc Init() method to call initCss().
+     *
      * @return \Core\Lib\Amvc\App
      */
-    private final function initCss()
+    protected final function initCss()
     {
         // Init css only once
         if (self::$init_stages[$this->name]['css']) {
@@ -629,11 +631,6 @@ class App
             $this->content->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
         }
 
-        // Is there an additional css function in app to run?
-        if (method_exists($this, 'addCss')) {
-            $this->addCss();
-        }
-
         // Set flag for initiated css
         self::$init_stages[$this->name]['css'] = true;
 
@@ -643,11 +640,15 @@ class App
     /**
      * Initiates apps javascript
      *
+     * By default this method is first and only once called when a MVC object is requested on non AJAX requests.
+     * In some cases the apps Js file has to be loaded even when no MVC object has been requested so far.
+     * Use the app specifc Init() method to call initJs().
+     *
      * @return \Core\Lib\Amvc\App
      *
      * @throws \RuntimeException
      */
-    private final function initJs()
+    protected final function initJs()
     {
         // Init js only once
         if (self::$init_stages[$this->name]['js']) {
