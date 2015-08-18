@@ -2,6 +2,7 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Cfg;
+use Core\Lib\Errors\ErrorLog;
 
 /**
  *
@@ -49,9 +50,10 @@ class Creator
     }
 
     /**
-     * Get an unique app object by cloning an app instance
+     * Get an unique app object by cloning an app instance.
      *
      * @param string $name
+     * @param boolean $do_init
      *
      * @return App
      */
@@ -99,7 +101,10 @@ class Creator
         $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
 
         if (!file_exists($filename)) {
-            throw new \RuntimeException('AMVC Creator Error: App class file "' . $filename . '" was not found.');
+            header("HTTP/1.0 404 Page not found.");
+            echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
+            error_log('AMVC Creator Error: App class file "' . $filename . '" was not found.');
+            exit;
         }
 
         // Check for already existing instance of app
@@ -161,6 +166,15 @@ class Creator
                 }
             }
         }
+
+        // Run possible Start() method in apps
+        $apps = array_keys($this->instances);
+
+        foreach ($apps as $app) {
+            if (method_exists($this->instances[$app], 'Start')) {
+                $this->instances[$app]->Start();
+            }
+        }
     }
 
     /**
@@ -180,8 +194,9 @@ class Creator
         foreach ($cfg_app as $key => $cfg_def) {
 
             // Set possible vaue from apps default config when no config was loaded from db
-            if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default']))
+            if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default'])) {
                 $this->cfg->set($app_name, $key, $cfg_def['default']);
+            }
         }
     }
 
