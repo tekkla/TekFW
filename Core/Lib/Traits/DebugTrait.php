@@ -21,8 +21,47 @@ trait DebugTrait
         $this->di->get('core.ajax')->fnPrintVar($var);
     }
 
-    protected function fbLog($var)
+    /**
+     * FirePHP log
+     *
+     * @param $var Var to log
+     * @param string $label Optional label
+     */
+    protected function fbLog($var, $label=null)
     {
-        \FB::log($var);
+        \FB::log($var, $label);
+    }
+
+    /**
+     * FirePHP Warn log
+     *
+     * @param $var Var to log
+     * @param string $label Optional label
+     */
+    protected function fbWarn($var, $label=null)
+    {
+        \FB::warn($var, $label);
+    }
+
+    /**
+     * FirePHP Info log
+     *
+     * @param $var Var to log
+     * @param string $label Optional label
+     */
+    protected function fbInfo($var, $label=null)
+    {
+        \FB::info($var, $label);
+    }
+
+    /**
+     * FirePHP Error log
+     *
+     * @param $var Var to log
+     * @param string $label Optional label
+     */
+    protected function fbError($var, $label=null)
+    {
+        \FB::error($var, $label);
     }
 }

@@ -65,6 +65,16 @@ class Cookie
 	{}
 
 	/**
+	 * Creates new instance
+	 *
+	 * @return Cookie
+	 */
+	public function getInstance()
+	{
+	    return new self;
+	}
+
+	/**
 	 * Returns cookie name
 	 *
 	 * @return the $name

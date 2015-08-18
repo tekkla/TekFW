@@ -18,7 +18,7 @@ class SecurityModel extends Model
     {
         $data = $this->getContainer('Core', 'Security');
 
-        $data['remember'] = 1;
+        $data['remember'] = 0;
 
         return $data;
     }
@@ -35,7 +35,7 @@ class SecurityModel extends Model
 
         /* @var $security \Core\Lib\Security\Security */
         $security = $this->di->get('core.sec.security');
-        $security->login($data['login'], $data['password'], isset($data['remember']));
+        $security->login($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
 
         if ($security->loggedIn() === true) {
             $data['logged_in'] = true;
@@ -46,10 +46,5 @@ class SecurityModel extends Model
         }
 
         return $data;
-    }
-
-    public function doLogout()
-    {
-        $this->di->get('core.sec.security')->logout();
     }
 }

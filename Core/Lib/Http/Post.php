@@ -3,6 +3,7 @@ namespace Core\Lib\Http;
 
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Security\Security;
 
 /**
  * Post.php
@@ -29,6 +30,12 @@ class Post
 
     /**
      *
+     * @var Security
+     */
+    private $security;
+
+    /**
+     *
      * @var string
      */
     private $app;
@@ -44,9 +51,10 @@ class Post
      *
      * @param Router $router
      */
-    public function __construct(Router $router)
+    public function __construct(Router $router, Security $security)
     {
         $this->router = $router;
+        $this->security = $security;
     }
 
     /**
@@ -101,6 +109,7 @@ class Post
             ->create($app)
             ->getContainer($key);
 
+        // No container from app recieved? Create a generic one!
         if (! $container) {
             $container = $this->di->get('core.data.container');
         }
@@ -128,6 +137,15 @@ class Post
     {
         // Do only react on POST requests
         if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
+            return false;
+        }
+
+        // Validate posted data with session token
+        if (!$this->security->validatePostToken()) {
+
+            // Log attempt and start ban process with max 3 tries.
+            $this->security->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
+
             return false;
         }
 

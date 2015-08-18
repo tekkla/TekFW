@@ -464,7 +464,6 @@ class QueryBuilder
                 $this->processDelete();
                 break;
 
-            case 'SELECT':
             default:
                 $this->processSelect();
                 break;

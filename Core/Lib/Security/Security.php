@@ -5,6 +5,9 @@ use Core\Lib\Cfg;
 use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Logging\Logging;
+use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Traits\DebugTrait;
 
 /**
  * Security
@@ -16,9 +19,12 @@ use Core\Lib\Data\DataAdapter;
  * @license MIT
  * @package TekFW
  * @subpackage Lib
+ * @todo Find better solution for GC of expired autologin tokens
  */
 class Security
 {
+
+    use DebugTrait;
 
     /**
      * Cookiename
@@ -51,7 +57,7 @@ class Security
 
     /**
      *
-     * @var DataAdapter
+     * @var Database
      */
     private $adapter;
 
@@ -92,8 +98,24 @@ class Security
     private $permission;
 
     /**
+     *
+     * @var Logging
      */
-    public function __construct(DataAdapter $adapter, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission)
+    private $logging;
+
+    /**
+     * Constructor
+     *
+     * @param DataAdapter $adapter
+     * @param Cfg $cfg
+     * @param Session $session
+     * @param Cookie $cookie
+     * @param User $user
+     * @param Group $group
+     * @param Permission $permission
+     * @param Logging $logging
+     */
+    public function __construct(DataAdapter $adapter, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission, Logging $logging)
     {
         $this->adapter = $adapter;
         $this->cfg = $cfg;
@@ -102,8 +124,8 @@ class Security
         $this->user = $user;
         $this->group = $group;
         $this->permission = $permission;
+        $this->logging = $logging;
     }
-
 
     /**
      * Initiates security model.
@@ -124,6 +146,9 @@ class Security
         if ($this->cfg->exists('Core', 'security_autologin_expire_days')) {
             $this->days = $this->cfg->get('Core', 'security_autologin_expire_days');
         }
+
+        // Create random session token
+        $this->generateRandomSessionToken();
 
         // Try autologin
         $this->doAutoLogin();
@@ -213,47 +238,73 @@ class Security
      *
      * @return boolean|mixed
      */
-    public function login($username, $password, $remember_me = true)
+    public function login($username, $password, $remember_me = false)
     {
         // Empty username or password
-        if (! trim($username) || ! trim($password)) {
+        if (empty(trim($username)) || empty(trim($password))) {
             return false;
         }
 
         // Try to load user from db
-        $this->adapter->query('SELECT id_user, password FROM {db_prefix}users WHERE username = :username LIMIT 1');
-        $this->adapter->bindValue(':username', $username);
+        $query = [
+            'table' => 'users',
+            'fields' => [
+                'id_user',
+                'password'
+            ],
+            'filter' => 'username=:username',
+            'params' => [
+                ':username' => $username
+            ]
+        ];
+
+        $this->adapter->query($query);
         $this->adapter->execute();
 
-        $login = $this->adapter->single(\PDO::FETCH_NUM);
+        $login = $this->adapter->single();
 
         // No user found => login failed
         if (! $login) {
             return false;
         }
 
+        // @todo Append pepper. But is it neccessary?
+        $password .= $this->pepper;
+
         // Password ok?
-        if (password_verify($password . $this->pepper, $login[1])) {
+        if (password_verify($password, $login['password'])) {
 
             // Needs hash to be updated?
-            if (password_needs_rehash($login[1], PASSWORD_DEFAULT)) {
-                $this->adapter->query('UPDATE {db_prefix}users SET password = :hash WHERE id_user = :id_user');
-                $this->adapter->bindValue(':hash', password_hash($password . $this->pepper, PASSWORD_DEFAULT));
-                $this->adapter->bindValue(':id_user', $login[0]);
+            if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
+
+                $query = [
+                    'table' => 'users',
+                    'method' => 'UPDATE',
+                    'fields' => [
+                        'password'
+                    ],
+                    'filter' => 'id_user = :id_user',
+                    'params' => [
+                        ':password' => password_hash($password, PASSWORD_DEFAULT),
+                        ':id_user' => $login['id_user']
+                    ]
+                ];
+
+                $this->adapter->query($query);
                 $this->adapter->execute();
             }
 
             // Store essential userdata in session
             $this->session->set('logged_in', true);
-            $this->session->set('id_user', $login[0]);
+            $this->session->set('id_user', $login['id_user']);
 
             // Remember for autologin?
-            if ($remember_me) {
-                $this->setAutoLoginCookies($login[0]);
+            if ($remember_me === true) {
+                $this->setAutoLoginCookies($login['id_user']);
             }
 
             // Login is ok, return user id
-            return $login[0];
+            return $login['id_user'];
         }
         else {
             return false;
@@ -271,8 +322,7 @@ class Security
         $this->session->set('logged_in', false);
 
         // Calling logout means to revoke autologin cookies
-        $this->cookie->remove($this->cookie_name . 'U');
-        $this->cookie->remove($this->cookie_name . 'T');
+        $this->cookie->remove($this->cookie_name . 'Token');
     }
 
     /**
@@ -284,24 +334,17 @@ class Security
     {
         // User already logged in?
         if ($this->session->exists('logged_in') && $this->session->get('logged_in') === true) {
-
-            // Load data of current user...
-            $this->user->load($this->session->get('id_user'));
-
-            // ...and end here
             return true;
         }
 
-        // Cookienames for user id and token
-        $cookie_user = $this->cookie_name . 'U';
-        $cookie_token = $this->cookie_name . 'T';
+        // Cookiename of token cookie
+        $cookie = $this->cookie_name . 'Token';
 
-        // No autologin when either user or token cookie not present or autologin already failed
-        if (! $this->cookie->exists($cookie_user) || ! $this->cookie->exists($cookie_token) || $this->session->exists('autologin_failed')) {
+        // No autologin when autologin already failed
+        if ($this->session->exists('autologin_failed')) {
 
             // Remove fragments/all of autologin cookies
-            $this->cookie->remove($cookie_user);
-            $this->cookie->remove($cookie_token);
+            $this->cookie->remove($cookie);
 
             // Remove the flag which forces the log off
             $this->session->remove('autologin_failed');
@@ -309,33 +352,69 @@ class Security
             return false;
         }
 
-        // Read user id cookie
-        $id_user = base64_decode($this->cookie->get($cookie_user));
-
-        // Compare geneated token with token stored in cookie and set user as logged in on equal match
-        $token = $this->generateUserToken($id_user);
-
-        // Cookie successful validated
-        if ($token == $this->cookie->get($cookie_token)) {
-
-            // Refresh autologin cookie so the user stays logged in until he nver comes back
-            $this->setAutoLoginCookies($id_user);
-
-            // Login user, set session flags and return true
-            $this->session->set('logged_in', true);
-            $this->session->set('id_user', $id_user);
-
-            // Remove autologin flag flag
-            $this->session->remove('autologin_failed');
-
-            return true;
+        // No autologin cookie no autologin ;)
+        if (! $this->cookie->exists($cookie)) {
+            return false;
         }
 
-        // !!! Reaching this point means autologin validation failed
+        // Let's find the user for the token in cookie
+        list ($selector, $token) = explode(':', $this->cookie->get($cookie));
+
+        $query = [
+            'table' => 'auth_tokens',
+            'fields' => [
+                'id_auth_token',
+                'id_user',
+                'token',
+                'selector'
+            ],
+            'filter' => 'selector=:selector',
+            'params' => [
+                ':selector' => $selector
+            ]
+        ];
+
+        $this->adapter->query($query);
+        $data = $this->adapter->all();
+
+        // Create hash of token to compare with hash from db only when there is data
+        if (! $data) {
+            $token = hash('sha256', hex2bin($token));
+        }
+
+        foreach ($data as $auth_token) {
+
+            // Check if token is expired?
+            if ($auth_token['expires'] < date('Y-m-d H:i:s')) {
+                $this->deleteAuthTokenFromDb($auth_token['id_user']);
+            }
+
+            // Matches the hash in db with the provided token?
+            if (hash_equals($auth_token['token'], $token)) {
+
+                // Refresh autologin cookie so the user stays logged in
+                // as long as he comes back before his cookie has been expired.
+                $this->setAutoLoginCookies($auth_token['id_user']);
+
+                // Login user, set session flags and return true
+                $this->session->set('logged_in', true);
+                $this->session->set('id_user', $auth_token['id_user']);
+
+                // Remove possible autologin failed flag
+                $this->session->remove('autologin_failed');
+
+                // And finally load user
+                $this->user->load($auth_token['id_user']);
+
+                return true;
+            }
+        }
+
+        // !!! Reaching this point means autologin validation failed in all ways
+        // Clean up the mess and return a big bad fucking false as failed autologin result.
 
         // Remove user and tooken cookie
-        $this->cookie->remove($cookie_user);
-        $this->cookie->remove($cookie_token);
+        $this->cookie->remove($cookie);
 
         // Set flag that autologin failed
         $this->session->set('autologin_failed', true);
@@ -351,7 +430,29 @@ class Security
     }
 
     /**
-     * Set auto login cookies with user id and generated token
+     * Removes the token of a user from auth_token table and all tokens expired.
+     *
+     * @param int $id_user
+     */
+    private function deleteAuthTokenFromDb($id_user)
+    {
+        // Yep! Delete token and return false for failed autologin
+        $query = [
+            'table' => 'auth_tokens',
+            'method' => 'DELETE',
+            'filter' => 'expires < :expires OR id_user=:id_user',
+            'params' => [
+                ':expires' => date('Y-m-d H:i:s'),
+                ':id_user' => $id_user
+            ]
+        ];
+
+        $this->adapter->query($query);
+        $this->adapter->execute();
+    }
+
+    /**
+     * Set auto login cookies with user generated token
      *
      * @param int $id_user
      *
@@ -361,58 +462,49 @@ class Security
      */
     private function setAutoLoginCookies($id_user)
     {
-        // Cast user id explicite integer
-        $id_user = (int) $id_user;
-
-        // Check type of $id_user to be integer and throw error when not integer
-        if (! $id_user) {
-            Throw new \InvalidArgumentException('User id is empty or zero.');
-        }
-
         // Check for empty expire time and generate time if it is empty
         if (! $this->expire_time) {
             $this->generateExpireTime();
         }
 
-        // Expiretime for both cookies
-        $this->cookie->setExpire($this->expire_time);
+        $selector = bin2hex($this->generateRandomToken(6));
+        $token = $this->generateRandomToken(64);
 
-        // User id cookie
-        $this->cookie->setName($this->cookie_name . 'U');
-        $this->cookie->setValue(base64_encode($id_user));
-        $this->cookie->set();
-
-        // User token cookie
-        $this->cookie->setName($this->cookie_name . 'T');
-        $this->cookie->setValue($this->generateUserToken($id_user));
-        $this->cookie->set();
-    }
-
-    /**
-     * Generates a hashed user token based on userdata
-     *
-     * @param unknown $id_user
-     *
-     * @return string
-     */
-    private function generateUserToken($id_user)
-    {
-        // Get userinfo
-        $this->user->load($id_user);
-
-        // Unique pieces of our user
-        $pieces = [
-            $id_user,
-            $this->pepper,
-            $this->user->getUsername(),
-            $this->user->getPassword(),
-            implode(',', $this->user->getGroups())
+        // Store selector and hash in DB
+        $query = [
+            'table' => 'auth_tokens',
+            'method' => 'INSERT',
+            'fields' => [
+                'selector',
+                'token',
+                'id_user',
+                'expires'
+            ],
+            'params' => [
+                ':selector' => $selector,
+                ':token' => hash('sha256', $token),
+                ':id_user' => $id_user,
+                ':expires' => date('Y-m-d H:i:s', $this->expire_time)
+            ]
         ];
 
-        // Build hash from combinded data
-        $token = md5(implode('|', $pieces));
+        $this->adapter->query($query);
+        $this->adapter->execute();
 
-        return $token;
+        // Set autologin token cookie only when token is stored successfully in db!!!
+        if ($this->adapter->lastInsertId()) {
+
+            // Get new cookie
+            $cookie = $this->cookie->getInstance();
+
+            // Expiretime for both cookies
+            $cookie->setExpire($this->expire_time);
+
+            // Set token cookie
+            $cookie->setName($this->cookie_name . 'Token');
+            $cookie->setValue($selector . ':' . bin2hex($token));
+            $cookie->set();
+        }
     }
 
     /**
@@ -423,6 +515,26 @@ class Security
     public function loggedIn()
     {
         return $this->session->get('logged_in') == true && $this->session->get('id_user') > 0 ? true : false;
+    }
+
+    /**
+     * Checks login state and overrides the router current data to force display of loginform.
+     *
+     * @return boolean
+     */
+    public function forceLogin()
+    {
+        if ($this->loggedIn()) {
+            return true;
+        }
+
+        /* @var $router \Core\Lib\Http\Router */
+        $router = $this->di->get('core.http.router');
+        $router->setApp('Core');
+        $router->setController('Security');
+        $router->setAction('Login');
+
+        return false;
     }
 
     /**
@@ -454,8 +566,8 @@ class Security
     /**
      * Checks user access by permissions
      *
-     * @param unknown $perms
-     * @param string $force
+     * @param array $perms
+     * @param boolean $force
      *
      * @return boolean
      */
@@ -488,5 +600,87 @@ class Security
 
         // You aren't allowed, by default.
         return false;
+    }
+
+    /**
+     * Generates a random session token.
+     *
+     * @param number $size
+     *
+     * @return Security
+     */
+    public function generateRandomSessionToken($size = 32)
+    {
+        if (! $this->session->exists('token')) {
+
+            // Store random token in session
+            $this->session->set('token', hash('sha256', $this->generateRandomToken($size)));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Generates a random token.
+     *
+     * @param number $size
+     *
+     * @return string
+     */
+    public function generateRandomToken($size = 32)
+    {
+        return function_exists('openssl_random_pseudo_bytes') ? openssl_random_pseudo_bytes($size) : mcrypt_create_iv($size);
+    }
+
+    /**
+     * Validates $token against the random token stored in session.
+     *
+     * @param string $token
+     *
+     * @return boolean
+     */
+    public function validateRandomSessionToken($token)
+    {
+        return $token == $this->session->get('token');
+    }
+
+    /**
+     * Checks $_POST for sent token value and validates this token (if present) against the random token stored in session.
+     *
+     * @return boolean
+     */
+    public function validatePostToken()
+    {
+        // Show warning in error log when using a form without a token
+        if (! isset($_POST['token'])) {
+            return false;
+        }
+
+        // Token sent so let's check it
+        if (isset($_POST['token'])) {
+
+            if (! $this->validateRandomSessionToken($_POST['token'])) {
+                return false;
+            }
+
+            unset($_POST['token']);
+
+            return true;
+        }
+    }
+
+    /**
+     * Security method to log suspisious actions and start banning process.
+     *
+     * @param string $msg Message to log
+     * @param boolean|int $ban Set this to the number of tries the user is allowed to do other suspicious things until he gets banned.
+     *
+     * @return Security
+     */
+    public function logSuspicious($msg, $ban = false)
+    {
+        $this->logging->security($msg);
+
+        return $this;
     }
 }

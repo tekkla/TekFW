@@ -86,9 +86,12 @@ class DI implements \ArrayAccess
 
         // == HTTP =========================================================
         $this->mapService('core.http.router', '\Core\Lib\Http\Router');
-        $this->mapService('core.http.post', '\Core\Lib\Http\Post', 'core.http.router');
         $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
         $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
+        $this->mapService('core.http.post', '\Core\Lib\Http\Post', [
+            'core.http.router',
+            'core.sec.security'
+        ]);
 
         // == UTILITIES ====================================================
         $this->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
@@ -106,7 +109,8 @@ class DI implements \ArrayAccess
             'core.http.cookie',
             'core.sec.user.current',
             'core.sec.group',
-            'core.sec.permission'
+            'core.sec.permission',
+            'core.log'
         ]);
         $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
             'db.default',
@@ -127,6 +131,9 @@ class DI implements \ArrayAccess
         // == IO ===========================================================
         $this->mapFactory('core.io.file', '\Core\Lib\IO\File');
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
+
+        // == LOGGING========================================================
+        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
 
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
@@ -397,7 +404,8 @@ class DI implements \ArrayAccess
         return $this->getSFV($name);
     }
 
-    public function log($var) {
+    public function log($var)
+    {
         $this->get('core.util.fire')->log($var);
     }
 

@@ -121,6 +121,13 @@ class Content
     private $action;
 
     /**
+     *
+     * @var array
+     */
+    private $headers = [];
+
+
+    /**
      * Constructor
      *
      * @param Router $router
@@ -168,10 +175,6 @@ class Content
         // Match request against stored routes
         $this->router->match();
 
-        // --------------------------------------
-        // 8. Run called app
-        // --------------------------------------
-
         // Try to use appname provided by router
         $app_name = $this->router->getApp();
 
@@ -188,9 +191,8 @@ class Content
 
         /**
          * Each app can have it's own start procedure.
-         * This procedure is used to
-         * init apps with more than the app creator does. To use this feature the
-         * app needs run() method in it's main file.
+         * This procedure is used to init apps with more than the app creator does.
+         * To use this feature the app needs a run() method in it's main file.
          */
         if (method_exists($app, 'run')) {
             $app->run();
@@ -216,12 +218,7 @@ class Content
         }
 
         // Run controller and process result.
-        if ($this->router->isAjax()) {
-            $this->createAjax();
-        }
-        else {
-            $this->createFull();
-        }
+        return $this->router->isAjax() ? $this->createAjax() : $this->createFull();
     }
 
     private function createAjax()
@@ -230,107 +227,121 @@ class Content
         header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
-        switch ($this->router->getFormat()) {
-
-            case 'json':
-                $this->createJson();
-                break;
-
-            case 'xml':
-                $this->createXml();
-                break;
-
-            case 'html':
-            default:
-                try {
-                    // Result will be processed as ajax command list
-                    $this->controller->ajax($this->action, $this->router->getParam());
-                }
-                catch (\Exception $e) {
-                    $this->di->get('core.error')->handleException($e, false, true);
-                }
-
-                // send JSON header
-                header('Content-type: application/json; charset=utf-8");');
-
-                // Run ajax processor
-                echo $this->di->get('core.ajax')->process();
-
-                // End end here
-                exit();
-
-                break;
+        try {
+            // Result will be processed as ajax command list
+            $this->controller->ajax($this->action, $this->router->getParam());
         }
+        catch (\Exception $e) {
+            $this->di->get('core.error')->handleException($e, false, true);
+        }
+
+        // send JSON header
+        header('Content-type: application/json; charset=utf-8");');
+
+        // Run ajax processor
+        echo $this->di->get('core.ajax')->process();
+
+        // End end here
+        #exit();
+
+        #break;
+
+        return false;
     }
 
     private function createFull()
     {
+        Try {
+
+            // Run controller and store result
+            $result = $this->controller->run($this->action, $this->router->getParam());
+
+            /*
+             * // No content created? Check app for onEmpty() event which maybe gives us content.
+             * if (empty($result) && method_exists($app, 'onEmpty')) {
+             * $result = $app->onEmpty();
+             * }
+             *
+             * // Append content provided by apps onBefore() event method
+             * if (method_exists($app, 'onBefore')) {
+             * $result = $app->onBefore() . $result;
+             * }
+             *
+             * // Prepend content provided by apps onAfter() event method
+             * if (method_exists($app, 'onAfter')) {
+             * $result .= $app->onAfter();
+             * }
+             */
+        }
+        catch (\Exception $e) {
+
+            $result = $this->di->get('core.error')->handleException($e);
+        }
+
         switch ($this->router->getFormat()) {
 
             case 'json':
-                $this->createJson();
-                break;
+                $this->headers[] = 'Content-type: application/json; charset=utf-8");';
+                $this->sendHeader();
+                echo json_encode($result);
+                return false;
 
             case 'xml':
-                $this->createXml();
-                break;
+                $this->headers[] = "Content-Type: application/xml; charset=utf-8";
+                $this->sendHeader();
+                echo $result;
+                return false;
+
+            case 'file':
+
+                $this->sendHeader();
+                readfile($result);
+                return false;
 
             case 'html':
             default:
 
+                $this->css->init();
+                $this->js->init();
+
                 // Always use UTF-8
-                header("Content-Type: text/html; charset=utf-8");
+                $this->headers[] ="Content-Type: text/html; charset=utf-8";
 
                 // Add missing title
                 if (empty($this->title)) {
                     $this->title = $this->cfg->get('Core', 'sitename');
                 }
 
-                Try {
-
-                    // Run controller and store result
-                    $result = $this->controller->run($this->action, $this->router->getParam());
-
-                    // No content created? Check app for onEmpty() event which maybe gives us content.
-                    if (empty($result) && method_exists($app, 'onEmpty')) {
-                        $result = $app->onEmpty();
-                    }
-
-                    // Append content provided by apps onBefore() event method
-                    if (method_exists($app, 'onBefore')) {
-                        $result = $app->onBefore() . $result;
-                    }
-
-                    // Prepend content provided by apps onAfter() event method
-                    if (method_exists($app, 'onAfter')) {
-                        $result .= $app->onAfter();
-                    }
-                }
-                catch (\Exception $e) {
-
-                    $result = $this->di->get('core.error')->handleException($e);
-                }
-
                 $this->setContent($result);
 
                 // Call content builder
+
+                $this->sendHeader();
+
                 echo $this->render();
-                break;
+
+                return true;
         }
     }
 
-    private function createJson()
+    /**
+     * Sends all stored header data.
+     *
+     * @throws \RuntimeException
+     *
+     * @return Content
+     */
+    private function sendHeader()
     {
-        header('Content-type: application/json; charset=utf-8");');
-        echo json_encode($this->controller->run($this->action, $this->router->getParam()));
-        exit();
-    }
+        if (headers_sent()) {
+            Throw new \RuntimeException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
+        }
 
-    private function createXml()
-    {
-        header("Content-Type: application/xml; charset=utf-8");
-        echo $this->controller->run($this->action, $this->router->getParam());
-        exit();
+        foreach ($this->headers as $header) {
+            header($header);
+        }
+
+        return $this;
     }
 
     /**
@@ -484,8 +495,49 @@ class Content
         return $this;
     }
 
+    /**
+     * Returns stored debug data.
+     */
     public function getDebug()
     {
         return $this->debug;
+    }
+
+    /**
+     * Sets one or more headers which replaces already set headers.
+     *
+     * @param string|array $headers
+     *
+     * @return \Core\Lib\Content\Content
+     */
+    public function setHeader($headers=[])
+    {
+        if (!is_array($headers)) {
+            $headers = (array) $headers;
+        }
+
+        $this->headers = $headers;
+
+        return $this;
+    }
+
+    /**
+     * Adds one or more headers to already set headers.
+     *
+     * @param string|array $headers
+     *
+     * @return \Core\Lib\Content\Content
+     */
+    public function addHeader($headers=[])
+    {
+        if (!is_array($headers)) {
+            $headers = (array) $headers;
+        }
+
+        foreach ($headers as $header) {
+            $this->headers[] = $headers;
+        }
+
+        return $this;
     }
 }

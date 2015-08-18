@@ -1,10 +1,6 @@
 <?php
 /**
- * Entry file for TekFW framework.
- *
- * It defines the WEB constant for direct accesschecks,
- * defines constants to get rid of some global var use,
- * and registers an autoclassloader.
+ * Entry file for Core framework.
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
@@ -15,24 +11,37 @@ use Core\Lib\DI;
 // Define that the TekFW has been loaded
 define('TEKFW', 1);
 
-/**
- * Absolute path to site
- */
+// Absolute path to site
 define('BASEDIR', __DIR__);
-
-$cfg = [];
 
 // Check for settings file
 if (! file_exists(BASEDIR . '/Settings.php')) {
     die('Settings file could not be loaded.');
 }
 
-// Load Settings.php file
-require_once (BASEDIR . '/Settings.php');
+// Define path to the framweork core.
+define('COREDIR', BASEDIR . '/Core');
+
+// Define path to applications.
+define('APPSDIR', BASEDIR . '/Apps');
+
+// Define path to themes
+define('THEMESDIR', BASEDIR . '/Themes');
+
+// Define path to secured apps
+define('APPSSECDIR', BASEDIR . '/Core/AppsSec');
+
+// Load basic config from Settings.php
+$cfg = include (BASEDIR . '/Settings.php');;
+
+// Define url to Core
+define('BASEURL', $cfg['url']);
+
+// Define url of themes
+define('THEMESURL', $cfg['url'] . '/Themes');
 
 // Include error handler
 require_once (COREDIR . '/Lib/Errors/Error.php');
-
 
 try {
 
@@ -54,7 +63,6 @@ try {
     $loader = new SplClassLoader('Themes', BASEDIR);
     $loader->register();
 
-
     // start output buffering
     ob_start();
 
@@ -68,7 +76,10 @@ try {
     /* @var $config \Core\Lib\Cfg */
     $config = $di->get('core.cfg');
 
+    // Init config with config from Settings.php
     $config->init($cfg);
+
+    // Load additiona configs from DB
     $config->load();
 
     // Add dirs to config
@@ -128,35 +139,29 @@ try {
 
     /* @var $creator \Core\Lib\Amvc\Creator */
     $creator = $di->get('core.amvc.creator');
+
     $creator->initAppConfig('Core');
 
-    // Initialize the apps
-    $app_dirs = [
+    // --------------------------------------
+    // 6. Start app autodiscover process
+    // --------------------------------------
+    $creator->autodiscover([
         $config->get('Core', 'dir_appssec'),
         $config->get('Core', 'dir_apps')
-    ];
+    ]);
 
     // --------------------------------------
-    // 6. Init essential content
+    // 7. Create content
     // --------------------------------------
 
     /* @var $content \Core\Lib\Content\Content */
     $content = $di->get('core.content');
 
-    $content->css->init();
-    $content->js->init();
-
-    // --------------------------------------
-    // 6. Start app autodiscover process
-    // --------------------------------------
-    $creator->autodiscover($app_dirs);
-
-    // --------------------------------------
-    // 7. Create content
-    // --------------------------------------
     $content->create();
 
-    // @TODO remove this later!
+    // --------------------------------------
+    // 8. Send some debug data to FirePhp
+    // --------------------------------------
     $fb = [
         'Runtime' => $timer->getDiff() . 's',
         'Permissions' => $di->get('core.sec.permission')->getPermissions(),
