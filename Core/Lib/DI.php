@@ -110,6 +110,7 @@ class DI implements \ArrayAccess
             'core.sec.user.current',
             'core.sec.group',
             'core.sec.permission',
+            'core.log'
         ]);
         $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
             'db.default',
@@ -130,6 +131,9 @@ class DI implements \ArrayAccess
         // == IO ===========================================================
         $this->mapFactory('core.io.file', '\Core\Lib\IO\File');
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
+
+        // == LOGGING========================================================
+        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
 
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
