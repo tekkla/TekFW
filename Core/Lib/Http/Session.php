@@ -28,6 +28,13 @@ final class Session
     {
         $this->adapter = $adapter;
 
+        // Lifetime auf eine Stunde setzen
+        ini_set('session.gc_maxlifetime', 3600);
+
+        // gc mit einer Wahrscheinlichkeit von 1% aufrufen
+        ini_set('session.gc_probability', 1);
+        ini_set('session.gc_divisor', 100);
+
         // Set handler to overide SESSION
         session_set_save_handler([
             $this,
@@ -196,9 +203,6 @@ final class Session
      */
     public function write($id_session, $data)
     {
-        // Create timestamp
-        $access = time();
-
         // Set query
         $this->adapter->query([
             'method' => 'REPLACE',
@@ -210,7 +214,7 @@ final class Session
             ],
             'params' => [
                 ':id_session' => $id_session,
-                ':access' => $access,
+                ':access' => time(),
                 ':data' => $data
             ]
         ]);
