@@ -86,9 +86,12 @@ class DI implements \ArrayAccess
 
         // == HTTP =========================================================
         $this->mapService('core.http.router', '\Core\Lib\Http\Router');
-        $this->mapService('core.http.post', '\Core\Lib\Http\Post', 'core.http.router');
         $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
         $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
+        $this->mapService('core.http.post', '\Core\Lib\Http\Post', [
+            'core.http.router',
+            'core.sec.security'
+        ]);
 
         // == UTILITIES ====================================================
         $this->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
@@ -106,7 +109,7 @@ class DI implements \ArrayAccess
             'core.http.cookie',
             'core.sec.user.current',
             'core.sec.group',
-            'core.sec.permission'
+            'core.sec.permission',
         ]);
         $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
             'db.default',
@@ -397,7 +400,8 @@ class DI implements \ArrayAccess
         return $this->getSFV($name);
     }
 
-    public function log($var) {
+    public function log($var)
+    {
         $this->get('core.util.fire')->log($var);
     }
 
