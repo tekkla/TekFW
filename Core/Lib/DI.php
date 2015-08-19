@@ -133,7 +133,10 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
         // == LOGGING========================================================
-        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
+        $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
+            'db.default',
+            'core.http.session'
+        ]);
 
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
