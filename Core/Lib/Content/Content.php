@@ -80,7 +80,7 @@ class Content
      *
      * @var Menu
      */
-    public $navbar;
+    public $menu;
 
     /**
      *
@@ -145,7 +145,7 @@ class Content
         $this->cfg = $cfg;
         $this->app_creator = $app_creator;
         $this->html = $html;
-        $this->navbar = $menu;
+        $this->menu = $menu;
         $this->js = $js;
         $this->css = $css;
         $this->msg = $msg;
@@ -171,7 +171,6 @@ class Content
 
     public function create()
     {
-
         // Match request against stored routes
         $this->router->match();
 
@@ -189,6 +188,22 @@ class Content
         /* @var $app \Core\Lib\Amvc\App */
         $app = $this->app_creator->create($app_name);
 
+        if (method_exists($app, 'Access')) {
+
+            // Call app wide access method. This is important for using forceLogin() security method.
+            $app->Access();
+
+            // Check for redirect from Access() method!!!
+            if ($app_name != $this->router->getApp()) {
+
+                // Get new appname and create this app instead of the requested one.
+                $app_name = $this->router->getApp();
+
+                /* @var $app \Core\Lib\Amvc\App */
+                $app = $this->app_creator->create($app_name);
+            }
+        }
+
         /**
          * Each app can have it's own start procedure.
          * This procedure is used to init apps with more than the app creator does.
@@ -197,6 +212,7 @@ class Content
         if (method_exists($app, 'run')) {
             $app->run();
         }
+
         // Get name of requested controller
         $controller_name = $this->router->getController();
 
@@ -240,11 +256,6 @@ class Content
 
         // Run ajax processor
         echo $this->di->get('core.ajax')->process();
-
-        // End end here
-        #exit();
-
-        #break;
 
         return false;
     }
