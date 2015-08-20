@@ -28,19 +28,19 @@ class Template
      *
      * @var Cfg
      */
-    private $cfg;
+    protected $cfg;
 
     /**
      *
      * @var Content
      */
-    private $content;
+    protected $content;
 
     /**
      *
      * @var HtmlFactory
      */
-    private $html;
+    protected $html;
 
     /**
      * Constructor
@@ -94,22 +94,22 @@ class Template
             return $meta_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($meta_stack as $tag) {
 
-            $meta = $this->html->create('Elements\Meta');
+            // $meta = $this->html->create('Elements\Meta');
 
-            $html .= PHP_EOL . '<meta';
+            echo PHP_EOL . '<meta';
 
             foreach ($tag as $attribute => $value) {
-                $html .= ' ' . $attribute . '="' . $value . '"';
+                echo ' ', $attribute, '="', $value, '"';
             }
 
-            $html .= '>';
+            echo '>';
         }
 
-        return $html;
+        $html = ob_get_contents();
     }
 
     /**
@@ -132,7 +132,7 @@ class Template
     }
 
     /**
-     * Returns html navbar or only its data.
+     * Returns html navbar or only the menu structure.
      *
      * Set $data_only argument to true if you want to get get only the data
      * without a genereated html control.
@@ -141,20 +141,9 @@ class Template
      *
      * @return string|array
      */
-    final protected function getNavbar($data_only = false)
+    final protected function getMenu($name='')
     {
-        if ($data_only) {
-            return [
-                'brand' => $this->content->getBrand(),
-                'items' => $this->content->navbar->getMenu()
-            ];
-        }
-
-        $navbar = $this->html->create('Controls\Navbar');
-        $navbar->setBrand($this->content->getBrand(), '/');
-        $navbar->setItems($this->content->navbar->getMenu());
-
-        return $navbar->build();
+        return $this->content->menu->getItems($name);
     }
 
     /**
@@ -175,11 +164,15 @@ class Template
             return $og_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($og_stack as $property => $content) {
-            $html .= '<meta property="' . $property . '" content="' . $content . '">' . PHP_EOL;
+            echo '<meta property="', $property, '" content="', $content, '">', PHP_EOL;
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -246,13 +239,19 @@ class Template
             }
         }
 
+        ob_start();
+
         foreach ($files as $file) {
-            $html .= PHP_EOL . '<link rel="stylesheet" type="text/css" href="' . $file . '">';
+            echo PHP_EOL, '<link rel="stylesheet" type="text/css" href="', $file, '">';
         }
 
         if ($inline) {
-            $html .= PHP_EOL . '<style>' . PHP_EOL . implode(PHP_EOL, $inline) . PHP_EOL . '</style>' . PHP_EOL;
+            echo PHP_EOL, '<style>', PHP_EOL, implode(PHP_EOL, $inline), PHP_EOL, '</style>', PHP_EOL;
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -362,48 +361,60 @@ class Template
         }
 
         // Init output var
-        $html = '';
+        ob_start();
 
         // Create compiled output
         if ($vars || $scripts || $ready || $files) {
-            $html .= PHP_EOL . '<!-- ' . strtoupper($area) . ' JAVASCRIPTS -->';
+            echo PHP_EOL, '<!-- ', strtoupper($area), ' JAVASCRIPTS -->';
         }
 
         if ($vars || $scripts || $ready) {
 
             // Create script html object
-            $script = '<script>';
+            echo '<script>';
 
             foreach ($vars as $name => $val) {
-                $script .= (PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';');
+                echo PHP_EOL, 'var ', $name, ' = ', (is_string($val) ? '"' . $val . '"' : $val), ';';
             }
 
             // Create $(document).ready()
             if ($ready) {
-                $script .= PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
-                $script .= implode(PHP_EOL, $ready);
-                $script .= PHP_EOL . '});';
+                echo PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
+                echo implode(PHP_EOL, $ready);
+                echo PHP_EOL . '});';
             }
 
-            $script .= PHP_EOL . '</script>';
+            echo PHP_EOL . '</script>';
+
+            // Add complete blocks
+            echo implode(PHP_EOL, $blocks);
 
             // Minify script?
             if ($this->cfg->get('Core', 'js_minify')) {
-                $script = \JSMin::minify($script);
+
+                // Get outputbuffer with scripts so far
+                $script = ob_get_contents();
+
+                // Clean buffer
+                ob_clean();
+
+                // Minify scripts output
+                echo \JSMin::minify($script . PHP_EOL . $script);
             }
-
-            $html .= PHP_EOL . $script;
         }
-
-        // Add complete blocks
-        $html .= implode(PHP_EOL, $blocks);
 
         // Create files
         foreach ($files as $file) {
 
             // Create script html object
-            $html .= PHP_EOL . '<script src="' . $file . '"></script>';
+            echo PHP_EOL . '<script src="', $file, '"></script>';
         }
+
+        // Get final scripts from buffer
+        $html = ob_get_contents();
+
+        // End buffering
+        ob_end_clean();
 
         return $html;
     }
@@ -426,18 +437,22 @@ class Template
             return $link_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($link_stack as $link) {
 
-            $html .= PHP_EOL . '<link';
+            echo PHP_EOL . '<link';
 
             foreach ($link as $attribute => $value) {
-                $html .= ' ' . $attribute . '="' . $value . '"';
+                echo ' ', $attribute, '="', $value, '"';
             }
 
-            $html .= '>';
+            echo '>';
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -460,28 +475,27 @@ class Template
             return $messages;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($messages as $msg) {
 
-            $html .= PHP_EOL . '
-			<div class="alert alert-' . $msg->getType();
-
-            // Message dismissable?
-            if ($msg->getDismissable()) {
-                $html .= ' alert-dismissable';
-            }
+            echo PHP_EOL, '
+            <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
             // Fadeout message?
-            if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
-                $html .= ' fadeout';
-            }
+            // if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+            // echo ' fadeout';
+            // }
 
-            $html .= '">
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-				' . $msg->getMessage() . '
-			</div>';
+            echo '">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                ', $msg->getMessage(), '
+            </div>';
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -516,28 +530,32 @@ class Template
 
         array_unshift($breadcrumbs, $home_crumb);
 
-        $html = '';
+        ob_start();
 
         if ($breadcrumbs) {
 
-            $html .= '<ol class="breadcrumb">';
+            echo '<ol class="breadcrumb">';
 
             foreach ($breadcrumbs as $breadcrumb) {
 
-                $html .= '<li';
+                echo '<li';
 
                 if ($breadcrumb->getActive()) {
-                    $html .= ' class="active">' . $breadcrumb->getText();
+                    echo ' class="active">' . $breadcrumb->getText();
                 }
                 else {
-                    $html .= '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
+                    echo '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
                 }
 
-                $html .= '</li>';
+                echo '</li>';
             }
 
-            $html .= '</ol>';
+            echo '</ol>';
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
