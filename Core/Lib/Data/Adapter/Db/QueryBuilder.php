@@ -662,7 +662,7 @@ class QueryBuilder
 
             foreach ($this->definition['join'] as $join) {
 
-                if ($this->isAssoc($join)) {
+                if ($this->arrayIsAssoc($join)) {
                     $this->join[] = [
                         'tbl' => $join['tbl'],
                         'as' => $join['as'],
@@ -716,7 +716,7 @@ class QueryBuilder
                     Throw new \RuntimeException('Querybuilder needs two elements when filter is set as array. The first element has to be the filter statement. The second one an assoc array with filter parameters');
                 }
 
-                if (! $this->isAssoc($this->definition['filter'][1])) {
+                if (! $this->arrayIsAssoc($this->definition['filter'][1])) {
                     Throw new \RuntimeException('Querybuilder needs an assoc array as filter parameter list.');
                 }
 
@@ -795,7 +795,7 @@ class QueryBuilder
     {
         if ($arg2 === null) {
 
-            if (! is_array($arg1) || ! $this->isAssoc($arg1)) {
+            if (! is_array($arg1) || ! $this->arrayIsAssoc($arg1)) {
                 Throw new \InvalidArgumentException('Setting one QueryBuilder argument means you have to set an assoc array as argument.');
             }
 

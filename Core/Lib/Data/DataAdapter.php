@@ -199,7 +199,7 @@ class DataAdapter implements \IteratorAggregate
 
         // When data is an assoc array we check here for an existing
         // Container object and fill the container with our data
-        if (is_array($data) && $this->isAssoc($data)) {
+        if ($this->arrayIsAssoc($data)) {
 
             $this->checkContainer($data);
 
@@ -290,7 +290,7 @@ class DataAdapter implements \IteratorAggregate
             }
 
             // Container creation only from assoc arrays
-            if (! $data instanceof Container && $this->isAssoc($data)) {
+            if (! $data instanceof Container && $this->arrayIsAssoc($data)) {
 
                 $this->checkContainer($data);
 

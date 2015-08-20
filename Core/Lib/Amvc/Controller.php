@@ -213,12 +213,8 @@ class Controller extends MvcAbstract
         }
 
         // Use givem params
-        if (! empty($params)) {
-            if ($this->isAssoc($params)) {
-                $this->params = $params;
-            } else {
-                Throw new \RuntimeException('Controller run methods $params argument has to be an assoc array.');
-            }
+        if ($this->arrayIsAssoc($params)) {
+            $this->params = $params;
         }
 
         // Init return var with boolean false as default value. This default

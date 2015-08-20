@@ -528,7 +528,7 @@ abstract class HtmlAbstract
             else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
-                if ($this->isAssoc($args[0])) {
+                if ($this->arrayIsAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }

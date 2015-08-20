@@ -44,7 +44,7 @@ class HtmlFactory
 
             if (is_array($arg)) {
 
-                if (! $this->isAssoc($arg)) {
+                if (! $this->arrayIsAssoc($arg)) {
                     Throw new \InvalidArgumentException('Arrayed arguments for html objects created by HtmlFactory have to be associative.');
                 }
 
