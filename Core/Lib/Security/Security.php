@@ -265,6 +265,9 @@ class Security
 
         // No user found => login failed
         if (! $login) {
+
+            // Log login try with not existing username
+            $this->logLogin(0, $username, false, true);
             return false;
         }
 
@@ -303,19 +306,28 @@ class Security
                 $this->setAutoLoginCookies($login['id_user']);
             }
 
+            // Log successfull login
+            $this->logLogin($login['id_user']);
+
             // Login is ok, return user id
             return $login['id_user'];
         }
         else {
+
+            // Log try with wrong password and start ban counter
+            $this->logLogin(0,false,true, true);
             return false;
         }
     }
 
     /**
-     * Logout of the user and clean up autologin cookies
+     * Logout of the user and clean up autologin cookies.
      */
     public function logout()
     {
+
+        $id_user = $this->session->get('id_user');
+
         // Clean up session
         $this->session->set('autologin_failed', true);
         $this->session->set('id_user', 0);
@@ -323,6 +335,10 @@ class Security
 
         // Calling logout means to revoke autologin cookies
         $this->cookie->remove($this->cookie_name . 'Token');
+
+
+        $this->logging->logout('User:' . $id_user);
+
     }
 
     /**
@@ -679,8 +695,71 @@ class Security
      */
     public function logSuspicious($msg, $ban = false)
     {
-        $this->logging->security($msg);
+        $this->logging->suspicious($msg);
 
         return $this;
+    }
+
+    /**
+     * Logs login attemps.
+     *
+     * @param integer $id_user
+     * @param boolean $username
+     * @param boolean $password
+     * @param boolean $ban
+     */
+    private function logLogin($id_user, $username = false, $password = false, $ban = false)
+    {
+        $text = 'Login for user:' . $id_user;
+        $state = 0;
+
+        if (! $username || !$password) {
+
+            $text .= ' failed!';
+
+            if (!$username) {
+                $state = 1;
+            }
+
+            if (!$password) {
+                $state = 2;
+            }
+        }
+        else  {
+            $text .= ' success';
+        }
+
+
+        $this->logging->login($text, $state);
+
+        // Start ban process only when requested and only when state
+        // indicates a login error from user credentials
+        if ($state > 0 && $ban) {
+            $this->logging->ban('Ban event');
+        }
+    }
+
+    /**
+     * Ban check
+     */
+    public function checkBan()
+    {
+            // Get max tries until get banned from config
+            $max_tries = $this->cfg->get('Core', 'ban_max_counter');
+
+            // Max tries of 0 means no ban check at all
+            if ($max_tries == 0) {
+                return true;
+            }
+
+            // Get ban counter for the visitors IP
+            $counter = $this->logging->countBanLogEntries($_SERVER['REMOTE_ADDR']);
+
+            // As long as the ban counter is smaller than allowed the check is ok.
+            if ($counter < $max_tries) {
+                return true;
+            }
+
+            //
     }
 }
