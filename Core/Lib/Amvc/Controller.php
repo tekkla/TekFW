@@ -14,6 +14,7 @@ use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Data\Vars;
+use Core\Lib\Traits\ArrayTrait;
 
 /**
  * Controllers parent class.
@@ -30,6 +31,7 @@ class Controller extends MvcAbstract
 
     use UrlTrait;
     use TextTrait;
+    use ArrayTrait;
 
     /**
      * Type of class
@@ -194,29 +196,29 @@ class Controller extends MvcAbstract
      * In this case you should provide the action an parameters needed to get the
      * wanted result.
      *
-     * @param string $action Optional action to run
-     * @param string $params Parameter to use
+     * @param string $action Action method to call.
+     * @param string $params Optional ssociative array to be uses as action method parameter.
      *
      * @return boolean bool|string
-     *
-     * @todo Controller access is deactivated
      */
     final public function run($action, $params = [])
     {
         $this->action = $action;
 
         // If accesscheck failed => stop here and return false!
-        /**
-         *
-         * @todo Does not work now. Important!!!
-         */
         if ($this->checkControllerAccess() == false) {
-            return true;
+            $this->message->warning($this->txt('missing_userrights', 'Core'));
+            $this->security->logSuspicious('Missing permission for ressource '. $this->app->getName() . '::' . $this->getName() . '::' . $action . '()');
+            return false;
         }
 
-        // Try to autodiscover params on empty param args
+        // Use givem params
         if (! empty($params)) {
-            $this->params = $params;
+            if ($this->isAssoc($params)) {
+                $this->params = $params;
+            } else {
+                Throw new \RuntimeException('Controller run methods $params argument has to be an assoc array.');
+            }
         }
 
         // Init return var with boolean false as default value. This default
@@ -423,15 +425,14 @@ class Controller extends MvcAbstract
      * Level 0 - App: Tries to check access on possible app wide access function
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
-     * @param boolean $smf Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
      * @param bool $force Set this to true if you want to force a brutal stop
      *
      * @return boolean
      */
-    final protected function checkControllerAccess($mode = 'smf', $force = false)
+    final protected function checkControllerAccess($force = false)
     {
         // Is there an global access method in the app main class to call?
-        if (method_exists($this->app, 'appAccess') && $this->app->appAccess() === false) {
+        if (method_exists($this->app, 'Access') && $this->app->Access() === false) {
             return false;
         }
 
@@ -461,7 +462,7 @@ class Controller extends MvcAbstract
 
             // No perms until here means we can finish here and allow access by returning true
             if ($perm) {
-                return $this->security->checkAccess($perm, $mode, $force);
+                return $this->security->checkAccess($perm, $force);
             }
         }
 
@@ -699,7 +700,7 @@ class Controller extends MvcAbstract
         }
 
         // Append session id
-        $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
+        #$location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
 
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
