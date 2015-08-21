@@ -297,6 +297,9 @@ class Security
                 $this->adapter->execute();
             }
 
+            // Load User
+            $this->user->load($login['id_user']);
+
             // Store essential userdata in session
             $this->session->set('logged_in', true);
             $this->session->set('id_user', $login['id_user']);
@@ -350,6 +353,7 @@ class Security
     {
         // User already logged in?
         if ($this->session->exists('logged_in') && $this->session->get('logged_in') === true) {
+            $this->user->load($this->session->get('id_user'));
             return true;
         }
 
@@ -591,22 +595,27 @@ class Security
     {
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
+            $this->fbLog('is Guest');
             return false;
         }
 
         // Allow access to all users when perms argument is empty
         if (empty($perms)) {
+            $this->fbLog('no Perms');
             return true;
         }
 
         // Administrators are supermen :P
         if ($this->user->isAdmin()) {
+            $this->fbLog('is Admin');
             return true;
         }
 
         // Explicit array conversion of perms arg
         if (! is_array($perms)) {
             $perms = (array) $perms;
+            $this->fbLog($perms);
+
         }
 
         // User has the right to do this?
