@@ -16,8 +16,8 @@ class SecurityController extends Controller
     public function Login()
     {
         if ($this->security->loggedIn()) {
-            echo 'Already logged in.';
-            return false;
+            $this->redirect('AlreadyLoggedIn');
+            return;
         }
 
         $data = $this->post->get();
@@ -25,21 +25,25 @@ class SecurityController extends Controller
         if ($data) {
 
             // Do login procedure
-            $data = $this->model->doLogin($data);
+            $logged_in = $this->model->doLogin($data);
 
-            if ($data['logged_in'] === true) {
-                $this->redirectExit();
+            //
+            if ($logged_in == true) {
+                $url = $this->url('index');
+                $this->redirectExit($url);
                 return;
+            }
+            else {
+                $this->message->danger($this->txt('login_failed'));
             }
         }
         else {
-
             $data = $this->model->getEmptyLogin();
         }
 
         $form = $this->getFormDesigner($data);
 
-        $form->setAction($this->router->url('core_login'));
+        $form->setActionRoute($this->router->getCurrentRoute(), $this->router->getParam());
 
         // Form save button
         $form->setSaveButtonText($this->txt('login'));
@@ -50,13 +54,13 @@ class SecurityController extends Controller
 
         /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
         $control = $group->addControl('Text', 'login');
-        $control->noLabel();
         $control->setPlaceholder($this->txt('username'));
+        $control->setLabel($this->txt('username'));
 
         /* @var $control \Core\Lib\Content\Html\FormDesigner\Controls\TextControl */
         $control = $group->addControl('Password', 'password');
-        $control->noLabel();
         $control->setPlaceholder($this->txt('password'));
+        $control->setLabel($this->txt('password'));
 
         /* @var $control \Core\Lib\Content\Html\Form\Checkbox */
         $control = $group->addControl('Checkbox', 'remember');
@@ -70,31 +74,12 @@ class SecurityController extends Controller
 
     public function Logout()
     {
-        $this->model->doLogout();
+        $this->security->logout();
         $this->redirectExit($this->router->url('core_index'));
     }
 
-    public function Register()
+    public function AlreadyLoggedIn()
     {
-        $data = $this->post->get();
-
-        if ($data) {
-
-            // Do login procedure
-            $data = $this->model->saveUser($data);
-
-            if (! $data->hasErrors()) {
-                $this->content->msg->success($this->txt('login_ok'));
-                $this->redirectExit($this->url('core_user', [
-                    $data['id_user']
-                ]));
-            }
-            else {
-                $this->content->msg->danger($this->txt('login_failed'));
-            }
-        }
-        else {
-            $data = $this->model->getRegister($id_user);
-        }
+        $this->setVar('loggedin', $this->txt('already_loggedin'));
     }
 }

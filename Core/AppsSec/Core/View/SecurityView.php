@@ -6,7 +6,7 @@ use Core\Lib\Amvc\View;
 /**
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *        
+ *
  */
 final class SecurityView extends View
 {
@@ -14,6 +14,11 @@ final class SecurityView extends View
     public function Login()
     {
         echo $this->form;
+    }
+
+    public function AlreadyLoggedIn()
+    {
+        echo $this->loggedin;
     }
 }
 

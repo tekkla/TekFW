@@ -18,19 +18,17 @@ class SecurityModel extends Model
     {
         $data = $this->getContainer('Core', 'Security');
 
-        $data['remember'] = 0;
+        // Autologin on or off by default?
+        $data['remember'] = $this->cfg('autologin');
 
         return $data;
     }
 
     public function doLogin(Container $data)
     {
-        // Set validation rules and validate data
-        $data->validate();
-
         // End on validation errors and return data container
-        if ($data->hasErrors()) {
-            return $data;
+        if (!$data->validate()) {
+            return false;
         }
 
         /* @var $security \Core\Lib\Security\Security */
@@ -38,13 +36,11 @@ class SecurityModel extends Model
         $security->login($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
 
         if ($security->loggedIn() === true) {
-            $data['logged_in'] = true;
+            return true;
         }
         else {
-            $data['logged_in'] = false;
             $data->addError('@', $this->txt('login_failed'));
+            return false;
         }
-
-        return $data;
     }
 }
