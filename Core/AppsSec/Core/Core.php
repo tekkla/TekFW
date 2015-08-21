@@ -65,6 +65,16 @@ final class Core extends App
                 ]
             ]
         ],
+        'autologin' => [
+            'group' => 'security',
+            'control' => 'Switch',
+            'default' => 1
+        ],
+        'ban_max_counter' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 5
+        ],
 
         // Group: Execute
 
@@ -308,24 +318,24 @@ final class Core extends App
             'route' => '../admin/[a:app_name]/reconfig',
             'controller' => 'config',
             'action' => 'reconfigure'
-        ]
+        ],
     ];
 
-    protected function addMenuItems()
+    public function Start()
     {
         if ($this->security->checkAccess('core_admin')) {
-            $this->content->navbar->createRootItem('admin', $this->txt('admin'), $this->router->url('core_admin'));
+
+            $root = $this->content->menu->createItem('admin', $this->txt('admin'), $this->url('admin'));
+
+            $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
+
+            foreach ($apps as $app) {
+                $root->createItem('admin_' . $app, $app, $this->url('config',['app_name' => $app]));
+            }
         }
 
-        if ($this->security->loggedIn()) {
-            $text = $this->txt('logout');
-            $route = 'core_logout';
-        }
-        else {
-            $text = $this->txt('login');
-            $route = 'core_login';
-        }
+        $key = $this->security->loggedIn() ? 'logout' : 'login';
 
-        $this->content->navbar->createRootItem('login', $text, $this->router->url($route));
+        $this->content->menu->createItem('login', $this->txt($key), $this->url($key));
     }
 }
