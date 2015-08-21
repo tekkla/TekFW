@@ -141,7 +141,7 @@ class Template
      *
      * @return string|array
      */
-    final protected function getMenu($name='')
+    final protected function getMenu($name = '')
     {
         return $this->content->menu->getItems($name);
     }
@@ -477,21 +477,25 @@ class Template
 
         ob_start();
 
+        echo '<div class="core-message">';
+
         foreach ($messages as $msg) {
 
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
-            // Fadeout message?
-            // if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
-            // echo ' fadeout';
-            // }
+            //Fadeout message?
+            if ($this->cfg->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                echo ' fadeout';
+            }
 
             echo '">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                 ', $msg->getMessage(), '
             </div>';
         }
+
+        echo '</div>';
 
         $html = ob_get_contents();
 
@@ -501,7 +505,7 @@ class Template
     }
 
     /**
-     * Creates breadcrumb html control or returns it's data
+     * Creates breadcrumb html content or returns it's data-
      *
      * Set $data_only argument to true if you want to get get only the data
      * without a genereated html control.
@@ -558,6 +562,46 @@ class Template
         ob_end_clean();
 
         return $html;
+    }
+
+    /**
+     * Returns default "core-scrolltotop" div html.
+     *
+     * @return string
+     */
+    protected function getScrollToTop()
+    {
+        return '<div id="core-scrolltotop"></div>';
+    }
+
+    /**
+     * Returns default "core-modal" div html.
+     *
+     * @return string
+     */
+    protected function getModal()
+    {
+        return '<div id="core-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>';
+    }
+
+    /**
+     * Returns default "core-tooltip" div html.
+     *
+     * @return string
+     */
+    protected function getTooltip()
+    {
+        return '<div id="core-tooltip"></div>';
+    }
+
+    /**
+     * Returns default "core-tooltip", "core-modal" and "core-scrolltotop" divs html.
+     *
+     * @return string
+     */
+    protected function getDisplayEssentials()
+    {
+        return $this->getTooltip() . $this->getModal() . $this->getScrollToTop();
     }
 
     /**

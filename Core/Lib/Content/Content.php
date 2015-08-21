@@ -412,14 +412,12 @@ class Content
      */
     public function getContent()
     {
-        // Add messageblock
-        $this->content = '<div id="message"></div>' . $this->content;
 
-        // Fill in content
+        // ContentHandler defined?
         try {
 
             // Try to run set content handler on non ajax request
-            if ($this->cfg->exists('Core', 'content_handler') && ! $this->router->isAjax()) {
+            if ($this->cfg->exists('Core', 'content_handler')) {
 
                 // We need the name of the ContentCover app
                 $app_name = $this->cfg->get('Core', 'content_handler');
@@ -428,27 +426,23 @@ class Content
                 $app = $this->app_creator->create($app_name);
 
                 // Check for existing ContenCover method
-                if (! method_exists($app, 'runContentHandler')) {
-                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "runContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
+                if (! method_exists($app, 'ContentHandler')) {
+                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "ContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
                 }
 
                 // Everything is all right. Run content handler by giving the current content to it.
-                $this->content .= $app->runContentHandler($this->content);
+                $this->content = $app->ContentHandler($this->content);
             }
         }
         catch (\Exception $e) {
 
+            // Get error info
+            $error=  $this->di->get('core.error')->handleException($e);
+
             // Add error message above content
-            $this->content .= '<div class="alert alert-danger">' . $this->di->get('core.error')->handleException($e) . '</div>';
+            $this->msg->danger($error);
         }
 
-        // Add framework status elements
-        $this->content .= '
-		<div id="status"><i class="fa fa-spinner fa-spin"></i></div>
-		<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-		<div id="debug"></div>
-		<div id="tooltip"></div>
-		<div id="scrolltotop"></div>';
 
         // # Insert content
         return $this->content;

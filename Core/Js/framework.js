@@ -137,8 +137,8 @@ var coreFw = {
                         bootbox.alert(cmd.a[0]);
                         break;
                     case "error":
-                        $('#message').addClass('fade in').append(cmd.a[0]);
-                        $('#message').bind(
+                        $('#core-message').addClass('fade in').append(cmd.a[0]);
+                        $('#core-message').bind(
                                 'closed.bs.alert',
                                 function() {
                                     $(this).removeClass().html('').unbind(
@@ -153,7 +153,7 @@ var coreFw = {
                     case "modal":
 
                         // fill dialog with content
-                        $('#modal').html(cmd.a).modal({
+                        $('#core-modal').html(cmd.a).modal({
                             keyboard : false
                         });
                         break;
@@ -184,9 +184,9 @@ $(document).ready(function() {
     $(window).scroll(function() {
 
         if ($(this).scrollTop() > 100) {
-            $('#scrolltotop').fadeIn();
+            $('#core-scrolltotop').fadeIn();
         } else {
-            $('#scrolltotop').fadeOut();
+            $('#core-scrolltotop').fadeOut();
         }
     });
 
@@ -240,7 +240,7 @@ $(document).on('keyup input paste', 'textarea[maxlength]', function() {
 // ----------------------------------------------------------------------------
 // Scroll to top click handler
 // ----------------------------------------------------------------------------
-$(document).on('click', '#scrolltotop', function(event) {
+$(document).on('click', '#core-scrolltotop', function(event) {
 
     if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {
         window.scrollTo(0, 0);
