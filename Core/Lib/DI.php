@@ -129,8 +129,13 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
         // == IO ===========================================================
-        $this->mapFactory('core.io.file', '\Core\Lib\IO\File');
+        $this->mapService('core.io.files', '\Core\Lib\IO\Files', [
+            'core.log',
+            'core.cfg'
+        ]);
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
+        $this->mapService('core.io.cache', '\Core\Lib\IO\Cache');
+        $this->mapFactory('core.io.cache.object', '\Core\Lib\IO\CacheObject');
 
         // == LOGGING========================================================
         $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
