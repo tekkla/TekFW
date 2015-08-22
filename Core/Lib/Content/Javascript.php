@@ -85,10 +85,10 @@ class Javascript
         $this->mode = 'core';
 
         // Add jquery cdn
-        $this->file('//code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
+        $this->file('https://code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
 
         // Add Bootstrap javascript from cdn
-        $this->file('//maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
+        $this->file('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
 
         // Add plugins file
         $this->file($this->js_url . '/plugins.js');
