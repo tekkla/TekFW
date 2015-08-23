@@ -3,7 +3,7 @@
 // Version: 2.0, Web
 return [
 
-    'name' => 'TekFW Framework',
+    'name' => 'Core Framework',
 
 	/*
 	 * **************************************************************************
@@ -41,6 +41,7 @@ return [
     'username' => 'Username',
     'password' => 'Password',
     'remember_me' => 'Stay logged in',
+    'already_loggedin' => 'You are already logged in.',
 
     'admin' => 'Administration',
 
@@ -60,6 +61,10 @@ return [
      * **************************************************************************
      */
     'cfg_headline' => 'TekFW Framework Settings',
+
+    'cfg_group_config' => 'Config display',
+    'cfg_config_display_style' => 'How to display Config?',
+    'cfg_config_display_style_desc' => 'Horizontal oder vertical display.',
 
 	/* Contenthandler
 	'cfg_default_action' => 'Default SMF action',
@@ -83,8 +88,8 @@ return [
 
     // Security
     'cfg_group_security' => 'Security',
-    'cfg_min_login_length' => 'Minimum login length',
-    'cfg_min_login_length_desc' => 'The minimum number of chars needed to create a login name.',
+    'cfg_min_username_length' => 'Minimum username length',
+    'cfg_min_username_length_desc' => 'The minimum number of chars the username has to contain.',
     'cfg_max_login_length' => 'Maximum login length',
     'cfg_max_login_length_desc' => 'The maximum number of chars allowed to create a login name.',
     'cfg_min_password_length' => 'Minimum password length',

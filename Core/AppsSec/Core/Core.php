@@ -29,7 +29,7 @@ final class Core extends App
                 'array',
                 [
                     0 => 'top down',
-                    1 => 'horizontal',
+                    1 => 'horizontal'
                 ],
                 0
             ],
@@ -37,15 +37,14 @@ final class Core extends App
         ],
 
         // Security
-        'min_login_length' => [
+        'min_username_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 8
         ],
-        'max_login_length' => [
+        'username_regexp' => [
             'group' => 'security',
-            'control' => 'number',
-            'default' => 5
+            'control' => 'input'
         ],
         'min_password_length' => [
             'group' => 'security',
@@ -55,22 +54,28 @@ final class Core extends App
         'max_password_length' => [
             'group' => 'security',
             'control' => 'number',
-            'default' => 50,
+            'default' => 4096,
             'validate' => [
                 'required',
                 [
-                    'range',
-                    [8,
-                    100]
+                    'max',
+                    [
+                        8,
+                        4096
+                    ]
                 ]
             ]
         ],
+        'password_regexp' => [
+            'group' => 'security',
+            'control' => 'input'
+        ],
         'autologin' => [
             'group' => 'security',
-            'control' => 'Switch',
+            'control' => 'switch',
             'default' => 1
         ],
-        'ban_max_counter' => [
+        'tries_before_ban' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 5
@@ -88,9 +93,8 @@ final class Core extends App
         ],
         'default_action' => [
             'group' => 'execute',
-            'control' => 'input',
+            'control' => 'input'
         ],
-
 
         // Group: JS
         'js_default_position' => [
@@ -215,7 +219,7 @@ final class Core extends App
         ],
         'error_to_mail_address' => [
             'group' => 'error',
-            'control' => 'input',
+            'control' => 'input'
         ],
         'error_to_log' => [
             'group' => 'error',
@@ -227,7 +231,6 @@ final class Core extends App
             'control' => 'switch',
             'default' => 0
         ],
-
 
         // Logging
         'log' => [
@@ -264,6 +267,23 @@ final class Core extends App
             'default' => 'page',
             'translate' => false
         ],
+
+        // Caching
+        'cache_ttl' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ],
+        'cache_ttl_js' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ],
+        'cache_ttl_css' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ]
     ];
 
     // Apps routes
@@ -318,7 +338,7 @@ final class Core extends App
             'route' => '../admin/[a:app_name]/reconfig',
             'controller' => 'config',
             'action' => 'reconfigure'
-        ],
+        ]
     ];
 
     public function Start()
@@ -330,7 +350,9 @@ final class Core extends App
             $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
 
             foreach ($apps as $app) {
-                $root->createItem('admin_' . $app, $app, $this->url('config',['app_name' => $app]));
+                $root->createItem('admin_' . $app, $app, $this->url('config', [
+                    'app_name' => $app
+                ]));
             }
         }
 

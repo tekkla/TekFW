@@ -2,6 +2,7 @@
 namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
+use Core\Lib\IO\Cache;
 use Core\Lib\Content\Html\HtmlFactory;
 
 /**
@@ -43,17 +44,24 @@ class Template
     protected $html;
 
     /**
+     *
+     * @var Cache
+     */
+    private $cache;
+
+    /**
      * Constructor
      *
      * @param Cfg $cfg
      * @param Content $content
      * @param HtmlFactory $html
      */
-    public function __construct(Cfg $cfg, Content $content, HtmlFactory $html)
+    public function __construct(Cfg $cfg, Content $content, HtmlFactory $html, Cache $cache)
     {
         $this->cfg = $cfg;
         $this->content = $content;
         $this->html = $html;
+        $this->cache = $cache;
     }
 
     /**
@@ -196,16 +204,24 @@ class Template
         }
 
         $files = [];
+        $local_files = [];
         $inline = [];
-
-        $html = '';
 
         /* @var $css Css */
         foreach ($css_stack as $css) {
 
             switch ($css->getType()) {
                 case 'file':
-                    $files[] = $css->getCss();
+
+                    $filename = $css->getCss();
+
+                    if (strpos($filename, BASEURL) !== false) {
+                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
+                    }
+                    else {
+                        $files[] = $filename;
+                    }
+
                     break;
 
                 case 'inline':
@@ -214,44 +230,49 @@ class Template
             }
         }
 
-        // create script for minifier
-        if ($this->cfg->get('Core', 'css_minify')) {
+        $combined = '';
 
-            foreach ($files as $file) {
+        // Any local files?
+        if ($local_files) {
 
-                if (strpos($file['filename'], BASEURL) !== false) {
+            // Yes! Now check cache
+            $cache_object = $this->cache->createCacheObject();
 
-                    $board_parts = parse_url(BASEURL);
-                    $url_parts = parse_url($file['filename']);
+            $key = 'combined';
+            $extension = 'css';
 
-                    // Do not try to minify ressorces from external host
-                    if ($board_parts['host'] != $url_parts['host'])
-                        continue;
+            $cache_object->setKey($key);
+            $cache_object->setExtension($extension);
+            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_css'));
 
-                        // Store filename in minify list
-                    $files_to_min[] = '/' . $url_parts['path'];
+            if ($this->cache->checkExpired($cache_object)) {
+
+                foreach ($local_files as $filename) {
+                    $combined .= file_get_contents($filename);
                 }
+
+                if ($inline) {
+                    $combined .= implode(PHP_EOL, $inline);
+                }
+
+                // Minify combined css code
+                $cssmin = new \CSSmin();
+                $combined = $cssmin->run($combined);
+
+                $cache_object->setContent($combined);
+
+                $this->cache->put($cache_object);
             }
 
-            if ($files_to_min) {
-                $_SESSION['min_css'] = $files_to_min;
-                $files = (array) $this->cfg->get('Core', 'url_tools') . '/min/g=css';
-            }
+            $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
         }
 
-        ob_start();
+        $html = '';
 
+        // Start reading
         foreach ($files as $file) {
-            echo PHP_EOL, '<link rel="stylesheet" type="text/css" href="', $file, '">';
+            $html .= PHP_EOL . '<link rel="stylesheet" type="text/css" href="' . $file . '">';
         }
-
-        if ($inline) {
-            echo PHP_EOL, '<style>', PHP_EOL, implode(PHP_EOL, $inline), PHP_EOL, '</style>', PHP_EOL;
-        }
-
-        $html = ob_get_contents();
-
-        ob_end_clean();
 
         return $html;
     }
@@ -272,6 +293,10 @@ class Template
         // Get scripts of this area
         $script_stack = $this->content->js->getScriptObjects($area);
 
+        if (empty($script_stack)) {
+            return false;
+        }
+
         if ($data_only) {
             return $script_stack;
         }
@@ -280,9 +305,9 @@ class Template
         $files = $blocks = $inline = $scripts = $ready = $vars = [];
 
         // Include JSMin lib
-        if ($this->cfg->get('Core', 'js_minify')) {
-            require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
-        }
+        // if ($this->cfg->get('Core', 'js_minify')) {
+        // require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
+        // }
 
         /* @var $script Javascript */
         foreach ($script_stack as $key => $script) {
@@ -291,17 +316,24 @@ class Template
 
                 // File to lin
                 case 'file':
-                    $files[] = $script->getScript();
+                    $filename = $script->getScript();
+
+                    if (strpos($filename, BASEURL) !== false) {
+                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
+                    }
+                    else {
+                        $files[] = $filename;
+                    }
                     break;
 
                 // Script to create
                 case 'script':
-                    $inline[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
+                    $inline[] = $script->getScript();
                     break;
 
                 // Dedicated block to embaed
                 case 'block':
-                    $blocks[] = PHP_EOL . $script->getScript();
+                    $blocks[] = $script->getScript();
                     break;
 
                 // A variable to publish to global space
@@ -312,7 +344,7 @@ class Template
 
                 // Script to add to $.ready()
                 case 'ready':
-                    $ready[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
+                    $ready[] = $script->getScript();
                     break;
             }
 
@@ -320,101 +352,70 @@ class Template
             unset($script_stack[$key]);
         }
 
-        // Are there files to minify?
-        if ($this->cfg->get('Core', 'js_minify')) {
+        $combined = '';
 
-            if ($files) {
-                $to_minfiy = [];
-            }
+        // Check cache
+        if ($local_files) {
 
-            foreach ($files as $file) {
+            // Yes! Now check cache
+            $cache_object = $this->cache->createCacheObject();
 
-                // Process only files that come from the sitecontext
-                if (strpos($file['filename'], BASEURL) !== false) {
+            $key = 'combined_' . $area;
+            $extension = 'js';
 
-                    // Compare host to get sure
-                    $board_parts = parse_url(BASEURL);
-                    $url_parts = parse_url($file['filename']);
+            $cache_object->setKey($key);
+            $cache_object->setExtension($extension);
+            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_js'));
 
-                    if ($board_parts['host'] != $url_parts['host']) {
-                        continue;
-                    }
+            if ($this->cache->checkExpired($cache_object)) {
 
-                    // Store filename in minify list
-                    if (! in_array('/' . $url_parts['path'], $files)) {
-                        $to_minfiy[] = '/' . $url_parts['path'];
-                    }
+                // Create combined output
+                foreach ($local_files as $filename) {
+                    $combined .= file_get_contents($filename);
                 }
-            }
 
-            // Are there files to combine?
-            if ($to_minfiy) {
+                if ($inline) {
+                    $combined .= implode(PHP_EOL, $inline);
+                }
 
-                // Store files to minify in session
-                $_SESSION['min']['js-' . $area] = $to_minfiy;
+                if ($vars || $scripts || $ready) {
 
-                // Add link to combined js file
-                $files = [
-                    $this->cfg->get('Core', 'url_tools') . '/min/g=js-' . $area
-                ];
+                    // Create script html object
+                    foreach ($vars as $name => $val) {
+                        $combined .= PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';';
+                    }
+
+                    // Create $(document).ready()
+                    if ($ready) {
+                        $combined .= PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
+                        $combined .= implode(PHP_EOL, $ready);
+                        $combined .= PHP_EOL . '});';
+                    }
+
+                    // Add complete blocks
+                    $combined .= implode(PHP_EOL, $blocks);
+                }
+
+                // Minify combined css code
+                $combined = \JSMin::minify($combined);
+
+                $cache_object->setContent($combined);
+
+                $this->cache->put($cache_object);
             }
         }
+
+        $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
 
         // Init output var
-        ob_start();
-
-        // Create compiled output
-        if ($vars || $scripts || $ready || $files) {
-            echo PHP_EOL, '<!-- ', strtoupper($area), ' JAVASCRIPTS -->';
-        }
-
-        if ($vars || $scripts || $ready) {
-
-            // Create script html object
-            echo '<script>';
-
-            foreach ($vars as $name => $val) {
-                echo PHP_EOL, 'var ', $name, ' = ', (is_string($val) ? '"' . $val . '"' : $val), ';';
-            }
-
-            // Create $(document).ready()
-            if ($ready) {
-                echo PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
-                echo implode(PHP_EOL, $ready);
-                echo PHP_EOL . '});';
-            }
-
-            echo PHP_EOL . '</script>';
-
-            // Add complete blocks
-            echo implode(PHP_EOL, $blocks);
-
-            // Minify script?
-            if ($this->cfg->get('Core', 'js_minify')) {
-
-                // Get outputbuffer with scripts so far
-                $script = ob_get_contents();
-
-                // Clean buffer
-                ob_clean();
-
-                // Minify scripts output
-                echo \JSMin::minify($script . PHP_EOL . $script);
-            }
-        }
+        $html = '';
 
         // Create files
         foreach ($files as $file) {
 
             // Create script html object
-            echo PHP_EOL . '<script src="', $file, '"></script>';
+            $html .= PHP_EOL . '<script src="' . $file . '"></script>';
         }
-
-        // Get final scripts from buffer
-        $html = ob_get_contents();
-
-        // End buffering
-        ob_end_clean();
 
         return $html;
     }
@@ -484,7 +485,7 @@ class Template
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
-            //Fadeout message?
+            // Fadeout message?
             if ($this->cfg->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
                 echo ' fadeout';
             }
