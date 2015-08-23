@@ -11,15 +11,13 @@ namespace Core\Lib\IO;
 class CacheObject
 {
 
-    private $key;
-
-    private $data;
-
-    private $extension = 'php';
-
-    private $ttl = 3600;
-
-    private $cachedir = '';
+    private $data = [
+        'key' => '',
+        'content' => '',
+        'ttl' => 3600,
+        'timestamp' => 0,
+        'cachedir' => ''
+    ];
 
     /**
      * Constructor
@@ -27,8 +25,10 @@ class CacheObject
     public function __construct()
     {
         if (defined('CACHEDIR')) {
-            $this->cachedir = CACHEDIR;
+            $this->data['cachedir'] = CACHEDIR;
         }
+
+        $this->data['timestamp'] = time();
     }
 
     /**
@@ -37,16 +37,16 @@ class CacheObject
      */
     public function getKey()
     {
-        return $this->key;
+        return $this->data['key'];
     }
 
     /**
      *
-     * @return the $data
+     * @return the $content
      */
-    public function getData()
+    public function getContent()
     {
-        return $this->data;
+        return base64_decode($this->data['content']);
     }
 
     /**
@@ -55,7 +55,7 @@ class CacheObject
      */
     public function getExtension()
     {
-        return $this->extension;
+        return $this->data['extension'];
     }
 
     /**
@@ -64,7 +64,16 @@ class CacheObject
      */
     public function getTTL()
     {
-        return $this->ttl;
+        return $this->data['ttl'];
+    }
+
+    /**
+     *
+     * @return the $ttl
+     */
+    public function getTimestamp()
+    {
+        return $this->data['timestamp'];
     }
 
     /**
@@ -73,7 +82,7 @@ class CacheObject
      */
     public function getCachdir()
     {
-        return $this->cachedir;
+        return $this->data['cachedir'];
     }
 
     /**
@@ -83,7 +92,17 @@ class CacheObject
      */
     public function getFilename()
     {
-        return $this->cachedir . '/' . $this->key . '.' . $this->extension;
+        return $this->data['cachedir'] . '/' . $this->data['key'] . '.' . $this->data['extension'];
+    }
+
+    /**
+     * Exoired status of caceobject
+     *
+     * @return boolean
+     */
+    public function isExpired()
+    {
+        return time() < $this->data['timestamp'] + $this->data['ttl'];
     }
 
     /**
@@ -95,21 +114,21 @@ class CacheObject
      */
     public function setKey($key)
     {
-        $this->key = $key;
+        $this->data['key'] = $key;
 
         return $this;
     }
 
     /**
-     * Sets the data do cache.
+     * Sets the content to cache.
      *
-     * @param string $data
+     * @param string $content
      *
      * @return CacheObject
      */
-    public function setData($data)
+    public function setContent($content)
     {
-        $this->data = $data;
+        $this->data['content'] = base64_encode($content);
 
         return $this;
     }
@@ -123,7 +142,7 @@ class CacheObject
      */
     public function setExtension($extension)
     {
-        $this->extension = $extension;
+        $this->data['extension'] = $extension;
 
         return $this;
     }
@@ -137,7 +156,25 @@ class CacheObject
      */
     public function setTTL($ttl)
     {
-        $this->ttl = $ttl;
+        $this->data['ttl'] = $ttl;
+
+        return $this;
+    }
+
+    /**
+     * Sets timestampt of cacheobject creation.
+     *
+     * @param number $timestamp
+     *
+     * @return CacheObject
+     */
+    public function setTimestamp($timestamp = null)
+    {
+        if (! $timestamp) {
+            $timestamp = time();
+        }
+
+        $this->data['timestamp'] = $timestamp;
 
         return $this;
     }
@@ -151,7 +188,31 @@ class CacheObject
      */
     public function setCachdir($cachedir)
     {
-        $this->cachedir = $cachedir;
+        $this->data['cachedir'] = $cachedir;
+
+        return $this;
+    }
+
+    /**
+     * Returns the cache objects data array in a var_export() like way.
+     *
+     * @return string
+     */
+    public function export()
+    {
+        return '<?php return ' . var_export($this->data, true) . '; ?>';
+    }
+
+    /**
+     * Imports an array as cache object data.
+     *
+     * @param array $data
+     *
+     * @return CacheObject
+     */
+    public function import(array $data)
+    {
+        $this->data = $data;
 
         return $this;
     }

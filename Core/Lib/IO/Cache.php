@@ -27,8 +27,15 @@ class Cache
      */
     public function put(CacheObject $object)
     {
-        $fp = fopen($object->getFilename(), 'w+');
-        $fw = fwrite($fp, $object->getData());
+        $filename = $object->getFilename();
+
+        $fp = fopen($filename, 'w+');
+
+        $object->setTimestamp(filemtime($filename));
+
+        $data = $object->getExtension() == 'php' ? $object->export() : $object->getContent();
+
+        $fw = fwrite($fp, $data);
 
         fclose($fp);
     }
@@ -47,7 +54,14 @@ class Cache
             return false;
         }
 
-        $object->setData(file_get_contents($object->getFilename()));
+        $filename = $object->getFilename();
+
+        if ($object->getExtension() == 'php') {
+            $object->import(include($filename));
+        }
+        else {
+            $object->setContent(file_get_contents($filename));
+        }
 
         return true;
     }
