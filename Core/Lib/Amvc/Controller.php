@@ -15,6 +15,7 @@ use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Data\Vars;
 use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\IO\Cache;
 
 /**
  * Controllers parent class.
@@ -146,11 +147,17 @@ class Controller extends MvcAbstract
     protected $vars;
 
     /**
+     *
+     * @var \Core\Lib\IO\Cache
+     */
+    protected $cache;
+
+    /**
      * Hidden constructor.
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars, Cache $cache)
     {
         // Store name
         $this->name = $name;
@@ -163,6 +170,7 @@ class Controller extends MvcAbstract
         $this->menu = $menu;
         $this->html = $html;
         $this->vars = $vars;
+        $this->cache = $cache;
 
         // Model to bind?
         $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);

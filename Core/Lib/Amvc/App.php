@@ -375,7 +375,8 @@ class App
             'core.content',
             'core.content.menu',
             'core.content.html.factory',
-            'core.data.vars'
+            'core.data.vars',
+            'core.io.cache'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);
