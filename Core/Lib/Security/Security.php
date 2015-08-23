@@ -386,7 +386,8 @@ class Security
                 'id_auth_token',
                 'id_user',
                 'token',
-                'selector'
+                'selector',
+                'expires'
             ],
             'filter' => 'selector=:selector',
             'params' => [
@@ -397,15 +398,10 @@ class Security
         $this->adapter->query($query);
         $data = $this->adapter->all();
 
-        // Create hash of token to compare with hash from db only when there is data
-        if (! $data) {
-            $token = hash('sha256', hex2bin($token));
-        }
-
         foreach ($data as $auth_token) {
 
             // Check if token is expired?
-            if ($auth_token['expires'] < date('Y-m-d H:i:s')) {
+            if (strtotime($auth_token['expires']) < time()) {
                 $this->deleteAuthTokenFromDb($auth_token['id_user']);
             }
 
@@ -433,7 +429,7 @@ class Security
         // !!! Reaching this point means autologin validation failed in all ways
         // Clean up the mess and return a big bad fucking false as failed autologin result.
 
-        // Remove user and tooken cookie
+        // Remove token cookie
         $this->cookie->remove($cookie);
 
         // Set flag that autologin failed
@@ -490,6 +486,8 @@ class Security
         $selector = bin2hex($this->generateRandomToken(6));
         $token = $this->generateRandomToken(64);
 
+        $hash = hash('sha256', $token);
+
         // Store selector and hash in DB
         $query = [
             'table' => 'auth_tokens',
@@ -502,7 +500,7 @@ class Security
             ],
             'params' => [
                 ':selector' => $selector,
-                ':token' => hash('sha256', $token),
+                ':token' => $hash,
                 ':id_user' => $id_user,
                 ':expires' => date('Y-m-d H:i:s', $this->expire_time)
             ]
@@ -522,7 +520,7 @@ class Security
 
             // Set token cookie
             $cookie->setName($this->cookie_name . 'Token');
-            $cookie->setValue($selector . ':' . bin2hex($token));
+            $cookie->setValue($selector . ':' . $hash);
             $cookie->set();
         }
     }
@@ -608,6 +606,7 @@ class Security
         // Administrators are supermen :P
         if ($this->user->isAdmin()) {
             $this->fbLog('is Admin');
+            $this->fbLog($this->user->getGroups());
             return true;
         }
 
