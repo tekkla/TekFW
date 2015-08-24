@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Content\Html\Bootstrap\Breadcrumb;
 
 /**
  * BreadcrumbObject
@@ -41,7 +41,7 @@ class BreadcrumbObject
 	 *
 	 * @param string $href
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function setHref($href)
 	{
@@ -55,7 +55,7 @@ class BreadcrumbObject
 	 *
 	 * @param string $title
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function setTitle($title)
 	{
@@ -69,7 +69,7 @@ class BreadcrumbObject
 	 *
 	 * @param string $text
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function setText($text)
 	{
@@ -83,11 +83,11 @@ class BreadcrumbObject
 	 *
 	 * @param string $active
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function setActive($active=true)
 	{
-		$this->active = $active;
+		$this->active = (bool) $active;
 
 		return $this;
 	}

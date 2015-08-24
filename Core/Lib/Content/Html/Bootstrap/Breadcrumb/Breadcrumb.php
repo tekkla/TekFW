@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Content\Html\Bootstrap\Breadcrumb;
 
 /**
  * Breadcrumb
@@ -17,7 +17,7 @@ class Breadcrumb
 	/**
 	 * Adds a BreadcrumbObject to the breadcrumbs list
 	 *
-	 * @return \Core\Lib\Content\Breadcrumbs
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\Breadcrumb
 	 */
 	public function addBreadcrumb(BreadcrumbObject $breadcrumb)
 	{
@@ -32,7 +32,7 @@ class Breadcrumb
 	 * @param string $text Text to show
 	 * @param string $title Title to use
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function createActiveItem($text, $title='')
 	{
@@ -56,7 +56,7 @@ class Breadcrumb
 	 * @param string $href Href of the link
 	 * @param string $title Title to use
 	 *
-	 * @return \Core\Lib\Content\BreadcrumbObject
+	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
 	 */
 	public function createItem($text, $href, $title='')
 	{

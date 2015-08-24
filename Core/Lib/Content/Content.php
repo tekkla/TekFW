@@ -154,10 +154,10 @@ class Content
         $this->og = new OpenGraph();
         $this->link = new Link();
 
-        $this->breadcrumbs = new Breadcrumb();
+        $this->breadcrumbs = $this->html->create('Bootstrap\Breadcrumb\Breadcrumb');
 
         // Try to init possible content handler
-        if ($this->cfg->exists('Core', 'content_handler') && $this->router->isAjax()) {
+        if ($this->cfg->exists('Core', 'content_handler') && !$this->router->isAjax()) {
 
             // Get instance of content handler app
             $app = $this->app_creator->getAppInstance($this->cfg->get('Core', 'content_handler'));
