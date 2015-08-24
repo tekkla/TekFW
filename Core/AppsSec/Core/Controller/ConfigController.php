@@ -77,8 +77,11 @@ class ConfigController extends Controller
         // storage for active group
         $groupname = '';
 
+        // App creator
+        $creator = $this->di->get('core.amvc.creator');
+
         // Get the config definition from app
-        $app = $this->di['core.amvc.creator']->create($app_name);
+        $app = $creator->getAppInstance($app_name);
         $app_cfg = $app->getConfig();
 
         // controls for each config key will be created as a loop
@@ -98,7 +101,7 @@ class ConfigController extends Controller
 
                 $group->addElement('Elements\Heading', [
                     'setInner' => $this->txt($this->uncamelizeString('cfg_group_' . $cfg['group'], $app_name)),
-                    'setSize' => 3
+                    'setSize' => 4
                 ]);
 
                 // Set this group as active group
@@ -106,6 +109,10 @@ class ConfigController extends Controller
             }
 
             // Is this a control with more settings or only the controltype
+            if (!isset($cfg['control'])) {
+                $cfg['control'] = 'text';
+            }
+
             $control_type = is_array($cfg['control']) ? $cfg['control'][0] : $cfg['control'];
 
             // Create control object
@@ -119,6 +126,8 @@ class ConfigController extends Controller
                     $control->addAttribute($attr, $val);
                 }
             }
+
+            $this->fbLog($control_type);
 
             // Create controls
             switch ($control_type) {
@@ -153,7 +162,7 @@ class ConfigController extends Controller
                         // DataType: model
                         case 'model':
                             list ($model_app, $model_name, $model_action) = explode('::', $cfg['data'][1]);
-                            $datasource = $this->di['core.amvc.creator']->create($model_app)->getModel($model_name);
+                            $datasource = $creator->getAppInstance($model_app)->getModel($model_name);
                             break;
 
                         // DataType: array

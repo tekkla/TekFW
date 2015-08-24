@@ -106,7 +106,7 @@ class Post
 
         // Get container from matching app
         $container = $this->di->get('core.amvc.creator')
-            ->create($app)
+            ->getAppInstance($app)
             ->getContainer($key);
 
         // No container from app recieved? Create a generic one!

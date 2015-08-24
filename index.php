@@ -158,9 +158,7 @@ try {
     // --------------------------------------
 
     /* @var $content \Core\Lib\Content\Content */
-    $content = $di->get('core.content');
-
-    $content->create();
+    $di->get('core.content')->create();
 }
 catch (Exception $e) {
     echo $di->get('core.error')->handleException($e, true);

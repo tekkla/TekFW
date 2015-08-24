@@ -160,11 +160,11 @@ class Content
         if ($this->cfg->exists('Core', 'content_handler') && $this->router->isAjax()) {
 
             // Get instance of content handler app
-            $app = $this->app_creator->create($this->cfg->get('Core', 'content_handler'));
+            $app = $this->app_creator->getAppInstance($this->cfg->get('Core', 'content_handler'));
 
             // Init method to call exists?
-            if (method_exists($app, 'initContentHandler')) {
-                $app->initContentHandler();
+            if (method_exists($app, 'InitContentHandler')) {
+                $app->InitContentHandler();
             }
         }
     }
@@ -186,7 +186,7 @@ class Content
         // Start with factoring the requested app
 
         /* @var $app \Core\Lib\Amvc\App */
-        $app = $this->app_creator->create($app_name);
+        $app = $this->app_creator->getAppInstance($app_name);
 
         if (method_exists($app, 'Access')) {
 
@@ -200,7 +200,7 @@ class Content
                 $app_name = $this->router->getApp();
 
                 /* @var $app \Core\Lib\Amvc\App */
-                $app = $this->app_creator->create($app_name);
+                $app = $this->app_creator->getAppInstance($app_name);
             }
         }
 
@@ -209,8 +209,8 @@ class Content
          * This procedure is used to init apps with more than the app creator does.
          * To use this feature the app needs a run() method in it's main file.
          */
-        if (method_exists($app, 'run')) {
-            $app->run();
+        if (method_exists($app, 'Run')) {
+            $app->Run();
         }
 
         // Get name of requested controller
@@ -423,7 +423,7 @@ class Content
                 $app_name = $this->cfg->get('Core', 'content_handler');
 
                 // Get instance of this app
-                $app = $this->app_creator->create($app_name);
+                $app = $this->app_creator->getAppInstance($app_name);
 
                 // Check for existing ContenCover method
                 if (! method_exists($app, 'ContentHandler')) {
@@ -461,7 +461,8 @@ class Content
         }
 
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
-        $template = new $class($this->cfg, $this, $this->html);
+
+        $template = new $class($this->cfg, $this, $this->html, $this->di->get('core.io.cache'));
 
         return $template->render();
     }
