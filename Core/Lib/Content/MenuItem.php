@@ -66,6 +66,13 @@ class MenuItem extends MenuItemAbstract
     private $css = '';
 
     /**
+     * Options storage.
+     *
+     * @var Array
+     */
+    private $options = [];
+
+    /**
      * Constructor
      */
     public function _construct()
@@ -206,6 +213,7 @@ class MenuItem extends MenuItemAbstract
      * be transformed into a string
      *
      * @param string $css
+     *
      * @return MenuItem
      */
     public function setCss($css)
@@ -217,4 +225,37 @@ class MenuItem extends MenuItemAbstract
 
         return $this;
     }
+
+    /**
+     * Sets one or more options.
+     *
+     * @param string|array $option Name of option or assoc array of options.
+     * @param mixed $value Optional value when setting only one option.
+     *
+     * @return MenuItem
+     */
+    public function setOption($option, $value='') {
+
+        if (is_array($option)) {
+            foreach ($option as $key => $value) {
+                $this->options[$key] = $value;
+            }
+        }
+        else {
+            $this->options[$option] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns set options.
+     *
+     * @return Array
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
 }
