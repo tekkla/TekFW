@@ -25,5 +25,3 @@ class ButtonElement extends NavbarElementAbstract
     public function build()
     {}
 }
-
-?>
