@@ -43,7 +43,7 @@ class SecurityController extends Controller
 
         $form = $this->getFormDesigner($data);
 
-        $form->setActionRoute($this->router->getCurrentRoute(), $this->router->getParam());
+        $form->setAction($this->url('login'));
 
         // Form save button
         $form->setSaveButtonText($this->txt('login'));
