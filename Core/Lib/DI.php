@@ -166,7 +166,6 @@ class DI implements \ArrayAccess
             'core.http.router'
         ]);
         $this->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
-        $this->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
         $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
         $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
         $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
