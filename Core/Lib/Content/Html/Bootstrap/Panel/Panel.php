@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Content\Html\Bootstrap;
+namespace Core\Lib\Content\Html\Bootstrap\Panel;
 
 use Core\Lib\Content\Html\Elements\Div;
 

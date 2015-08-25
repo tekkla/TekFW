@@ -4,7 +4,9 @@ namespace Core\Lib\Content\Html\Controls;
 use Core\AppsSec\Core\Exception\HtmlException;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\FormDesigner\FormDesigner;
-use Core\Lib\Content\Html\Bootstrap\Panel;
+use Core\Lib\Content\Html\Bootstrap\Panel\Panel;
+
+
 /**
  *
  * @author Michael
@@ -92,7 +94,7 @@ class Editbox extends Panel
 
     /**
      * (non-PHPdoc)
-     * @see \Core\Lib\Content\Html\Bootstrap\Panel::build()
+     * @see \Core\Lib\Content\Html\Bootstrap\Panel\Panel::build()
      */
     public function build()
     {
