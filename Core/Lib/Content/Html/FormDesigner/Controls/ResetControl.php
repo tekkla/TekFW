@@ -4,10 +4,10 @@ namespace Core\Lib\Content\Html\FormDesigner\Controls;
 use Core\Lib\Content\Html\Form\Button;
 
 /**
- * FormDesigner Reset Control
+ * ResetControl.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class ResetControl extends Button

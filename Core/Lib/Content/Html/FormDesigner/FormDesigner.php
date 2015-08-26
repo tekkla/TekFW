@@ -8,14 +8,15 @@ use Core\Lib\Traits\AnalyzeVarTrait;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\Form\Option;
 use Core\Lib\Content\Html\Form\Checkbox;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * FormDesigner
+ * FormDesigner.php
  *
- * @todo Write explanation... or an app which explains the basics
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2015 by author
  */
 final class FormDesigner extends Form
 {
@@ -99,19 +100,19 @@ final class FormDesigner extends Form
      *
      * @var array
      */
-    private $buttons = array(
+    private $buttons = [
         'submit' => 'save'
-    );
+    ];
 
     /**
      * Icons for buttons
      *
      * @var array
      */
-    private $icons = array(
+    private $icons = [
         'submit' => 'save',
         'reset' => 'eraser'
-    );
+    ];
 
     /**
      * Associated data container
@@ -190,7 +191,7 @@ final class FormDesigner extends Form
      *
      * @param string $send_mode Send mode which can be 'ajax' or 'submit'
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Elements\FormDesigner
      */
@@ -202,7 +203,7 @@ final class FormDesigner extends Form
         ];
 
         if (! in_array($send_mode, $modes)) {
-            Throw new \InvalidArgumentException('Wrong form sendmode.', 1000);
+            Throw new InvalidArgumentException(sprintf('"%s" is not an allowed form sendmode.', $send_mode), 1000);
         }
 
         $this->send_mode = $send_mode;
@@ -350,14 +351,14 @@ final class FormDesigner extends Form
      * @param string $button Name of the button the icon is related to
      * @param string $icon Name of the icon to use
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Elements\FormDesignerDesigner
      */
     public function setIcon($button, $icon)
     {
         if (! array_key_exists($button, $this->icons)) {
-            Throw new \InvalidArgumentException('Form Tool: Button not ok.');
+            Throw new InvalidArgumentException('Form Tool: Button not ok.');
         }
 
         $this->icons[$button] = $icon;
@@ -370,12 +371,12 @@ final class FormDesigner extends Form
      *
      * @param string $button Optional Name of the button to remove. If not set, all icons will be removed.
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      */
     public function removeIcon($button = null)
     {
         if (isset($button) && ! in_array($button, $this->icons)) {
-            Throw new \InvalidArgumentException('This button is not set in form buttonlist and cannot be removed');
+            Throw new InvalidArgumentException('This button is not set in form buttonlist and cannot be removed');
         }
 
         if (! isset($button)) {
@@ -428,17 +429,17 @@ final class FormDesigner extends Form
     /**
      * Creates prefixes for controlnames/-ids used within the form which is created by FormDesigner.
      *
-     * @throws \RuntimeException
+     * @throws UnexpectedValueException
      */
     private function createNames()
     {
         // manual forms need a set app and model name
         if (! isset($this->app_name)) {
-            Throw new \RuntimeException('The FormDesigner needs a name of a related app.', 10000);
+            Throw new UnexpectedValueException('The FormDesigner needs a name of a related app.', 10000);
         }
 
         if (! isset($this->control_name)) {
-            Throw new \RuntimeException('The FormDesigner needs a name for the controls,', 10000);
+            Throw new UnexpectedValueException('The FormDesigner needs a name for the controls,', 10000);
         }
 
         $base_form_name = 'appform';
@@ -572,11 +573,13 @@ final class FormDesigner extends Form
      * (non-PHPdoc)
      *
      * @see \Core\Lib\Content\Html\HtmlAbstract::build()
+     *
+     * @throws UnexpectedValueException
      */
     public function build()
     {
         if (empty($this->groups)) {
-            Throw new \RuntimeException('Your form has no groups to show. Add groups and try again.');
+            Throw new UnexpectedValueException('Your form has no groups to show. Add groups and try again.');
         }
 
         // Create needed IDs and control names
@@ -643,7 +646,7 @@ final class FormDesigner extends Form
                         }
 
                         // Is control checkable (checkbox eg option)?
-                        if ($content instanceof Checkbox || $content instanceof  Option) {
+                        if ($content instanceof Checkbox || $content instanceof Option) {
 
                             // Set control checked when it's value = container field value
                             if ($content->getValue() == $this->container[$content->getName()]) {
@@ -653,7 +656,7 @@ final class FormDesigner extends Form
 
                         // Try to get value from container when control has no content set
                         elseif ($content->getValue() === null && $this->container[$content->getName()]) {
-                           $content->setValue($this->container[$content->getName()]);
+                            $content->setValue($this->container[$content->getName()]);
                         }
                     }
 

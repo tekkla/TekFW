@@ -10,9 +10,11 @@ use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 
 /**
+ * ControlBuilder.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class ControlBuilder
 {
@@ -161,7 +163,7 @@ class ControlBuilder
         }
 
         // create control id {app}_{model}_{existing id}
-        if (!$this->control->getId()) {
+        if (! $this->control->getId()) {
             $this->control->setId(str_replace('_', '-', $this->id_prefix . '-' . $field_name));
         }
 

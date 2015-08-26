@@ -4,10 +4,10 @@ namespace Core\Lib\Content\Html\FormDesigner\Controls;
 use Core\Lib\Content\Html\Form\Input;
 
 /**
- * FormDesigner Url Conrol
+ * UrlControl.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class UrlControl extends Input

@@ -7,9 +7,11 @@ use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Traits\DebugTrait;
 
 /**
+ * FormGroup.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class FormGroup
 {

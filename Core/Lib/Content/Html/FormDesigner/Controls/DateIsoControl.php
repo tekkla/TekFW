@@ -2,10 +2,10 @@
 namespace Core\Lib\Content\Html\FormDesigner\Controls;
 
 /**
- * FormDesigner Date-Iso Control (dummy)
+ * DateIsoControl.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class DateIsoControl extends DateControl
