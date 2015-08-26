@@ -2,133 +2,136 @@
 namespace Core\Lib\Content\Html\Bootstrap\Breadcrumb;
 
 /**
- * BreadcrumbObject
- *
- * Class to use as element in Breadcrumb object
+ * BreadcrumbObject.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014
  */
 class BreadcrumbObject
 {
-	/**
-	 * Href url
-	 * @var string
-	 */
-	private $href = '';
 
-	/**
-	 * Inner text
-	 * @var string
-	 */
-	private $text = '';
+    /**
+     * Href url
+     *
+     * @var string
+     */
+    private $href = '';
 
-	/**
-	 * Title text
-	 * @var string
-	 */
-	private $title = '';
+    /**
+     * Inner text
+     *
+     * @var string
+     */
+    private $text = '';
 
-	/**
-	 * Active flag
-	 * @var boolean
-	 */
-	private $active = false;
+    /**
+     * Title text
+     *
+     * @var string
+     */
+    private $title = '';
 
-	/**
-	 * Sets href to use in breadcrumb link
-	 *
-	 * @param string $href
-	 *
-	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
-	 */
-	public function setHref($href)
-	{
-		$this->href = $href;
+    /**
+     * Active flag
+     *
+     * @var boolean
+     */
+    private $active = false;
 
-		return $this;
-	}
+    /**
+     * Sets href to use in breadcrumb link
+     *
+     * @param string $href
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
+     */
+    public function setHref($href)
+    {
+        $this->href = $href;
 
-	/**
-	 * Sets title to use on breadcrumb
-	 *
-	 * @param string $title
-	 *
-	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
-	 */
-	public function setTitle($title)
-	{
-		$this->title = $title;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Sets title to use on breadcrumb
+     *
+     * @param string $title
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
 
-	/**
-	 * Sets inner text
-	 *
-	 * @param string $text
-	 *
-	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
-	 */
-	public function setText($text)
-	{
-		$this->text = $text;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Sets inner text
+     *
+     * @param string $text
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
+     */
+    public function setText($text)
+    {
+        $this->text = $text;
 
-	/**
-	 * Sets active flag to be used on control creation
-	 *
-	 * @param string $active
-	 *
-	 * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
-	 */
-	public function setActive($active=true)
-	{
-		$this->active = (bool) $active;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Sets active flag to be used on control creation
+     *
+     * @param string $active
+     *
+     * @return \Core\Lib\Content\Html\Bootstrap\Breadcrumb\BreadcrumbObject
+     */
+    public function setActive($active = true)
+    {
+        $this->active = (bool) $active;
 
-	/**
-	 * Returns set href
-	 *
-	 * @return string
-	 */
-	public function getHref()
-	{
-		return $this->href;
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns set title
-	 *
-	 * @return string
-	 */
-	public function getTitle()
-	{
-		return $this->title;
-	}
+    /**
+     * Returns set href
+     *
+     * @return string
+     */
+    public function getHref()
+    {
+        return $this->href;
+    }
 
-	/**
-	 * Returns set text
-	 *
-	 * @return string
-	 */
-	public function getText()
-	{
-		return $this->text;
-	}
+    /**
+     * Returns set title
+     *
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
 
-	/**
-	 * Returns active flag
-	 *
-	 * @return boolean
-	 */
-	public function getActive()
-	{
-		return $this->active;
-	}
+    /**
+     * Returns set text
+     *
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->text;
+    }
+
+    /**
+     * Returns active flag
+     *
+     * @return boolean
+     */
+    public function getActive()
+    {
+        return $this->active;
+    }
 }
