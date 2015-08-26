@@ -1,14 +1,16 @@
 <?php
 namespace Core\Lib\Ajax;
 
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+
 /**
- * AjaxCommand
+ * AjaxCommand.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
-class AjaxCommand
+abstract class AjaxCommandAbstract
 {
 
     /**
@@ -175,8 +177,8 @@ class AjaxCommand
      *
      * @return \Core\Lib\Ajax\AjaxCommand
      */
-    public function setId($id) {
-
+    public function setId($id)
+    {
         $this->id = $id;
 
         return $this;
@@ -198,14 +200,17 @@ class AjaxCommand
     /**
      * Parses an array based command definition and sets it's values as command properties
      *
-     * @param unknown $definition
+     * @param array $definition
+     *
+     * @throws UnexpectedValueException
      */
     public function parse(Array $definition)
     {
         // Be sure that the commandtype isset
         if (! in_array('type', $definition)) {
             $definition['type'] = 'dom';
-        } else {
+        }
+        else {
 
             // Check for correct commandtype
             $types = [
@@ -214,16 +219,17 @@ class AjaxCommand
             ];
 
             if (! in_array($definition['type'], $types)) {
-                Throw new \InvalidArgumentException('Your AjaxCommand type "' . $definition['type'] . '"is not allowed.');
+                Throw new UnexpectedValueException('Your AjaxCommand type "' . $definition['type'] . '"is not allowed.');
             }
         }
 
         foreach ($definition as $property => $value) {
             if (property_exists($this, $property)) {
-                if ($property == 'args' && ! is_array($value))
-                    $value =[
+                if ($property == 'args' && ! is_array($value)) {
+                    $value = [
                         $value
                     ];
+                }
 
                 $this->{$property} = $value;
             }

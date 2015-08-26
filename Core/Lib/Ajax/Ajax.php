@@ -1,12 +1,14 @@
 <?php
 namespace Core\Lib\Ajax;
 
+use Core\Lib\Content\Message;
+
 /**
- * Ajax commands which are managed by framework.js
+ * Ajax.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 final class Ajax
 {
@@ -46,13 +48,21 @@ final class Ajax
      */
     private $fn = 'html';
 
-    public function __construct()
-    {}
+    /**
+     *
+     * @var Message
+     */
+    private $message;
+
+    public function __construct(Message $message)
+    {
+        $this->message = $message;
+    }
 
     /**
      * Builds ajax definition and adds it to the ajaxlist
      */
-    public function add(AjaxCommand $cmd)
+    public function add(AjaxCommandAbstract $cmd)
     {
         // Create alert on missing target when type is in need-target list
         if ($cmd->getType() == 'dom' && ! $cmd->getSelector()) {
@@ -91,7 +101,7 @@ final class Ajax
     {
 
         // Add messages
-        $messages = $this->di->get('core.content.message')->getMessages();
+        $messages = $this->message->getMessages();
 
         if ($messages) {
 

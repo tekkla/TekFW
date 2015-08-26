@@ -1,14 +1,16 @@
 <?php
 namespace Core\Lib\Ajax\Commands\Act;
 
-use Core\Lib\Ajax\AjaxCommand;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
+ * Alert.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
-class Alert extends AjaxCommand
+class Alert extends AjaxCommandAbstract
 {
 
     protected $type = 'act';

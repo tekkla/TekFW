@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Ajax\Commands\Dom;
 
-use Core\Lib\Ajax\AjaxCommand;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
  * Css.php
@@ -10,7 +10,7 @@ use Core\Lib\Ajax\AjaxCommand;
  * @copyright 2015
  * @license MIT
  */
-class Css extends AjaxCommand
+class Css extends AjaxCommandAbstract
 {
 
     protected $type = 'dom';

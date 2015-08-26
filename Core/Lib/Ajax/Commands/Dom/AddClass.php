@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Ajax\Commands\Dom;
 
-use Core\Lib\Ajax\AjaxCommand;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
  * AddClass.php
@@ -10,7 +10,7 @@ use Core\Lib\Ajax\AjaxCommand;
  * @copyright 2015
  * @license MIT
  */
-class AddClass extends AjaxCommand
+class AddClass extends AjaxCommandAbstract
 {
 
     protected $fn = 'addClass';
