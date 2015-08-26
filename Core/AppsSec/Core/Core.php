@@ -345,12 +345,12 @@ final class Core extends App
     {
         if ($this->security->checkAccess('core_admin')) {
 
-            $root = $this->content->menu->createItem('admin', $this->txt('admin'), $this->url('admin'));
+            $root = $this->content->menu->createItem('admin', $this->txt('admin'));
 
             $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
 
             foreach ($apps as $app) {
-                $root->createItem('admin_' . $app, $app, $this->url('config', [
+                $root->createItem('admin_app_' . $app, $app, $this->url('config', [
                     'app_name' => $app
                 ]));
             }
