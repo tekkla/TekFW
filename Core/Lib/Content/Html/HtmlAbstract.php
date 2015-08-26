@@ -3,13 +3,14 @@ namespace Core\Lib\Content\Html;
 
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Parent class for html all elements
+ * HtmlAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 abstract class HtmlAbstract
 {
@@ -28,14 +29,14 @@ abstract class HtmlAbstract
      *
      * @var string
      */
-    protected $name;
+    protected $name = '';
 
     /**
      * Attribute: id
      *
      * @var string
      */
-    protected $id;
+    protected $id = '';
 
     /**
      * Attribute: class
@@ -142,11 +143,11 @@ abstract class HtmlAbstract
      * Returns name if set.
      * No name set it returns boolean false.
      *
-     * @return string|boolean
+     * @return string
      */
     public function getName()
     {
-        return isset($this->name) ? $this->name : false;
+        return $this->name ? $this->name : '';
     }
 
     /**
@@ -170,7 +171,7 @@ abstract class HtmlAbstract
      */
     public function getId()
     {
-        return isset($this->id) ? $this->id : false;
+        return $this->id ? $this->id : '';
     }
 
     /**
@@ -241,7 +242,7 @@ abstract class HtmlAbstract
      */
     public function getInner()
     {
-        return isset($this->inner) ? $this->inner : false;
+        return $this->inner ? $this->inner : '';
     }
 
     /**
@@ -421,14 +422,14 @@ abstract class HtmlAbstract
      *
      * @param string $attribute
      *
-     * @return string
+     * @throws InvalidArgumentException
      *
-     * @throws Error
+     * @return string
      */
     public function getAttribute($attribute)
     {
         if (! isset($this->attribute[$attribute])) {
-            Throw new \InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
+            Throw new InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
         }
         else {
             return $this->attribute[$attribute];
