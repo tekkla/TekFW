@@ -81,9 +81,6 @@ class DI implements \ArrayAccess
         // == CONFIG =======================================================
         $this->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
 
-        // == ERROR=========================================================
-        $this->mapFactory('core.error', '\Core\Lib\Error\Error');
-
         // == HTTP =========================================================
         $this->mapService('core.http.router', '\Core\Lib\Http\Router');
         $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
@@ -128,14 +125,16 @@ class DI implements \ArrayAccess
         $this->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
         $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
+        // == CACHE ========================================================
+        $this->mapService('core.cache', '\Core\Lib\Cache\Cache');
+        $this->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
+
         // == IO ===========================================================
         $this->mapService('core.io.files', '\Core\Lib\IO\Files', [
             'core.log',
             'core.cfg'
         ]);
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
-        $this->mapService('core.io.cache', '\Core\Lib\IO\Cache');
-        $this->mapFactory('core.io.cache.object', '\Core\Lib\IO\CacheObject');
 
         // == LOGGING========================================================
         $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
@@ -160,10 +159,14 @@ class DI implements \ArrayAccess
             'core.content.message'
         ]);
         $this->mapService('core.content.lang', '\Core\Lib\Content\Language');
-        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
+        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', [
+            'core.cfg',
+            'core.cache'
+        ]);
         $this->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
             'core.cfg',
-            'core.http.router'
+            'core.http.router',
+            'core.cache'
         ]);
         $this->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
         $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
@@ -175,7 +178,7 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.ajax.cmd', '\Core\Lib\Ajax\AjaxCommand');
 
         // == ERROR =========================================================
-        $this->mapService('core.error', '\Core\Lib\Errors\Error', [
+        $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
             'core.http.router',
             'core.sec.user.current',
             'core.ajax',

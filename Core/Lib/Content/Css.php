@@ -2,6 +2,7 @@
 namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
+use Core\Lib\Cache\Cache;
 
 /**
  * Class for managing and creating of css objects
@@ -47,6 +48,12 @@ final class Css
      */
     private $cfg;
 
+    /**
+     *
+     * @var Cache
+     */
+    private $cache;
+
     private $mode = 'apps';
 
     /**
@@ -54,9 +61,10 @@ final class Css
      *
      * @param Cfg $cfg
      */
-    public function __construct(Cfg $cfg)
+    public function __construct(Cfg $cfg, Cache $cache)
     {
         $this->cfg = $cfg;
+        $this->cache = $cache;
     }
 
     /**
@@ -127,7 +135,7 @@ final class Css
     public function &link($url)
     {
         $css = new CssObject();
-        
+
         $css->setType('file');
         $css->setCss($url);
 
@@ -144,7 +152,7 @@ final class Css
     public function &inline($styles)
     {
         $css = new CssObject();
-        
+
         $css->setType('inline');
         $css->setCss($styles);
 
@@ -157,5 +165,79 @@ final class Css
     public function getObjectStack()
     {
         return array_merge(self::$core_css, self::$app_css);
+    }
+
+    /**
+     * Returns
+     */
+    public function getFiles()
+    {
+        $css_stack = $this->getObjectStack();
+
+        $files = [];
+        $local_files = [];
+        $inline = [];
+
+        /* @var $css Css */
+        foreach ($css_stack as $css) {
+
+            switch ($css->getType()) {
+                case 'file':
+
+                    $filename = $css->getCss();
+
+                    if (strpos($filename, BASEURL) !== false) {
+                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
+                    }
+                    else {
+                        $files[] = $filename;
+                    }
+
+                    break;
+
+                case 'inline':
+                    $inline[] = $css->getCss();
+                    break;
+            }
+        }
+
+        $combined = '';
+
+        // Any local files?
+        if ($local_files) {
+
+            // Yes! Now check cache
+            $cache_object = $this->cache->createCacheObject();
+
+            $key = 'combined';
+            $extension = 'css';
+
+            $cache_object->setKey($key);
+            $cache_object->setExtension($extension);
+            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_css'));
+
+            if ($this->cache->checkExpired($cache_object)) {
+
+                foreach ($local_files as $filename) {
+                    $combined .= file_get_contents($filename);
+                }
+
+                if ($inline) {
+                    $combined .= implode(PHP_EOL, $inline);
+                }
+
+                // Minify combined css code
+                $cssmin = new \CSSmin();
+                $combined = $cssmin->run($combined);
+
+                $cache_object->setContent($combined);
+
+                $this->cache->put($cache_object);
+            }
+
+            $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
+        }
+
+        return $files;
     }
 }
