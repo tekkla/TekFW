@@ -2,18 +2,20 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Content\Html\Form\Traits\IsMultipleTrait;
+use Core\Lib\Content\Html\Form\Traits\SizeTrait;
 
 /**
- * Select Form Element
+ * Select.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Form
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Select extends FormAbstract
 {
+    use IsMultipleTrait;
+    use SizeTrait;
 
     private $options = [];
 
@@ -80,38 +82,14 @@ class Select extends FormAbstract
         return $this->options[$uniqeid];
     }
 
-    public function setSize($size)
-    {
-        if (! is_int($size)) {
-            Throw new \InvalidArgumentException('A html form selects size attribute needs to be an integer.');
-        }
-
-        $this->attribute['size'] = $size;
-
-        return $this;
-    }
-
-    public function isMultiple($state = null)
-    {
-        $attrib = 'multiple';
-
-        if (! isset($state)) {
-            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
-        }
-
-        if ($state == 0) {
-            unset($this->attribute[$attrib]);
-        }
-        else {
-            $this->attribute[$attrib] = $attrib;
-        }
-
-        return $this;
-    }
-
+    /**
+     * Sets values to be selected.
+     *
+     * @param array $value
+     */
     public function setValue($value)
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             $value = (array) $value;
         }
 
@@ -120,6 +98,11 @@ class Select extends FormAbstract
         return $this;
     }
 
+    /**
+     * Returns set value
+     *
+     * @return Ambigous <array, array>
+     */
     public function getValue()
     {
         return $this->value;

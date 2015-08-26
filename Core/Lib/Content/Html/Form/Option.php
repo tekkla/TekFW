@@ -2,6 +2,7 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
 
 /**
  * Option Form Element
@@ -12,6 +13,7 @@ use Core\Lib\Content\Html\FormAbstract;
  */
 class Option extends FormAbstract
 {
+    use ValueTrait;
 
     protected $element = 'option';
 
@@ -49,33 +51,6 @@ class Option extends FormAbstract
         }
 
         return $this;
-    }
-
-    /**
-     * Sets value of option
-     *
-     * @param string|number $value
-     * @return \Core\Lib\Content\Html\Form\Option
-     */
-    public function setValue($value)
-    {
-        if ($value === null) {
-            Throw new \InvalidArgumentException('Your are not allowed to set a NULL as value for a html option.');
-        }
-
-        $this->attribute['value'] = $value;
-
-        return $this;
-    }
-
-    /**
-     * Gets value of option
-     *
-     * @return \Core\Lib\Content\Html\Form\Option
-     */
-    public function getValue()
-    {
-        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
     }
 
     public function build()
