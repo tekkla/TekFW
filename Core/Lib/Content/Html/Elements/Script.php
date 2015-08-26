@@ -4,58 +4,56 @@ namespace Core\Lib\Content\Html\Elements;
 use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
- * Div Html Element
+ * Script.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Html\Elements
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Script extends HtmlAbstract
 {
 
-	protected $element = 'script';
+    protected $element = 'script';
 
-	public function setType($type)
-	{
-		$this->attribute['type'] = $type;
+    public function setType($type)
+    {
+        $this->attribute['type'] = $type;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setSrc($src)
-	{
-		$this->attribute['src'] = $src;
+    public function setSrc($src)
+    {
+        $this->attribute['src'] = $src;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setCharset($charset)
-	{
-		$this->attribute['charset'] = $charset;
+    public function setCharset($charset)
+    {
+        $this->attribute['charset'] = $charset;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setFor($for)
-	{
-		$this->attribute['for'] = $for;
+    public function setFor($for)
+    {
+        $this->attribute['for'] = $for;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setDefer()
-	{
-		$this->addAttribute('defer');
+    public function setDefer()
+    {
+        $this->addAttribute('defer');
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setAsync()
-	{
-		$this->addAttribute('async');
+    public function setAsync()
+    {
+        $this->addAttribute('async');
 
-		return $this;
-	}
+        return $this;
+    }
 }

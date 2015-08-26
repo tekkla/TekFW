@@ -1,14 +1,14 @@
 <?php
 namespace Core\Lib\Content\Html\Elements;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Abbr Html Object
- * 
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Lib
+ * Area.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Abbr extends Link
 {
@@ -16,22 +16,26 @@ class Abbr extends Link
     protected $element = 'area';
 
     /**
-     * Sets the coordinates of the area
-     * 
+     * Sets the coordinates of the area.
+     *
      * @param string $cords
      * @return \Core\Lib\Content\Html\Elements\Abbr
+     *
      */
     public function setCoords($cords)
     {
         $this->attribute['coords'] = $cords;
+
         return $this;
     }
 
     /**
-     * Sets the shape of the area
-     * 
+     * Sets the shape of the area.
+     *
      * @param string $shape
-     * @throws Error
+     *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Elements\Abbr
      */
     public function setShape($shape)
@@ -42,11 +46,13 @@ class Abbr extends Link
             'circle',
             'poly'
         );
-        
-        if (! in_array($shape, $shapes))
-            Throw new \InvalidArgumentException('Set shape is not valid.', 1000);
-        
+
+        if (! in_array($shape, $shapes)) {
+            Throw new InvalidArgumentException('Set shape is not valid.', 1000);
+        }
+
         $this->attribute['shape'] = $shape;
+
         return $this;
     }
 }
