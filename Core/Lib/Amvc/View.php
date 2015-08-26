@@ -2,11 +2,10 @@
 namespace Core\Lib\Amvc;
 
 /**
- * Basic view class.
- * Each app view has to be a child of this class.
+ * View.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class View extends MvcAbstract
@@ -33,10 +32,8 @@ class View extends MvcAbstract
     /**
      * Renders the view and returns the result
      *
-     * @param string $func
-     *            Name of render method
-     * @param array $params
-     *            Optional: Parameterlist to pass to render function
+     * @param string $func Name of render method
+     * @param array $params Optional: Parameterlist to pass to render function
      */
     public final function render($action, $params = array())
     {
@@ -53,8 +50,7 @@ class View extends MvcAbstract
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
      * @param string $key
-     * @param
-     *            $val
+     * @param $val
      */
     public final function setVar($key, $val)
     {

@@ -11,10 +11,10 @@ use Core\Lib\Data\Adapter\Database;
 use Core\Lib\Data\Vars;
 
 /**
- * Model class
+ * Model.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015 by author
+ * @copyright 2015
  * @license MIT
  */
 class Model extends MvcAbstract implements \ArrayAccess
@@ -44,6 +44,10 @@ class Model extends MvcAbstract implements \ArrayAccess
 
     /**
      * Constructor
+     *
+     * @param unknown $name
+     * @param App $app
+     * @param Vars $vars
      */
     final public function __construct($name, App $app, Vars $vars)
     {
@@ -55,6 +59,7 @@ class Model extends MvcAbstract implements \ArrayAccess
 
     /**
      * Access to the apps config.
+     *
      * Without any paramter set this method returns the complete config.
      * With only key set, it returns the value associated with it.
      * Set key and value, and the config will be updated.
@@ -71,6 +76,7 @@ class Model extends MvcAbstract implements \ArrayAccess
 
     /**
      * Wrapper function for $this->appgetModel($model_name).
+     *
      * There is a little difference in using this method than the long term. Not setting a model name
      * means, that you get a new instance of the currently used model.
      *
@@ -113,7 +119,7 @@ class Model extends MvcAbstract implements \ArrayAccess
     {
         $container = $this->di->get('core.data.container');
 
-        if (!empty($fields)) {
+        if (! empty($fields)) {
             $container->parseFields($fields);
         }
 

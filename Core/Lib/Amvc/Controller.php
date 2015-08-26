@@ -15,17 +15,15 @@ use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Data\Vars;
 use Core\Lib\Traits\ArrayTrait;
-use Core\Lib\IO\Cache;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Cache\Cache;
 
 /**
- * Controllers parent class.
- *
- * Each app controller has to be a child of this class.
+ * Controller.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
- *
  */
 class Controller extends MvcAbstract
 {
@@ -105,7 +103,7 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var\Core\Lib\Http\Post
+     * @var \Core\Lib\Http\Post
      */
     protected $post;
 
@@ -126,7 +124,6 @@ class Controller extends MvcAbstract
      * @var \Core\Lib\Content\Content
      */
     protected $content;
-
 
     /**
      *
@@ -216,7 +213,7 @@ class Controller extends MvcAbstract
         // If accesscheck failed => stop here and return false!
         if ($this->checkControllerAccess() == false) {
             $this->message->warning($this->txt('missing_userrights', 'Core'));
-            $this->security->logSuspicious('Missing permission for ressource '. $this->app->getName() . '::' . $this->getName() . '::' . $action . '()');
+            $this->security->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '::' . $this->getName() . '::' . $action . '()');
             return false;
         }
 
@@ -493,6 +490,10 @@ class Controller extends MvcAbstract
      *
      * @param string|array $arg1 Name of var or list of vars in an array
      * @param mixed $arg2 Optional value to be ste when $arg1 is the name of a var
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Controller
      */
     final protected function setVar($arg1, $arg2 = null)
     {
@@ -525,7 +526,7 @@ class Controller extends MvcAbstract
             $this->view->setVar($arg1, $arg2);
         }
         else {
-            Throw new \InvalidArgumentException('The vars to set are not correct.', 1001);
+            Throw new InvalidArgumentException('The vars to set are not correct.', 1001);
         }
 
         return $this;
@@ -704,7 +705,7 @@ class Controller extends MvcAbstract
         }
 
         // Append session id
-        #$location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
+        // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
 
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
@@ -727,5 +728,4 @@ class Controller extends MvcAbstract
      */
     public function Index()
     {}
-
 }

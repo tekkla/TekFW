@@ -4,8 +4,11 @@ namespace Core\Lib\Amvc;
 use Core\Lib\Cfg;
 
 /**
+ * Creator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class Creator
 {
@@ -98,7 +101,7 @@ class Creator
     {
         header("HTTP/1.0 404 Page not found.");
         echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
-        error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null,10), true));
+        error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null, 10), true));
         exit();
     }
 

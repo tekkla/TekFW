@@ -5,14 +5,13 @@ use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Traits\AccessTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * Abstract MVC class.
- *
- * Model, View and Controller libs are children of this class.
+ * MvcAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 abstract class MvcAbstract
@@ -78,7 +77,7 @@ abstract class MvcAbstract
             return $this->name;
         }
 
-        Throw new \UnexpectedValueException('Name from MVC component is not set.');
+        Throw new UnexpectedValueException('Name from MVC component is not set.');
     }
 
     /**
@@ -86,13 +85,14 @@ abstract class MvcAbstract
      * Throws an error
      * if the App object is not set.
      *
-     * @throws Error
+     * @throws UnexpectedValueException
+     *
      * @return string
      */
     public function getAppName()
     {
         if (! isset($this->app)) {
-            Throw new \UnexpectedValueException('MVC component has no set app name.');
+            Throw new UnexpectedValueException('MVC component has no set app name.');
         }
 
         return $this->app->getName();
