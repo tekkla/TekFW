@@ -1,14 +1,14 @@
 <?php
 namespace Core\Lib\Errors\Exceptions;
 
+use Core\Lib\Errors\Exceptions\BasicException;
+
 /**
- * ParseException.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
  * @license MIT
+ * @copyright 2015
  */
-class ParseException extends BasicException
+class HtmlException extends BasicException
 {
-    protected $to_db = false;
 }

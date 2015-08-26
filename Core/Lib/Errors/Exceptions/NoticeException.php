@@ -4,10 +4,8 @@ namespace Core\Lib\Errors\Exceptions;
 /**
  *
  * @author Michael
- *        
+ *
  */
-class NoticeException extends \ErrorException
+class NoticeException extends BasicException
 {
 }
-
-?>

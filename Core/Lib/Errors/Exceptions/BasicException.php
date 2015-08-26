@@ -109,4 +109,5 @@ class BasicException extends \ErrorException
     {
         return is_bool($this->to_db) ? $this->to_db : false;
     }
+
 }

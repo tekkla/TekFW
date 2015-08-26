@@ -2,13 +2,13 @@
 namespace Core\Lib\Errors\Exceptions;
 
 /**
- * ParseException.php
+ * RuntimeException.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
-class ParseException extends BasicException
+class RuntimeException extends BasicException
 {
-    protected $to_db = false;
+
 }

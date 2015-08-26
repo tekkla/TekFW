@@ -6,7 +6,7 @@ namespace Core\Lib\Errors\Exceptions;
  * @author Michael
  *        
  */
-class CompileWarningException extends \ErrorException
+class CompileWarningException extends BasicException
 {
 }
 
