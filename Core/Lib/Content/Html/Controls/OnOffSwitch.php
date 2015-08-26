@@ -3,12 +3,13 @@ namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Select;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Creates a on/off switch control
+ * OnOffSwitch.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015
  * @license MIT
  */
 class OnOffSwitch extends Select
@@ -29,14 +30,18 @@ class OnOffSwitch extends Select
 
         // Add off option
         $option = $this->factory->create('Form\Option');
+
         $option->setValue(0);
         $option->setInner($this->txt('off'));
+
         $this->switch['off'] = $option;
 
         // Add on option
         $option = $this->factory->create('Form\Option');
+
         $option->setValue(1);
         $option->setInner($this->txt('on'));
+
         $this->switch['on'] = $option;
     }
 
@@ -69,6 +74,10 @@ class OnOffSwitch extends Select
      * Set switch to a specific state
      *
      * @param number $state
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return OnOffSwitch
      */
     public function switchTo($state)
     {
@@ -80,7 +89,7 @@ class OnOffSwitch extends Select
         ];
 
         if (! in_array($state, $states)) {
-            Throw new \InvalidArgumentException('Wrong state for on/off switch.');
+            Throw new InvalidArgumentException('Wrong state for on/off switch.');
         }
 
         $this->createSwitches();

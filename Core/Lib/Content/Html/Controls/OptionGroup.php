@@ -2,14 +2,14 @@
 namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * Creates a optiongroup control
- * It is a set of checkboxes grouped together.
+ * OptionGroup.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class OptionGroup extends FormAbstract
 {
@@ -40,19 +40,19 @@ class OptionGroup extends FormAbstract
      *
      * @see \Core\Lib\Html::build()
      *
+     * @throws UnexpectedValueException
+     *
      * @return string
      */
     public function build()
     {
         if (empty($this->options)) {
-            Throw new \RuntimeException('OptionGroup Control: No Options set.');
+            Throw new UnexpectedValueException('OptionGroup Control: No Options set.');
         }
 
         $html = '';
 
         foreach ($this->options as $option) {
-
-            $html .= '<div class="checkbox">';
 
             // Create name of optionelement
             $option_name = $this->getName() . '[' . $option->getValue() . ']';
@@ -76,9 +76,10 @@ class OptionGroup extends FormAbstract
             $control = $this->factory->create('Form\Checkbox', $args);
 
             // Build control
-            $html .= '<label>' . $control->build() . $option->getInner() . '</label>';
-
-            $html .= '</div>';
+            $html .= '
+            <div class="checkbox">
+                <label>' . $control->build() . $option->getInner() . '</label>
+            </div>';
         }
 
         return $html;

@@ -2,13 +2,11 @@
 namespace Core\Lib\Content\Html\Controls;
 
 /**
- * Creates a Bootstrap modal window control
+ * ModalWindow.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Controls
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class ModalWindow
 {

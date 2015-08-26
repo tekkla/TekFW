@@ -3,15 +3,15 @@ namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Elements\Div;
 use Core\Lib\Content\Html\Form\Button;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * Creates a Bootstrap buttongroup
+ * ButtonGroup.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Html\Controls
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class ButtonGroup extends Div
 {
@@ -28,12 +28,14 @@ class ButtonGroup extends Div
      *
      * @param Button $button
      *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Controls\ButtonGroup
      */
     public function addButton($button)
     {
         if (! $button instanceof Button && ! $button instanceof UiButton) {
-            Throw new \InvalidArgumentException('Buttons for a buttongroup must be an instance of Button or UiButton');
+            Throw new InvalidArgumentException('Buttons for a buttongroup must be an instance of Button or UiButton');
         }
 
         if (! $button->checkCss('btn')) {
@@ -48,7 +50,7 @@ class ButtonGroup extends Div
     /**
      * Builds buttongroup
      *
-     * @throws Error
+     * @throws UnexpectedValueException
      *
      * @return string
      *
@@ -57,7 +59,7 @@ class ButtonGroup extends Div
     public function build()
     {
         if (empty($this->buttons)) {
-            Throw new \RuntimeException('No buttons for buttongroup set.');
+            Throw new UnexpectedValueException('No buttons for buttongroup set.');
         }
 
         /* @var $button Button */
