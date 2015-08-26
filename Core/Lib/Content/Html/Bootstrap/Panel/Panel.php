@@ -4,18 +4,24 @@ namespace Core\Lib\Content\Html\Bootstrap\Panel;
 use Core\Lib\Content\Html\Elements\Div;
 
 /**
+ * Panel.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ * @deprecated On Bootstrap 4.0 (!!!)
  */
 class Panel extends Div
 {
+
     protected $css = [
         'panel'
     ];
 
     private $heading = '';
+
     private $body = '';
+
     private $footer = '';
 
     private $context = 'default';
@@ -36,7 +42,8 @@ class Panel extends Div
         return $this;
     }
 
-    /*+
+    /*
+     * +
      * Returns panel context.
      *
      * @return string
@@ -116,8 +123,9 @@ class Panel extends Div
     public function setTitle($title)
     {
         $this->use_title = true;
-
         $this->heading = $title;
+
+        return $this;
     }
 
     public function setBody($body)
@@ -147,7 +155,8 @@ class Panel extends Div
 
         if ($this->use_title) {
             $this->inner .= '<h3 class="panel-title">' . $this->heading . '</h3>';
-        } else {
+        }
+        else {
             $this->inner .= $this->heading;
         }
 
