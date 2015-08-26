@@ -2,7 +2,16 @@
 namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
+use Core\Lib\Errors\Exceptions\SecurityException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
+/**
+ * ConfigController.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ */
 class ConfigController extends Controller
 {
 
@@ -15,8 +24,11 @@ class ConfigController extends Controller
 
     /**
      *
-     * @param unknown $app_name
-     * @throws \RuntimeException
+     * @param string $app_name
+     *
+     * @throws SecurityException
+     * @throws RuntimeException
+     *
      * @return void|boolean
      */
     public function Config($app_name)
@@ -26,7 +38,7 @@ class ConfigController extends Controller
 
         // check permission
         if (! $this->checkAccess($app_name . '_config')) {
-            Throw new \RuntimeException('No accessrights');
+            Throw new SecurityException('No accessrights');
         }
 
         $data = $this->post->get();
@@ -36,7 +48,7 @@ class ConfigController extends Controller
 
             $this->model->saveConfig($data);
 
-            if (!$data->hasErrors()) {
+            if (! $data->hasErrors()) {
                 $this->content->msg->success($this->txt('config_saved'));
                 $redir_url = $this->url($this->router->getCurrentRoute(), [
                     'app_name' => $this->uncamelizeString($app_name)
@@ -109,7 +121,7 @@ class ConfigController extends Controller
             }
 
             // Is this a control with more settings or only the controltype
-            if (!isset($cfg['control'])) {
+            if (! isset($cfg['control'])) {
                 $cfg['control'] = 'text';
             }
 
@@ -153,7 +165,7 @@ class ConfigController extends Controller
                 case 'multiselect':
 
                     if (! isset($cfg['data']) || isset($cfg['data']) && ! is_array($cfg['data'])) {
-                        Throw new \RuntimeException('No or not correct set data definition.');
+                        Throw new RuntimeException('No or not correct set data definition.');
                     }
 
                     // Load optiongroup datasource type
@@ -172,7 +184,7 @@ class ConfigController extends Controller
 
                         // Datasource has to be of type array or model. All other will result in an exception
                         default:
-                            Throw new \RuntimeException('Wrong or none datasource set for control "' . $key . '" of type "' . $cfg['control'] . '"');
+                            Throw new RuntimeException('Wrong or none datasource set for control "' . $key . '" of type "' . $cfg['control'] . '"');
                     }
 
                     // if no bound column number is set, set default to column 0
@@ -189,22 +201,21 @@ class ConfigController extends Controller
                         $option->setInner($ds_val);
                         $option->setValue($option_value);
 
-
-                            if (is_array($fld->getValue())) {
-                                foreach ($fld->getValue() as $k => $v) {
-                                    if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg['data'][2] == 0 && $k == $option_value) || ($cfg['data'][2] == 1 && $v == $option_value))) {
-                                        $option->isSelected(1);
-                                        continue;
-                                    }
-                                }
-                            }
-                            else {
-
-                                // this is for simple select control
-                                if (($cfg['data'][2] == 0 && $ds_key === $fld->getValue()) || ($cfg['data'][2] == 1 && $ds_val == $fld->getValue())) {
+                        if (is_array($fld->getValue())) {
+                            foreach ($fld->getValue() as $k => $v) {
+                                if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg['data'][2] == 0 && $k == $option_value) || ($cfg['data'][2] == 1 && $v == $option_value))) {
                                     $option->isSelected(1);
+                                    continue;
                                 }
                             }
+                        }
+                        else {
+
+                            // this is for simple select control
+                            if (($cfg['data'][2] == 0 && $ds_key === $fld->getValue()) || ($cfg['data'][2] == 1 && $ds_val == $fld->getValue())) {
+                                $option->isSelected(1);
+                            }
+                        }
                     }
 
                     break;

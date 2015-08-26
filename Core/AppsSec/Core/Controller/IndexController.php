@@ -4,9 +4,11 @@ namespace Core\AppsSec\Core\Controller;
 use Core\Lib\Amvc\Controller;
 
 /**
+ * IndexController.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- *        
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 final class IndexController extends Controller
 {

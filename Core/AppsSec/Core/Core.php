@@ -4,10 +4,10 @@ namespace Core\AppsSec\Core;
 use Core\Lib\Amvc\App;
 
 /**
- * Core App
+ * Core.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 final class Core extends App

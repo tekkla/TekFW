@@ -1,6 +1,11 @@
 <?php
-
-// Version: 2.0, Web
+/**
+ * Core.english.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ */
 return [
 
     'name' => 'Core Framework',
@@ -147,7 +152,6 @@ return [
     'cfg_log_handler' => 'Log handler',
     '' => '',
     '' => '',
-
 
     /**
      * **************************************************************************

@@ -5,11 +5,11 @@ use Core\Lib\Amvc\Model;
 use Core\Lib\Data\Container;
 
 /**
- * Config model
+ * ConfigModel.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2015 by author
  */
 final class ConfigModel extends Model
 {
@@ -17,7 +17,9 @@ final class ConfigModel extends Model
     public function loadByApp($app_name)
     {
         // Try to get a config defintion from the app
-        $cfg = $this->di->get('core.amvc.creator')->getAppInstance($app_name)->getConfig();
+        $cfg = $this->di->get('core.amvc.creator')
+            ->getAppInstance($app_name)
+            ->getConfig();
 
         // Do we have a defintion?
         if ($cfg) {
@@ -85,7 +87,9 @@ final class ConfigModel extends Model
         unset($data['app_name'], $data['btn_submit']);
 
         // Get config definition from app
-        $app_cfg = $this->di->get('core.amvc.creator')->getAppInstance($app_name)->getConfig();
+        $app_cfg = $this->di->get('core.amvc.creator')
+            ->getAppInstance($app_name)
+            ->getConfig();
 
         // Add validation rules to fields in data container
         foreach ($data as $key => $fld) {
@@ -148,7 +152,9 @@ final class ConfigModel extends Model
     private function extendContainer(Container $data, $app_name)
     {
         // Try to get a config defintion from the app
-        $cfg = $this->di->get('core.amvc.creator')->getAppInstance($app_name)->getConfig();
+        $cfg = $this->di->get('core.amvc.creator')
+            ->getAppInstance($app_name)
+            ->getConfig();
 
         // Do we have a defintion?
         if ($cfg) {

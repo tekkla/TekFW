@@ -4,9 +4,11 @@ namespace Core\AppsSec\Core\Container;
 use Core\Lib\Data\Container;
 
 /**
+ * UserContainer.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class UserContainer extends Container
 {
@@ -91,7 +93,7 @@ class UserContainer extends Container
                     ]
                 ]
             ]
-        ],
+        ]
     ];
 
     public function Index()
@@ -101,7 +103,7 @@ class UserContainer extends Container
             'username',
             'password',
             'display_name',
-            'state',
+            'state'
         ];
     }
 }

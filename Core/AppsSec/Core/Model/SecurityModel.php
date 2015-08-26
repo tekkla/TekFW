@@ -5,10 +5,10 @@ use Core\Lib\Amvc\Model;
 use Core\Lib\Data\Container;
 
 /**
- * Security Model
+ * SecurityModel.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class SecurityModel extends Model
@@ -27,7 +27,7 @@ class SecurityModel extends Model
     public function doLogin(Container $data)
     {
         // End on validation errors and return data container
-        if (!$data->validate()) {
+        if (! $data->validate()) {
             return false;
         }
 

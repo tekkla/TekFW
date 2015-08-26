@@ -4,7 +4,7 @@ namespace Core\AppsSec\Core\Controller;
 use Core\Lib\Amvc\Controller;
 
 /**
- * Appsec/Core/SecurityController
+ * SecurityController.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
