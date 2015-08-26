@@ -19,6 +19,8 @@ class CacheObject
         'cachedir' => ''
     ];
 
+    private $expires_on = 0;
+
     /**
      * Constructor
      */
@@ -29,6 +31,8 @@ class CacheObject
         }
 
         $this->data['timestamp'] = time();
+
+        $this->expires_on = $this->data['timestamp'] + $this->data['ttl'];
     }
 
     /**
@@ -76,6 +80,11 @@ class CacheObject
         return $this->data['timestamp'];
     }
 
+    public function getExpiresOn()
+    {
+        return $this->expires_on;
+    }
+
     /**
      *
      * @return the $cachedir
@@ -100,9 +109,14 @@ class CacheObject
      *
      * @return boolean
      */
-    public function isExpired()
+    public function checkExpired()
     {
-        return time() < $this->data['timestamp'] + $this->data['ttl'];
+        if (time() < $this->expires_on) {
+            $this->expired();
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -158,11 +172,14 @@ class CacheObject
     {
         $this->data['ttl'] = $ttl;
 
+        // Update internal expiring timestamp
+        $this->expires_on = $ttl + $this->data['timestamp'];
+
         return $this;
     }
 
     /**
-     * Sets timestampt of cacheobject creation.
+     * Sets timestamp of cacheobject creation.
      *
      * @param number $timestamp
      *
@@ -175,6 +192,23 @@ class CacheObject
         }
 
         $this->data['timestamp'] = $timestamp;
+
+        // Update internal expiring timestamp
+        $this->expires_on = $timestamp + $this->data['ttl'];
+
+        return $this;
+    }
+
+    /**
+     * Sets expires on timestamp
+     *
+     * @param number $timestamp
+     *
+     * @return CacheObject
+     */
+    public function setExpiresOn($timestamp)
+    {
+        $this->expires_on = $timestamp;
 
         return $this;
     }
@@ -215,5 +249,21 @@ class CacheObject
         $this->data = $data;
 
         return $this;
+    }
+
+    /**
+     * Sets timestamp and TTL of object to zero, content to an boolean false
+     * and removes the cache file from cache storage.
+     */
+    public function expired()
+    {
+        $this->data['timestamp'] = 0;
+        $this->data['ttl'] = 0;
+        $this->data['content'] = false;
+
+        // Set internal expiring timestamp to 0
+        $this->expires_on = 0;
+
+        unlink($this->getFilename());
     }
 }

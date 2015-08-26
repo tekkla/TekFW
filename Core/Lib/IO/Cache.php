@@ -10,6 +10,7 @@ namespace Core\Lib\IO;
  */
 class Cache
 {
+
     /**
      * Creates and returns a new CacheObject.
      *
@@ -41,7 +42,8 @@ class Cache
     }
 
     /**
-     * Fills cacheobject with data. Data
+     * Fills cacheobject with data.
+     * Data
      *
      * @param string $key
      *
@@ -57,7 +59,7 @@ class Cache
         $filename = $object->getFilename();
 
         if ($object->getExtension() == 'php') {
-            $object->import(include($filename));
+            $object->import(include ($filename));
         }
         else {
             $object->setContent(file_get_contents($filename));
@@ -67,7 +69,7 @@ class Cache
     }
 
     /**
-     * Checks a CacheObject to be expired. Returns boolean true or false.
+     * Checks a CacheObject to be expired.
      *
      * @param CacheObject $object
      *
@@ -81,16 +83,16 @@ class Cache
             return true;
         }
 
-        // Check
-        if (filemtime($filename) + $object->getTTL() < time()) {
-
-            // Remove expired file!
-            unlink($filename);
-
-            return true;
+        // While data based cache objects have stored their creation timestamp within
+        // the data itself, file based objects need to use the time of the filecreation.
+        if ($object->getExtension() == 'php') {
+            $object->import(include ($filename));
+        }
+        else {
+            $object->setTimestamp(filemtime($filename));
         }
 
-        return false;
+        return $object->checkExpired();
     }
 }
 
