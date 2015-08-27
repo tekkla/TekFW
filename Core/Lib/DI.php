@@ -2,12 +2,14 @@
 namespace Core\Lib;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * DI Container
+ * DI.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class DI implements \ArrayAccess
@@ -56,9 +58,9 @@ class DI implements \ArrayAccess
         $this->mapValue('db.default.user', $cfg['db_user']);
         $this->mapValue('db.default.pass', $cfg['db_pass']);
         $this->mapValue('db.default.options', [
-            \PDO::ATTR_PERSISTENT => true,
-            \PDO::ATTR_ERRMODE => 2,
-            \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+            \PDO::ATTR_PERSISTENT => $cfg['db_persistent'],
+            \PDO::ATTR_ERRMODE => $cfg['db_errmode'],
+            \PDO::MYSQL_ATTR_INIT_COMMAND => $cfg['db_init_command']
         ]);
         $this->mapValue('db.default.prefix', $cfg['db_prefix']);
         $this->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
@@ -168,14 +170,13 @@ class DI implements \ArrayAccess
             'core.http.router',
             'core.cache'
         ]);
-        $this->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
+        $this->mapService('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
         $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
         $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
         $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
 
         // == AJAX ==========================================================
-        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax');
-        $this->mapFactory('core.ajax.cmd', '\Core\Lib\Ajax\AjaxCommand');
+        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', 'core.content.message');
 
         // == ERROR =========================================================
         $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
@@ -316,20 +317,20 @@ class DI implements \ArrayAccess
      * @param $method Name of method to call
      * @param $params (Optional) Array of parameters to inject into method
      *
-     * @throws MethodNotExistsError
-     * @throws ParameterNotSetError
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      *
      * @return object
      */
     public function invokeMethod(&$obj, $method, array $params = [])
     {
         if (! is_array($params)) {
-            Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
+            Throw new InvalidArgumentException('Parameter to invoke needs to be of type array.');
         }
 
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
-            Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
+            Throw new InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
         }
 
         // Get reflection method
@@ -349,7 +350,7 @@ class DI implements \ArrayAccess
 
             // Parameter is not optional and not set => throw error
             if (! $parameter->isOptional() && ! isset($params[$param_name])) {
-                Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
+                Throw new RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
             }
 
             // If parameter is optional and not set, set argument to null
@@ -365,12 +366,14 @@ class DI implements \ArrayAccess
      *
      * @param string $name Name of the Service, Factory or Value to return
      *
+     * @throws InvalidArgumentException
+     *
      * @return unknown|Ambigous
      */
     private function getSFV($name)
     {
         if (! $this->offsetExists($name)) {
-            Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
+            Throw new InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
         }
 
         $type = $this->map[$name]['type'];
@@ -443,11 +446,13 @@ class DI implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetSet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetSet($name, $value)
     {
         // No mapping through this way.
-        Throw new \InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
+        Throw new InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
     }
 
     /**
