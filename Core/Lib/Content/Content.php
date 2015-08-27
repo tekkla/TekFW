@@ -8,13 +8,15 @@ use Core\Lib\Amvc\Creator;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Amvc\Controller;
+use Core\Lib\Errors\Exceptions\HttpException;
+use Core\Lib\Errors\Exceptions\ConfigException;
 
 /**
- * Content
+ * Content.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license MIT
  * @copyright 2015
+ * @license MIT
  */
 class Content
 {
@@ -126,7 +128,6 @@ class Content
      */
     private $headers = [];
 
-
     /**
      * Constructor
      *
@@ -157,7 +158,7 @@ class Content
         $this->breadcrumbs = $this->html->create('Bootstrap\Breadcrumb\Breadcrumb');
 
         // Try to init possible content handler
-        if ($this->cfg->exists('Core', 'content_handler') && !$this->router->isAjax()) {
+        if ($this->cfg->exists('Core', 'content_handler') && ! $this->router->isAjax()) {
 
             // Get instance of content handler app
             $app = $this->app_creator->getAppInstance($this->cfg->get('Core', 'content_handler'));
@@ -266,23 +267,6 @@ class Content
 
             // Run controller and store result
             $result = $this->controller->run($this->action, $this->router->getParam());
-
-            /*
-             * // No content created? Check app for onEmpty() event which maybe gives us content.
-             * if (empty($result) && method_exists($app, 'onEmpty')) {
-             * $result = $app->onEmpty();
-             * }
-             *
-             * // Append content provided by apps onBefore() event method
-             * if (method_exists($app, 'onBefore')) {
-             * $result = $app->onBefore() . $result;
-             * }
-             *
-             * // Prepend content provided by apps onAfter() event method
-             * if (method_exists($app, 'onAfter')) {
-             * $result .= $app->onAfter();
-             * }
-             */
         }
         catch (\Exception $e) {
 
@@ -316,7 +300,7 @@ class Content
                 $this->js->init();
 
                 // Always use UTF-8
-                $this->headers[] ="Content-Type: text/html; charset=utf-8";
+                $this->headers[] = "Content-Type: text/html; charset=utf-8";
 
                 // Add missing title
                 if (empty($this->title)) {
@@ -338,14 +322,14 @@ class Content
     /**
      * Sends all stored header data.
      *
-     * @throws \RuntimeException
+     * @throws HttpException
      *
      * @return Content
      */
     private function sendHeader()
     {
         if (headers_sent()) {
-            Throw new \RuntimeException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
+            Throw new HttpException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
         }
 
         foreach ($this->headers as $header) {
@@ -406,7 +390,7 @@ class Content
     /**
      * Handles, enhances and returns the content of the page
      *
-     * @throws \RuntimeException
+     * @throws ConfigException
      *
      * @return string
      */
@@ -427,7 +411,7 @@ class Content
 
                 // Check for existing ContenCover method
                 if (! method_exists($app, 'ContentHandler')) {
-                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "ContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
+                    Throw new ConfigException('You set the app "' . $app_name . '" as content handler but it lacks of method "ContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
                 }
 
                 // Everything is all right. Run content handler by giving the current content to it.
@@ -437,12 +421,11 @@ class Content
         catch (\Exception $e) {
 
             // Get error info
-            $error=  $this->di->get('core.error')->handleException($e);
+            $error = $this->di->get('core.error')->handleException($e);
 
             // Add error message above content
             $this->msg->danger($error);
         }
-
 
         // # Insert content
         return $this->content;
@@ -462,7 +445,7 @@ class Content
 
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
 
-        $template = new $class($this->cfg, $this, $this->html, $this->di->get('core.io.cache'));
+        $template = new $class($this->cfg, $this, $this->html, $this->di->get('core.cache'));
 
         return $template->render();
     }
@@ -516,9 +499,9 @@ class Content
      *
      * @return \Core\Lib\Content\Content
      */
-    public function setHeader($headers=[])
+    public function setHeader($headers = [])
     {
-        if (!is_array($headers)) {
+        if (! is_array($headers)) {
             $headers = (array) $headers;
         }
 
@@ -534,9 +517,9 @@ class Content
      *
      * @return \Core\Lib\Content\Content
      */
-    public function addHeader($headers=[])
+    public function addHeader($headers = [])
     {
-        if (!is_array($headers)) {
+        if (! is_array($headers)) {
             $headers = (array) $headers;
         }
 

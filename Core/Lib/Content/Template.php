@@ -2,11 +2,12 @@
 namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
-use Core\Lib\IO\Cache;
 use Core\Lib\Content\Html\HtmlFactory;
+use Core\Lib\Errors\Exceptions\TemplateException;
+use Core\Lib\Cache\Cache;
 
 /**
- * Template parent class
+ * Template.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -71,13 +72,13 @@ class Template
      * runtime exception when a requested layer does not exist in the called
      * template file.
      *
-     * @throws \RuntimeException
+     * @throws TemplateException
      */
     final public function render()
     {
         foreach ($this->layers as $layer) {
             if (! method_exists($this, $layer)) {
-                Throw new \RuntimeException('Template Error: The requested layer "' . $layer . '" does not exist.');
+                Throw new TemplateException('Template Error: The requested layer "' . $layer . '" does not exist.');
             }
 
             $this->$layer();
@@ -195,77 +196,9 @@ class Template
      *
      * @return array|string
      */
-    final protected function getCss($data_only = false)
+    final protected function getCss()
     {
-        $css_stack = $this->content->css->getObjectStack();
-
-        if ($data_only) {
-            return $css_stack;
-        }
-
-        $files = [];
-        $local_files = [];
-        $inline = [];
-
-        /* @var $css Css */
-        foreach ($css_stack as $css) {
-
-            switch ($css->getType()) {
-                case 'file':
-
-                    $filename = $css->getCss();
-
-                    if (strpos($filename, BASEURL) !== false) {
-                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
-                    }
-                    else {
-                        $files[] = $filename;
-                    }
-
-                    break;
-
-                case 'inline':
-                    $inline[] = $css->getCss();
-                    break;
-            }
-        }
-
-        $combined = '';
-
-        // Any local files?
-        if ($local_files) {
-
-            // Yes! Now check cache
-            $cache_object = $this->cache->createCacheObject();
-
-            $key = 'combined';
-            $extension = 'css';
-
-            $cache_object->setKey($key);
-            $cache_object->setExtension($extension);
-            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_css'));
-
-            if ($this->cache->checkExpired($cache_object)) {
-
-                foreach ($local_files as $filename) {
-                    $combined .= file_get_contents($filename);
-                }
-
-                if ($inline) {
-                    $combined .= implode(PHP_EOL, $inline);
-                }
-
-                // Minify combined css code
-                $cssmin = new \CSSmin();
-                $combined = $cssmin->run($combined);
-
-                $cache_object->setContent($combined);
-
-                $this->cache->put($cache_object);
-            }
-
-            $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
-        }
+        $files = $this->content->css->getFiles();
 
         $html = '';
 
@@ -284,131 +217,20 @@ class Template
      * without a genereated html control.
      *
      * @param string $area Valid areas are 'top' and 'below'.
-     * @param boolean $data_only
      *
-     * @return array|string
+     * @return array
      */
-    final protected function getScript($area, $data_only = false)
+    final protected function getScript($area)
     {
-        // Get scripts of this area
-        $script_stack = $this->content->js->getScriptObjects($area);
 
-        if (empty($script_stack)) {
-            return false;
-        }
-
-        if ($data_only) {
-            return $script_stack;
-        }
-
-        // Init js storages
-        $files = $blocks = $inline = $scripts = $ready = $vars = [];
-
-        // Include JSMin lib
-        // if ($this->cfg->get('Core', 'js_minify')) {
-        // require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
-        // }
-
-        /* @var $script Javascript */
-        foreach ($script_stack as $key => $script) {
-
-            switch ($script->getType()) {
-
-                // File to lin
-                case 'file':
-                    $filename = $script->getScript();
-
-                    if (strpos($filename, BASEURL) !== false) {
-                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
-                    }
-                    else {
-                        $files[] = $filename;
-                    }
-                    break;
-
-                // Script to create
-                case 'script':
-                    $inline[] = $script->getScript();
-                    break;
-
-                // Dedicated block to embaed
-                case 'block':
-                    $blocks[] = $script->getScript();
-                    break;
-
-                // A variable to publish to global space
-                case 'var':
-                    $var = $script->getScript();
-                    $vars[$var[0]] = $var[1];
-                    break;
-
-                // Script to add to $.ready()
-                case 'ready':
-                    $ready[] = $script->getScript();
-                    break;
-            }
-
-            // Remove worked script object
-            unset($script_stack[$key]);
-        }
-
-        $combined = '';
-
-        // Check cache
-        if ($local_files) {
-
-            // Yes! Now check cache
-            $cache_object = $this->cache->createCacheObject();
-
-            $key = 'combined_' . $area;
-            $extension = 'js';
-
-            $cache_object->setKey($key);
-            $cache_object->setExtension($extension);
-            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_js'));
-
-            if ($this->cache->checkExpired($cache_object)) {
-
-                // Create combined output
-                foreach ($local_files as $filename) {
-                    $combined .= file_get_contents($filename);
-                }
-
-                if ($inline) {
-                    $combined .= implode(PHP_EOL, $inline);
-                }
-
-                if ($vars || $scripts || $ready) {
-
-                    // Create script html object
-                    foreach ($vars as $name => $val) {
-                        $combined .= PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';';
-                    }
-
-                    // Create $(document).ready()
-                    if ($ready) {
-                        $combined .= PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
-                        $combined .= implode(PHP_EOL, $ready);
-                        $combined .= PHP_EOL . '});';
-                    }
-
-                    // Add complete blocks
-                    $combined .= implode(PHP_EOL, $blocks);
-                }
-
-                // Minify combined css code
-                $combined = \JSMin::minify($combined);
-
-                $cache_object->setContent($combined);
-
-                $this->cache->put($cache_object);
-            }
-        }
-
-        $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
+        $files = $this->content->js->getFiles($area);
 
         // Init output var
         $html = '';
+
+        if (empty($files)) {
+            return $html;
+        }
 
         // Create files
         foreach ($files as $file) {

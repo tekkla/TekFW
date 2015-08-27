@@ -5,7 +5,7 @@ use Core\Lib\Cfg;
 use Core\Lib\Cache\Cache;
 
 /**
- * Class for managing and creating of css objects
+ * Css.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015

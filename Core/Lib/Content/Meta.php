@@ -2,11 +2,11 @@
 namespace Core\Lib\Content;
 
 /**
- * Class to create and store html meta tag defintition by php code
+ * Meta.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license
- *
+ * @copyright 2015
+ * @license MIT
  */
 class Meta
 {

@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Content;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
  * MenuItem.php
  *
@@ -94,12 +96,15 @@ class MenuItem extends MenuItemAbstract
      * InvalidArgumentException().
      *
      * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
      * @return MenuItem
      */
     public function setName($name)
     {
         if (in_array($name, self::$used_names)) {
-            Throw new \InvalidArgumentException('The menuitem name "' . $name . '" is already in use.');
+            Throw new InvalidArgumentException('The menuitem name "' . $name . '" is already in use.');
         }
 
         $this->name = $name;
@@ -234,8 +239,8 @@ class MenuItem extends MenuItemAbstract
      *
      * @return MenuItem
      */
-    public function setOption($option, $value='') {
-
+    public function setOption($option, $value = '')
+    {
         if (is_array($option)) {
             foreach ($option as $key => $value) {
                 $this->options[$key] = $value;
@@ -257,5 +262,4 @@ class MenuItem extends MenuItemAbstract
     {
         return $this->options;
     }
-
 }

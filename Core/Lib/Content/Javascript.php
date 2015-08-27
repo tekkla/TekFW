@@ -3,15 +3,16 @@ namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
 use Core\Lib\Http\Router;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
+use Core\Lib\Cache\Cache;
 
 /**
- * Class for managing and creating of javascript objects
+ * Javascript.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Javascript
 {
@@ -50,6 +51,10 @@ class Javascript
      */
     private $filecounter = 0;
 
+    private $mode = 'apps';
+
+    private $js_url = '';
+
     /**
      *
      * @var Cfg
@@ -62,24 +67,31 @@ class Javascript
      */
     private $router;
 
-    private $mode = 'apps';
-
-    private $js_url = '';
+    /**
+     *
+     * @var Cache
+     */
+    private $cache;
 
     /**
      * Constructor
      *
      * @param Cfg $cfg
      * @param Router $router
+     * @param Cache $cache
      */
-    public function __construct(Cfg $cfg, Router $router)
+    public function __construct(Cfg $cfg, Router $router, Cache $cache)
     {
         $this->cfg = $cfg;
         $this->router = $router;
+        $this->cache = $cache;
 
         $this->js_url = $cfg->get('Core', 'url_js');
     }
 
+    /**
+     * Init method
+     */
     public function init()
     {
         $this->mode = 'core';
@@ -131,7 +143,8 @@ class Javascript
 
         if ($this->mode == 'core') {
             $this->core_js[$area][] = $js;
-        } else {
+        }
+        else {
             $this->app_js[$area][] = $js;
         }
 
@@ -143,7 +156,7 @@ class Javascript
      *
      * @param string $area
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return array
      */
@@ -155,7 +168,7 @@ class Javascript
         ];
 
         if (! in_array($area, $areas)) {
-            Throw new \InvalidArgumentException('Wrong scriptarea.');
+            Throw new InvalidArgumentException('Wrong scriptarea.');
         }
 
         return array_merge($this->core_js[$area], $this->app_js[$area]);
@@ -168,20 +181,24 @@ class Javascript
      * @param bool $defer
      * @param bool $is_external
      *
+     * @throws RuntimeException
+     *
      * @return JavascriptObject
      */
     public function &file($url, $defer = false, $is_external = false)
     {
         // Do not add files already added
         if (in_array($url, $this->files_used)) {
-            Throw new \RuntimeException(sprintf('Url "%s" is already set as included js file.', $url));
+            Throw new RuntimeException(sprintf('Url "%s" is already set as included js file.', $url));
         }
 
         $dt = debug_backtrace();
+
         $this->files_used[$this->filecounter . '-' . $dt[1]['function']] = $url;
         $this->filecounter ++;
 
         $script = new JavascriptObject();
+
         $script->setType('file');
         $script->setScript($url);
         $script->setIsExternal($is_external);
@@ -201,6 +218,7 @@ class Javascript
     public function &script($script, $defer = false)
     {
         $script = new JavascriptObject();
+
         $script->setType('script');
         $script->setScript($script);
         $script->setDefer($defer);
@@ -219,6 +237,7 @@ class Javascript
     public function &ready($script, $defer = false)
     {
         $script = new JavascriptObject();
+
         $script->setType('ready');
         $script->setScript($script);
         $script->setDefer($defer);
@@ -238,6 +257,7 @@ class Javascript
     public function &block($script, $defer = false)
     {
         $script = new JavascriptObject();
+
         $script->setType('block');
         $script->setScript($script);
         $script->setDefer($defer);
@@ -261,6 +281,7 @@ class Javascript
         }
 
         $script = new JavascriptObject();
+
         $script->setType('var');
         $script->setScript([
             $name,
@@ -275,7 +296,9 @@ class Javascript
      *
      * @param string $version
      * @param bool $from_cdn
+     *
      * @return string
+     *
      * @todo Make it an Script object?
      */
     public function &bootstrap($version, $defer = false)
@@ -295,5 +318,130 @@ class Javascript
     public function getStack()
     {
         return array_merge($this->core_js, $this->app_js);
+    }
+
+    /**
+     * Returns filelist of js files for the requested area.
+     *
+     * Also combines all local files and inline scripts into one cached combined_{$area}.js file.
+     *
+     * @param string $area
+     *
+     * @return array
+     */
+    public function getFiles($area)
+    {
+        // Get scripts of this area
+        $script_stack = $this->getScriptObjects($area);
+
+        if (empty($script_stack)) {
+            return false;
+        }
+
+        // Init js storages
+        $files = $blocks = $inline = $scripts = $ready = $vars = [];
+
+        // Include JSMin lib
+        // if ($this->cfg->get('Core', 'js_minify')) {
+        // require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
+        // }
+
+        /* @var $script Javascript */
+        foreach ($script_stack as $key => $script) {
+
+            switch ($script->getType()) {
+
+                // File to lin
+                case 'file':
+                    $filename = $script->getScript();
+
+                    if (strpos($filename, BASEURL) !== false) {
+                        $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
+                    }
+                    else {
+                        $files[] = $filename;
+                    }
+                    break;
+
+                // Script to create
+                case 'script':
+                    $inline[] = $script->getScript();
+                    break;
+
+                // Dedicated block to embaed
+                case 'block':
+                    $blocks[] = $script->getScript();
+                    break;
+
+                // A variable to publish to global space
+                case 'var':
+                    $var = $script->getScript();
+                    $vars[$var[0]] = $var[1];
+                    break;
+
+                // Script to add to $.ready()
+                case 'ready':
+                    $ready[] = $script->getScript();
+                    break;
+            }
+
+            // Remove worked script object
+            unset($script_stack[$key]);
+        }
+
+        $combined = '';
+
+        // Check cache
+        if ($local_files) {
+
+            // Yes! Now check cache
+            $cache_object = $this->cache->createCacheObject();
+
+            $key = 'combined_' . $area;
+            $extension = 'js';
+
+            $cache_object->setKey($key);
+            $cache_object->setExtension($extension);
+            $cache_object->setTTL($this->cfg->get('Core', 'cache_ttl_js'));
+
+            if ($this->cache->checkExpired($cache_object)) {
+
+                // Create combined output
+                foreach ($local_files as $filename) {
+                    $combined .= file_get_contents($filename);
+                }
+
+                if ($inline) {
+                    $combined .= implode('', $inline);
+                }
+
+                if ($vars || $scripts || $ready) {
+
+                    // Create script html object
+                    foreach ($vars as $name => $val) {
+                        $combined .= 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';';
+                    }
+
+                    // Create $(document).ready()
+                    if ($ready) {
+                        $combined .= '$(document).ready(function() {' . implode('', $ready) . '});';
+                    }
+
+                    // Add complete blocks
+                    $combined .= implode($blocks);
+                }
+
+                // Minify combined css code
+                $combined = \JSMin::minify($combined);
+
+                $cache_object->setContent($combined);
+
+                $this->cache->put($cache_object);
+            }
+
+            $files[] = $this->cfg->get('Core', 'url_cache') . '/' . $key . '.' . $extension;
+        }
+
+        return $files;
     }
 }

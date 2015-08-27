@@ -1,8 +1,10 @@
 <?php
 namespace Core\Lib\Content;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Message class for flash messages.
+ * MessageObject.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -35,7 +37,6 @@ class MessageObject
      */
     private $dismissable = true;
 
-
     /**
      * Sets message content
      *
@@ -65,7 +66,7 @@ class MessageObject
      *
      * @param string $type
      *
-     * @throws NoValidParameterError
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Message
      */
@@ -82,7 +83,7 @@ class MessageObject
         ];
 
         if (! in_array($type, $types)) {
-            Throw new \InvalidArgumentException('Wrong type set for message.');
+            Throw new InvalidArgumentException('Wrong type set for message.');
         }
 
         $this->type = $type;
@@ -109,7 +110,7 @@ class MessageObject
      */
     public function setFadeout($fadeout)
     {
-        $this->fadeout = is_bool($fadeout) ? $fadeout : false;
+        $this->fadeout = (bool) $fadeout;
 
         return $this;
     }
@@ -133,7 +134,7 @@ class MessageObject
      */
     public function setDismissable($dismissable)
     {
-        $this->dismissable = is_bool($dismissable) ? $dismissable : false;
+        $this->dismissable = (bool) $dismissable;
 
         return $this;
     }
