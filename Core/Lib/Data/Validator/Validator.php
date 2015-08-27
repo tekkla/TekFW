@@ -6,15 +6,11 @@ use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Validator\Rules\RuleAbstract;
 
 /**
- * Validator
- *
- * Validates fields of a Container object against their validation rules.
- * Adde errors on failed validation to Container errorlist.
+ * Validator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
- * @todo Split into validator and function?
  */
 final class Validator
 {

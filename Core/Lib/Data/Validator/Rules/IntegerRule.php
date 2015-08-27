@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Integer
+ * IntegerRule.php
  *
- * Checks the value to be of type integer
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class IntegerRule extends RuleAbstract
 {

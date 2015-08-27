@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Empty
+ * EmptyRule.php
  *
- * Checks for empty value like the php function empty().
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class EmptyRule extends RuleAbstract
 {

@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Phone
+ * PhoneRule.php
  *
- * Checks the value to be a valid phone number
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class PhoneRule extends RuleAbstract
 {

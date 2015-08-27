@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Date iso
+ * DateIsoRule.php
  *
- * Compares the value aginst the ISO dateformat (YYYY-mm-dd).
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class DateIsoRule extends RuleAbstract
 {

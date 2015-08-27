@@ -2,20 +2,20 @@
 namespace Core\Lib\Data;
 
 use Core\Lib\Traits\SerializeTrait;
-use Core\Lib\Traits\DebugTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * Container Object
+ * Container.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015 by author
+ * @copyright 2015
  * @license MIT
  */
 class Container implements \IteratorAggregate, \ArrayAccess
 {
 
     use SerializeTrait;
-    use DebugTrait;
 
     /**
      * Optional name of fieldlist to load
@@ -121,6 +121,8 @@ class Container implements \IteratorAggregate, \ArrayAccess
      * default => Defaultvalue for this field.
      *
      * @param array $fields
+     *
+     * @throws UnexpectedValueException
      */
     public function parseFields(Array $fields = [])
     {
@@ -129,7 +131,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
             $src = empty($this->use) ? 'available' : 'use';
 
             if (empty($this->$src)) {
-                Throw new \RuntimeException('The called container has no field definitions set.');
+                Throw new UnexpectedValueException('The called container has no field definitions set.');
             }
 
             foreach ($this->$src as $fld_name) {
@@ -530,11 +532,13 @@ class Container implements \IteratorAggregate, \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetSet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
-            Throw new \InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
+            Throw new InvalidArgumentException('You can not add an anonymous field to a container. Please provide a unique name.');
         }
 
         if (! isset($this->fields[$offset])) {

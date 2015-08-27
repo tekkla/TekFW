@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Float
+ * FloatRule.php
  *
- * Checks the value to be of type float
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class FloatRule extends RuleAbstract
 {
@@ -18,7 +20,7 @@ class FloatRule extends RuleAbstract
     public function execute()
     {
         $result = is_float($this->value);
-        
+
         if (! $result) {
             $this->msg = $this->txt('validator_float');
         }

@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Custom Regexp
+ * CustomRegexpRule.php
  *
- * Checks the value against a custom regexp.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class CustomRegexpRule extends RuleAbstract
 {
@@ -29,4 +31,3 @@ class CustomRegexpRule extends RuleAbstract
         }
     }
 }
-

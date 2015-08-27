@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Only letter and number
+ * OnlyLetterNumberRule.php
  *
- * Checks the value to be only of letters and numbers
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class OnlyLetterNumberRule extends RuleAbstract
 {

@@ -6,6 +6,7 @@ use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\DebugTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * Database adapter
@@ -102,19 +103,21 @@ class Database extends AdapterAbstract
      *
      * @param Connection $conn
      * @param string $prefix
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct(array $options)
     {
         if (! isset($options['conn'])) {
-            Throw new \InvalidArgumentException('No connection option found in database options');
+            Throw new InvalidArgumentException('No connection option found in database options');
         }
 
         if (! $options['conn'] instanceof Connection) {
-            Throw new \InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
+            Throw new InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
         }
 
         if (! isset($options['prefix'])) {
-            Throw new \InvalidArgumentException('No table prefix in database options');
+            Throw new InvalidArgumentException('No table prefix in database options');
         }
 
         $this->conn = $options['conn'];
@@ -413,7 +416,8 @@ class Database extends AdapterAbstract
         return $this->rowCount();
     }
 
-    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC) {
+    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    {
         $query = [
             'table' => $tbl,
             'filter' => $key_field . '=:' . $key_field,
@@ -651,7 +655,8 @@ class Database extends AdapterAbstract
      *
      * @return multitype:string array
      */
-    public function getSqlAndParams() {
+    public function getSqlAndParams()
+    {
         return [
             'sql' => $this->sql,
             'params' => $this->params

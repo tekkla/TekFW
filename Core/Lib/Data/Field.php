@@ -1,19 +1,14 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Field Class
- *
- * Element of a data container. Wrapper for data provided by DataAdapter.
- * Each field has it's own definiton. Flags like serialize or primary can
- * be used to control how data has.
- *
- * Implements ArrayAccess interface to use object like an array.
+ * Field.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @version 1.0
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Field implements \ArrayAccess
 {
@@ -83,6 +78,8 @@ class Field implements \ArrayAccess
     /**
      * On echo field .
      *
+     *
+     *
      * ..
      *
      * @return string
@@ -145,8 +142,6 @@ class Field implements \ArrayAccess
 
     /**
      * Converts the field value explicite to the var type specified
-     *
-     * @throws \InvalidArgumentException
      */
     private function convValueToType()
     {
@@ -164,14 +159,15 @@ class Field implements \ArrayAccess
             case 'real':
                 $this->value = (float) $this->value;
                 break;
-            case 'string':
-                $this->value = (string) $this->value;
-                break;
             case 'array':
                 $this->value = (array) $this->value;
                 break;
             case 'object':
                 $this->value = (object) $this->value;
+                break;
+            case 'string':
+            default:
+                $this->value = (string) $this->value;
                 break;
         }
     }
@@ -193,14 +189,20 @@ class Field implements \ArrayAccess
      *
      * @param int $size
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Data\Field
      */
     public function setSize($size)
     {
+        $size = (int) $size;
+
+        if (empty($size)) {
+            Throw new InvalidArgumentException('field size cannot be zero.');
+        }
+
         if (! is_numeric($size)) {
-            Throw new \InvalidArgumentException('Only numbers are allowed as field size.');
+            Throw new InvalidArgumentException('Only numbers are allowed as field size.');
         }
 
         $this->size = $size;
@@ -465,11 +467,13 @@ class Field implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetSet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
-            Throw new \InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
+            Throw new InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
         }
         else {
             $this->$offset = $value;
@@ -500,6 +504,8 @@ class Field implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetGet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetGet($offset)
     {
@@ -507,7 +513,7 @@ class Field implements \ArrayAccess
             return $this->$offset;
         }
         else {
-            Throw new \InvalidArgumentException('Field property "' . $offset . '" does not exists.');
+            Throw new InvalidArgumentException('Field property "' . $offset . '" does not exists.');
         }
     }
 }

@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Number max
+ * NumberMaxRule.php
  *
- * Check the value to be smaller or equal to parameter ($max)
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class NumberMaxRule extends RuleAbstract
 {

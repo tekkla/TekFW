@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Blank
+ * BlankRule.php
  *
- * Checks for empty value but treats 0, -0, 0.0 as existing values.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class BlankRule extends RuleAbstract
 {

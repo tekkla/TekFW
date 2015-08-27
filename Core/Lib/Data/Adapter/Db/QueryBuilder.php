@@ -4,9 +4,11 @@ namespace Core\Lib\Data\Adapter\Db;
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\ConvertTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * QueryBuilder
+ * QueryBuilder.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -496,29 +498,33 @@ class QueryBuilder
     /**
      * Processes insert definition
      *
-     * @throws \RuntimeException
+     * @throws UnexpectedValueException
      */
     private function processInsert()
     {
         if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
-            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
+            Throw new UnexpectedValueException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
         }
 
         if (! isset($this->definition['params'])) {
-            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
+            Throw new UnexpectedValueException('QueryBuilder need a assoc array param list to process "INSERT" definition.');
         }
 
         $this->processFieldDefinition();
         $this->processParamsDefinition();
     }
 
+    /**
+     *
+     * @throws UnexpectedValueException
+     */
     private function processUpdate()
     {
         if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
-            Throw new \RuntimeException('QueryBuilder need a "field" or "fields" list element to process "UPDATE" definition.');
+            Throw new UnexpectedValueException('QueryBuilder need a "field" or "fields" list element to process "UPDATE" definition.');
         }
         if (! isset($this->definition['params'])) {
-            Throw new \RuntimeException('QueryBuilder need a assoc array param list to process "UPDATE" definition.');
+            Throw new UnexpectedValueException('QueryBuilder need a assoc array param list to process "UPDATE" definition.');
         }
 
         $this->processFieldDefinition();
@@ -541,11 +547,13 @@ class QueryBuilder
     /**
      * Processes value defintion.
      * Takes also care of set alias definition.
+     *
+     * @throws UnexpectedValueException
      */
     private function processTblDefinition()
     {
         if (! isset($this->definition['tbl']) && ! isset($this->definition['table'])) {
-            Throw new \RuntimeException('QueryBuilder needs a table name. Provide tablename by setting "tbl" or "table" element in your query definition');
+            Throw new UnexpectedValueException('QueryBuilder needs a table name. Provide tablename by setting "tbl" or "table" element in your query definition');
         }
         else {
             $this->tbl = isset($this->definition['tbl']) ? $this->definition['tbl'] : $this->definition['table'];
@@ -578,12 +586,14 @@ class QueryBuilder
      *
      * Take care of data type. Uses container field names for field list
      * and field values for paramters.
+     *
+     * @throws UnexpectedValueException
      */
     private function processDataDefinition()
     {
         // Data definition only as \Core\Lib\Data\Container ever<thing else causes an exception
         if (! $this->definition['data'] instanceof Container) {
-            Throw new \RuntimeException('QueryBuilder can only process data attributes of type \Core\Lib\Data\Container.');
+            Throw new UnexpectedValueException('QueryBuilder can only process data attributes of type \Core\Lib\Data\Container.');
         }
 
         // Autodetection of method when none is set e.g. SELECT is set.
@@ -593,7 +603,7 @@ class QueryBuilder
             $primary = $this->definition['data']->getPrimary();
 
             // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record.
-            $this->method = ($primary !== false && !empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
+            $this->method = ($primary !== false && ! empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
         }
 
         // Check for allowed querymethods
@@ -604,7 +614,7 @@ class QueryBuilder
         ];
 
         if (! in_array($this->method, $allowed_methods)) {
-            Throw new \RuntimeException('QueryBuilder can only process querymethods of type "update", "insert" or "replace".');
+            Throw new UnexpectedValueException('QueryBuilder can only process querymethods of type "update", "insert" or "replace".');
         }
 
         /* @var $field \Core\Lib\Data\Field */
@@ -705,6 +715,8 @@ class QueryBuilder
     /**
      * Processes filter defintion.
      * When Filter is an array
+     *
+     * @throws UnexpectedValueException
      */
     private function processFilterDefinition()
     {
@@ -713,11 +725,11 @@ class QueryBuilder
             if (is_array($this->definition['filter'])) {
 
                 if (! count($this->definition['filter']) == 2) {
-                    Throw new \RuntimeException('Querybuilder needs two elements when filter is set as array. The first element has to be the filter statement. The second one an assoc array with filter parameters');
+                    Throw new UnexpectedValueException('Querybuilder needs two elements when filter is set as array. The first element has to be the filter statement. The second one an assoc array with filter parameters');
                 }
 
                 if (! $this->arrayIsAssoc($this->definition['filter'][1])) {
-                    Throw new \RuntimeException('Querybuilder needs an assoc array as filter parameter list.');
+                    Throw new UnexpectedValueException('Querybuilder needs an assoc array as filter parameter list.');
                 }
 
                 $this->filter = $this->definition['filter'][0];
@@ -787,7 +799,7 @@ class QueryBuilder
      * @var string $arg2 Needs only to be set when seting on paramters by name and value.
      * @var bool $reset Optional: Set this to true when you want to reset already existing parameters
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Url
      */
@@ -796,7 +808,7 @@ class QueryBuilder
         if ($arg2 === null) {
 
             if (! is_array($arg1) || ! $this->arrayIsAssoc($arg1)) {
-                Throw new \InvalidArgumentException('Setting one QueryBuilder argument means you have to set an assoc array as argument.');
+                Throw new InvalidArgumentException('Setting one QueryBuilder argument means you have to set an assoc array as argument.');
             }
 
             $this->params = array_merge($this->params, $arg1);

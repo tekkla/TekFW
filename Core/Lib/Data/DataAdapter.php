@@ -3,12 +3,14 @@ namespace Core\Lib\Data;
 
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * DataAdapter Object
+ * DataAdapter.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015 by author
+ * @copyright 2015
  * @license MIT
  */
 class DataAdapter implements \IteratorAggregate
@@ -62,12 +64,12 @@ class DataAdapter implements \IteratorAggregate
      * @param string $type
      * @param array $arguments
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function __construct($type, array $arguments = [])
     {
         if (! array_key_exists($type, self::$adapters)) {
-            Throw new \InvalidArgumentException('There is no data adapter of type "' . $type . '" registered');
+            Throw new InvalidArgumentException('There is no data adapter of type "' . $type . '" registered');
         }
 
         $this->type = $type;
@@ -137,14 +139,16 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Returns a clone of the registered data container
+     * Returns a clone of the registered data container.
+     *
+     * @throws UnexpectedValueException
      *
      * @return \Core\Lib\Data\Container
      */
     public function getContainer()
     {
         if (! $this->container) {
-            Throw new \RuntimeException('There is no data container to r in this DataAdapter.');
+            Throw new UnexpectedValueException('There is no data container to r in this DataAdapter.');
         }
 
         return unserialize(serialize($this->container));
@@ -156,18 +160,18 @@ class DataAdapter implements \IteratorAggregate
      * @param string $name Unique name of adapter
      * @param string $class Class to map as adapter
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Data\DataAdapter
      */
     public function mapAdapter($name, $class)
     {
         if (array_key_exists($name, self::$adapters)) {
-            Throw new \InvalidArgumentException('There is already a data adapter type with name "' . $name . '" registered');
+            Throw new InvalidArgumentException('There is already a data adapter type with name "' . $name . '" registered');
         }
 
         if (in_array($class, self::$adapters)) {
-            Throw new \InvalidArgumentException('There is already a data adapter with class "' . $class . '" registered');
+            Throw new InvalidArgumentException('There is already a data adapter with class "' . $class . '" registered');
         }
 
         self::$adapters[$name] = $class;

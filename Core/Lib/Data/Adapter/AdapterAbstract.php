@@ -4,11 +4,11 @@ namespace Core\Lib\Data\Adapter;
 use Core\Lib\Data\DataAdapter;
 
 /**
- * DataAdapert abstract class
+ * AdapterAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2015 by author
  */
 abstract class AdapterAbstract
 {
