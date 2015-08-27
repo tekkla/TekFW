@@ -111,12 +111,12 @@ class CacheObject
      */
     public function checkExpired()
     {
-        if (time() < $this->expires_on) {
+        if ($this->expires_on < time()) {
             $this->expired();
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**

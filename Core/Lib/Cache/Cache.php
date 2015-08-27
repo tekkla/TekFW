@@ -14,11 +14,11 @@ class Cache
     /**
      * Creates and returns a new CacheObject.
      *
-     * @return \Core\Lib\IO\CacheObject
+     * @return \Core\Lib\Cache\CacheObject
      */
     public function createCacheObject()
     {
-        return $this->di->get('core.io.cache.object');
+        return $this->di->get('core.cache.object');
     }
 
     /**
@@ -32,9 +32,16 @@ class Cache
 
         $fp = fopen($filename, 'w+');
 
-        $object->setTimestamp(filemtime($filename));
+        if ($object->getExtension() == 'php') {
 
-        $data = $object->getExtension() == 'php' ? $object->export() : $object->getContent();
+            // Important to set the filemodification as objects timestamp!
+            $object->setTimestamp(filemtime($filename));
+
+            $data = $object->export();
+
+        } else {
+           $data = $object->getContent();
+        }
 
         $fw = fwrite($fp, $data);
 
