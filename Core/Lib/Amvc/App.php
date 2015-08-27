@@ -21,6 +21,8 @@ use Core\Lib\Errors\Exceptions\FileException;
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
+ *
+ * @todo Switch to options porperty to set app specfic flags.
  */
 class App
 {
@@ -259,7 +261,7 @@ class App
             // Include permission file
             $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
 
-            $this->di['core.content.lang']->loadLanguageFile($this->name, $language_file);
+            $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
 
             self::$init_stages[$this->name]['language'] = true;
         }
@@ -318,6 +320,8 @@ class App
                 $args[] = $arg;
             }
         }
+
+        $this->debugFbLog($args);
 
         // Create component be using di instance factory to get sure the
         // di services the container itself is injected properly
@@ -379,7 +383,8 @@ class App
             'core.content.menu',
             'core.content.html.factory',
             'core.data.vars',
-            'core.cache'
+            'core.cache',
+            'core.ajax'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);

@@ -17,6 +17,8 @@ use Core\Lib\Data\Vars;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Cache\Cache;
+use Core\Lib\Ajax\Ajax;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
  * Controller.php
@@ -78,83 +80,95 @@ class Controller extends MvcAbstract
      * Stores the controller bound Model object.
      * Is false when controller has no model.
      *
-     * @var \Core\Lib\Amvc\Model
+     * @var Model
      */
     public $model;
 
     /**
      *
-     * @var \Core\Lib\Amvc\View
+     * @var View
      */
     private $view;
 
     /**
-     * Falg to signal that this controller is in ajax mode
      *
-     * @var bool
-     */
-    private $is_ajax = false;
-
-    /**
-     *
-     * @var \Core\Lib\Security\Security
+     * @var Security
      */
     protected $security;
 
     /**
      *
-     * @var \Core\Lib\Http\Post
+     * @var Post
      */
     protected $post;
 
     /**
      *
-     * @var \Core\Lib\Http\Router
+     * @var Router
      */
     protected $router;
 
     /**
      *
-     * @var \Core\Lib\Content\Message
+     * @var Message
      */
     protected $message;
 
     /**
      *
-     * @var \Core\Lib\Content\Content
+     * @var Content
      */
     protected $content;
 
     /**
      *
-     * @var \Core\Lib\Content\Menu
+     * @var Menu
      */
     protected $menu;
 
     /**
      *
-     * @var \Core\Lib\Content\Html\HtmlFactory
+     * @var HtmlFactory
      */
     protected $html;
 
     /**
      *
-     * @var \Core\Lib\Data\Vars
+     * @var Vars
      */
     protected $vars;
 
     /**
      *
-     * @var \Core\Lib\IO\Cache
+     * @var Cache
      */
     protected $cache;
+
+    /**
+     *
+     * @var Ajax
+     */
+    protected $ajax;
+
+    /**
+     * Flag to signal that this controller is in ajax mode
+     *
+     * @var bool
+     */
+    private $ajax_flag = false;
+
+    /**
+     *
+     * @var AjaxCommandAbstract
+     */
+    private $ajax_command;
 
     /**
      * Hidden constructor.
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars, Cache $cache)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -168,9 +182,16 @@ class Controller extends MvcAbstract
         $this->html = $html;
         $this->vars = $vars;
         $this->cache = $cache;
+        $this->ajax = $ajax;
 
         // Model to bind?
         $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
+
+        // Controller of an ajax request?
+        if ($this->router->isAjax()) {
+            $this->ajax_flag = true;
+            $this->ajax_command = $this->ajax->createCommand('Dom\Html');
+        }
 
         // Run onload event
         $this->runEvent('load');
@@ -298,22 +319,18 @@ class Controller extends MvcAbstract
      */
     final public function ajax($action = 'Index', $params = [], $selector = '')
     {
-        $this->is_ajax = true;
-
-        $this->ajax = $this->di->get('core.ajax')->createCommand('Dom\Html');
-
         $content = $this->run($action, $params);
 
         if ($content !== false) {
 
-            $this->ajax->setArgs($content);
-            $this->ajax->setId(get_called_class() . '::' . $action);
+            $this->ajax_command->setArgs($content);
+            $this->ajax_command->setId(get_called_class() . '::' . $action);
 
             if ($selector) {
-                $this->ajax->setSelector($selector);
+                $this->ajax_command->setSelector($selector);
             }
 
-            $this->ajax->send();
+            $this->ajax_command->send();
         }
 
         return $this;
@@ -637,10 +654,13 @@ class Controller extends MvcAbstract
      *
      * @param string $params Paramertername
      * @param mixed $value Parametervalue
+     *
+     * @return \Core\Lib\Amvc\Controller
      */
     final protected function addParam($param, $value)
     {
         $this->params[$param] = $value;
+
         return $this;
     }
 
@@ -653,8 +673,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxTarget($target)
     {
-        if ($this->is_ajax) {
-            $this->ajax->setSelector($target);
+        if ($this->ajax_flag) {
+            $this->ajax_command->setSelector($target);
         }
 
         return $this;
@@ -669,8 +689,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxFunction($function)
     {
-        if ($this->is_ajax) {
-            $this->ajax->setFunction($function);
+        if ($this->ajax_flag) {
+            $this->ajax_command->setFunction($function);
         }
 
         return $this;
@@ -685,7 +705,7 @@ class Controller extends MvcAbstract
      */
     final public function getAjaxCommand($command_name = 'Dom\Html')
     {
-        return $this->di->get('core.ajax')->createCommand($command_name);
+        return $this->ajax->createCommand($command_name);
     }
 
     /**
