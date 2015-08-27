@@ -276,13 +276,13 @@ class Content
         switch ($this->router->getFormat()) {
 
             case 'json':
-                $this->headers[] = 'Content-type: application/json; charset=utf-8");';
+                $this->headers[] = 'Content-type: application/json; charset=utf-8';
                 $this->sendHeader();
                 echo json_encode($result);
                 return false;
 
             case 'xml':
-                $this->headers[] = "Content-Type: application/xml; charset=utf-8";
+                $this->headers[] = 'Content-Type: application/xml; charset=utf-8';
                 $this->sendHeader();
                 echo $result;
                 return false;
@@ -300,7 +300,7 @@ class Content
                 $this->js->init();
 
                 // Always use UTF-8
-                $this->headers[] = "Content-Type: text/html; charset=utf-8";
+                $this->headers[] = 'Content-Type: text/html; charset=utf-8';
 
                 // Add missing title
                 if (empty($this->title)) {
