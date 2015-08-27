@@ -4,7 +4,6 @@ namespace Core\Lib\Content\Html\FormDesigner;
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
-use Core\Lib\Traits\AnalyzeVarTrait;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\Form\Option;
 use Core\Lib\Content\Html\Form\Checkbox;
@@ -22,7 +21,6 @@ final class FormDesigner extends Form
 {
     use StringTrait;
     use TextTrait;
-    use AnalyzeVarTrait;
 
     /**
      * Forms group storage
