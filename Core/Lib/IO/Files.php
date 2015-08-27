@@ -309,6 +309,8 @@ class Files
      * Takes care of namespaces.
      *
      * @param string $class
+     *
+     * @return boolean
      */
     public function checkClassFileExists($class)
     {
