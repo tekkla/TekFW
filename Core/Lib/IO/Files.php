@@ -302,4 +302,16 @@ class Files
     {
         return $this->convertPHPSizeToBytes(ini_get('upload_max_filesize'));
     }
+
+    /**
+     * Checks for existing class file of a given classname.
+     *
+     * Takes care of namespaces.
+     *
+     * @param string $class
+     */
+    public function checkClassFileExists($class)
+    {
+        return file_exists(BASEDIR . '/' . str_replace('\\', '/', $class) . '.php');
+    }
 }
