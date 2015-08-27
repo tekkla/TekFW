@@ -2,9 +2,10 @@
 namespace Core\Lib\Traits;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * Text Trait
+ * TextTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -19,11 +20,15 @@ trait TextTrait
      * @param string $key
      * @param string $app
      *
+     * @throws RuntimeException
+     *
      * @return string
      */
     public function txt($key, $app = '')
     {
-        global $di;
+        if (!property_exists($this, 'di')) {
+            Throw new RuntimeException('TextTrait::txt() method cannot work without access to DI service container. Make sure that the object using this trait has this property set.');
+        }
 
         if (empty($app)) {
 
@@ -44,6 +49,6 @@ trait TextTrait
             }
         }
 
-        return $di->get('core.content.lang')->getTxt($key, $app);
+        return $this->di->get('core.content.lang')->getTxt($key, $app);
     }
 }

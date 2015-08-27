@@ -2,13 +2,14 @@
 namespace Core\Lib\Traits;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * Url Trait
+ * UrlTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license MIT
  * @copyright 2015
+ * @license MIT
  */
 trait UrlTrait
 {
@@ -16,13 +17,21 @@ trait UrlTrait
     use StringTrait;
 
     /**
-     * Generates url by using routename and optional prameters
+     * Generates url by using routename and optional prameters.
      *
      * @param string $route Name of route to compile
      * @param array $params Optional parameter list
+     *
+     * @throws RuntimeException
+     *
+     * @return string
      */
     protected function url($route, Array $params = [], $app = '')
     {
+        if (! property_exists($this, 'di')) {
+            Throw new RuntimeException('UrlTrait::url() method cannot work without access to DI service container. Make sure that the object using this trait has this property set.');
+        }
+
         if (empty($app)) {
 
             if (! property_exists($this, 'app_name')) {

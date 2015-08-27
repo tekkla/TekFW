@@ -1,10 +1,14 @@
 <?php
 namespace Core\Lib\Traits;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
+ * ArrayTrait.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 trait ArrayTrait
 {
@@ -16,12 +20,15 @@ trait ArrayTrait
      * @param array $insert Array to insert inti $array
      * @param string $search Key to search and insert after
      * @param number $position Position after the found key to insert into
+     *
+     * @throws InvalidArgumentException
+     *
      * @return array
      */
     function arrayInsertArrayAfter(&$array, $search, $insert, $position = 0)
     {
         if (! is_array($array)) {
-            throw new \InvalidArgumentException('Wrong parameter type.', 1000);
+            throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
 
         $counter = 0;
@@ -47,12 +54,15 @@ trait ArrayTrait
      * @param array $array
      * @param string $search
      * @param number $position
+     *
+     * @throws InvalidArgumentException
+     *
      * @return array
      */
     function arrayGetSlicesByKey($array, $search, $position = 0)
     {
         if (! is_array($array)) {
-            throw new \InvalidArgumentException('Wrong parameter type.', 1000);
+            throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
 
         $counter = 0;
@@ -78,12 +88,15 @@ trait ArrayTrait
      * Checks a value whether to be an array, if its empty and when not an empty array if it's an associative one.
      *
      * @param array $array
+     *
+     * @throws InvalidArgumentException
+     *
      * @return boolean
      */
     function arrayIsAssoc($array)
     {
         if (! is_array($array)) {
-            Throw new \InvalidArgumentException('ArrayTrait::arrayIsAssoc() : You can only check arrays to be associative.');
+            Throw new InvalidArgumentException('ArrayTrait::arrayIsAssoc() : You can only check arrays to be associative.');
         }
 
         if (empty($array)) {
@@ -91,9 +104,5 @@ trait ArrayTrait
         }
 
         return (bool) count(array_filter(array_keys($array), 'is_string'));
-    }
-
-    function arrayAddTo($mixed) {
-
     }
 }

@@ -1,19 +1,21 @@
 <?php
 namespace Core\Lib\Traits;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * String Trait
+ * StringTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015
  * @license MIT
- *
  */
 trait StringTrait
 {
 
     /**
      * Shortens a string to the given length and adds .
+     *
      *
      * .. at the end of string
      *
@@ -82,6 +84,9 @@ trait StringTrait
      * and function.
      *
      * @param string $val
+     *
+     * @throws InvalidArgumentException#
+     *
      * @return string Example:
      *         IN: MyName | OUT: my_name
      *         IN: ThisIsATest | OUT: this_is_a_test
@@ -89,11 +94,11 @@ trait StringTrait
     public function uncamelizeString($string)
     {
         if (empty($string)) {
-            Throw new \InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
+            Throw new InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
         }
 
         if (! is_string($string)) {
-            Throw new \InvalidArgumentException('Only strings can be used to be uncamelized.', 1000);
+            Throw new InvalidArgumentException('Only strings can be used to be uncamelized.', 1000);
         }
 
         // set first letter to lowercase
