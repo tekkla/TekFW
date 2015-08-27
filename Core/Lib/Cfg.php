@@ -2,12 +2,12 @@
 namespace Core\Lib;
 
 use Core\Lib\Data\DataAdapter;
-use Core\Lib\Traits\SerializeTrait;
-use Core\AppsSec\Core\Exception\ConfigException;
 use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Traits\SerializeTrait;
+use Core\Lib\Errors\Exceptions\ConfigException;
 
 /**
- * Handles all TekFW low level config related stuff
+ * Cfg.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -29,17 +29,24 @@ final class Cfg
      */
     private $adapter;
 
+    /**
+     * Constructor
+     *
+     * @param DataAdapter $adapter
+     */
     public function __construct(DataAdapter $adapter)
     {
         $this->adapter = $adapter;
     }
 
     /**
-     * Get an cfg setting
+     * Get a cfg value.
      *
      * @param string $app
      * @param string $key
-     * @throws Error
+     *
+     * @throws ConfigException
+     *
      * @return mixed
      */
     public function get($app, $key = null)
@@ -59,7 +66,7 @@ final class Cfg
     }
 
     /**
-     * Set a cfg setting
+     * Set a cfg value.
      *
      * @param string $app
      * @param string $key
@@ -104,6 +111,8 @@ final class Cfg
      * Parameter is used as initial core config
      *
      * @param array $cfg
+     *
+     * @throws ConfigException
      */
     public function init($cfg = array())
     {
