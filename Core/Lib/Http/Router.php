@@ -3,9 +3,10 @@ namespace Core\Lib\Http;
 
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\ConvertTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Router class which handles routes and request like post or get.
+ * Router.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -71,8 +72,6 @@ final class Router extends \AltoRouter
      * @var string
      */
     private $name = '';
-
-
 
     private $raw = false;
 
@@ -164,7 +163,7 @@ final class Router extends \AltoRouter
             // Stroe params
             $this->params = $match['params'];
 
-            #var_dump($this);
+            // var_dump($this);
         }
 
         return $match;
@@ -273,7 +272,7 @@ final class Router extends \AltoRouter
      *
      * @param string $format Output format: xml, json or html
      *
-     * @throws \ErrorException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Http\Router
      */
@@ -286,8 +285,8 @@ final class Router extends \AltoRouter
             'file'
         ];
 
-        if (!in_array(strtolower($format), $allowed)) {
-            Throw new \ErrorException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
+        if (! in_array(strtolower($format), $allowed)) {
+            Throw new InvalidArgumentException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
         }
 
         $this->format = $format;
@@ -400,23 +399,23 @@ final class Router extends \AltoRouter
      *
      * @param mnixed $value
      *
-     * @throws \RuntimeException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Router
      */
-    public function setParam($param, $value=null) {
-
-        if (!is_array($param) && $value === null) {
-            Throw new \RuntimeException('Setting router parameter with NULL value is not allowed');
+    public function setParam($param, $value = null)
+    {
+        if (! is_array($param) && $value === null) {
+            Throw new InvalidArgumentException('Setting router parameter with NULL value is not allowed');
         }
 
-        if (!is_array($param)) {
+        if (! is_array($param)) {
             $param = [
                 $param => $value
             ];
         }
 
-        foreach ($param as $key => $value ) {
+        foreach ($param as $key => $value) {
             $this->params[$key] = $value;
         }
 
