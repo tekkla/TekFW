@@ -3,6 +3,8 @@ namespace Core\Lib\IO;
 
 use Core\Lib\Logging\Logging;
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\FileException;
 
 /**
  * File.php
@@ -52,10 +54,10 @@ class Files
      *
      * @param $dirname Path to the dir
      *
-     * @return boolean
+     * @throws FileException
+     * @throws InvalidArgumentException
      *
-     * @throws \InvalidArgumentException
-     * @throws \RuntimeException
+     * @return boolean
      */
     public function deleteDir($dirname)
     {
@@ -63,11 +65,11 @@ class Files
             $dir_handle = opendir($dirname);
         }
         else {
-            Throw new \InvalidArgumentException('The dirname parameter is not a valid directory');
+            Throw new InvalidArgumentException('The dirname parameter is not a valid directory');
         }
 
         if (! $dir_handle) {
-            Throw new \RuntimeException('Directory handle couldn\'t be created.');
+            Throw new FileException('Directory handle couldn\'t be created.');
         }
 
         while (($file = readdir($dir_handle)) != false) {
@@ -117,14 +119,14 @@ class Files
      * @param string $destination
      * @param bool $check_exists
      *
-     * @return boolean
+     * @throws FileException
      *
-     * @throws \RuntimeException
+     * @return boolean
      */
     public function moveUploadedFile($source, $destination, $check_exists = true)
     {
         if ($check_exists == true && $this->exists($destination)) {
-            Throw new \RuntimeException('File already exits', 2001);
+            Throw new FileException('File already exits', 2001);
         }
 
         return move_uploaded_file($source, $destination);
@@ -157,14 +159,14 @@ class Files
      *
      * @param int $bytes
      *
-     * @return string unknown
+     * @throws InvalidArgumentException
      *
-     * @throws \InvalidArgumentException
+     * @return string unknown
      */
     public function convFilesize($bytes)
     {
         if (! $bytes == '0' . $bytes) {
-            Throw new \InvalidArgumentException('Wrong parameter type');
+            Throw new InvalidArgumentException('Wrong parameter type');
         }
 
         if ($bytes > 0) {
@@ -214,9 +216,9 @@ class Files
      *
      * @param string $path Directory path to get filelist from
      *
-     * @return void multitype:string
+     * @throws InvalidArgumentException
      *
-     * @throws \RuntimeException
+     * @return void multitype:string
      */
     public function getFilenamesFromDir($path)
     {
@@ -233,7 +235,7 @@ class Files
 
         // No handle, error exception
         if ($handle === false) {
-            Throw new \RuntimeException(sprintf('Path "%s" not found.', $path, 2000));
+            Throw new InvalidArgumentException(sprintf('Path "%s" not found.', $path, 2000));
         }
 
         while (($file = readdir($handle)) !== false) {
