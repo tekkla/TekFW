@@ -176,7 +176,10 @@ class DI implements \ArrayAccess
         $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
 
         // == AJAX ==========================================================
-        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', 'core.content.message');
+        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', [
+            'core.content.message',
+            'core.io.files'
+        ]);
 
         // == ERROR =========================================================
         $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
