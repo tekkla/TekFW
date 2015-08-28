@@ -187,6 +187,10 @@ return [
     'validator_numbermax' => 'The value exeeds the set maximum of $1',
     'validator_numberrange' => 'The value has to be between %d and %d.',
 
+    // Email
+    'validator_email' => 'This is not a valid mailadress.',
+    'validator_email_dnscheck' => 'The email host "%s" is unknown eg does not exist.',
+
     /**
      * **************************************************************************
      * Models

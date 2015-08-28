@@ -21,15 +21,27 @@ class EmailRule extends RuleAbstract
      */
     public function execute()
     {
+        $txt = 'validator_email';
+
         $result = filter_var($this->value, FILTER_VALIDATE_EMAIL);
 
-        list ($user, $domain) = explode("@", $this->value);
+        if ($result) {
 
-        // Perform dns check of mail domain
-        $result = checkdnsrr($domain, "MX");
+            list ($user, $domain) = explode("@", $this->value);
+
+            // Perform dns check of mail domain
+            if (isset($domain)) {
+
+                $result = checkdnsrr($domain, "MX");
+
+                if (! $result) {
+                    $txt = 'validator_email_dnscheck';
+                }
+            }
+        }
 
         if (! $result) {
-            $this->msg = $this->txt('validator_email');
+            $this->msg = sprintf($this->txt($txt), $domain);
         }
     }
 }
