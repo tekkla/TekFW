@@ -70,17 +70,14 @@ class Field implements \ArrayAccess
     private $default = '';
 
     /**
-     * Constructor
+     *
+     * @var array
      */
-    public function __construct()
-    {}
+    private $filter = [];
 
     /**
      * On echo field .
      *
-     *
-     *
-     * ..
      *
      * @return string
      */
@@ -435,6 +432,73 @@ class Field implements \ArrayAccess
     public function setSerialize($serialize)
     {
         $this->serialize = (bool) $serialize;
+
+        return $this;
+    }
+
+    /**
+     * Set filter statements for the field.
+     *
+     * @param string|array $filter
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function setFilter($filter)
+    {
+        $this->filter = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Adds a filter to the field
+     *
+     * @param string|array $filter
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function addFilter($filter)
+    {
+        $this->filter[] = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Returns the fields set filters
+     *
+     * @return array
+     */
+    public function getFilter()
+    {
+        return $this->filter;
+    }
+
+    /**
+     * Filters the fields value by using the set filter statements.
+     *
+     * It is possible to filter the field with multiple filters.
+     * This method uses filter_var_array() to filter the value.
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function filter()
+    {
+        if (! empty($this->filter)) {
+
+            $var = [
+                'data' => $this->value
+            ];
+
+            foreach ($this->filter as $filter) {
+
+                $args = [
+                    'data' => $filter
+                ];
+
+                $this->value = filter_var_array($var, $args)['data'];
+            }
+        }
 
         return $this;
     }

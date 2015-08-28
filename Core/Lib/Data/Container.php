@@ -164,33 +164,36 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
             // Nullify fields when not set
             $null_fields = [
-                'size',
-                'control',
-                'default'
+                'size' => null,
+                'control' => null,
+                'default' => null,
+                'filter' => []
             ];
 
-            foreach ($null_fields as $to_check) {
+            foreach ($null_fields as $to_check => $empty_value) {
                 if (! isset($field[$to_check])) {
-                    $field[$to_check] = null;
+                    $field[$to_check] = $empty_value;
                 }
             }
 
-            $this->createField($name, $field['type'], $field['size'], $field['primary'], $field['serialize'], $field['validate'], $field['control'], $field['default']);
+            $this->createField($name, $field['type'], $field['size'], $field['primary'], $field['serialize'], $field['validate'], $field['control'], $field['default'], $field['filter']);
         }
     }
 
     /**
-     * Creates a container field and adds it to the container
+     * Creates a container field, adds it to the container and returns e refrence to this field.
      *
-     * @param string $name Fieldname
-     * @param string $type Fieldtype
-     * @param boolean $primary Primary key flag
-     * @param boolean $serialize Serialize flag
-     * @param string|array $validate One or more validation rules
-     *
-     * @return \Core\Lib\Data\Container
+     * @param string $name name of field
+     * @param string $type Optional data type of field. (Default: variant)
+     * @param string $size Optional size of the field. (Default: null)
+     * @param string $primary Optional flag to set a field as primary key (Default: false)
+     * @param string $serialize Optional flag for value serialization (Default: false)
+     * @param array $validate Optional set of validation rules (Default: [])
+     * @param string $control Optional control type (Default: null)
+     * @param string $default Optional default value (Default: null)
+     * @param string|array $filter Optional filter statements (Default: [])
      */
-    public function createField($name, $type = 'variant', $size = null, $primary = false, $serialize = false, $validate = [], $control = null, $default = null)
+    public function &createField($name, $type = 'variant', $size = null, $primary = false, $serialize = false, $validate = [], $control = null, $default = null, $filter = [])
     {
         $field = new Field();
 
@@ -209,13 +212,17 @@ class Container implements \IteratorAggregate, \ArrayAccess
             $field->setDefault($default);
         }
 
+        if (! empty($filter)) {
+            $field->setFilter($filter);
+        }
+
         $field->setPrimary($primary);
         $field->setSerialize($serialize);
         $field->setValidation($validate);
 
         $this->fields[$name] = $field;
 
-        return $this;
+        return $field;
     }
 
     /**
@@ -328,6 +335,21 @@ class Container implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
+     * Runs filter() method on each field in container.
+     *
+     * @return Container
+     */
+    public function filter()
+    {
+        /* @var $field \Core\Lib\Data\Field */
+        foreach ($this->fields as $field) {
+            $field->filter();
+        }
+
+        return $this;
+    }
+
+    /**
      * Adds a field related error message.
      *
      * @param string $field Fieldname
@@ -394,32 +416,37 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return \Core\Lib\Data\DataContainer
      */
-    public function fill(Array $data, Array $validationset = [], Array $serialize = [])
+    public function fill(Array $data, Array $validationset = [], Array $serialize = [], $autofilter=false)
     {
         foreach ($data as $name => $value) {
 
             // Not existing field? Create a generic one.
-            if (! in_array($name, array_keys($this->fields))) {
-                $this->createField($name, 'string');
-            }
 
-            // Important: Explicite txype conversion!
+            /* @var $field \Core\lib\Data\Field */
+            $field = ! in_array($name, array_keys($this->fields)) ? $this->createField($name, 'string') : $this->fields[$name];
+
+            // Important: explicite type conversion!
             if (! $value instanceof Container && ! is_object($value) && ! is_array($value) && ! is_null($value)) {
-                settype($value, $this->fields[$name]->getType());
+                settype($value, $field->getType());
             }
 
             // Simple array check to determine array field type and set serialize flag
             if (is_array($value)) {
-                $this->fields[$name]->setType('array');
-                $this->fields[$name]->setSerialize(true);
+                $field->setType('array');
+                $field->setSerialize(true);
             }
 
             if ($value instanceof Container) {
-                $this->fields[$name]->setType('container');
-                $this->fields[$name]->setSerialize(true);
+                $field->setType('container');
+                $field->setSerialize(true);
             }
 
-            $this->fields[$name]->setValue($value);
+            $field->setValue($value);
+
+            // Filter only on demand
+            if ($autofilter) {
+                $field->filter();
+            }
         }
 
         if ($validationset) {
