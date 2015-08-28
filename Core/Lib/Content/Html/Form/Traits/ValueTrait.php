@@ -1,6 +1,7 @@
 <?php
 namespace Core\Lib\Content\Html\Form\Traits;
 
+use Core\Lib\Content\Html\Form\Select;
 /**
  * ValueTrait.php
  *
@@ -11,7 +12,7 @@ namespace Core\Lib\Content\Html\Form\Traits;
 trait ValueTrait
 {
 
-    private $value;
+    private $value = null;
 
     /**
      * Sets value attribute.
@@ -20,13 +21,22 @@ trait ValueTrait
      */
     public function setValue($value)
     {
-        $this->value = $value;
+
+        if ($this instanceof  Select) {
+            $this->value = $value;
+        } else {
+            $this->attribute['value'] = $value;
+        }
 
         return $this;
     }
 
     public function getValue()
     {
+        if ($this instanceof  Select) {
+            return $this->value;
+        }
+
         return isset($this->attribute['value']) ? $this->attribute['value'] : null;
     }
 }
