@@ -321,8 +321,6 @@ class App
             }
         }
 
-        $this->debugFbLog($args);
-
         // Create component be using di instance factory to get sure the
         // di services the container itself is injected properly
         return $this->di->instance($class, $args);
