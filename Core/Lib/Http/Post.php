@@ -164,6 +164,11 @@ class Post
             return false;
         }
 
+        // Trim data
+        array_walk_recursive($_POST[$app_small][$key_small], function(&$data) {
+            $data = trim($data);
+        });
+
         return $_POST[$app_small][$key_small];
     }
 
