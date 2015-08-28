@@ -95,46 +95,6 @@ class ExceptionHandler
     }
 
     /**
-     * Creates html error message
-     */
-    private function createErrorHtml($dismissable = false)
-    {
-        $this->error_html = '
-        <div class="alert alert-danger' . ($dismissable == true ? ' alert-dismissible' : '') . '" role="alert" id="' . $this->error_id . '">';
-
-        if ($dismissable == true) {
-            $this->error_html .= '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
-        }
-
-        switch (true) {
-            case $this->exception->getPublic():
-            case $this->user->isAdmin():
-            case $this->cfg->get('Core', 'skip_security_check'):
-                $this->error_html .= '
-                <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
-                <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
-                <p><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</p>
-                <hr>
-                <h4>Router</h4>
-                <pre><small>' . print_r($this->router->getStatus(), true) . '</small></pre>
-                <hr>
-                <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
-
-                break;
-
-            default:
-                $this->error_html .= '
-                <h3 class="no-top-margin">Error</h3>
-                <p>Sorry for that! Webmaster has been informed. Please try again later.</p>';
-        }
-
-        $this->error_html .= '
-        </div>';
-
-        return $this->error_html;
-    }
-
-    /**
      * Exceptionhandler
      *
      * @param \Exception $e
@@ -175,15 +135,6 @@ class ExceptionHandler
 
             // Prevent db logging on PDOException!!!
             $to_db = false;
-        }
-
-        if ($fatal == true) {
-            $this->fatal();
-        }
-
-        // Clean output buffer?
-        if ($clean_buffer == true) {
-            ob_clean();
         }
 
         // Log error
@@ -230,18 +181,80 @@ class ExceptionHandler
         // Ajax output
         if ($this->router->isAjax()) {
 
+            // Stop output buffering by removing content
+            ob_end_clean();
+
+            // Clean current command stack
+            $this->ajax->cleanCommandStack();
+
             $command = $this->ajax->createCommand('Act\Error');
-            $command->error($this->createErrorHtml(true), uniqid());
+
+            $command->error($this->createErrorHtml(true));
             $command->send();
 
-            return false;
+            // We have to send a 200 response code or jQueries ajax handler
+            // recognizes the error and cancels result processing
+            http_response_code(200);
+            header('Content-type: application/json; charset=utf-8');
+
+            die($this->ajax->process());
+        }
+
+        // Clean output buffer?
+        if ($clean_buffer == true) {
+            ob_clean();
+        }
+
+        if ($fatal == true) {
+            $this->fatal();
         }
 
         return $this->createErrorHtml(false);
     }
 
     /**
-     *
+     * Creates html error message
+     */
+    private function createErrorHtml($dismissable = false)
+    {
+        $this->error_html = '
+        <div class="alert alert-danger' . ($dismissable == true ? ' alert-dismissible' : '') . '" role="alert" id="' . $this->error_id . '">';
+
+        if ($dismissable == true) {
+            $this->error_html .= '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
+        }
+
+        switch (true) {
+            case $this->exception->getPublic():
+            case $this->user->isAdmin():
+            case $this->cfg->get('Core', 'skip_security_check'):
+                $this->error_html .= '
+                <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
+                <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
+                <p><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</p>
+                <hr>
+                <h4>Router</h4>
+                <div style="max-height: 200px; overflow-y: scroll;">
+                    <pre><small>' . print_r($this->router->getStatus(), true) . '</small></pre>
+                </div>
+                <hr>
+                <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
+
+                break;
+
+            default:
+                $this->error_html .= '
+                <h3 class="no-top-margin">Error</h3>
+                <p>Sorry for that! Webmaster has been informed. Please try again later.</p>';
+        }
+
+        $this->error_html .= '
+        </div>';
+
+        return $this->error_html;
+    }
+
+    /**
      */
     private function fatal()
     {
