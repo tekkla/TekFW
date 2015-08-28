@@ -2,6 +2,8 @@
 namespace Core\Lib\Ajax;
 
 use Core\Lib\Content\Message;
+use Core\Lib\IO\Files;
+use Core\Lib\Errors\Exceptions\AjaxException;
 
 /**
  * Ajax.php
@@ -54,9 +56,16 @@ final class Ajax
      */
     private $message;
 
-    public function __construct(Message $message)
+    /**
+     *
+     * @var Files
+     */
+    private $files;
+
+    public function __construct(Message $message, Files $files)
     {
         $this->message = $message;
+        $this->files = $files;
     }
 
     /**
@@ -155,10 +164,24 @@ final class Ajax
     }
 
     /**
+     * Cleans the current ajax command stack.
+     *
+     * @return \Core\Lib\Ajax\Ajax
+     */
+    public function cleanCommandStack()
+    {
+        $this->ajax = [];
+
+        return $this;
+    }
+
+    /**
      * Creates and returns a named ajax command.
      * Commands are split into DOM (Dom) manipulation and predifined actions (Act) to call.
      *
      * @param string $command_name Name of command to create. Default: Dom\Html
+     *
+     * @throws AjaxException
      *
      * @return \Core\Lib\Ajax\Command
      */
@@ -170,6 +193,12 @@ final class Ajax
 
         $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
-        return $this->di->instance($class);
+        if (!$this->files->checkClassFileExists($class)) {
+            Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
+        }
+
+        return $this->di->instance($class, [
+            'core.ajax'
+        ]);
     }
 }
