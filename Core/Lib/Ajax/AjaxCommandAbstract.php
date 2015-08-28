@@ -49,15 +49,19 @@ abstract class AjaxCommandAbstract
     protected $id = '';
 
     /**
+     *
+     * @var Ajax
+     */
+    private $ajax;
+
+    /**
      * Constructor with option to parse command from definition array
      *
      * @param array $definition Definition to parse as ajax command
      */
-    public function __construct(Array $definition = [])
+    public function __construct(Ajax $ajax)
     {
-        if ($definition) {
-            $this->parse($definition);
-        }
+        $this->ajax = $ajax;
     }
 
     /**
@@ -194,7 +198,7 @@ abstract class AjaxCommandAbstract
      */
     public function send()
     {
-        $this->di->get('core.ajax')->add($this);
+        $this->ajax->add($this);
     }
 
     /**
