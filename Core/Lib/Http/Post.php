@@ -165,7 +165,8 @@ class Post
         }
 
         // Trim data
-        array_walk_recursive($_POST[$app_small][$key_small], function(&$data) {
+        array_walk_recursive($_POST[$app_small][$key_small], function (&$data)
+        {
             $data = trim($data);
         });
 
