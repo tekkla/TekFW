@@ -118,10 +118,10 @@ final class Validator
 
                 // If no error message is set, use the default validator error
                 if (empty($msg)) {
-                    $this->msg[] = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
+                    $msg = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
                 }
 
-                $this->msg[] = $msg;
+                $this->msg[] = htmlspecialchars($msg, ENT_COMPAT, 'UTF-8');
             }
         }
 
