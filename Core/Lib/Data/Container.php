@@ -445,6 +445,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
             // Filter only on demand
             if ($autofilter) {
+                \FB::log('Autofilter');
                 $field->filter();
             }
         }
