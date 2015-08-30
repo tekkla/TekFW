@@ -7,9 +7,11 @@ use Core\Lib\Data\DataAdapter;
 use Core\Lib\Http\Session;
 
 /**
+ * Logging.php
  *
- * @author mzorn
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class Logging
 {
@@ -26,7 +28,7 @@ class Logging
         $this->session = $session;
     }
 
-    public function log($text, $type = 'general', $state = 0)
+    private function log($text, $type = 'general', $code = 0)
     {
         $time = time();
 
@@ -40,7 +42,7 @@ class Logging
         $message['ip'] = $_SERVER['REMOTE_ADDR'];
         $message['url'] = $_SERVER['REQUEST_URI'];
         $message['id_user'] = $this->session->get('id_user');
-        $message['state'] = $state;
+        $message['code'] = $code;
 
         $this->saveLog($message);
     }
@@ -49,11 +51,11 @@ class Logging
      * Generates a general log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function general($text, $state = 0)
+    public function general($text, $code = 0)
     {
-        $this->log($text, 'general', $state);
+        $this->log($text, 'general', $code);
 
         return $this;
     }
@@ -62,11 +64,11 @@ class Logging
      * Generates a system log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function core($text, $state = 0)
+    public function core($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -75,11 +77,11 @@ class Logging
      * Generates a app log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function app($text, $app, $state = 0)
+    public function app($text, $app, $code = 0)
     {
-        $this->log($text, $app, $state);
+        $this->log($text, $app, $code);
 
         return $this;
     }
@@ -88,11 +90,11 @@ class Logging
      * Generates a general security log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function security($text, $state = 0)
+    public function security($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -101,11 +103,24 @@ class Logging
      * Generates a suspicious log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function suspicious($text, $state = 0)
+    public function suspicious($text, $code = 0)
     {
-        $this->log($text, 'security::suspicious', $state);
+        $this->log($text, 'security::suspicious', $code);
+
+        return $this;
+    }
+
+    /**
+     * Generates a ban log message
+     *
+     * @param string $text Text to log
+     * @param number $code Flexible code flag
+     */
+    public function ban($text)
+    {
+        $this->log($text, __FUNCTION__, - 1);
 
         return $this;
     }
@@ -114,11 +129,11 @@ class Logging
      * Generates a error log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function error($text, $state = 0)
+    public function error($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -127,11 +142,11 @@ class Logging
      * Generates a user log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function user($text, $state = 0)
+    public function user($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -140,11 +155,11 @@ class Logging
      * Generates a language log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function language($text, $state = 0)
+    public function language($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -153,11 +168,11 @@ class Logging
      * Generates a database log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function database($text, $state = 0)
+    public function database($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -166,11 +181,11 @@ class Logging
      * Generates a info log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function info($text, $state = 0)
+    public function info($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -179,11 +194,11 @@ class Logging
      * Generates a warning log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function warning($text, $state = 0)
+    public function warning($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -192,11 +207,11 @@ class Logging
      * Generates a danger log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function danger($text, $state = 0)
+    public function danger($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -205,11 +220,11 @@ class Logging
      * Generates a success log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function success($text, $state = 0)
+    public function success($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
@@ -218,15 +233,46 @@ class Logging
      * Generates a login log message
      *
      * @param string $text Text to log
-     * @param number $state Flexible state flag
+     * @param number $code Flexible code flag
      */
-    public function login($text, $state = 0)
+    public function login($text, $code = 0)
     {
-        $this->log($text, __FUNCTION__, $state);
+        $this->log($text, __FUNCTION__, $code);
 
         return $this;
     }
 
+    /**
+     * Generates a logout log message
+     *
+     * @param string $text Text to log
+     * @param number $code Flexible code flag
+     */
+    public function logout($text, $code = 0)
+    {
+        $this->log($text, __FUNCTION__, $code);
+
+        return $this;
+    }
+
+    /**
+     * Generates a file log message
+     *
+     * @param string $text Text to log
+     * @param number $code Flexible code flag
+     */
+    public function file($text, $code = 0)
+    {
+        $this->log($text, __FUNCTION__, $code);
+
+        return $this;
+    }
+
+    /**
+     * Saves logentry to db
+     *
+     * @param Container $message
+     */
     private function saveLog(Container $message)
     {
         $query = [
@@ -236,5 +282,49 @@ class Logging
 
         $this->adapter->query($query);
         $this->adapter->execute();
+    }
+
+    /**
+     * Returns the number of ban entires in the log for an IP address.
+     *
+     * @param string $ip IP address to check
+     *
+     * @return number
+     */
+    public function countBanLogEntries($ip)
+    {
+        $query = [
+            'table' => 'logs',
+            'fields' => 'COUNT(ip)',
+            'filter' => 'ip=:ip AND type="ban"',
+            'params' => [
+                ':ip' => $ip
+            ]
+        ];
+
+        $this->adapter->query($query);
+
+        return $this->adapter->value();
+    }
+
+    /**
+     * Returns the date of last ban log entry for an IP address.
+     *
+     * @param string $ip IP address to check
+     *
+     * @return string
+     */
+    public function getDateOfLastBanLogEntry($ip)
+    {
+        $query = [
+            'table' => 'logs',
+            'fields' => 'logdate',
+            'filter' => 'ip=:ip AND type="ban"',
+            'params' => [
+                ':ip' => $ip
+            ],
+            'order' => 'logstamp DESC',
+            'limit' => 1
+        ];
     }
 }
