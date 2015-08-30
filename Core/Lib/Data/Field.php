@@ -76,9 +76,6 @@ class Field implements \ArrayAccess
     private $filter = [];
 
     /**
-     * On echo field .
-     *
-     *
      * @return string
      */
     public function __toString()
@@ -495,6 +492,8 @@ class Field implements \ArrayAccess
                 $args = [
                     'data' => $filter
                 ];
+
+                \FB::log($filter);
 
                 $this->value = filter_var_array($var, $args)['data'];
             }
