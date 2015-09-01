@@ -52,7 +52,7 @@ try {
     require_once (BASEDIR . '/vendor/autoload.php');
 
     // Register core classloader
-    require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
+    require_once (COREDIR . '/Lib/SplClassLoader.php');
 
     // Register Core classloader
     $loader = new SplClassLoader('Core', BASEDIR);
@@ -161,6 +161,7 @@ try {
     $di->get('core.content')->create();
 }
 catch (Exception $e) {
+    echo 'Firstline Exception';
     echo $di->get('core.error')->handleException($e, true);
 }
 
