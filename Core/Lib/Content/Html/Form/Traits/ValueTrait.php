@@ -38,12 +38,14 @@ trait ValueTrait
     public function getValue()
     {
         switch (true) {
-            case ($this instanceof Select):
-                return !empty($this->value) ? $this->value : null;
-            case ($this instanceof Textarea):
-                return !empty($this->inner) ? $this->inner : null;
+            case ($this instanceof Select && !empty($this->value)):
+                return $this->value;
+            case ($this instanceof Textarea && !empty($this->inner)):
+                return $this->inner;
+            case (isset($this->attribute['value'])):
+                return $this->attribute['value'];
             default:
-                return isset($this->attribute['value']) ? $this->attribute['value'] : null;
+                return  null;
         }
     }
 }
