@@ -10,8 +10,8 @@
     "components/jquery" : "=1.9.1",
     "components/font-awesome" : "=4.2.0",
     "components/bootstrap" : "=3.2.0",
-    "swiftmailer/swiftmailer" : ">=v5.3.0",
-    "tecnick.com/tcpdf" : ">=6.0.098"
+    "tecnick.com/tcpdf" : ">=6.0.098",
+    "phpmailer/phpmailer" : ">=v5.2.10"
   },
   "repositories" : [ {
     "type" : "composer",
