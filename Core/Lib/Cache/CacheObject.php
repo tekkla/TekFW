@@ -14,7 +14,7 @@ class CacheObject
     private $data = [
         'key' => '',
         'content' => '',
-        'ttl' => 3600,
+        'ttl' => 0,
         'timestamp' => 0,
         'cachedir' => ''
     ];
@@ -30,9 +30,10 @@ class CacheObject
             $this->data['cachedir'] = CACHEDIR;
         }
 
+        // Always use current timestamp
         $this->data['timestamp'] = time();
 
-        $this->expires_on = $this->data['timestamp'] + $this->data['ttl'];
+        $this->expires_on = $this->data['ttl'] > 0 ? $this->data['timestamp'] + $this->data['ttl'] : strtotime('2099-12-31');
     }
 
     /**
@@ -232,9 +233,9 @@ class CacheObject
      *
      * @return string
      */
-    public function export()
+    public function export($complex=false)
     {
-        return '<?php return ' . var_export($this->data, true) . '; ?>';
+        return $complex ? '<?php return ' . var_export($this->data, true) . '; ?>' : $this->data;
     }
 
     /**
