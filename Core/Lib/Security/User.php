@@ -222,4 +222,29 @@ class User
             }
         }
     }
+
+    public function create($username, $password, $activation_mail=false)
+    {
+        $activation_key = bin2hex($this->security->getRandomToken(64));
+
+        $query = [
+            'table' => 'users',
+            'data' => [
+                'username' => $username,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'activation' => $activation_key
+            ]
+        ];
+
+        $this->adapter->query($query);
+        $this->adapter->execute();
+
+        $id_user = $this->adapter->lastInsertId();
+
+        if ($activation_mail) {
+            $mail = 'activate?key=' . $activation_key;
+
+            echo $mail;
+        }
+    }
 }
