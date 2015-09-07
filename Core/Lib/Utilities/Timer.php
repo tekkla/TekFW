@@ -1,11 +1,13 @@
 <?php
 namespace Core\Lib\Utilities;
 
+use Core\Lib\Errors\Exceptions\NoticeException;
+
 /**
- * Timer class for time measurement
+ * Timer.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class Timer
@@ -38,14 +40,14 @@ class Timer
     /**
      * Starts timer and creates first checkpoint
      *
-     * @throws \RuntimeException
+     * @throws NoticeException
      *
      * @return \Core\Lib\Utilities\Timer
      */
     public function start()
     {
         if ($this->running) {
-            Throw new \RuntimeException('Timer is already running.');
+            Throw new NoticeException('Timer is already running.');
         }
 
         $this->start = microtime(true);
@@ -55,21 +57,22 @@ class Timer
         return $this;
     }
 
-
     /**
      * Stopps timer and returns difference from start
+     *
+     * @throws NoticeException
      */
     public function stop()
     {
-        if (!$this->running) {
-            Throw new \RuntimeException('Timer is not running.');
+        if (! $this->running) {
+            Throw new NoticeException('Timer is not running.');
         }
 
         $this->end = microtime(true);
         $this->checkpoints['end'] = $this->end;
         $this->running = false;
 
-        return  $this->getDiff();
+        return $this->getDiff();
     }
 
     /**
