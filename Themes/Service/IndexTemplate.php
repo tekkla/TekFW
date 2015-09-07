@@ -38,10 +38,19 @@ class IndexTemplate extends Template
     public function Body()
     {
         echo '
-        <body>',
-            $this->getContent(),
-            $this->getScript('below'),
-        '</body>';
+        <body>';
+
+            // Navbar
+            $this->createMenu();
+
+            // Message container
+            echo '<div id="messages" class="container">', $this->getMessages(), '</div>';
+
+            // Main content
+            echo '<div class="container" id="content">', $this->getContent(), '</div>',
+
+    		$this->getScript('below'),
+	   '</body>';
     }
 
     public function htmlBelow()
@@ -51,63 +60,69 @@ class IndexTemplate extends Template
 
     private function createMenu()
     {
-        $menu_items = $this->getNavbar(true);
-
-        echo '<nav class="navbar navbar-default">
-  <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">Brand</a>
-    </div>
-
-    <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
-        <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-        <li><a href="#">Link</a></li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-            <li class="divider"></li>
-            <li><a href="#">One more separated link</a></li>
-          </ul>
-        </li>
-      </ul>
-      <form class="navbar-form navbar-left" role="search">
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Search">
+        echo '
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">', $this->content->getBrand() , '</a>
         </div>
-        <button type="submit" class="btn btn-default">Submit</button>
-      </form>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="#">Link</a></li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div><!-- /.navbar-collapse -->
-  </div><!-- /.container-fluid -->
+        <div class="collapse navbar-collapse">';
+
+            $service = $this->getMenu('service');
+
+            if ($service) {
+                echo '<ul class="nav navbar-nav">';
+
+                foreach($service->getItems() as $item) {
+                    echo '<li><a data-ajax href="',  $item->geTurl(), '">', $item->getText(), '</a></li>';
+                }
+
+                echo '</ul>';
+            }
+
+            //  Add admin menu and login button
+            $admin = $this->getMenu('admin');
+            $login = $this->getMenu('login');
+
+            if ($admin || $login) {
+
+                echo'
+                <ul class="nav navbar-nav navbar-right">';
+
+                    if ($admin) {
+                        echo '
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">', $admin->getText() ,' <span class="caret"></span></a>
+                            <ul class="dropdown-menu">';
+
+                            foreach($admin->getItems() as $item) {
+                                echo '<li><a href="',  $item->getUrl(), '">', $item->getText(), '</a></li>';
+                            }
+
+                            echo '
+                            </ul>
+                        </li>';
+                    }
+
+                    if ($login) {
+                        echo '<li><a href="',  $login->getUrl(), '">', $login->getText(), '</a></li>';
+                    }
+
+                echo '
+                </ul>';
+            }
+
+            echo '
+        </div>
+    </div>
 </nav>';
 
-        var_dump($menu_items);
     }
 }
 
