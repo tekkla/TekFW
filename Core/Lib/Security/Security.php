@@ -10,16 +10,11 @@ use Core\Lib\Data\Adapter\Database;
 use Core\Lib\Traits\DebugTrait;
 
 /**
- * Security
- *
- * For login and permission handling
+ * Security.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
- * @todo Find better solution for GC of expired autologin tokens
  */
 class Security
 {
@@ -593,28 +588,27 @@ class Security
     {
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
-            $this->fbLog('is Guest');
+            $this->debugFbLog('is Guest');
             return false;
         }
 
         // Allow access to all users when perms argument is empty
         if (empty($perms)) {
-            $this->fbLog('no Perms');
+            $this->debugFbLog('no Perms');
             return true;
         }
 
         // Administrators are supermen :P
         if ($this->user->isAdmin()) {
-            $this->fbLog('is Admin');
-            $this->fbLog($this->user->getGroups());
+            $this->debugFbLog('is Admin');
+            $this->debugFbLog($this->user->getGroups());
             return true;
         }
 
         // Explicit array conversion of perms arg
         if (! is_array($perms)) {
             $perms = (array) $perms;
-            $this->fbLog($perms);
-
+            $this->debugFbLog($perms);
         }
 
         // User has the right to do this?
