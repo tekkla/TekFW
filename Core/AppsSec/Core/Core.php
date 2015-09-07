@@ -283,7 +283,15 @@ final class Core extends App
             'group' => 'cache',
             'control' => 'text',
             'default' => '3600'
-        ]
+        ],
+        'cache_memcache_server' => [
+            'group' => 'cache',
+            'control' => 'text',
+        ],
+        'cache_memcache_port' => [
+            'group' => 'cache',
+            'control' => 'text',
+        ],
     ];
 
     // Apps routes
