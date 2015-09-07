@@ -69,12 +69,6 @@ class Textarea extends FormAbstract
 
     public function build()
     {
-        if ($this->value === null) {
-            $this->value = '';
-        }
-
-        $this->inner = $this->value;
-
         return parent::build();
     }
 }
