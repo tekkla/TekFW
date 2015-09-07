@@ -2,13 +2,11 @@
 namespace Core\Lib\Utilities;
 
 /**
- * Class for date related functions
+ * Date.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class Date
 {
