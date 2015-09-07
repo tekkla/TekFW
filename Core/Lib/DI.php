@@ -128,7 +128,9 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
         // == CACHE ========================================================
-        $this->mapService('core.cache', '\Core\Lib\Cache\Cache');
+        $this->mapService('core.cache', '\Core\Lib\Cache\Cache', [
+            'core.cfg'
+        ]);
         $this->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
 
         // == IO ===========================================================
