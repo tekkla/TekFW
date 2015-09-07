@@ -300,7 +300,7 @@ class Template
 
         ob_start();
 
-        echo '<div class="core-message">';
+        echo '<div id="core-message">';
 
         foreach ($messages as $msg) {
 
