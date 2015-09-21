@@ -74,36 +74,44 @@ final class Css
     {
         $this->mode = 'core';
 
-        $bootstrap_css = $this->cfg->get('Core', 'theme') . '/css/bootstrap.min.css';
+        // Bootstrap version from config
+        $version = $this->cfg->get('Core', 'bootstrap_version');
+
+        // Core and theme file
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/css/bootstrap.min.css';
 
         // Add existing local user/theme related bootstrap file or load it from cdn
-        if (file_exists(THEMESDIR . '/' . $bootstrap_css)) {
-            $this->link(THEMESURL . '/' . $bootstrap_css);
-        }
-        else {
-
+        if ($this->cfg->get('Core', 'bootstrap_use_local') && file_exists(THEMESDIR . $file)) {
+            $this->link(THEMESURL . $file);
+        } else {
             // Add bootstrap main css file from cdn
             $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/bootstrap.min.css');
-
-            // Add existing local user/theme related bootstrap file or load it from cdn
-            if (file_exists($this->cfg->get('Core', 'dir_css') . '/bootstrap-theme.css')) {
-                $this->link($this->cfg->get('Core', 'url_css') . '/bootstrap-theme.css');
-            }
-            else {
-                $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/bootstrap-theme.min.css');
-            }
         }
+
+        // Add existing local user/theme related bootstrap file or load it from cdn
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/css/bootstrap-theme.min.css';
+
+        if ($this->cfg->get('Core', 'bootstrap_use_local') && file_exists(THEMESDIR . $file)) {
+            $this->link(THEMESURL . $file);
+        } else {
+            // Add bootstrap theme file from cdn
+            $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/bootstrap-theme.min.css');
+        }
+
+        // Fontawesome file
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/css/font-awesome.min.css';
 
         // Add existing font-awesome font icon css file or load it from cdn
-        if (file_exists($this->cfg->get('Core', 'dir_css') . '/font-awesome-' . $this->cfg->get('Core', 'fontawesome_version') . '.min.css')) {
-            $this->link($this->cfg->get('Core', 'url_css') . '/font-awesome-' . $this->cfg->get('Core', 'fontawesome_version') . '.min.css');
-        }
-        else {
-            $this->link('https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css');
+        if ($this->cfg->get('Core', 'fontawesome_use_local') && file_exists(THEMESDIR . $file)) {
+            $this->link(THEMESURL . $file);
+        } else {
+            $this->link('https://maxcdn.bootstrapcdn.com/font-awesome/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/font-awesome.min.css');
         }
 
         // Add general TekFW css file
-        $this->link($this->cfg->get('Core', 'url_css') . '/Core.css');
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/css/Core.css';
+
+        $this->link(THEMESURL . $file);
 
         $this->mode = 'apps';
     }
@@ -117,8 +125,7 @@ final class Css
     {
         if ($this->mode == 'core') {
             self::$core_css[] = $css;
-        }
-        else {
+        } else {
             self::$app_css[] = $css;
         }
 
@@ -188,8 +195,7 @@ final class Css
 
                     if (strpos($filename, BASEURL) !== false) {
                         $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
-                    }
-                    else {
+                    } else {
                         $files[] = $filename;
                     }
 
