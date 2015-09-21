@@ -125,11 +125,6 @@ final class Core extends App
             'control' => 'switch',
             'default' => 0
         ],
-        'js_modernizr' => [
-            'group' => 'js',
-            'control' => 'switch',
-            'default' => 0
-        ],
         'js_fadeout_time' => [
             'group' => 'js',
             'control' => [
@@ -148,23 +143,11 @@ final class Core extends App
             ]
         ],
 
-        // Group: Minify
-        'css_minify' => [
-            'group' => 'minify',
-            'control' => 'switch',
-            'default' => 0
-        ],
-        'js_minify' => [
-            'group' => 'minify',
-            'control' => 'switch',
-            'default' => 0
-        ],
-
         // Bootstrap
         'bootstrap_version' => [
             'group' => 'style',
             'control' => 'input',
-            'default' => '3.1.1',
+            'default' => '3.3.5',
             'translate' => false,
             'validate' => [
                 'required'
