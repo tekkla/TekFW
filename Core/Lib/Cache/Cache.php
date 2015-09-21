@@ -65,13 +65,14 @@ class Cache
                 $data = $object->export();
             }
             else {
-                $fp = fopen($filename, 'w+');
-                // Important to set the filemodification as objects timestamp!
-                $object->setTimestamp(filemtime($filename));
                 $data = $object->export(true);
             }
         }
         else {
+            $fp = fopen($filename, 'w+');
+            // Important to set the filemodification as objects timestamp!
+            $object->setTimestamp(filemtime($filename));
+
             $data = $object->getContent();
         }
 
@@ -148,6 +149,8 @@ class Cache
      */
     private function connectMemcached()
     {
+        return true;
+
         if ($this->cfg->exists('Core', 'cache_memcache_server') && class_exists('\Memcache')) {
 
             $host = $this->cfg->get('Core', 'cache_memcache_server');
