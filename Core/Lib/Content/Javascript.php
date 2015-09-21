@@ -87,6 +87,7 @@ class Javascript
         $this->cache = $cache;
 
         $this->js_url = $cfg->get('Core', 'url_js');
+        $this->js_dir = $cfg->get('Core', 'dir_js');
     }
 
     /**
@@ -96,11 +97,25 @@ class Javascript
     {
         $this->mode = 'core';
 
-        // Add jquery cdn
-        $this->file('https://code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
+        // Add local jQeury file or the one from CDN
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/js/jquery.min.js';
 
-        // Add Bootstrap javascript from cdn
-        $this->file('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
+        if ($this->cfg->get('Core', 'jquery_use_local') && file_exists(THEMESDIR . $file)) {
+            $this->file(THEMESURL . $file);
+        }
+        else {
+            $this->file('https://code.jquery.com/jquery-' . $this->cfg->get('Core', 'jquery_version') . '.min.js', false, true);
+        }
+
+        // Add Bootstrap javascript from local or cdn
+        $file = '/' . $this->cfg->get('Core', 'theme') . '/js/bootstrap.min.js';
+
+        if ($this->cfg->get('Core', 'jquery_use_local') && file_exists(THEMESDIR . $file)) {
+            $this->file(THEMESURL . $file);
+        }
+        else {
+            $this->file('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/js/bootstrap.min.js', false, true);
+        }
 
         // Add plugins file
         $this->file($this->js_url . '/plugins.js');
