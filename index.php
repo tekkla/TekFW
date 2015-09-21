@@ -161,7 +161,6 @@ try {
     $di->get('core.content')->create();
 }
 catch (Exception $e) {
-    echo 'Firstline Exception';
     echo $di->get('core.error')->handleException($e, true);
 }
 
