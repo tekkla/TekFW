@@ -236,6 +236,14 @@ final class Css
                 $cssmin = new \CSSmin();
                 $combined = $cssmin->run($combined);
 
+                $theme = $this->cfg->get('Core', 'theme');
+
+                // Rewrite fonts paths
+                $combined = str_replace('../fonts/', '../Themes/' . $theme . '/fonts/', $combined);
+
+                // Rewrite images path
+                $combined = str_replace('../img/', '../Themes/' . $theme . '/img/', $combined);
+
                 $cache_object->setContent($combined);
 
                 $this->cache->put($cache_object);
