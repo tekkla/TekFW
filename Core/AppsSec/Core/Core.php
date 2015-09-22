@@ -174,7 +174,6 @@ final class Core extends App
             'default' => 0,
             'type' => 'int'
         ],
-
         'theme' => [
             'group' => 'style',
             'control' => 'text',
@@ -266,6 +265,11 @@ final class Core extends App
             'group' => 'cache',
             'control' => 'text',
             'default' => '3600'
+        ],
+        'cache_memcache_use' => [
+            'group' => 'cache',
+            'control' => 'switch',
+            'default' => 0,
         ],
         'cache_memcache_server' => [
             'group' => 'cache',
