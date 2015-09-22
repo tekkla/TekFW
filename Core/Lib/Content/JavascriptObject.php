@@ -44,6 +44,13 @@ class JavascriptObject
     private $is_external = false;
 
     /**
+     * Flag to signal that this object has to be inside combined file.
+     *
+     * @var boolean
+     */
+    private $combine = true;
+
+    /**
      * Sets the objects type.
      * Select from "file", "script", "ready", "block" or "var".
      *
@@ -150,5 +157,31 @@ class JavascriptObject
     public function getDefer()
     {
         return $this->defer;
+    }
+
+    /**
+     * Sets combine flag.
+     *
+     * This is only be used file objects.
+     *
+     * @param boolean $combine
+     *
+     * @return \Core\Lib\Content\JavascriptObject
+     */
+    public function setCombine($combine)
+    {
+        $this->combine = (bool) $combine;
+
+        return $this;
+    }
+
+    /**
+     * Returns combine flag.
+     *
+     * @return boolean
+     */
+    public function getCombine()
+    {
+        return $this->combine;
     }
 }

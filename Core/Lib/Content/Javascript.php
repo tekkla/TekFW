@@ -356,12 +356,7 @@ class Javascript
         // Init js storages
         $files = $blocks = $inline = $scripts = $ready = $vars = [];
 
-        // Include JSMin lib
-        // if ($this->cfg->get('Core', 'js_minify')) {
-        // require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
-        // }
-
-        /* @var $script Javascript */
+        /* @var $script JavascriptObject */
         foreach ($script_stack as $key => $script) {
 
             switch ($script->getType()) {
@@ -370,7 +365,7 @@ class Javascript
                 case 'file':
                     $filename = $script->getScript();
 
-                    if (strpos($filename, BASEURL) !== false) {
+                    if (strpos($filename, BASEURL) !== false && $script->getCombine()) {
                         $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
                     }
                     else {
