@@ -175,16 +175,26 @@ class Content
         // Match request against stored routes
         $this->router->match();
 
-        // Try to use appname provided by router
-        $app_name = $this->router->getApp();
+        // Handle default settings when we have a default
+        if ($this->router->getCurrentRoute() == 'core_index') {
 
-        // No app by request? Try to get default app from config or set Core as
-        // default app
-        if (! $app_name) {
-            $app_name = $this->cfg->exists('Core', 'default_app') ? $this->cfg->get('Core', 'default_app') : 'Core';
+            if ($this->cfg->exists('Core', 'default_app')) {
+                $this->router->setApp($this->cfg->get('Core', 'default_app'));
+            }
+
+            if ($this->cfg->exists('Core', 'default_controller')) {
+                $this->router->setController($this->cfg->get('Core', 'default_controller'));
+            }
+
+            if ($this->cfg->exists('Core', 'default_action')) {
+                $this->router->setAction($this->cfg->get('Core', 'default_action'));
+            }
         }
 
         // Start with factoring the requested app
+
+        // Store app name for later checks
+        $app_name = $this->router->getApp();
 
         /* @var $app \Core\Lib\Amvc\App */
         $app = $this->app_creator->getAppInstance($app_name);
@@ -194,14 +204,13 @@ class Content
             // Call app wide access method. This is important for using forceLogin() security method.
             $app->Access();
 
-            // Check for redirect from Access() method!!!
-            if ($app_name != $this->router->getApp()) {
+            $app_check = $this->router->getApp();
 
-                // Get new appname and create this app instead of the requested one.
-                $app_name = $this->router->getApp();
+            // Check for redirect from Access() method!!!
+            if ($app_name != $app_check) {
 
                 /* @var $app \Core\Lib\Amvc\App */
-                $app = $this->app_creator->getAppInstance($app_name);
+                $app = $this->app_creator->getAppInstance($app_check);
             }
         }
 
@@ -214,25 +223,11 @@ class Content
             $app->Run();
         }
 
-        // Get name of requested controller
-        $controller_name = $this->router->getController();
-
-        // Set controller name to "Index" when no controller name has been returned
-        // from request handler
-        if (empty($controller_name)) {
-            $controller_name = $this->router->checkParam('ctrl') ? $this->router->getParam('ctrl') : 'Index';
-        }
-
         // Load controller object
-        $this->controller = $app->getController($controller_name);
+        $this->controller = $app->getController($this->router->getController());
 
         // Which controller action has to be run?
         $this->action = $this->router->getAction();
-
-        // No action => use Index as default
-        if (empty($this->action)) {
-            $this->action = $this->router->checkParam('action') ? $this->router->getParam('action') : 'Index';
-        }
 
         // Run controller and process result.
         return $this->router->isAjax() ? $this->createAjax() : $this->createFull();
