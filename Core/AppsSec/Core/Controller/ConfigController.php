@@ -139,7 +139,7 @@ class ConfigController extends Controller
                 }
             }
 
-            $this->fbLog($control_type);
+            $this->debugFbLog($control_type);
 
             // Create controls
             switch ($control_type) {
