@@ -105,7 +105,7 @@ final class Css
         if ($this->cfg->get('Core', 'fontawesome_use_local') && file_exists(THEMESDIR . $file)) {
             $this->link(THEMESURL . $file);
         } else {
-            $this->link('https://maxcdn.bootstrapcdn.com/font-awesome/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/font-awesome.min.css');
+            $this->link('https://maxcdn.bootstrapcdn.com/font-awesome/' . $this->cfg->get('Core', 'fontawesome_version') . '/css/font-awesome.min.css');
         }
 
         // Add general TekFW css file
