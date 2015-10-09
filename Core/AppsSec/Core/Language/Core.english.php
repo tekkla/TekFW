@@ -71,18 +71,19 @@ return [
     'cfg_config_display_style' => 'How to display Config?',
     'cfg_config_display_style_desc' => 'Horizontal oder vertical display.',
 
-	/* Contenthandler
-	'cfg_default_action' => 'Default SMF action',
+	 // Contenthandler
+	'cfg_group_execute' => 'Runtime execute',
+	'cfg_default_action' => 'Default action',
 	'cfg_default_action_desc' => 'Name of default action to use.',
 	'cfg_group_global' => 'Content',
 	'cfg_default_app' => 'Default app',
-	'cfg_default_desc' => 'Name of app which is used for pagecontrol',
-	'cfg_default_ctrl' => 'Default Controller',
-	'cfg_default_ctrl_desc' => 'Name of controller to call in default app.',
+	'cfg_default_app_desc' => 'Name of app which is used for pagecontrol',
+	'cfg_default_controller' => 'Default Controller',
+	'cfg_default_controller_desc' => 'Name of controller to call in default app.',
 	'cfg_content_handler' => 'Contenthandler app',
 	'cfg_content_handler_desc' => 'Name of app which handles the content output.',
 	'cfg_menu_handler' => 'Menuhandler app',
-	'cfg_menu_handler_desc' => 'Name of app which handles menucreation.',*/
+	'cfg_menu_handler_desc' => 'Name of app which handles menucreation.',
 
 	// Minifier
 	'cfg_group_minify' => 'Minify',
@@ -95,12 +96,20 @@ return [
     'cfg_group_security' => 'Security',
     'cfg_min_username_length' => 'Minimum username length',
     'cfg_min_username_length_desc' => 'The minimum number of chars the username has to contain.',
+    'cfg_username_regexp' => 'Username regexpcheck',
+    'cfg_username_regexp_desc' => 'RegEx to check a username against on user creation.',
     'cfg_max_login_length' => 'Maximum login length',
     'cfg_max_login_length_desc' => 'The maximum number of chars allowed to create a login name.',
     'cfg_min_password_length' => 'Minimum password length',
+    'cfg_password_regexp' => 'Password regex check',
+    'cfg_password_regexp_desc' => 'RegEx to check a password against on user creation.',
     'cfg_min_password_length_desc' => 'The minimum number of chars needed to create a password.',
     'cfg_max_password_length' => 'Maximum password length',
     'cfg_max_password_length_desc' => 'The maximum number of chars allowed to create a password.',
+    'cfg_autologin' => 'Autologin (default state)',
+    'cfg_autologin_desc' => 'Switch to set autologin on login form to be preselected. (Default: On)',
+    'cfg_tries_before_ban' => 'Tries before ban',
+    'cfg_tries_before_ban_desc' => 'When set >0 a ban counter is startet on a ban enabled request. Example: Failed logins. (Default: 0 = no Bans)',
 
     // Javascript
     'cfg_group_js' => 'Javascript',
@@ -127,7 +136,8 @@ return [
     'cfg_fontawesome_version' => 'Fontawesome Version',
     'cfg_fontawesome_version_desc' => 'Version number of Fontawesome css framework to use. Do not forget to place the corresponding file into frameworks css folder. The filename has to use "fontawesome-versionnumber.css" or "fontawesome-version.min.css" pattern.',
     'cfg_fontawesome_use_local' => 'Use local Fontawesome files instead of official CDN?',
-    'cfg_theme' => 'Them to use',
+    'cfg_theme' => 'Theme',
+    'cfg_theme_desc' => 'Name of the theme tu use.',
 
     // Error
     'cfg_group_error' => 'Error handling',
