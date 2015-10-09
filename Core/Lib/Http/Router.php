@@ -162,8 +162,6 @@ final class Router extends \AltoRouter
 
             // Stroe params
             $this->params = $match['params'];
-
-            // var_dump($this);
         }
 
         return $match;
