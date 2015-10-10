@@ -175,26 +175,12 @@ class Content
         // Match request against stored routes
         $this->router->match();
 
-        // Handle default settings when we have a default
-        if ($this->router->getCurrentRoute() == 'core_index') {
-
-            if ($this->cfg->exists('Core', 'default_app')) {
-                $this->router->setApp($this->cfg->get('Core', 'default_app'));
-            }
-
-            if ($this->cfg->exists('Core', 'default_controller')) {
-                $this->router->setController($this->cfg->get('Core', 'default_controller'));
-            }
-
-            if ($this->cfg->exists('Core', 'default_action')) {
-                $this->router->setAction($this->cfg->get('Core', 'default_action'));
-            }
-        }
-
-        // Start with factoring the requested app
-
-        // Store app name for later checks
         $app_name = $this->router->getApp();
+
+        // Handle default settings when we have a default
+        if (empty($app_name) && $this->cfg->exists('Core', 'default_app')) {
+            $app_name = $this->cfg->get('Core', 'default_app');
+        }
 
         /* @var $app \Core\Lib\Amvc\App */
         $app = $this->app_creator->getAppInstance($app_name);
@@ -223,11 +209,23 @@ class Content
             $app->Run();
         }
 
+        $controller_name = $this->router->getController();
+
+        if (empty($controller_name) && $this->cfg->exists('Core', 'default_controller')) {
+            $controller_name = $this->cfg->get('Core', 'default_controller');
+        }
+
         // Load controller object
-        $this->controller = $app->getController($this->router->getController());
+        $this->controller = $app->getController($controller_name);
+
+        $action_name = $this->router->getAction();
+
+        if (empty($action_name) && $this->cfg->exists('Core', 'default_action')) {
+            $action_name = $this->cfg->get('Core', 'default_action');
+        }
 
         // Which controller action has to be run?
-        $this->action = $this->router->getAction();
+        $this->action = $action_name;
 
         // Run controller and process result.
         return $this->router->isAjax() ? $this->createAjax() : $this->createFull();
