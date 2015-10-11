@@ -258,9 +258,12 @@ class App
                 Throw new ConfigException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
             }
 
-            // Include permission file
-            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
+            // Always load english language files.
+            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.english.php';
+            $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
 
+            // After that load set languenage file which can override the loaded english string.
+            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
             $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
 
             self::$init_stages[$this->name]['language'] = true;
