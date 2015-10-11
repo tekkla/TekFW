@@ -13,7 +13,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 class Language
 {
 
-    private static $txt = [];
+    private $txt = [];
 
     /**
      * Loads an app related language file.
@@ -27,11 +27,9 @@ class Language
      */
     public function loadLanguageFile($app_name, $lang_file)
     {
-        if (! file_exists($lang_file)) {
-            throw new InvalidArgumentException('The language file "' . $lang_file . '" does not exist.');
+        if ( file_exists($lang_file)) {
+            $this->txt[$app_name] = include ($lang_file);
         }
-
-        self::$txt[$app_name] = include ($lang_file);
     }
 
     /**
@@ -55,16 +53,16 @@ class Language
         }
 
         // Return key when key is not found
-        if (! isset(self::$txt[$app]) || ! isset(self::$txt[$app][$key])) {
+        if (! isset($this->txt[$app]) || ! isset($this->txt[$app][$key])) {
 
-            if (isset(self::$txt['Core'][$key])) {
-                return self::$txt['Core'][$key];
+            if (isset($this->txt['Core'][$key])) {
+                return $this->txt['Core'][$key];
             }
 
             return $key;
         }
 
         // Return requested text
-        return self::$txt[$app][$key];
+        return $this->txt[$app][$key];
     }
 }
