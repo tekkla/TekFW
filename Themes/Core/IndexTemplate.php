@@ -44,10 +44,10 @@ class IndexTemplate extends Template
             $this->createMenu();
 
             // Message container
-            echo '<div id="messages" class="container">', $this->getMessages(), '</div>';
+            echo '<div id="core-message" class="container">', $this->getMessages(), '</div>';
 
             // Main content
-            echo '<div class="container" id="content">', $this->getContent(), '</div>',
+            echo '<div id="content" class="container">', $this->getContent(), '</div>',
 
     		$this->getScript('below'),
 	   '</body>';

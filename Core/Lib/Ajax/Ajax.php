@@ -117,7 +117,7 @@ final class Ajax
             foreach ($messages as $msg) {
 
                 if ($msg->getType() == 'clear') {
-                    $this->ajax['dom']['#message'][] = [
+                    $this->ajax['dom']['#core-message'][] = [
                         'f' => 'html',
                         'a' => ''
                     ];
@@ -142,7 +142,7 @@ final class Ajax
                     ' . $msg->getMessage() . '
                     </div>';
 
-                $this->ajax['dom']['#message'][] = [
+                $this->ajax['dom']['#core-message'][] = [
                     'f' => 'append',
                     'a' => $html
                 ];
