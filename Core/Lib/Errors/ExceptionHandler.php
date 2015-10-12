@@ -141,12 +141,12 @@ class ExceptionHandler
         if ($this->cfg->get('Core', 'error_logger')) {
 
             // Write to error log?
-            if ($error_log == true || $this->cfg->get('Core', 'to_log') == true) {
+            if ($error_log == true || $this->cfg->get('Core', 'error_to_log') == true) {
                 error_log($message . ' (' . $file . ':' . $line . ')');
             }
 
             // Write to db error log? Take care of avoid flag (-1) due to PDOExceptions
-            if ($to_db == true || $this->cfg->get('Core', 'to_db') == true) {
+            if ($to_db == true || $this->cfg->get('Core', 'error_to_db') == true) {
 
                 try {
 
@@ -225,9 +225,9 @@ class ExceptionHandler
         }
 
         switch (true) {
-            case $this->exception->getPublic():
-            case $this->user->isAdmin():
-            case $this->cfg->get('Core', 'skip_security_check'):
+            case method_exists($this->exception, 'getPublic') && $this->exception->getPublic():
+            case (bool) $this->user->isAdmin():
+            case (bool) $this->cfg->get('Core', 'skip_security_check'):
                 $this->error_html .= '
                 <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
                 <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
