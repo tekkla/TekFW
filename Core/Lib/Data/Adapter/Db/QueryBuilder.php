@@ -621,7 +621,7 @@ class QueryBuilder
         foreach ($this->definition['data'] as $field_name => $field) {
 
             // Value handling
-            $value = $field->get();
+            $value = $field->getValue();
 
             // Field is flagged as serialized?
             if ($field->getSerialize()) {
