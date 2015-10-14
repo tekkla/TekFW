@@ -76,6 +76,7 @@ class Field implements \ArrayAccess
     private $filter = [];
 
     /**
+     *
      * @return string
      */
     public function __toString()
@@ -235,23 +236,14 @@ class Field implements \ArrayAccess
 
     /**
      * Returns field value.
+     * Filters value with set field filters before returning it.
      *
      * @return mixed
      */
     public function getValue()
     {
-        return $this->value;
-    }
+        $this->filter();
 
-    /**
-     * Returns field value.
-     *
-     * Same as getValue() only shorter.
-     *
-     * @return mixed
-     */
-    public function get()
-    {
         return $this->value;
     }
 
@@ -289,32 +281,6 @@ class Field implements \ArrayAccess
     }
 
     /**
-     * Same as setValue only shorter.
-     *
-     * Takes care of serialized data.
-     *
-     * @param mixed $value
-     *
-     * @return \Core\Lib\Data\Field
-     */
-    public function set($value, $type = null)
-    {
-        // Is the data serialized?
-        if ($this->isSerialized($value)) {
-            $this->serialize = true;
-            $value = unserialize($value);
-        }
-
-        $this->value = $value;
-
-        if (isset($type)) {
-            $this->setType($type);
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets the control to use when field used in displayfunctions.
      *
      * @param string $control_type
@@ -331,7 +297,7 @@ class Field implements \ArrayAccess
     /**
      * Get control type.
      *
-     * @retur nstring
+     * @return string
      */
     public function getControl()
     {
@@ -404,7 +370,14 @@ class Field implements \ArrayAccess
      */
     public function addValidation($rule)
     {
-        $this->validate[] = $rule;
+        if (is_array($rule)) {
+            foreach ($rule as $val) {
+                $this->validate[] = $val;
+            }
+        }
+        else {
+	        $this->validate[] = $rule;
+        }
 
         return $this;
     }
@@ -440,8 +413,12 @@ class Field implements \ArrayAccess
      *
      * @return \Core\Lib\Data\Field
      */
-    public function setFilter($filter)
+    public function setFilter(array $filter)
     {
+        if (! is_array($filter)) {
+            $filter = (array) $filter;
+        }
+        
         $this->filter = $filter;
 
         return $this;
@@ -456,7 +433,14 @@ class Field implements \ArrayAccess
      */
     public function addFilter($filter)
     {
-        $this->filter[] = $filter;
+        if (is_array($filter)) {
+            foreach ($filter as $val) {
+                $this->filter[] = $val;
+            }
+        }
+        else {
+            $this->filter[] = $filter;
+        }        
 
         return $this;
     }
@@ -492,8 +476,6 @@ class Field implements \ArrayAccess
                 $args = [
                     'data' => $filter
                 ];
-
-                \FB::log($filter);
 
                 $this->value = filter_var_array($var, $args)['data'];
             }
