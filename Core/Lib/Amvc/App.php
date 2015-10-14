@@ -14,6 +14,7 @@ use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\ConfigException;
 use Core\Lib\Errors\Exceptions\FileException;
+use Core\Lib\Data\Container;
 
 /**
  * App.php
@@ -296,7 +297,7 @@ class App
         // Create classname of component to create
         $class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
 
-        // Check existance of container objects becaus they are optional.
+        // Check existance of container objects because they are optional.
         if ($type == 'Container') {
 
             $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
@@ -304,6 +305,8 @@ class App
             if (! file_exists($container_class_path)) {
                 return false;
             }
+
+            return new $class;
         }
 
         // By default each MVC component constructor needs at least a name and
@@ -445,7 +448,7 @@ class App
         else {
 
             // Forget the exception. Create a generic container instead.
-            $container = $this->di->get('core.data.container');
+            $container = new Container();
         }
 
         return $container;
