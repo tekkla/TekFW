@@ -12,7 +12,7 @@ use Core\Lib\Errors\Exceptions\AjaxException;
  * @copyright 2015
  * @license MIT
  */
-final class Ajax
+class Ajax
 {
 
     /**
@@ -21,34 +21,6 @@ final class Ajax
      * @var \stdClass
      */
     private $ajax = [];
-
-    /**
-     * Kind of command
-     *
-     * @var string
-     */
-    private $type = 'dom';
-
-    /**
-     * The documents DOM ID the ajax content should go in
-     *
-     * @var string
-     */
-    private $selector = '';
-
-    /**
-     * Parameters to pass into the controlleraction
-     *
-     * @var array
-     */
-    private $args = [];
-
-    /**
-     * The type of the current ajax.
-     *
-     * @var string
-     */
-    private $fn = 'html';
 
     /**
      *
@@ -78,7 +50,7 @@ final class Ajax
 
             $this->ajax['act'][] = [
                 'f' => 'console',
-                'a' => 'Your DOM ajax response from "' . $cmd->getId() . '" needs a selector but none is set'
+                'a' => 'Your DOM ajax response from "' . $cmd->getId() . '" needs a selector but none is set.'
             ];
 
             $this->ajax['act'][] = [
