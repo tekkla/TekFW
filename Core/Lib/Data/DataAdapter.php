@@ -1,7 +1,6 @@
 <?php
 namespace Core\Lib\Data;
 
-use Core\Lib\Data\Container;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
@@ -38,9 +37,9 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var Container
+     * @var mixed
      */
-    private $container = false;
+    private $container = [];
 
     /**
      *
@@ -107,31 +106,13 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Creates Container object from field definition.
+     * Sets container to store dataresult in.
      *
-     * @param array $fields
-     *
-     * @return \Core\Lib\Data\DataAdapter
-     */
-    public function createContainer(array $fields = [])
-    {
-        $this->container = $this->di->get('core.data.container');
-
-        if (! empty($fields)) {
-            $this->container->parseFields($fields);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Sets Container object
-     *
-     * @param Container $container
+     * @param array|object $container
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setContainer(Container $container)
+    public function setContainer($container = [])
     {
         $this->container = $container;
 
@@ -148,7 +129,7 @@ class DataAdapter implements \IteratorAggregate
     public function getContainer()
     {
         if (! $this->container) {
-            Throw new UnexpectedValueException('There is no data container to r in this DataAdapter.');
+            Throw new UnexpectedValueException('There is no data container in this DataAdapter.');
         }
 
         return unserialize(serialize($this->container));
@@ -203,44 +184,14 @@ class DataAdapter implements \IteratorAggregate
 
         // When data is an assoc array we check here for an existing
         // Container object and fill the container with our data
-        if ($this->arrayIsAssoc($data)) {
-
-            $this->checkContainer($data);
-
-            $container = $this->getContainer();
-            $container->fill($data);
-
-            $this->data = $container;
+        if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
+            $this->data = $data;
         }
         else {
-
-            // None assoc data will be set without container
-            $this->data = $data;
+            $this->data = $this->fillContainer($data);
         }
 
         return $this;
-    }
-
-    /**
-     * Checks for and generates a generic container when no container is set.
-     *
-     * @param array $data
-     */
-    private function checkContainer(array $data)
-    {
-        if (! $this->container) {
-
-            $container = new Container();
-
-            // Get fieldnames from first record
-            $fields = array_keys($data);
-
-            foreach ($fields as $field) {
-                $container->createField($field, 'string');
-            }
-
-            $this->container = $container;
-        }
     }
 
     /**
@@ -256,7 +207,7 @@ class DataAdapter implements \IteratorAggregate
     {
         $this->data = [];
 
-        foreach ($dataset as $key => $data) {
+        foreach ($dataset as $data) {
 
             // Init skip flag
             $skip = false;
@@ -293,22 +244,35 @@ class DataAdapter implements \IteratorAggregate
                 continue;
             }
 
-            // Container creation only from assoc arrays
-            if (! $data instanceof Container && $this->arrayIsAssoc($data)) {
-
-                $this->checkContainer($data);
-
-                $container = $this->getContainer();
-                $container->fill($data);
-
-                $this->data[] = $container;
+            // When data is an assoc array we check here for an existing
+            // Container object and fill the container with our data
+            if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
+                $this->data[] = $data;
             }
             else {
-                $this->data[] = $data;
+                $this->data[] = $this->fillContainer($data);
             }
         }
 
         return $this;
+    }
+
+    /**
+     * Creates a data container from provided data by using a copy of set container.
+     *
+     * @param array $data
+     *
+     * @return array|object
+     */
+    private function fillContainer(array $data)
+    {
+        $container = unserialize(serialize($this->container));
+
+        foreach ($data as $field => $value) {
+            $container[$field] = $value;
+        }
+
+        return $container;
     }
 
     /**
