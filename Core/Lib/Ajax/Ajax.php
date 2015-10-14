@@ -169,8 +169,6 @@ class Ajax
             Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
         }
 
-        return $this->di->instance($class, [
-            'core.ajax'
-        ]);
+        return new $class($this);
     }
 }
