@@ -36,7 +36,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @var array
      */
-    private $fields = [];
+    protected $fields = [];
 
     /**
      * Storage of container error messages
@@ -92,6 +92,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
     public function __isset($name)
     {
         return isset($this->fields[$name]);
+    }
+
+    public function __sleep()
+    {
+        return ['available', 'use', 'fields'];
     }
 
     /**
@@ -416,7 +421,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
      *
      * @return \Core\Lib\Data\DataContainer
      */
-    public function fill(Array $data, Array $validationset = [], Array $serialize = [], $autofilter=false)
+    public function fill(Array $data, Array $validationset = [], Array $serialize = [], $autofilter = false)
     {
         foreach ($data as $name => $value) {
 
@@ -445,7 +450,6 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
             // Filter only on demand
             if ($autofilter) {
-                \FB::log('Autofilter');
                 $field->filter();
             }
         }
