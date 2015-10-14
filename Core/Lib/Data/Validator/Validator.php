@@ -162,7 +162,7 @@ final class Validator
 
             $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
 
-            $this->rules[$rule_name] = $this->di->instance($rule_class, 'core.data.validator');
+            $this->rules[$rule_name] = new $rule_class($this);
         }
         else {
 
