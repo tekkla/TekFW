@@ -9,6 +9,7 @@ use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\ConvertTrait;
 use Core\Lib\Data\Adapter\Database;
 use Core\Lib\Data\Vars;
+use Core\Lib\Data\Container;
 
 /**
  * Model.php
@@ -117,7 +118,7 @@ class Model extends MvcAbstract implements \ArrayAccess
      */
     final public function getGenericContainer($fields = [])
     {
-        $container = $this->di->get('core.data.container');
+        $container = new Container();
 
         if (! empty($fields)) {
             $container->parseFields($fields);
@@ -158,9 +159,11 @@ class Model extends MvcAbstract implements \ArrayAccess
             ]);
         }
 
-        if ($fields) {
-            $adapter->createContainer($fields);
-        }
+        // Try to get a container objects
+        $container = empty($fields)? $this->getContainer() : $this->getGenericContainer($fields);
+
+        // Pass it to the DataAdapter
+        $adapter->setContainer($container);
 
         return $adapter;
     }
