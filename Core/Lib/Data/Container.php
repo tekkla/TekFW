@@ -4,6 +4,7 @@ namespace Core\Lib\Data;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Data\Validator\Validator;
 
 /**
  * Container.php
@@ -299,18 +300,19 @@ class Container implements \IteratorAggregate, \ArrayAccess
      * Validates container data against the set validation rules.
      * Returns boolean true when successful validate without errors.
      *
+     * @param array $skip Optional array of fieldnames to skip on validation
+     *
      * @return boolean
      */
-    public function validate($options = [])
+    public function validate(array $skip = [])
     {
-        /* @var $validator \Core\Lib\Data\Validator\Validator */
-        $validator = $this->di->get('core.data.validator');
+        $validator = new Validator();
 
         /* @var $field \Core\Lib\Data\Field */
-        foreach ($this->fields as $field) {
+        foreach ($this->fields as $name => $field) {
 
             // Skip field?
-            if (isset($options['skip']) && in_array($field->getName(), $options['skip'])) {
+            if (isset(in_array($name, $skip))) {
                 continue;
             }
 
@@ -333,7 +335,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
                 continue;
             }
 
-            $this->addError($field->getName(), $result);
+            $this->addError($name, $result);
         }
 
         return $this->hasErrors() ? false : true;
