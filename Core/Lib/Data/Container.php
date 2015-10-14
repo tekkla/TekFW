@@ -312,7 +312,7 @@ class Container implements \IteratorAggregate, \ArrayAccess
         foreach ($this->fields as $name => $field) {
 
             // Skip field?
-            if (isset(in_array($name, $skip))) {
+            if (in_array($name, $skip)) {
                 continue;
             }
 
