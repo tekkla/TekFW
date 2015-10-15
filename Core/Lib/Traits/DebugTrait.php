@@ -2,6 +2,7 @@
 namespace Core\Lib\Traits;
 
 use Core\Lib\Errors\Exceptions\RuntimeException;
+
 /**
  * DebugTrait.php class
  *
