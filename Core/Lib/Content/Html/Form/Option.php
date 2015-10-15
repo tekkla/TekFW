@@ -73,8 +73,6 @@ class Option extends FormAbstract
             $this->inner = $this->attribute['value'];
         }
 
-        \FB::log($this->attribute);
-
         return parent::build();
     }
 }
