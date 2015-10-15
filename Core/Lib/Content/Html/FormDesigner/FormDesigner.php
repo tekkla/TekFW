@@ -9,7 +9,6 @@ use Core\Lib\Content\Html\Form\Checkbox;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Content\Html\Form\Select;
-use Core\Lib\Content\Html\FormDesigner\Controls\HiddenControl;
 
 /**
  * FormDesigner.php
