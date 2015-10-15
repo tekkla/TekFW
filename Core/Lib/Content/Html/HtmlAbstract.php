@@ -134,7 +134,7 @@ abstract class HtmlAbstract
      */
     public function removeName()
     {
-        unset($this->name);
+        $this->name = '';
 
         return $this;
     }
@@ -147,7 +147,7 @@ abstract class HtmlAbstract
      */
     public function getName()
     {
-        return $this->name ? $this->name : '';
+        return $this->name;
     }
 
     /**
@@ -159,7 +159,7 @@ abstract class HtmlAbstract
      */
     public function setId($id)
     {
-        $this->id = $id;
+        $this->id = (string) $id;
 
         return $this;
     }
@@ -171,7 +171,7 @@ abstract class HtmlAbstract
      */
     public function getId()
     {
-        return $this->id ? $this->id : '';
+        return $this->id;
     }
 
     /**
@@ -181,15 +181,13 @@ abstract class HtmlAbstract
      */
     public function removeId()
     {
-        unset($this->id);
+        $this->id = '';
 
         return $this;
     }
 
     /**
      * Sets inner value of element like.
-     *
-     * Tries to load string from txt storage when argument begins with "txt-".
      *
      * <code>
      * &lt;div&gt;{inner}&lt;/div&gt;
@@ -201,13 +199,7 @@ abstract class HtmlAbstract
      */
     public function setInner($inner)
     {
-        $inner = (string) $inner;
-
-        if (substr($inner, 0, 4) == 'txt-') {
-            $inner = $this->txt(substr($inner, 4));
-        }
-
-        $this->inner = $inner;
+       $this->inner = (string) $inner;
 
         return $this;
     }
@@ -215,21 +207,13 @@ abstract class HtmlAbstract
     /**
      * Adds content to existing inner conntent.
      *
-     * Tries to load string from txt storage when argument begins with "txt-".
-     *
      * @param string $content
      *
      * @return \Core\Lib\Abstracts\HtmlAbstract
      */
     public function addInner($content)
     {
-        $content = (string) $content;
-
-        if (substr($content, 0, 4) == 'txt-') {
-            $content = $this->txt(substr($content, 4));
-        }
-
-        $this->inner .= $content;
+        $this->inner .= (string) $content;
 
         return $this;
     }
@@ -242,7 +226,7 @@ abstract class HtmlAbstract
      */
     public function getInner()
     {
-        return $this->inner ? $this->inner : '';
+        return $this->inner;
     }
 
     /**
@@ -256,22 +240,14 @@ abstract class HtmlAbstract
      */
     public function setTitle($title)
     {
-        $title = (string) $title;
-
-        if (substr($title, 0, 4) == 'txt-') {
-            $title = $this->txt(substr($title, 4));
-        }
-
-        $this->addAttribute('title', $title);
+        $this->addAttribute('title', (string) $title);
 
         return $this;
     }
 
     public function setTabindex($index)
     {
-        $index = (int) $index;
-
-        $this->addAttribute('tabindex', $index);
+        $this->addAttribute('tabindex', (int) $index);
 
         return $this;
     }
