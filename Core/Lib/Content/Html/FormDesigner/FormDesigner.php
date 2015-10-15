@@ -5,10 +5,10 @@ use Core\Lib\Data\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\Form\Form;
-use Core\Lib\Content\Html\Form\Option;
 use Core\Lib\Content\Html\Form\Checkbox;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Content\Html\Form\Select;
 
 /**
  * FormDesigner.php
@@ -643,18 +643,24 @@ final class FormDesigner extends Form
                             $builder->setErrors($this->container->getErrors($content->getName()));
                         }
 
-                        // Is control checkable (checkbox eg option)?
-                        if ($content instanceof Checkbox || $content instanceof Option) {
+                        switch (true) {
+                            case ($content instanceof Checkbox):
+                                if ($content->getValue() == $this->container[$content->getName()]) {
+                                    $content->addAttribute('checked');
+                                }
+                                break;
 
-                            // Set control checked when it's value = container field value
-                            if ($content->getValue() == $this->container[$content->getName()]) {
-                                $content->addAttribute('checked');
-                            }
-                        }
+                            case ($content instanceof Select):
+                                if (empty($content->getValue()) && $this->container[$content->getName()] !== false) {
+                                    $content->setValue($this->container[$content->getName()]);
+                                }
+                                break;
 
-                        // Try to get value from container when control has no content set
-                        elseif ($content->getValue() === null && $this->container[$content->getName()]) {
-                            $content->setValue($this->container[$content->getName()]);
+                            default:
+                                if ($content->getValue() !== false && $this->container[$content->getName()] !== false) {
+                                    $content->setValue($this->container[$content->getName()]);
+                                }
+                                break;
                         }
                     }
 
