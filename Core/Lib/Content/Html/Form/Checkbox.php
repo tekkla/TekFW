@@ -1,15 +1,20 @@
 <?php
 namespace Core\Lib\Content\Html\Form;
 
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
+use Core\Lib\Content\Html\Form\Traits\IsCheckedTrait;
+
 /**
- * Checkbox Form Element
+ * Checkbox.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Checkbox extends Input
 {
+    use ValueTrait;
+    use IsCheckedTrait;
 
     protected $type = 'checkbox';
 
@@ -20,7 +25,7 @@ class Checkbox extends Input
     ];
 
     protected $attribute = [
-        'value' => 1,
+        'value' => 1
     ];
 }
 
