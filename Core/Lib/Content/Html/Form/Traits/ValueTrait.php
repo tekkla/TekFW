@@ -13,6 +13,7 @@ use Core\Lib\Content\Html\Form\Textarea;
  */
 trait ValueTrait
 {
+
     /**
      * Sets value attribute.
      *
@@ -22,6 +23,10 @@ trait ValueTrait
     {
         switch (true) {
             case ($this instanceof Select):
+                if (! is_array($value)) {
+                    $value = (array) $value;
+                }
+
                 $this->value = $value;
                 break;
             case ($this instanceof Textarea):
@@ -38,14 +43,29 @@ trait ValueTrait
     public function getValue()
     {
         switch (true) {
-            case ($this instanceof Select && !empty($this->value)):
+            case ($this instanceof Select):
                 return $this->value;
-            case ($this instanceof Textarea && !empty($this->inner)):
+            case ($this instanceof Textarea):
                 return $this->inner;
             case (isset($this->attribute['value'])):
                 return $this->attribute['value'];
             default:
-                return  null;
+                return false;
+        }
+    }
+
+    public function unsetValue()
+    {
+        switch (true) {
+        case ($this instanceof Select):
+            $this->value = [];
+            break;
+        case ($this instanceof Textarea):
+            $this->inner = '';
+            break;
+        default:
+            $this->removeAttribute('value');
+            break;
         }
     }
 }
