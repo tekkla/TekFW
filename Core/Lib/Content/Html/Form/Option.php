@@ -22,46 +22,58 @@ class Option extends FormAbstract
     ];
 
     protected $attribute = [
-        'value' => 1,
+        'value' => 1
     ];
 
+    private $selected = false;
+
     /**
-     * Selected attribute setter and checker.
-     * Accepts parameter "null", "0" and "1".
-     * "null" means to check for a set disabled attribute
-     * "0" means to remove disabled attribute
-     * "1" means to set disabled attribute
+     * Set option to be selected.
      *
-     * @param int $state
      * @return \Core\Lib\Content\Html\Form\Option
      */
-    public function isSelected($state = null)
+    public function isSelected()
     {
-        $attrib = 'selected';
-
-        if (! isset($state)) {
-            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
-        }
-
-        if ($state == 0) {
-            unset($this->attribute[$attrib]);
-        }
-        else {
-            $this->attribute[$attrib] = false;
-        }
+        $this->selected = true;
 
         return $this;
     }
 
+    /**
+     * Set option to not selected.
+     *
+     * @return \Core\Lib\Content\Html\Form\Option
+     */
+    public function notSelected()
+    {
+        $this->selected = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns options selcted state.
+     */
+    public function getSelected()
+    {
+        return $this->selected;
+    }
+
     public function build()
     {
-        if (!$this->checkAttribute('value') && !empty($this->inner)) {
+        if ($this->selected) {
+            $this->attribute['selected'] = false;
+        }
+
+        if (! $this->checkAttribute('value') && ! empty($this->inner)) {
             $this->attribute['value'] = $this->inner;
         }
 
         if ($this->checkAttribute('value') && empty($this->inner)) {
             $this->inner = $this->attribute['value'];
         }
+
+        \FB::log($this->attribute);
 
         return parent::build();
     }
