@@ -535,11 +535,11 @@ abstract class HtmlAbstract
             $this->element = strtolower((new \ReflectionClass($this))->getShortName());
         }
 
-        if (isset($this->id)) {
+        if (!empty($this->id)) {
             $html_attr['id'] = $this->id;
         }
 
-        if (isset($this->name)) {
+        if (!empty($this->name)) {
             $html_attr['name'] = $this->name;
         }
 
