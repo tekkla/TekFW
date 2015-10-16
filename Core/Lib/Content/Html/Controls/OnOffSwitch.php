@@ -19,9 +19,6 @@ class OnOffSwitch extends Select
     // array with option objects
     private $switch = [];
 
-    // by deafult switch state is off eg 0
-    private $state = 0;
-
     private function createSwitches()
     {
         if (! empty($this->switch)) {
@@ -52,9 +49,10 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
-        $this->switch['on']->isSelected(1);
-        $this->switch['off']->isSelected(0);
-        $this->state = 1;
+        $this->switch['on']->isSelected();
+        $this->switch['off']->notSelected();
+
+        $this->setValue(1);
     }
 
     /**
@@ -64,10 +62,10 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
-        $this->switch['off']->isSelected(1);
-        $this->switch['on']->isSelected(0);
+        $this->switch['on']->notSelected();
+        $this->switch['off']->isSelected();
 
-        $this->state = 0;
+        $this->setValue(0);
     }
 
     /**
@@ -85,7 +83,9 @@ class OnOffSwitch extends Select
             0,
             1,
             false,
-            true
+            true,
+            'on',
+            'off'
         ];
 
         if (! in_array($state, $states)) {
@@ -97,10 +97,12 @@ class OnOffSwitch extends Select
         switch ($state) {
             case 0:
             case false:
+            case 'off':
                 $this->switchOff();
                 break;
             case 1:
             case true:
+            case 'on':
                 $this->switchOn();
                 break;
         }
@@ -111,7 +113,7 @@ class OnOffSwitch extends Select
      */
     public function getState()
     {
-        return $this->state;
+        return $this->getValue();
     }
 
     /**
@@ -123,7 +125,19 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
+        /* @var $option \Core\Lib\Content\Html\Form\Option */
         foreach ($this->switch as $option) {
+
+            $value = $option->getValue();
+
+            if (!$value) {
+                $value = $option->getInner();
+            }
+
+            if ($this->getValue() == $value) {
+                $option->isSelected();
+            }
+
             $this->addOption($option);
         }
 
