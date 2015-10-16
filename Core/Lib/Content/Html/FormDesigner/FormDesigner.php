@@ -595,6 +595,20 @@ final class FormDesigner extends Form
         // Control html container
         $html = '';
 
+        // Are there global errors?
+        if ($this->container->hasErrors('*')) {
+
+            $errors = $this->container->getErrors('*');
+
+            $html .= '<div class="form-global-errors">';
+
+            foreach ($errors as $error) {
+                $html .= '<p class="bg-danger">' . $error . '</p>';
+            }
+
+            $html .= '</div>';
+        }
+
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group);
         }
@@ -639,26 +653,34 @@ final class FormDesigner extends Form
                     // Any errors in container
                     if (isset($this->container)) {
 
-                        if ($this->container->hasErrors($content->getName())) {
-                            $builder->setErrors($this->container->getErrors($content->getName()));
+                        $name = $content->getName();
+                        $value = $this->container[$name];
+
+                        if ($this->container->hasErrors($name)) {
+                            $builder->setErrors($this->container->getErrors($name));
+                        }
+
+                        // Log notice when field does not exist in container
+                        if ($value === false) {
+                            Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner', $name()));
                         }
 
                         switch (true) {
                             case ($content instanceof Checkbox):
-                                if ($content->getValue() == $this->container[$content->getName()]) {
+                                if ($content->getValue() == $value) {
                                     $content->addAttribute('checked');
                                 }
                                 break;
 
                             case ($content instanceof Select):
-                                if (empty($content->getValue()) && $this->container[$content->getName()] !== false) {
-                                    $content->setValue($this->container[$content->getName()]);
+                                if (empty($content->getValue()) && $value !== false) {
+                                    $content->setValue($value);
                                 }
                                 break;
 
                             default:
-                                if ($content->getValue() == false && $this->container[$content->getName()] !== false) {
-                                    $content->setValue($this->container[$content->getName()]);
+                                if ($content->getValue() == false && $value !== false) {
+                                    $content->setValue($value);
                                 }
                                 break;
                         }
