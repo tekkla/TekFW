@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class RangeControl extends Input
 {
+    use ControlTrait;
 
     protected $type = 'number';
 

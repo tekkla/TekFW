@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Controls\UiButton;
  */
 class AjaxiconControl extends UiButton
 {
+    use ControlTrait;
 
     protected $type = 'icon';
 

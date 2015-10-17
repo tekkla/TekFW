@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class MailControl extends Input
 {
+    use ControlTrait;
 
     protected $type = 'mail';
 }

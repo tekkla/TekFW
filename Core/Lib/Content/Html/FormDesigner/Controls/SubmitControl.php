@@ -12,6 +12,9 @@ use Core\Lib\Content\Html\Form\Button;
  */
 class SubmitControl extends Button
 {
+    use ControlTrait;
+
+    protected $bound = false;
 
     protected $type = 'submit';
 

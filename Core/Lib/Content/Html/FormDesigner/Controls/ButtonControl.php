@@ -12,4 +12,5 @@ use Core\Lib\Content\Html\Form\Button;
  */
 class ButtonControl extends Button
 {
+    use ControlTrait;
 }

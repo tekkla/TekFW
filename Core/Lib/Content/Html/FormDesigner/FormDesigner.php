@@ -661,8 +661,8 @@ final class FormDesigner extends Form
                         }
 
                         // Log notice when field does not exist in container
-                        if ($value === false) {
-                            Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner', $name()));
+                        if ($value === false && $content->getBound()) {
+                            Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner', $name));
                         }
 
                         switch (true) {

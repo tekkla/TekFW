@@ -10,4 +10,5 @@ namespace Core\Lib\Content\Html\FormDesigner\Controls;
  */
 class InputControl extends TextControl
 {
+    use ControlTrait;
 }

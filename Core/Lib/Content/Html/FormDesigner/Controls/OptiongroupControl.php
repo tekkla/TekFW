@@ -12,4 +12,6 @@ use Core\Lib\Content\Html\Controls\OptionGroup;
  */
 class OptiongroupControl extends OptionGroup
 {
+    use ControlTrait;
+
 }

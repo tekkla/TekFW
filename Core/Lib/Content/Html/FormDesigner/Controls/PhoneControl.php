@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class PhoneControl extends Input
 {
+    use ControlTrait;
 
     protected $type = 'tel';
 }

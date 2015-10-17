@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Controls\DataSelect;
  */
 class DataselectControl extends DataSelect
 {
+    use ControlTrait;
 
     protected $css = [
         'form-select'

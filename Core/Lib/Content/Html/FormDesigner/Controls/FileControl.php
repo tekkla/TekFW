@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class FileControl extends Input
 {
+    use ControlTrait;
 
     protected $type = 'file';
 }

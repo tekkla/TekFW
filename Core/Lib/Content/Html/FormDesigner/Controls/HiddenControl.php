@@ -12,6 +12,7 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class HiddenControl extends Input
 {
+    use ControlTrait;
 
     protected $type = 'hidden';
 }

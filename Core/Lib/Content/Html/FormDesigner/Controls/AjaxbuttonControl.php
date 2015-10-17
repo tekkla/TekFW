@@ -13,6 +13,8 @@ use Core\Lib\Content\Html\Controls\UiButton;
 class AjaxbuttonControl extends UiButton
 {
 
+    use ControlTrait;
+
     protected $type = 'button';
 
     protected $mode = 'ajax';

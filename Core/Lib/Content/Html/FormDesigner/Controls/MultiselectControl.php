@@ -12,9 +12,10 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class MultiselectControl extends Select
 {
+    use ControlTrait;
 
     protected $attribute = [
-        'multiple' => 'multiple',
+        'multiple' => false,
         'size' => 10
     ];
 }

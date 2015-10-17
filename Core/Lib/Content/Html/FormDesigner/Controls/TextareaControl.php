@@ -12,4 +12,6 @@ use Core\Lib\Content\Html\Form\Textarea;
  */
 class TextareaControl extends Textarea
 {
+    use ControlTrait;
+
 }
