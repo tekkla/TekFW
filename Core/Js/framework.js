@@ -54,11 +54,11 @@ var coreFw = {
                 var url = $(element).attr('href');
             } else if ($(element).data('href') !== undefined) {
                 var url = $(element).data('href');
-            }
-            else if ($(element).data('url') !== undefined) {
-                var url = $(element).data('url');                
+            } else if ($(element).data('url') !== undefined) {
+                var url = $(element).data('url');
             } else {
-                console.log('No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
+                console
+                        .log('No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
                 return false;
             }
         } else {
@@ -77,11 +77,12 @@ var coreFw = {
             // control the hidden form where we put the content
             // before serialization gathers the form data
             // for ajax post.
-            if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
-                
+            if ($(element).data('inline-id') !== undefined
+                    && $(element).data('inline-control') !== undefined) {
+
                 var control = $(element).data('inline-control');
                 var content = $('#' + $(element).data('inline-id')).html();
-                
+
                 $('#' + control).val(content);
             }
 
@@ -95,11 +96,13 @@ var coreFw = {
 
         // Add error handler
         ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-            
+
             var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText
                     : 'Ajax Request Error: ' + textStatus;
             console.log(errortext);
         };
+
+        history.pushState({}, '', url);
 
         // Fire ajax request!
         $.ajax(ajaxOptions);
@@ -119,7 +122,12 @@ var coreFw = {
                     if ($(id).length) {
 
                         $.each(cmd, function(i, x) {
-                            selector = $(id)[x.f](x.a);
+                            
+                            if (jQuery.isFunction($()[x.f])) {
+                                selector = $(id)[x.f](x.a);
+                            } else {
+                                console.log('Unknown method/function "' + x.f + '"');
+                            }
                         });
 
                     } else {
@@ -130,46 +138,48 @@ var coreFw = {
 
             // Specific actions
             if (type == 'act') {
-                $.each(stack, function(i, cmd) {
+                $.each(stack,
+                        function(i, cmd) {
 
-                    switch (cmd.f) {
-                    case "alert":
-                        bootbox.alert(cmd.a[0]);
-                        break;
-                    case "error":
-                        $('#core-message').addClass('fade in').append(cmd.a[0]);
-                        $('#core-message').bind(
-                                'closed.bs.alert',
-                                function() {
-                                    $(this).removeClass().html('').unbind(
-                                            'closed.bs.alert');
-                                });
-                        break;
-                    case "dump":
-                    case "log":
-                    case "console":
-                        console.log(cmd.a);
-                        break;
-                    case "modal":
-
-                        // fill dialog with content
-                        $('#core-modal').html(cmd.a).modal({
-                            keyboard : false
+                            switch (cmd.f) {
+                                case "alert":
+                                    bootbox.alert(cmd.a[0]);
+                                    break;
+                                case "error":
+                                    $('#core-message').addClass('fade in').append(
+                                            cmd.a[0]);
+                                    $('#core-message').bind(
+                                            'closed.bs.alert',
+                                            function() {
+                                                $(this).removeClass().html('')
+                                                        .unbind('closed.bs.alert');
+                                            });
+                                    break;
+                                case "dump":
+                                case "log":
+                                case "console":
+                                    console.log(cmd.a);
+                                    break;
+                                case "modal":
+    
+                                    // fill dialog with content
+                                    $('#core-modal').html(cmd.a).modal({
+                                        keyboard : false
+                                    });
+                                    break;
+    
+                                case 'load_script':
+                                    $.getScript(cmd.a);
+                                    break;
+    
+                                case 'href':
+                                    window.location.href = cmd.a;
+                                    return;
+                                }
                         });
-                        break;
-
-                    case 'load_script':
-                        $.getScript(cmd.a);
-                        break;
-
-                    case 'href':
-                        window.location.href = cmd.a;
-                        return;
-                    }
-                });
             }
         });
-        
+
         coreFw.readyAndAjax();
     }
 
@@ -266,35 +276,42 @@ $(document).on('click', '.btn-back', function(event) {
 // ----------------------------------------------------------------------------
 // ClickHandler for confirms
 // ----------------------------------------------------------------------------
-$(document).on('click', '*[data-confirm] + *:not([data-ajax])', function(event) {
-    
-    // confirmation wanted?
-    if ($(this).data('confirm') !== undefined) {
+$(document).on('click', '*[data-confirm] + *:not([data-ajax])',
+        function(event) {
 
-        if (!confirm($(this).data('confirm'))) {
-            event.preventDefault();
-            return false;
-        }
-    }
-});
+            // confirmation wanted?
+            if ($(this).data('confirm') !== undefined) {
+
+                if (!confirm($(this).data('confirm'))) {
+                    event.preventDefault();
+                    return false;
+                }
+            }
+        });
 
 // ----------------------------------------------------------------------------
 // Ajax based click-handler to links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-ajax]', function(event) {
-    
+
     if ($(this).data('confirm') !== undefined) {
-        
+
         if (!confirm($(this).data('confirm'))) {
             return false;
         }
     }
-    
-    coreFw.loadAjax(this);  
-    
+
+    coreFw.loadAjax(this);
+
     if ($(this).data('to-top') !== undefined) {
         window.scrollTo(0, 0);
     }
-    
+
     event.preventDefault();
+});
+
+$(window).on("popstate", function(e) {
+    if (e.originalEvent.state !== null) {
+        location.href = location.href;
+    }
 });
