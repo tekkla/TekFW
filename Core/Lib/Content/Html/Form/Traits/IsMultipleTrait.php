@@ -12,28 +12,38 @@ trait IsMultipleTrait
 {
 
     /**
-     * Sets and get the multiple attribute.
-     *
-     * @param bool Optional $bool Set this to set or change the attribute. Leave blank to get attribute state.
+     * Sets the multiple attribute.
      *
      * @return boolena|\Core\Lib\Content\Html\Form\Input
      */
-    public function isMultiple($bool = null)
+    public function isMultiple()
     {
-        $attrib = 'multiple';
-
-        if (! isset($bool)) {
-            return $this->checkAttribute($attrib);
-        }
-
-        if ((bool) $bool == false) {
-            $this->removeAttribute($attrib);
-        }
-        else {
-            $this->attribute[$attrib] = false;
-        }
+       $this->attribute['multiple'] = false;
 
         return $this;
     }
+
+    /**
+     * Removes possible set multiple attribute.
+     *
+     * @return boolena|\Core\Lib\Content\Html\Form\Input
+     */
+    public function notMultiple()
+    {
+        $this->removeAttribute('multiple');
+
+        return $this;
+    }
+
+    /**
+     * Returns current multiple atribute state.
+     *
+     * @return boolena|\Core\Lib\Content\Html\Form\Input
+     */
+    public function getMultiple()
+    {
+        return $this->checkAttribute('multiple');
+    }
+
 }
 
