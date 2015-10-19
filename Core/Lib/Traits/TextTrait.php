@@ -26,9 +26,7 @@ trait TextTrait
      */
     public function txt($key, $app = '')
     {
-        if (!property_exists($this, 'di')) {
-            Throw new RuntimeException('TextTrait::txt() method cannot work without access to DI service container. Make sure that the object using this trait has this property set.');
-        }
+        global $di;
 
         if (empty($app)) {
 
@@ -49,6 +47,6 @@ trait TextTrait
             }
         }
 
-        return $this->di->get('core.content.lang')->getTxt($key, $app);
+        return $di->get('core.content.lang')->getTxt($key, $app);
     }
 }

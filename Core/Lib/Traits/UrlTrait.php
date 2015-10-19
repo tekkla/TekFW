@@ -28,9 +28,7 @@ trait UrlTrait
      */
     protected function url($route, Array $params = [], $app = '')
     {
-        if (! property_exists($this, 'di')) {
-            Throw new RuntimeException('UrlTrait::url() method cannot work without access to DI service container. Make sure that the object using this trait has this property set.');
-        }
+        global $di;
 
         if (empty($app)) {
 
