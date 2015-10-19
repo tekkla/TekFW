@@ -72,9 +72,7 @@ class ConfigController extends Controller
         }
 
         // Use form designer
-        $form = $this->getFormDesigner();
-
-        $form->attachContainer($data);
+        $form = $this->getFormDesigner($data);
 
         // Set forms action route
         $form->setActionRoute($this->router->getCurrentRoute(), array(
@@ -138,8 +136,6 @@ class ConfigController extends Controller
                     $control->addAttribute($attr, $val);
                 }
             }
-
-            $this->debugFbLog($control_type);
 
             // Create controls
             switch ($control_type) {
@@ -244,10 +240,14 @@ class ConfigController extends Controller
             $control->setDescription($this->txt($txt . '_desc', $app));
         }
 
+
+        $control = $group->addControl('Submit');
+        $group->addElement('Elements\Hr');
+
         $this->setVar('form', $form);
 
         // Add linktreee
-        $this->content->breadcrumbs->createItem('TekFW Admincenter', $this->router->url('core_admin'));
+        $this->content->breadcrumbs->createItem('Admin', $this->router->url('core_admin'));
 
         $this->content->breadcrumbs->createActiveItem($this->txt('name', $app_name));
     }
