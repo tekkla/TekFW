@@ -62,6 +62,9 @@ class SecurityController extends Controller
         $control->setPlaceholder($this->txt('password'));
         $control->setLabel($this->txt('password'));
 
+        $control = $group->addControl('Submit');
+        $control->setInner($this->txt('login'));
+
         /* @var $control \Core\Lib\Content\Html\Form\Checkbox */
         $control = $group->addControl('Checkbox', 'remember');
         $control->setValue(1);
