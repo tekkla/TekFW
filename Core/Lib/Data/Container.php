@@ -19,11 +19,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
     use SerializeTrait;
 
     /**
-     * Optional name of fieldlist to load
+     * Field definition array
      *
-     * @var string
+     * @var array
      */
-    protected $available = '';
+    protected $available = [];
 
     /**
      * List of fieldnames to use from available fields
@@ -126,36 +126,26 @@ class Container implements \IteratorAggregate, \ArrayAccess
      * control => Name of controltype to use when container is used in forms or within FormDesinger lib.
      * default => Defaultvalue for this field.
      *
-     * @param array $fields
+     * @param array $use Optional array of fieldnames to use
      *
      * @throws UnexpectedValueException
      */
-    public function parseFields(Array $fields = [])
+    public function parseFields(Array $use = [])
     {
-        if (empty($fields)) {
-
-            $src = empty($this->use) ? 'available' : 'use';
-
-            if (empty($this->$src)) {
-                Throw new UnexpectedValueException('The called container has no field definitions set.');
-            }
-
-            foreach ($this->$src as $fld_name) {
-                $fields[$fld_name] = $this->available[$fld_name];
-            }
-        }
-
-        // When there is no field definition, than try to load this defintions
-        if (empty($fields) && ! empty($this->available) && is_array($this->available)) {
-
-            // The field defintion list can be stored in use property
-            $fields = $this->available;
+        if (!empty($use)) {
+            $this->use = $use;
         }
 
         // Field creation process
-        foreach ($fields as $name => $field) {
+        foreach ($this->use as $name) {
 
-            if (! isset($field['type'])) {
+            if (!array_key_exists($name, $this->available)) {
+                Throw new UnexpectedValueException(sprintf('The field "%s" does not exist in container "%s"', $name, get_called_class()));
+            }
+
+            $field = $this->available[$name];
+
+            if (! array_key_exists('type', $field)) {
                 $field['type'] = 'string';
             }
 
@@ -203,6 +193,11 @@ class Container implements \IteratorAggregate, \ArrayAccess
     {
         $field = new Field();
 
+
+        if ($default !== null) {
+            $field->setDefault($default);
+        }
+
         $field->setName($name);
         $field->setType($type);
 
@@ -212,10 +207,6 @@ class Container implements \IteratorAggregate, \ArrayAccess
 
         if ($control !== null) {
             $field->setControl($control);
-        }
-
-        if ($default !== null) {
-            $field->setDefault($default);
         }
 
         if (! empty($filter)) {
