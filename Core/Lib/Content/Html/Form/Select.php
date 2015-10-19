@@ -101,7 +101,7 @@ class Select extends FormAbstract
             $this->inner .= $option->build();
         }
 
-        if ($this->isMultiple()) {
+        if ($this->getMultiple()) {
             $this->setName($this->getName() . '[]');
         }
 
