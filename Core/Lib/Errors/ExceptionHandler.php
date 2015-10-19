@@ -150,7 +150,7 @@ class ExceptionHandler
 
                 try {
 
-                    $this->adapter->query([
+                    $this->adapter->qb([
                         'method' => 'INSERT',
                         'tbl' => 'error_log',
                         'fields' => [

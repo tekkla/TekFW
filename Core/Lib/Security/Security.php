@@ -241,7 +241,7 @@ class Security
         }
 
         // Try to load user from db
-        $query = [
+        $this->adapter->qb([
             'table' => 'users',
             'fields' => [
                 'id_user',
@@ -251,10 +251,7 @@ class Security
             'params' => [
                 ':username' => $username
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ]);
 
         $login = $this->adapter->single();
 
@@ -274,8 +271,7 @@ class Security
 
             // Needs hash to be updated?
             if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
-
-                $query = [
+                $this->adapter->qb([
                     'table' => 'users',
                     'method' => 'UPDATE',
                     'fields' => [
@@ -286,10 +282,7 @@ class Security
                         ':password' => password_hash($password, PASSWORD_DEFAULT),
                         ':id_user' => $login['id_user']
                     ]
-                ];
-
-                $this->adapter->query($query);
-                $this->adapter->execute();
+                ], true);
             }
 
             // Load User
@@ -375,7 +368,7 @@ class Security
         // Let's find the user for the token in cookie
         list ($selector, $token) = explode(':', $this->cookie->get($cookie));
 
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'fields' => [
                 'id_auth_token',
@@ -388,9 +381,7 @@ class Security
             'params' => [
                 ':selector' => $selector
             ]
-        ];
-
-        $this->adapter->query($query);
+        ]);
         $data = $this->adapter->all();
 
         foreach ($data as $auth_token) {
@@ -448,7 +439,7 @@ class Security
     private function deleteAuthTokenFromDb($id_user)
     {
         // Yep! Delete token and return false for failed autologin
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'method' => 'DELETE',
             'filter' => 'expires < :expires OR id_user=:id_user',
@@ -456,10 +447,7 @@ class Security
                 ':expires' => date('Y-m-d H:i:s'),
                 ':id_user' => $id_user
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ], true);
     }
 
     /**
@@ -484,7 +472,7 @@ class Security
         $hash = hash('sha256', $token);
 
         // Store selector and hash in DB
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'method' => 'INSERT',
             'fields' => [
@@ -499,10 +487,7 @@ class Security
                 ':id_user' => $id_user,
                 ':expires' => date('Y-m-d H:i:s', $this->expire_time)
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ], true);
 
         // Set autologin token cookie only when token is stored successfully in db!!!
         if ($this->adapter->lastInsertId()) {

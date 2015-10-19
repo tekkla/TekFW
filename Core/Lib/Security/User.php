@@ -178,7 +178,7 @@ class User
 
         $adapter = $this->di->get('db.default');
 
-        $adapter->query([
+        $adapter->qb([
             'tbl' => 'users',
             'field' => [
                 'username',
@@ -202,7 +202,7 @@ class User
             // Load groups the user is in
             $adapter = $this->di->get('db.default');
 
-            $adapter->query([
+            $adapter->qb([
                 'tbl' => 'users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
@@ -236,8 +236,7 @@ class User
             ]
         ];
 
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        $this->adapter->qb($query, true);
 
         $id_user = $this->adapter->lastInsertId();
 

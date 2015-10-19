@@ -187,36 +187,58 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * This is the db query method.
+     * Run query by QueryBuilder.
      *
-     * @param string $sql
-     * @param array $params
+     * @param array $definition QueryBuilder definition array
      * @param bool $autoexec
      *
      * @return \PDOStatement | queryresult
      */
-    public function query($sql, $params = [], $autoexec = false)
+    public function qb(array $definition, $autoexec = false)
+    {
+        $builder = new QueryBuilder($definition);
+
+        // Build sql string
+        $this->sql = $builder->build();
+
+        // Get params
+        $this->params = $builder->getParams();
+
+        return $this->query($autoexec);
+    }
+
+    /**
+     * Run query by sql string.
+     *
+     * @param unknown $sql
+     * @param unknown $params
+     * @param string $autoexec
+     * @return PDOStatement
+     */
+    public function sql($sql, array $params = [], $autoexec = false)
     {
         // Store Sql / definition and parameter
-        $this->sql = $sql;
+        $this->sql = (string) $sql;
         $this->params = $params;
 
+        return $this->query($autoexec);
+    }
+
+    /**
+     * This is the db query method.
+     *
+     * @param boolean $exec Optional autoexec flag
+     *
+     * @return \PDOStatement | queryresult
+     */
+    private function query($autoexec = false)
+    {
         // Reset PDO statement
         $this->stmt = null;
-
-        if (is_array($this->sql)) {
-
-            $builder = new QueryBuilder($this->sql);
-            $this->sql = $builder->build();
-
-            // Params?
-            $this->params = $builder->getParams();
-        }
 
         $this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $this->sql));
 
         if (! empty($this->params)) {
-
             foreach ($this->params as $parameter => $value) {
                 $data_type = $value === null ? \PDO::PARAM_INT : \PDO::PARAM_STR;
                 $this->stmt->bindValue($parameter, $value, $data_type);
@@ -426,7 +448,7 @@ class Database extends AdapterAbstract
             ]
         ];
 
-        $this->query($query);
+        $this->qb($query);
 
         return $this->single($fetch_mode);
     }

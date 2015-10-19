@@ -132,8 +132,10 @@ final class Cfg
      */
     public function load()
     {
-        $this->adapter->query('SELECT * FROM {db_prefix}config ORDER BY app, cfg');
-        $this->adapter->execute();
+        $this->adapter->qb([
+            'table' => 'config',
+            'order' => 'app, cfg'
+        ]);
 
         $results = $this->adapter->all(\PDO::FETCH_NUM);
 

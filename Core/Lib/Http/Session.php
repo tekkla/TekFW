@@ -185,7 +185,7 @@ final class Session
     public function read($id_session)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'tbl' => 'sessions',
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
@@ -205,7 +205,7 @@ final class Session
     public function write($id_session, $data)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'REPLACE',
             'tbl' => 'sessions',
             'fields' => [
@@ -230,7 +230,7 @@ final class Session
     public function destroy($id_session)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'id_session=:id_session',
@@ -252,7 +252,7 @@ final class Session
         $old = time() - $max;
 
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'access<:old',

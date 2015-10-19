@@ -14,6 +14,8 @@ use Core\Lib\Data\Container;
 final class ConfigModel extends Model
 {
 
+    private $table = 'config';
+
     public function loadByApp($app_name)
     {
         // Try to get a config defintion from the app
@@ -123,20 +125,37 @@ final class ConfigModel extends Model
         $adapter->beginTransaction();
 
         // Delete current config
-        $adapter->query("DELETE FROM {db_prefix}config WHERE app=:app_name");
-        $adapter->bindValue(':app_name', $app_name);
-        $adapter->execute();
+        $adapter->qb([
+            'table' => $this->table,
+            'method' => 'Delete',
+            'filter' => 'app = :app',
+            'params' => [
+                ':app' => $app_name
+            ]
+        ], true);
 
         // Prepare insert query
-        $adapter->query("INSERT INTO {db_prefix}config SET app=:app_name, cfg=:key, val=:val");
-        $adapter->bindValue(':app_name', $app_name);
+        $adapter->qb([
+            'table' => $this->table,
+            'method' => 'INSERT',
+            'fields' => [
+                'app',
+                'cfg',
+                'val',
+            ],
+            'params' => [
+                ':app' => $app_name
+            ]
+        ]);
+
+        #$adapter->bindValue(':app_name', $app_name);
 
         // Create config entries
         foreach ($fld_list as $key) {
 
-            $adapter->bindValue(':key', $key);
+            $adapter->bindValue(':cfg', $key);
 
-            $val = $data->getField($key)->getValue();
+            $val = $data[$key];
 
             if (isset($app_cfg[$key]['serialize']) && $app_cfg[$key]['serialize'] == true) {
                 $val = serialize($val);

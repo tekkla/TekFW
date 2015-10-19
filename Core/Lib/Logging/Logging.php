@@ -275,13 +275,10 @@ class Logging
      */
     private function saveLog(Container $message)
     {
-        $query = [
+        $this->adapter->qb([
             'table' => 'logs',
             'data' => $message
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ], true);
     }
 
     /**
@@ -293,16 +290,14 @@ class Logging
      */
     public function countBanLogEntries($ip)
     {
-        $query = [
+        $this->adapter->qb([
             'table' => 'logs',
             'fields' => 'COUNT(ip)',
             'filter' => 'ip=:ip AND type="ban"',
             'params' => [
                 ':ip' => $ip
             ]
-        ];
-
-        $this->adapter->query($query);
+        ]);
 
         return $this->adapter->value();
     }

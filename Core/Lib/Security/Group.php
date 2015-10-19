@@ -53,7 +53,7 @@ class Group
     {
         // Copy default groups to
         // $this->groups = $this->default_groups;
-        $this->adapter->query([
+        $this->adapter->qb([
             'table' => 'groups',
             'fields' => [
                 'id_group',
@@ -85,14 +85,14 @@ class Group
             $this->adapter->beginTransaction();
 
             // Delete current groups
-            $this->adapter->query([
+            $this->adapter->qb([
                 'table' => 'groups',
                 'method' => 'DELETE',
             ]);
             $this->adapter->execute();
 
             // Prepare statement for group insert
-            $this->adapter->query([
+            $this->adapter->qb([
                 'table' => 'groups',
                 'method' => 'INSERT',
                 'fields' => [
@@ -153,7 +153,7 @@ class Group
             $this->adapter->beginTransaction();
 
             // Delete usergroup
-            $this->adapter->query([
+            $this->adapter->qb([
                 'table' => 'groups',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',
@@ -164,7 +164,7 @@ class Group
             $this->adapter->execute();
 
             // Delete permissions related to this group
-            $this->adapter->query([
+            $this->adapter->qb([
                 'table' => 'permissions',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',

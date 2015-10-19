@@ -18,8 +18,7 @@ class Mysql extends TableInfoAbstract
      */
     public function loadColumns($tbl)
     {
-        $this->db->query('SHOW FIELDS FROM `' . $tbl . '`');
-        $this->db->execute();
+        $this->db->sql('SHOW FIELDS FROM `' . $tbl . '`');
         $result = $this->db->all();
 
         $columns = [];
@@ -60,8 +59,7 @@ class Mysql extends TableInfoAbstract
      */
     public function loadIndexes($tbl)
     {
-        $this->db->query('SHOW KEYS FROM `' . $tbl . '`');
-        $this->db->execute();
+        $this->db->sql('SHOW KEYS FROM `' . $tbl . '`');
         $result = $this->db->all();
 
         $indexes = [];
