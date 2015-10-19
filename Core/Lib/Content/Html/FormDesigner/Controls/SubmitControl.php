@@ -12,13 +12,10 @@ use Core\Lib\Content\Html\Form\Button;
  */
 class SubmitControl extends Button
 {
-    use ControlTrait;
-
-    protected $bound = false;
 
     protected $type = 'submit';
 
-    protected $inner = 'txt-btn_save';
+    protected $inner = 'submit';
 
     protected $icon = 'save';
 

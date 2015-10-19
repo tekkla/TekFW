@@ -12,5 +12,4 @@ use Core\Lib\Content\Html\Form\Checkbox;
  */
 class CheckboxControl extends Checkbox
 {
-    use ControlTrait;
 }

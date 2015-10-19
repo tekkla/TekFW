@@ -12,5 +12,4 @@ use Core\Lib\Content\Html\Controls\OnOffSwitch;
  */
 class SwitchControl extends OnOffSwitch
 {
-    use ControlTrait;
 }

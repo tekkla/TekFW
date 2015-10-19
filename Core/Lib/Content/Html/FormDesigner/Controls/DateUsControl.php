@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Controls\DateTimePicker;
  */
 class DateUsControl extends DateTimePicker
 {
-    use ControlTrait;
 
     protected $format = 'mm/dd/yyyy';
 

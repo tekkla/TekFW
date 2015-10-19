@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Controls\DateTimePicker;
  */
 class Time12sControl extends DateTimePicker
 {
-    use ControlTrait;
 
     protected $format = 'hh:mm::ss A/PM';
 
@@ -24,6 +23,6 @@ class Time12sControl extends DateTimePicker
         'maxlenght' => 8,
         'size' => 8
     ];
-
+    
     // @todo 'showMeridian' => true
 }

@@ -12,5 +12,4 @@ use Core\Lib\Content\Html\Controls\Editor;
  */
 class EditorControl extends Editor
 {
-    use ControlTrait;
 }

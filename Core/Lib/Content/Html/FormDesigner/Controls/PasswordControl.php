@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class PasswordControl extends Input
 {
-    use ControlTrait;
 
     protected $type = 'password';
 }

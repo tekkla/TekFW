@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class MultiselectControl extends Select
 {
-    use ControlTrait;
 
     protected $attribute = [
         'multiple' => false,

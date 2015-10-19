@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Controls\DateTimePicker;
  */
 class DatetimeControl extends DateTimePicker
 {
-    use ControlTrait;
 
     protected $format = 'YYYY-MM-DD HH:mm';
 
@@ -20,7 +19,7 @@ class DatetimeControl extends DateTimePicker
     {
         // Input mask
         $this->data['form-mask'] = '9999-99-99 99:99';
-
+        
         $this->attribute['maxlength'] = 10;
         $this->attribute['size'] = 16;
     }

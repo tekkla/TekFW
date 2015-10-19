@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Controls\DateTimePicker;
  */
 class Time24sControl extends DateTimePicker
 {
-    use ControlTrait;
 
     protected $format = 'HH:mm:ss';
 

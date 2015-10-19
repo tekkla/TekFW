@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Form\Input;
  */
 class TextControl extends Input
 {
-    use ControlTrait;
 
     protected $type = 'text';
 }

@@ -12,7 +12,6 @@ use Core\Lib\Content\Html\Form\Button;
  */
 class ResetControl extends Button
 {
-    use ControlTrait;
 
     protected $type = 'reset';
 

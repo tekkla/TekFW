@@ -12,5 +12,4 @@ use Core\Lib\Content\Html\Form\Select;
  */
 class SelectControl extends Select
 {
-    use ControlTrait;
 }

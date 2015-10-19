@@ -10,5 +10,4 @@ namespace Core\Lib\Content\Html\FormDesigner\Controls;
  */
 class DatetimeIsoControl extends DatetimeControl
 {
-    use ControlTrait;
 }
