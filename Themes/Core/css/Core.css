@@ -63,54 +63,23 @@
 	margin-bottom: 0;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| SMF compatibility
+| Vertical buffers
 |--------------------------------------------------------------------------
 */
-
-/**
- * Some parts of SMF do not like global box-sizing: border-box of BS
- */
-.sceditor-button,.admin-menu-icon:before {
-	box-sizing: content-box;
+.bottom-buffer {
+	margin-bottom: 15px;
 }
 
-/**
- * SMF uses headings as column titles. So we have to reset margins overridden by BS.
- */
-h3.catbg,h4.catbg,h3.titlebg,h4.titlebg {
-	margin: 0;
+.top-buffer {
+	margin-top: 15px;
 }
 
-/**
- * Fixes display error where topic header info col is to high
- */
-#topic_header .icon,#topic_header .info,#topic_header .stats,#topic_header .lastpost,#topic_header .moderation
-	{
-	margin-bottom: 0;
-}
-
-/**
- * I do not understand why headings are used for bold texts. Is it for SR?
- */
-div.news h2 {
-	font-size: 1em;
-	font-weight: 700;
-}
-
-/**
- * Fixes margins and pattern as result of using a 14px font size in BS
- */
-.dropmenu span,#profile_menu span {
-	margin: -3px 5px 0 0;
-}
-
-/**
- * Same for line heights in menus
- */
-.dropmenu li,#top_info>li {
-	line-height: 2em;
+.buffer {
+	margin-top: 15px;
+	margin-bottom: 15px;
 }
 
 /*
@@ -166,6 +135,15 @@ body.loading #status {
 
 #scrolltotop:active,#scrollertop:focus {
 	outline: none;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Editbox heading correction
+|--------------------------------------------------------------------------
+*/
+.editbox .panel-heading ul {
+	margin-bottom: 0;	
 }
 
 /*
