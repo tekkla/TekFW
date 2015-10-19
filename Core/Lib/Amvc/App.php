@@ -306,7 +306,7 @@ class App
                 return false;
             }
 
-            return new $class;
+            return new $class();
         }
 
         // By default each MVC component constructor needs at least a name and
@@ -416,7 +416,7 @@ class App
      *
      * @return Controller
      */
-    final public function getContainer($name, $init = true)
+    final public function getContainer($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -427,29 +427,23 @@ class App
         /* @var $container \Core\Lib\Data\Container */
         $container = $this->MVCFactory($name, 'Container', $args);
 
-        // Autoinit requested?
-        if ($container && $init) {
-
-            // init by current action?
-            $action = $init === true ? $this->router->getAction() : $init;
-
-            if (! method_exists($container, $action)) {
-
-                // ... and try to find and run Index method when no matching action is found
-                $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
-            }
-
-            // ... and call matching container action when method exists
-            $container->$action();
-
-            // finally try to parse field defintion
-            $container->parseFields();
+        if (! $container) {
+            Throw new InvalidArgumentException('The container "' . $name . '" does not exists');
         }
-        else {
 
-            // Forget the exception. Create a generic container instead.
-            $container = new Container();
+        $action = $this->router->getAction();
+
+        if (! method_exists($container, $action)) {
+
+            // ... and try to find and run Index method when no matching action is found
+            $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
         }
+
+        // ... and call matching container action when method exists
+        $container->$action();
+
+        // finally try to parse field defintion
+        $container->parseFields();
 
         return $container;
     }
