@@ -206,7 +206,7 @@ class FormAbstract extends HtmlAbstract
     }
 
     /**
-     * Set the field this element is bound to
+     * Returns the fieldname the control is bound to
      *
      * @throws UnexpectedValueException
      *
@@ -214,8 +214,8 @@ class FormAbstract extends HtmlAbstract
      */
     public function getField()
     {
-        if (! isset($this->field_name)) {
-            Throw new UnexpectedValueException('There is no field name bount onto this element which can be returned.');
+        if (! isset($this->field_name) && $this->getBound()) {
+            Throw new UnexpectedValueException('There is no field name bount onto "' . $this->name . '" element which can be returned.');
         }
 
         return $this->field_name;
