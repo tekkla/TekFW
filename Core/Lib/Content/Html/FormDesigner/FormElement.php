@@ -51,9 +51,9 @@ class FormElement
         else {
             $this->type = 'html';
         }
-
+        
         $this->content = $content;
-
+        
         return $content;
     }
 
@@ -84,13 +84,13 @@ class FormElement
             'html',
             'group'
         ];
-
+        
         if (! in_array($type, $types)) {
             Throw new InvalidArgumentException('The element type "' . $type . '" is not supported. Select from "' . implode('", ', $types) . '"');
         }
-
+        
         $this->type = $type;
-
+        
         return $this;
     }
 
