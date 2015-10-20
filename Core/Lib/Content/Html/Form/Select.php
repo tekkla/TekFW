@@ -2,18 +2,22 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Content\Html\Form\Traits\IsMultipleTrait;
+use Core\Lib\Content\Html\Form\Traits\SizeTrait;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
 
 /**
- * Select Form Element
+ * Select.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Form
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Select extends FormAbstract
 {
+    use IsMultipleTrait;
+    use SizeTrait;
+    use ValueTrait;
 
     private $options = [];
 
@@ -23,7 +27,7 @@ class Select extends FormAbstract
         'control' => 'select'
     ];
 
-    private $value = null;
+    protected $value = [];
 
     /**
      * Creates an Option object and returns it
@@ -39,20 +43,21 @@ class Select extends FormAbstract
 
     /**
      * Add an Option object to the options array.
-     * Use parameters to predefine
-     * the objects settings. If inner parameter is not set, the value is the inner
+     *
+     * Use parameters to predefine the objects settings.
+     * If inner parameter is not set, the value is the inner
      * content of option and has no value attribute.
      *
      * @param string|int $value
      * @param string|int Optional $inner
-     * @param number $selected
+     * @param boolean $selected
+     *
      * @return \Core\Lib\Content\Html\Form\Select
      */
-    public function &newOption($value = null, $inner = null, $selected = 0)
+    public function &newOption($value = null, $inner = null, $selected = false)
     {
+        /* @var $option \Core\Lib\Content\Html\Form\Option */
         $option = $this->factory->create('Form\Option');
-
-        $option->isSelected($selected);
 
         if (isset($value)) {
             $option->setValue($value);
@@ -60,6 +65,10 @@ class Select extends FormAbstract
 
         if (isset($inner)) {
             $option->setInner($inner);
+        }
+
+        if ($selected == true) {
+            $option->isSelected();
         }
 
         return $this->addOption($option);
@@ -80,67 +89,19 @@ class Select extends FormAbstract
         return $this->options[$uniqeid];
     }
 
-    public function setSize($size)
-    {
-        if (! is_int($size)) {
-            Throw new \InvalidArgumentException('A html form selects size attribute needs to be an integer.');
-        }
-
-        $this->attribute['size'] = $size;
-
-        return $this;
-    }
-
-    public function isMultiple($state = null)
-    {
-        $attrib = 'multiple';
-
-        if (! isset($state)) {
-            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
-        }
-
-        if ($state == 0) {
-            unset($this->attribute[$attrib]);
-        }
-        else {
-            $this->attribute[$attrib] = $attrib;
-        }
-
-        return $this;
-    }
-
-    public function setValue($value)
-    {
-        if (!is_array($value)) {
-            $value = (array) $value;
-        }
-
-        $this->value = $value;
-
-        return $this;
-    }
-
-    public function getValue()
-    {
-        return $this->value;
-    }
-
     public function build()
     {
-        if (count($this->value) > 1) {
-            $this->isMultiple(1);
-        }
-
         foreach ($this->options as $option) {
 
-            if ($this->value !== null && in_array($option->getValue(), $this->value)) {
-                $option->isSelected(1);
+            // Select unselected options when the options value is in selects value array
+            if (! $option->getSelected() && in_array($option->getValue(), $this->value)) {
+                $option->isSelected();
             }
 
             $this->inner .= $option->build();
         }
 
-        if ($this->isMultiple()) {
+        if ($this->getMultiple()) {
             $this->setName($this->getName() . '[]');
         }
 

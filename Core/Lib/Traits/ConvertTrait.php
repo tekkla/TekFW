@@ -2,93 +2,66 @@
 namespace Core\Lib\Traits;
 
 /**
+ * ConvertTrait.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 trait ConvertTrait
 {
-	use \Core\Lib\Traits\SerializeTrait;
 
-	/**
-	 * Converts an object and it's public members recursively into an array.
-	 * Use this if you want to convert objects into array.
-	 *
-	 * @param object $obj
-	 * @return array
-	 */
-	function convertObjectToArray($obj)
-	{
-		if (! is_object($obj))
-			return $obj;
+    /**
+     * Converts an object and it's public members recursively into an array.
+     * Use this if you want to convert objects into array.
+     *
+     * @param object $obj
+     * @return array
+     */
+    function convertObjectToArray($obj)
+    {
+        if (! is_object($obj)) {
+            return $obj;
+        }
 
-		$out = [];
+        $out = [];
 
-		foreach ($obj as $key => $val) {
-			if (is_object($val))
-				$out[$key] = $this->convertToArray($val);
-			else
-				$out[$key] = $val;
-		}
+        foreach ($obj as $key => $val) {
+            if (is_object($val)) {
+                $out[$key] = $this->convertToArray($val);
+            }
+            else {
+                $out[$key] = $val;
+            }
+        }
 
-		return $out;
-	}
+        return $out;
+    }
 
-	/**
-	 * Converts an array into an Data object.
-	 * This method works recursive.
-	 *
-	 * @param array $data
-	 *
-	 * @return Data
-	 */
-	function convertToObject($data)
-	{
-		// Return $data when it is already an object
-		if (is_object($data))
-			return $data;
+    /**
+     * Converts a value into boolean.
+     *
+     * Converts the following strings to true: true
+     *
+     * @param mixed $value
+     *
+     * @return boolean
+     */
+    function convertToBool($value)
+    {
+        if (! is_string($value)) {
+            return (bool) $value;
+        }
 
-		$data = new \Core\Lib\Data\Data($data);
-
-		foreach ($data as $key => $val) {
-			if ($this->isSerialized($val))
-				$val = unserialize($val);
-
-			if (is_array($val))
-				$val = $this->converToObject($val);
-
-			$val = empty($val) && strlen($val) == 0 ? '' : $val;
-
-			$data{$key} = $val;
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Converts a value into boolean.
-	 *
-	 * Converts the following strings to true: true
-	 *
-	 * @param mixed $value
-	 *
-	 * @return boolean
-	 */
-	function toBool($value)
-	{
-		if (! is_string($value)) {
-			return (bool) $value;
-		}
-
-		switch (strtolower($value)) {
-			#case '1':
-			case 'true':
-			#case 'on':
-			#case 'yes':
-			#case 'y':
-				return true;
-			default:
-				return false;
-		}
-	}
+        switch (strtolower($value)) {
+            case '1':
+            case 'true':
+            case 'on':
+            case 'yes':
+            case 'y':
+                return true;
+            default:
+                return false;
+        }
+    }
 }

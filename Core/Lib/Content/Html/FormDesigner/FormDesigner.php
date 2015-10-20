@@ -4,24 +4,23 @@ namespace Core\Lib\Content\Html\FormDesigner;
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
-use Core\Lib\Traits\AnalyzeVarTrait;
 use Core\Lib\Content\Html\Form\Form;
-use Core\Lib\Content\Html\Form\Option;
 use Core\Lib\Content\Html\Form\Checkbox;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Content\Html\Form\Select;
 
 /**
- * FormDesigner
+ * FormDesigner.php
  *
- * @todo Write explanation... or an app which explains the basics
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2015 by author
  */
 final class FormDesigner extends Form
 {
     use StringTrait;
     use TextTrait;
-    use AnalyzeVarTrait;
 
     /**
      * Forms group storage
@@ -99,19 +98,19 @@ final class FormDesigner extends Form
      *
      * @var array
      */
-    private $buttons = array(
+    private $buttons = [
         'submit' => 'save'
-    );
+    ];
 
     /**
      * Icons for buttons
      *
      * @var array
      */
-    private $icons = array(
+    private $icons = [
         'submit' => 'save',
         'reset' => 'eraser'
-    );
+    ];
 
     /**
      * Associated data container
@@ -190,7 +189,7 @@ final class FormDesigner extends Form
      *
      * @param string $send_mode Send mode which can be 'ajax' or 'submit'
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Elements\FormDesigner
      */
@@ -202,7 +201,7 @@ final class FormDesigner extends Form
         ];
 
         if (! in_array($send_mode, $modes)) {
-            Throw new \InvalidArgumentException('Wrong form sendmode.', 1000);
+            Throw new InvalidArgumentException(sprintf('"%s" is not an allowed form sendmode.', $send_mode), 1000);
         }
 
         $this->send_mode = $send_mode;
@@ -344,78 +343,6 @@ final class FormDesigner extends Form
         return $this;
     }
 
-    /**
-     * Set icon for a button
-     *
-     * @param string $button Name of the button the icon is related to
-     * @param string $icon Name of the icon to use
-     *
-     * @throws Error
-     *
-     * @return \Core\Lib\Content\Html\Elements\FormDesignerDesigner
-     */
-    public function setIcon($button, $icon)
-    {
-        if (! array_key_exists($button, $this->icons)) {
-            Throw new \InvalidArgumentException('Form Tool: Button not ok.');
-        }
-
-        $this->icons[$button] = $icon;
-
-        return $this;
-    }
-
-    /**
-     * Remove one or all set button icons.
-     *
-     * @param string $button Optional Name of the button to remove. If not set, all icons will be removed.
-     *
-     * @throws Error
-     */
-    public function removeIcon($button = null)
-    {
-        if (isset($button) && ! in_array($button, $this->icons)) {
-            Throw new \InvalidArgumentException('This button is not set in form buttonlist and cannot be removed');
-        }
-
-        if (! isset($button)) {
-            $this->icons = null;
-        }
-        else {
-            unset($this->icons[$button]);
-        }
-    }
-
-    /**
-     * Adds reset button to forms buttonlist
-     *
-     * @return \Core\Lib\Content\Html\Elements\FormDesigner
-     */
-    public function useResetButton()
-    {
-        $this->buttons['reset'] = 'reset';
-
-        return $this;
-    }
-
-    public function setSaveButtonText($text)
-    {
-        $this->buttons['submit'] = $text;
-
-        return $this;
-    }
-
-    /**
-     * Disables the automatic button creation.
-     * Good when you use an alternative like the Actionbar helper.
-     */
-    public function noButtons()
-    {
-        $this->no_buttons = true;
-
-        return $this;
-    }
-
     public function setActionRoute($route, $params = array())
     {
         // Store routename for later use
@@ -428,17 +355,17 @@ final class FormDesigner extends Form
     /**
      * Creates prefixes for controlnames/-ids used within the form which is created by FormDesigner.
      *
-     * @throws \RuntimeException
+     * @throws UnexpectedValueException
      */
     private function createNames()
     {
         // manual forms need a set app and model name
         if (! isset($this->app_name)) {
-            Throw new \RuntimeException('The FormDesigner needs a name of a related app.', 10000);
+            Throw new UnexpectedValueException('The FormDesigner needs a name of a related app.', 10000);
         }
 
         if (! isset($this->control_name)) {
-            Throw new \RuntimeException('The FormDesigner needs a name for the controls,', 10000);
+            Throw new UnexpectedValueException('The FormDesigner needs a name for the controls,', 10000);
         }
 
         $base_form_name = 'appform';
@@ -514,69 +441,16 @@ final class FormDesigner extends Form
     }
 
     /**
-     * Handles optional buttons like 'submit' or 'reset'
-     *
-     * @todo Check namecreation process an find a wayto use buttons for values!
-     */
-    private function handleButtons()
-    {
-        if (! $this->no_buttons && ! empty($this->buttons)) {
-
-            /* @var $group \Core\Lib\Content\Html\FormDesigner\FormGroup */
-            $group = $this->addGroup();
-
-            // Create form buttons
-            foreach ($this->buttons as $btn => $text) {
-
-                $btn_name = 'btn_' . $btn;
-                $btn_id = 'btn-' . str_replace('_', '-', $btn);
-
-                /* @var $button \Core\Lib\Content\Html\FormDesigner\Controls\ButtonControl */
-                $button = $group->addControl('Button', '', false);
-                $button->setName($btn_name);
-                $button->setId($btn_id);
-                $button->setInner($this->txt($text));
-
-                switch ($btn) {
-
-                    case 'submit':
-
-                        $button->addCss('btn-primary');
-
-                        switch ($this->send_mode) {
-
-                            case 'submit':
-                                $button->setType('submit')->addAttribute('form', $this->getId());
-                                break;
-
-                            case 'ajax':
-                                $button->addData('ajax', 'form')->addData('form', $this->getId());
-                                break;
-                        }
-
-                        break;
-
-                    case 'reset':
-                        $button->setType('reset')->setInner($this->txt('btn_reset'));
-                        break;
-                }
-
-                if (isset($this->icons[$btn])) {
-                    $button->useIcon($this->icons[$btn]);
-                }
-            }
-        }
-    }
-
-    /**
      * (non-PHPdoc)
      *
      * @see \Core\Lib\Content\Html\HtmlAbstract::build()
+     *
+     * @throws UnexpectedValueException
      */
     public function build()
     {
         if (empty($this->groups)) {
-            Throw new \RuntimeException('Your form has no groups to show. Add groups and try again.');
+            Throw new UnexpectedValueException('Your form has no groups to show. Add groups and try again.');
         }
 
         // Create needed IDs and control names
@@ -587,9 +461,6 @@ final class FormDesigner extends Form
 
         // Handle display mode
         $this->handleDisplayMode();
-
-        // Handle buttons
-        $this->handleButtons();
 
         // Control html container
         $html = '';
@@ -638,22 +509,36 @@ final class FormDesigner extends Form
                     // Any errors in container
                     if (isset($this->container)) {
 
-                        if ($this->container->hasErrors($content->getName())) {
-                            $builder->setErrors($this->container->getErrors($content->getName()));
+                        $name = $content->getName();
+                        $value = $this->container[$name];
+
+                        if ($this->container->hasErrors($name)) {
+                            $builder->setErrors($this->container->getErrors($name));
                         }
 
-                        // Is control checkable (checkbox eg option)?
-                        if ($content instanceof Checkbox || $content instanceof  Option) {
-
-                            // Set control checked when it's value = container field value
-                            if ($content->getValue() == $this->container[$content->getName()]) {
-                                $content->addAttribute('checked');
-                            }
+                        // Log notice when field does not exist in container
+                        if ($value === false && $content->isBound()) {
+                            Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner. If you want to use a control without binding it to a container field, you have to use the "notBound()" method for this control.', $name));
                         }
 
-                        // Try to get value from container when control has no content set
-                        elseif ($content->getValue() === null && $this->container[$content->getName()]) {
-                           $content->setValue($this->container[$content->getName()]);
+                        switch (true) {
+                            case ($content instanceof Checkbox):
+                                if ($content->getValue() == $value) {
+                                    $content->isChecked();
+                                }
+                                break;
+
+                            case ($content instanceof Select):
+                                if (empty($content->getValue()) && $value !== false) {
+                                    $content->setValue($value);
+                                }
+                                break;
+
+                            default:
+                                if ($content->getValue() == false && $value !== false) {
+                                    $content->setValue($value);
+                                }
+                                break;
                         }
                     }
 
@@ -674,11 +559,13 @@ final class FormDesigner extends Form
                     break;
 
                 case 'group':
-                    $html .= $this->buildGroups($content);
+                    $html .= $this->buildGroup($content);
                     break;
             }
         }
 
-        return $html;
+        $group->setInner($html);
+
+        return $group->build();
     }
 }

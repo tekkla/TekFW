@@ -3,12 +3,13 @@ namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Select;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Creates a on/off switch control
+ * OnOffSwitch.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2015
  * @license MIT
  */
 class OnOffSwitch extends Select
@@ -18,9 +19,6 @@ class OnOffSwitch extends Select
     // array with option objects
     private $switch = [];
 
-    // by deafult switch state is off eg 0
-    private $state = 0;
-
     private function createSwitches()
     {
         if (! empty($this->switch)) {
@@ -29,14 +27,18 @@ class OnOffSwitch extends Select
 
         // Add off option
         $option = $this->factory->create('Form\Option');
+
         $option->setValue(0);
         $option->setInner($this->txt('off'));
+
         $this->switch['off'] = $option;
 
         // Add on option
         $option = $this->factory->create('Form\Option');
+
         $option->setValue(1);
         $option->setInner($this->txt('on'));
+
         $this->switch['on'] = $option;
     }
 
@@ -47,9 +49,10 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
-        $this->switch['on']->isSelected(1);
-        $this->switch['off']->isSelected(0);
-        $this->state = 1;
+        $this->switch['on']->isSelected();
+        $this->switch['off']->notSelected();
+
+        $this->setValue(1);
     }
 
     /**
@@ -59,16 +62,20 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
-        $this->switch['off']->isSelected(1);
-        $this->switch['on']->isSelected(0);
+        $this->switch['on']->notSelected();
+        $this->switch['off']->isSelected();
 
-        $this->state = 0;
+        $this->setValue(0);
     }
 
     /**
      * Set switch to a specific state
      *
      * @param number $state
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return OnOffSwitch
      */
     public function switchTo($state)
     {
@@ -76,11 +83,13 @@ class OnOffSwitch extends Select
             0,
             1,
             false,
-            true
+            true,
+            'on',
+            'off'
         ];
 
         if (! in_array($state, $states)) {
-            Throw new \InvalidArgumentException('Wrong state for on/off switch.');
+            Throw new InvalidArgumentException('Wrong state for on/off switch.');
         }
 
         $this->createSwitches();
@@ -88,10 +97,12 @@ class OnOffSwitch extends Select
         switch ($state) {
             case 0:
             case false:
+            case 'off':
                 $this->switchOff();
                 break;
             case 1:
             case true:
+            case 'on':
                 $this->switchOn();
                 break;
         }
@@ -102,7 +113,7 @@ class OnOffSwitch extends Select
      */
     public function getState()
     {
-        return $this->state;
+        return $this->getValue();
     }
 
     /**
@@ -114,7 +125,19 @@ class OnOffSwitch extends Select
     {
         $this->createSwitches();
 
+        /* @var $option \Core\Lib\Content\Html\Form\Option */
         foreach ($this->switch as $option) {
+
+            $value = $option->getValue();
+
+            if (!$value) {
+                $value = $option->getInner();
+            }
+
+            if ($this->getValue() == $value) {
+                $option->isSelected();
+            }
+
             $this->addOption($option);
         }
 

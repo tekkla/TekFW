@@ -4,10 +4,10 @@ namespace Core\Lib\Content\Html\FormDesigner\Controls;
 use Core\Lib\Content\Html\Form\Button;
 
 /**
- * FormDesigner Submit Control
+ * SubmitControl.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class SubmitControl extends Button
@@ -15,7 +15,7 @@ class SubmitControl extends Button
 
     protected $type = 'submit';
 
-    protected $inner = 'txt-btn_save';
+    protected $inner = 'submit';
 
     protected $icon = 'save';
 

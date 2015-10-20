@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Time (24h format)
+ * Time24Rule.php
  *
- * Checks the value against the 24-hour notation.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class PhoneRule extends RuleAbstract
 {

@@ -2,11 +2,15 @@
 namespace Core\Lib\Security;
 
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Errors\Exceptions\DatabaseException;
+use Core\Lib\Errors\Exceptions\SecurityException;
 
 /**
+ * Group.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class Group
 {
@@ -49,7 +53,14 @@ class Group
     {
         // Copy default groups to
         // $this->groups = $this->default_groups;
-        $this->adapter->query('SELECT id_group, title FROM {db_prefix}groups ORDER BY id_group');
+        $this->adapter->qb([
+            'table' => 'groups',
+            'fields' => [
+                'id_group',
+                'title'
+            ],
+            'order' => 'id_group'
+        ]);
         $this->adapter->execute();
 
         $groups = $this->adapter->fetchAll();
@@ -61,7 +72,7 @@ class Group
 
     /**
      *
-     * @throws \PDOException
+     * @throws DatabaseException
      */
     public function saveGroups()
     {
@@ -74,11 +85,21 @@ class Group
             $this->adapter->beginTransaction();
 
             // Delete current groups
-            $this->adapter->query('DELETE FROM {db_prefix}groups');
+            $this->adapter->qb([
+                'table' => 'groups',
+                'method' => 'DELETE',
+            ]);
             $this->adapter->execute();
 
             // Prepare statement for group insert
-            $this->adapter->query('INSERT INTO {db_prefix}groups (id_group, title) VALUES (:id_group, :title)');
+            $this->adapter->qb([
+                'table' => 'groups',
+                'method' => 'INSERT',
+                'fields' => [
+                    'id_group',
+                    'title',
+                 ]
+            ]);
 
             // Insert the groups each by each into the groups table
             foreach ($groups as $id_group => $title) {
@@ -92,27 +113,27 @@ class Group
         }
         catch (\PDOException $e) {
             $this->adapter->cancelTransaction();
-            Throw new \PDOException($e->getMessage(), $e->getCode(), $e->getPrevious());
+            Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
 
     /**
      *
-     * @param unknown $id_group
-     * @param unknown $title
+     * @param integer $id_group
+     * @param string $title
      *
-     * @throws \RuntimeException
+     * @throws SecurityException
      */
     public function addGroup($id_group, $title)
     {
         // Check for group id already in use
         if (array_key_exists($id_group, $this->groups)) {
-            Throw new \RuntimeException('A usergroup with id "' . $id_group . '" already exists.');
+            Throw new SecurityException('A usergroup with id "' . $id_group . '" already exists.');
         }
 
         // Check for group name already in use
         if (array_search($title, $this->groups)) {
-            Throw new \RuntimeException('A usergroup with title "' . $title . '" already exists.');
+            Throw new SecurityException('A usergroup with title "' . $title . '" already exists.');
         }
 
         $this->groups[$id_group] = $title;
@@ -122,6 +143,8 @@ class Group
      * Removes a group from DB and groups list
      *
      * @param integer $id_group
+     *
+     * @throws DatabaseException
      */
     public function removeGroup($id_group)
     {
@@ -130,13 +153,25 @@ class Group
             $this->adapter->beginTransaction();
 
             // Delete usergroup
-            $this->adapter->query('DELETE FROM {db_prefix}groups WHERE id_group = :id_group');
-            $this->adapter->bindValue(':id_group', $id_group);
+            $this->adapter->qb([
+                'table' => 'groups',
+                'method' => 'DELETE',
+                'filter' => 'id_group = :id_group',
+                'params' => [
+                    ':id_group' => $id_group
+                ]
+            ]);
             $this->adapter->execute();
 
             // Delete permissions related to this group
-            $this->adapter->query('DELETE FROM {db_prefix}permissions WHERE id_group = :id_group');
-            $this->adapter->bindValue(':id_group', $id_group);
+            $this->adapter->qb([
+                'table' => 'permissions',
+                'method' => 'DELETE',
+                'filter' => 'id_group = :id_group',
+                'params' => [
+                    ':id_group' => $id_group
+                ]
+            ]);
             $this->adapter->execute();
 
             // Remove group from current grouplist
@@ -147,7 +182,7 @@ class Group
         catch (\PDOException $e) {
             $this->adapter->cancelTransaction();
 
-            Throw new \PDOException($e->getMessage(), $e->getCode(), $e->getPrevious());
+            Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
 

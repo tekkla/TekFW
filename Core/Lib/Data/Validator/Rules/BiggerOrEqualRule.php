@@ -2,16 +2,18 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Bigger or equal
+ * BiggerOrEqualRule.php
  *
- * Compares the value against a compare value by type and lenghts.
- * Only strings and numbers can be compared. All othe types returns false.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class BiggerOrEqualRule extends RuleAbstract
 {
 
     /**
      * (non-PHPdoc)
+     *
      * @see \Core\Lib\Data\Validator\Rules\RuleAbstract::execute()
      */
     public function execute()
@@ -33,4 +35,3 @@ class BiggerOrEqualRule extends RuleAbstract
         }
     }
 }
-

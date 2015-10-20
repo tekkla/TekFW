@@ -2,9 +2,10 @@
 namespace Core\Lib\Http;
 
 use Core\Lib\Data\DataAdapter;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Session object class
+ * Session.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -28,10 +29,10 @@ final class Session
     {
         $this->adapter = $adapter;
 
-        // Lifetime auf eine Stunde setzen
+        // Set sssion garbage collector lifetime to one hour
         ini_set('session.gc_maxlifetime', 3600);
 
-        // gc mit einer Wahrscheinlichkeit von 1% aufrufen
+        // Run garbage collector with a chance of 1%
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
 
@@ -62,7 +63,7 @@ final class Session
      *
      * @param string $key
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return mixed
      */
@@ -72,7 +73,7 @@ final class Session
             return $_SESSION[$key];
         }
         else {
-            Throw new \InvalidArgumentException('Session key "' . $key . '" not found.');
+            Throw new InvalidArgumentException('Session key "' . $key . '" not found.');
         }
     }
 
@@ -184,7 +185,7 @@ final class Session
     public function read($id_session)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'tbl' => 'sessions',
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
@@ -204,7 +205,7 @@ final class Session
     public function write($id_session, $data)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'REPLACE',
             'tbl' => 'sessions',
             'fields' => [
@@ -229,7 +230,7 @@ final class Session
     public function destroy($id_session)
     {
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'id_session=:id_session',
@@ -251,7 +252,7 @@ final class Session
         $old = time() - $max;
 
         // Set query
-        $this->adapter->query([
+        $this->adapter->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'access<:old',

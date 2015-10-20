@@ -2,16 +2,18 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Bigger
+ * BiggerRule.php
  *
- * Checks the value typsave to be longer/bigger than the compare value.
- * Only strings and numbers can be compared. All othe types returns false.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class BiggerRule extends RuleAbstract
 {
 
     /**
      * (non-PHPdoc)
+     *
      * @see \Core\Lib\Data\Validator\Rules\RuleAbstract::execute()
      */
     public function execute()
@@ -33,5 +35,3 @@ class BiggerRule extends RuleAbstract
         }
     }
 }
-
-?>

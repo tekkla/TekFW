@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: TxtMinLength
+ * TxtMinLengthRule.php
  *
- * Check for a minimum text length.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class TxtMinLengthRule extends RuleAbstract
 {

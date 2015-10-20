@@ -4,13 +4,11 @@ namespace Core\Lib\Content\Html\Controls;
 use Core\Lib\Content\Html\Elements\Div;
 
 /**
- * Creates a group control with heading and leading text.
+ * Group.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Controls
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Group extends Div
 {
@@ -77,7 +75,7 @@ class Group extends Div
      */
     public function usePanel($use_panel = true)
     {
-        $this->use_panel = is_bool($use_panel) ? $use_panel : false;
+        $this->use_panel = (bool) $use_panel;
 
         return $this;
     }

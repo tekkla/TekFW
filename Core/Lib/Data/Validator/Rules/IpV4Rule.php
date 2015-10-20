@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: IpV4
+ * IpV4Rule.php
  *
- * Checks the value to by a valid IpV4 adress
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class IpV4Rule extends RuleAbstract
 {
@@ -23,7 +25,7 @@ class IpV4Rule extends RuleAbstract
                 'regexp' => $regexp
             ]
         ]);
-        
+
         if (! $result) {
             $this->msg = $this->txt('validator_ipv4');
         }

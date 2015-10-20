@@ -1,12 +1,14 @@
 <?php
 namespace Core\Lib\Amvc;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Data\Container;
+
 /**
- * Basic view class.
- * Each app view has to be a child of this class.
+ * View.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class View extends MvcAbstract
@@ -33,10 +35,8 @@ class View extends MvcAbstract
     /**
      * Renders the view and returns the result
      *
-     * @param string $func
-     *            Name of render method
-     * @param array $params
-     *            Optional: Parameterlist to pass to render function
+     * @param string $func Name of render method
+     * @param array $params Optional: Parameterlist to pass to render function
      */
     public final function render($action, $params = array())
     {
@@ -53,8 +53,7 @@ class View extends MvcAbstract
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
      * @param string $key
-     * @param
-     *            $val
+     * @param $val
      */
     public final function setVar($key, $val)
     {
@@ -64,8 +63,14 @@ class View extends MvcAbstract
             $val = $val->build();
         }
 
+        if ($val instanceof Container) {
+            $val = $val->getArray();
+        }
+
         // Another lazy thing. It's for accessing vars in the view by ->var_name
         $this->__magic_vars[$key] = $val;
+
+        return $this;
     }
 
     /**
@@ -112,7 +117,7 @@ class View extends MvcAbstract
     }
 
     /**
-     * Returns a dumps all seth vars
+     * Returns a dump of all set vars.
      *
      * @return string
      */
@@ -120,6 +125,64 @@ class View extends MvcAbstract
     {
         ob_start();
         echo var_dump($this->__magic_vars);
+
         return ob_end_flush();
+    }
+
+    /**
+     * Shorthand method für htmlE() or htmlS().
+     *
+     * @param string|number $val
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return string
+     */
+    protected function html($val, $mode = 's')
+    {
+        switch ($mode) {
+            case 'e':
+                return $this->htmlE($val);
+            case 's':
+                return $this->htmlS($val);
+        }
+
+        Throw new InvalidArgumentException(sprintf('Mode "%s" is a not supported View::html() output mode.', $mode));
+    }
+
+    /**
+     * Wrapper method for encoding a value by htmlspecialchars($var, ENT_COMPAT, 'UTF-8')
+     *
+     * @param string|number $var
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return string
+     */
+    protected function htmlS($val)
+    {
+        if (is_array($val) || is_object($val)) {
+            Throw new InvalidArgumentException('It is not allowed to uses arrays or objects for htmlS() output.');
+        }
+
+        return htmlspecialchars($val, ENT_COMPAT, 'UTF-8');
+    }
+
+    /**
+     * Wrapper method for encoding a value by  htmlenteties($val, ENT_COMPAT, 'UTF-8')
+     *
+     * @param string|number $val
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return string
+     */
+    protected function htmlE($val)
+    {
+        if (is_array($val) || is_object($val)) {
+            Throw new InvalidArgumentException('It is not allowed to uses arrays or objects for htmlE() output.');
+        }
+
+        return htmlentities($val, ENT_COMPAT, 'UTF-8');
     }
 }

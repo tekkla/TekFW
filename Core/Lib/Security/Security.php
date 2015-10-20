@@ -10,16 +10,11 @@ use Core\Lib\Data\Adapter\Database;
 use Core\Lib\Traits\DebugTrait;
 
 /**
- * Security
- *
- * For login and permission handling
+ * Security.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
- * @todo Find better solution for GC of expired autologin tokens
  */
 class Security
 {
@@ -246,7 +241,7 @@ class Security
         }
 
         // Try to load user from db
-        $query = [
+        $this->adapter->qb([
             'table' => 'users',
             'fields' => [
                 'id_user',
@@ -256,15 +251,15 @@ class Security
             'params' => [
                 ':username' => $username
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ]);
 
         $login = $this->adapter->single();
 
         // No user found => login failed
         if (! $login) {
+
+            // Log login try with not existing username
+            $this->logLogin(0, $username, false, true);
             return false;
         }
 
@@ -276,8 +271,7 @@ class Security
 
             // Needs hash to be updated?
             if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
-
-                $query = [
+                $this->adapter->qb([
                     'table' => 'users',
                     'method' => 'UPDATE',
                     'fields' => [
@@ -288,11 +282,11 @@ class Security
                         ':password' => password_hash($password, PASSWORD_DEFAULT),
                         ':id_user' => $login['id_user']
                     ]
-                ];
-
-                $this->adapter->query($query);
-                $this->adapter->execute();
+                ], true);
             }
+
+            // Load User
+            $this->user->load($login['id_user']);
 
             // Store essential userdata in session
             $this->session->set('logged_in', true);
@@ -303,19 +297,28 @@ class Security
                 $this->setAutoLoginCookies($login['id_user']);
             }
 
+            // Log successfull login
+            $this->logLogin($login['id_user']);
+
             // Login is ok, return user id
             return $login['id_user'];
         }
         else {
+
+            // Log try with wrong password and start ban counter
+            $this->logLogin(0,false,true, true);
             return false;
         }
     }
 
     /**
-     * Logout of the user and clean up autologin cookies
+     * Logout of the user and clean up autologin cookies.
      */
     public function logout()
     {
+
+        $id_user = $this->session->get('id_user');
+
         // Clean up session
         $this->session->set('autologin_failed', true);
         $this->session->set('id_user', 0);
@@ -323,6 +326,10 @@ class Security
 
         // Calling logout means to revoke autologin cookies
         $this->cookie->remove($this->cookie_name . 'Token');
+
+
+        $this->logging->logout('User:' . $id_user);
+
     }
 
     /**
@@ -334,6 +341,7 @@ class Security
     {
         // User already logged in?
         if ($this->session->exists('logged_in') && $this->session->get('logged_in') === true) {
+            $this->user->load($this->session->get('id_user'));
             return true;
         }
 
@@ -360,32 +368,26 @@ class Security
         // Let's find the user for the token in cookie
         list ($selector, $token) = explode(':', $this->cookie->get($cookie));
 
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'fields' => [
                 'id_auth_token',
                 'id_user',
                 'token',
-                'selector'
+                'selector',
+                'expires'
             ],
             'filter' => 'selector=:selector',
             'params' => [
                 ':selector' => $selector
             ]
-        ];
-
-        $this->adapter->query($query);
+        ]);
         $data = $this->adapter->all();
-
-        // Create hash of token to compare with hash from db only when there is data
-        if (! $data) {
-            $token = hash('sha256', hex2bin($token));
-        }
 
         foreach ($data as $auth_token) {
 
             // Check if token is expired?
-            if ($auth_token['expires'] < date('Y-m-d H:i:s')) {
+            if (strtotime($auth_token['expires']) < time()) {
                 $this->deleteAuthTokenFromDb($auth_token['id_user']);
             }
 
@@ -413,7 +415,7 @@ class Security
         // !!! Reaching this point means autologin validation failed in all ways
         // Clean up the mess and return a big bad fucking false as failed autologin result.
 
-        // Remove user and tooken cookie
+        // Remove token cookie
         $this->cookie->remove($cookie);
 
         // Set flag that autologin failed
@@ -437,7 +439,7 @@ class Security
     private function deleteAuthTokenFromDb($id_user)
     {
         // Yep! Delete token and return false for failed autologin
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'method' => 'DELETE',
             'filter' => 'expires < :expires OR id_user=:id_user',
@@ -445,10 +447,7 @@ class Security
                 ':expires' => date('Y-m-d H:i:s'),
                 ':id_user' => $id_user
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ], true);
     }
 
     /**
@@ -470,8 +469,10 @@ class Security
         $selector = bin2hex($this->generateRandomToken(6));
         $token = $this->generateRandomToken(64);
 
+        $hash = hash('sha256', $token);
+
         // Store selector and hash in DB
-        $query = [
+        $this->adapter->qb([
             'table' => 'auth_tokens',
             'method' => 'INSERT',
             'fields' => [
@@ -482,14 +483,11 @@ class Security
             ],
             'params' => [
                 ':selector' => $selector,
-                ':token' => hash('sha256', $token),
+                ':token' => $hash,
                 ':id_user' => $id_user,
                 ':expires' => date('Y-m-d H:i:s', $this->expire_time)
             ]
-        ];
-
-        $this->adapter->query($query);
-        $this->adapter->execute();
+        ], true);
 
         // Set autologin token cookie only when token is stored successfully in db!!!
         if ($this->adapter->lastInsertId()) {
@@ -502,7 +500,7 @@ class Security
 
             // Set token cookie
             $cookie->setName($this->cookie_name . 'Token');
-            $cookie->setValue($selector . ':' . bin2hex($token));
+            $cookie->setValue($selector . ':' . $hash);
             $cookie->set();
         }
     }
@@ -575,22 +573,27 @@ class Security
     {
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
+            $this->debugFbLog('is Guest');
             return false;
         }
 
         // Allow access to all users when perms argument is empty
         if (empty($perms)) {
+            $this->debugFbLog('no Perms');
             return true;
         }
 
         // Administrators are supermen :P
         if ($this->user->isAdmin()) {
+            $this->debugFbLog('is Admin');
+            $this->debugFbLog($this->user->getGroups());
             return true;
         }
 
         // Explicit array conversion of perms arg
         if (! is_array($perms)) {
             $perms = (array) $perms;
+            $this->debugFbLog($perms);
         }
 
         // User has the right to do this?
@@ -679,8 +682,71 @@ class Security
      */
     public function logSuspicious($msg, $ban = false)
     {
-        $this->logging->security($msg);
+        $this->logging->suspicious($msg);
 
         return $this;
+    }
+
+    /**
+     * Logs login attemps.
+     *
+     * @param integer $id_user
+     * @param boolean $username
+     * @param boolean $password
+     * @param boolean $ban
+     */
+    private function logLogin($id_user, $username = false, $password = false, $ban = false)
+    {
+        $text = 'Login for user:' . $id_user;
+        $state = 0;
+
+        if (! $username || !$password) {
+
+            $text .= ' failed!';
+
+            if (!$username) {
+                $state = 1;
+            }
+
+            if (!$password) {
+                $state = 2;
+            }
+        }
+        else  {
+            $text .= ' success';
+        }
+
+
+        $this->logging->login($text, $state);
+
+        // Start ban process only when requested and only when state
+        // indicates a login error from user credentials
+        if ($state > 0 && $ban) {
+            $this->logging->ban('Ban event');
+        }
+    }
+
+    /**
+     * Ban check
+     */
+    public function checkBan()
+    {
+            // Get max tries until get banned from config
+            $max_tries = $this->cfg->get('Core', 'ban_max_counter');
+
+            // Max tries of 0 means no ban check at all
+            if ($max_tries == 0) {
+                return true;
+            }
+
+            // Get ban counter for the visitors IP
+            $counter = $this->logging->countBanLogEntries($_SERVER['REMOTE_ADDR']);
+
+            // As long as the ban counter is smaller than allowed the check is ok.
+            if ($counter < $max_tries) {
+                return true;
+            }
+
+            //
     }
 }

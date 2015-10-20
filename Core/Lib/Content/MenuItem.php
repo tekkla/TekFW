@@ -1,6 +1,8 @@
 <?php
 namespace Core\Lib\Content;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
  * MenuItem.php
  *
@@ -66,6 +68,13 @@ class MenuItem extends MenuItemAbstract
     private $css = '';
 
     /**
+     * Options storage.
+     *
+     * @var Array
+     */
+    private $options = [];
+
+    /**
      * Constructor
      */
     public function _construct()
@@ -87,12 +96,15 @@ class MenuItem extends MenuItemAbstract
      * InvalidArgumentException().
      *
      * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
      * @return MenuItem
      */
     public function setName($name)
     {
         if (in_array($name, self::$used_names)) {
-            Throw new \InvalidArgumentException('The menuitem name "' . $name . '" is already in use.');
+            Throw new InvalidArgumentException('The menuitem name "' . $name . '" is already in use.');
         }
 
         $this->name = $name;
@@ -206,6 +218,7 @@ class MenuItem extends MenuItemAbstract
      * be transformed into a string
      *
      * @param string $css
+     *
      * @return MenuItem
      */
     public function setCss($css)
@@ -216,5 +229,37 @@ class MenuItem extends MenuItemAbstract
         $this->css = $css;
 
         return $this;
+    }
+
+    /**
+     * Sets one or more options.
+     *
+     * @param string|array $option Name of option or assoc array of options.
+     * @param mixed $value Optional value when setting only one option.
+     *
+     * @return MenuItem
+     */
+    public function setOption($option, $value = '')
+    {
+        if (is_array($option)) {
+            foreach ($option as $key => $value) {
+                $this->options[$key] = $value;
+            }
+        }
+        else {
+            $this->options[$option] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns set options.
+     *
+     * @return Array
+     */
+    public function getOptions()
+    {
+        return $this->options;
     }
 }

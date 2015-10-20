@@ -2,6 +2,7 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\HtmlAbstract;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * Form html object
@@ -42,7 +43,7 @@ class Form extends HtmlAbstract
      *
      * @param string $method Value for the method attribute of from
      *
-     * @throws NoValidParameterError
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Elements\Form
      */
@@ -55,7 +56,7 @@ class Form extends HtmlAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array(strtolower($method), $methods)) {
-            Throw new \InvalidArgumentException('Wrong html form method attribute set.', 1000);
+            Throw new InvalidArgumentException('Wrong html form method attribute set.', 1000);
         }
 
         $this->attribute['method'] = $method;
@@ -84,7 +85,7 @@ class Form extends HtmlAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array(strtolower($enctype), $enctypes)) {
-            Throw new \InvalidArgumentException('Wrong html form enctype attribute set.', 1000);
+            Throw new InvalidArgumentException('Wrong html form enctype attribute set.', 1000);
         }
 
         $this->attribute['enctype'] = $enctype;
@@ -137,7 +138,7 @@ class Form extends HtmlAbstract
         ];
 
         if (! in_array(strtolower($state), $states))
-            Throw new \InvalidArgumentException('Wrong html form autocomplete attribute state.', 1000);
+            Throw new InvalidArgumentException('Wrong html form autocomplete attribute state.', 1000);
 
         $this->attribute['autocomplete'] = $state;
 

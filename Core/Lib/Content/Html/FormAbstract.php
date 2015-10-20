@@ -4,7 +4,16 @@ namespace Core\Lib\Content\Html;
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Content\Html\Form\Label;
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
+/**
+ * FormAbstract.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ */
 class FormAbstract extends HtmlAbstract
 {
     use StringTrait;
@@ -137,14 +146,16 @@ class FormAbstract extends HtmlAbstract
     }
 
     /**
-     * Returns the name of the set app
+     * Returns the name of the set app.
+     *
+     * @throws UnexpectedValueException
      *
      * @return string
      */
     public function getApp()
     {
         if (! isset($this->app_name)) {
-            Throw new \RuntimeException('App name was not set for this form and cannot be returned');
+            Throw new UnexpectedValueException('App name was not set for this form and cannot be returned');
         }
 
         return $this->app_name;
@@ -167,14 +178,14 @@ class FormAbstract extends HtmlAbstract
     /**
      * Returns the mnodel name set
      *
-     * @throws Error
+     * @throws UnexpectedValueException
      *
      * @return string
      */
     public function getModel()
     {
         if (! isset($this->model_name)) {
-            Throw new \RuntimeException('Model name was not set for element and cannot be returned');
+            Throw new UnexpectedValueException('Model name was not set for element and cannot be returned');
         }
 
         return $this->model_name;
@@ -195,16 +206,16 @@ class FormAbstract extends HtmlAbstract
     }
 
     /**
-     * Set the field this element is bound to
+     * Returns the fieldname the control is bound to
      *
-     * @throws Error
+     * @throws UnexpectedValueException
      *
      * @return string
      */
     public function getField()
     {
-        if (! isset($this->field_name)) {
-            Throw new \RuntimeException('There is no field name bount onto this element which can be returned.');
+        if (! isset($this->field_name) && $this->getBound()) {
+            Throw new UnexpectedValueException('There is no field name bount onto "' . $this->name . '" element which can be returned.');
         }
 
         return $this->field_name;
@@ -213,22 +224,22 @@ class FormAbstract extends HtmlAbstract
     /**
      * Create the name of the form element by using names of app, $model and field
      *
-     * @throws Error
+     * @throws UnexpectedValueException
      *
      * @return \Core\Lib\Content\Html\Elements\FormControlAbstract
      */
     public function createName()
     {
         if (! isset($this->app_name)) {
-            throw new \RuntimeException('No app name set for your form control.');
+            throw new UnexpectedValueException('No app name set for your form control.');
         }
 
         if (! isset($this->model_name)) {
-            throw new \RuntimeException('No model name set for your form control.');
+            throw new UnexpectedValueException('No model name set for your form control.');
         }
 
         if (! isset($this->field_name)) {
-            throw new \RuntimeException('No field name set for your form control.');
+            throw new UnexpectedValueException('No field name set for your form control.');
         }
 
         $this->setName('web[' . $this->app_name . '][' . $this->model_name . '][' . $this->field_name . ']');
@@ -239,22 +250,22 @@ class FormAbstract extends HtmlAbstract
     /**
      * Creates the dom id using app, model and field names
      *
-     * @throws Error
+     * @throws UnexpectedValueException
      *
      * @return \Core\Lib\Content\Html\Elements\FormControlAbstract
      */
     public function createId()
     {
         if (! isset($this->app_name)) {
-            throw new \RuntimeException('No app name set for your form control.');
+            throw new UnexpectedValueException('No app name set for your form control.');
         }
 
         if (! isset($this->model_name)) {
-            throw new \RuntimeException('No model name set for your form control.');
+            throw new UnexpectedValueException('No model name set for your form control.');
         }
 
         if (! isset($this->field_name)) {
-            throw new \RuntimeException('No field name set for your form control.');
+            throw new UnexpectedValueException('No field name set for your form control.');
         }
 
         $this->setId('appform_' . $this->app_name . '_' . $this->model_name . '_' . $this->field_name);
@@ -302,13 +313,10 @@ class FormAbstract extends HtmlAbstract
      * This method is used to determine the type of input form elements.
      *
      * @return string|null
-     * @throws Error
      */
     public function getType()
     {
-        if (method_exists($this, 'setType')) {
-            return $this->getAttribute('type');
-        }
+        return method_exists($this, 'setType') ? $this->getAttribute('type') : null;
     }
 
     /**
@@ -385,7 +393,7 @@ class FormAbstract extends HtmlAbstract
      *
      * @param string $element_width BS grid sizes like "sm-3" or "lg-5". Needed "col-" will be added by the method.
      *
-     * @throws NoValidParameterError
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Elements\FormControlAbstract
      */
@@ -406,7 +414,7 @@ class FormAbstract extends HtmlAbstract
         }
 
         if (! in_array($element_width, $allowed_widths)) {
-            throw new \InvalidArgumentException('Element with is no valid', 1000);
+            throw new InvalidArgumentException('Element with is no valid', 1000);
         }
 
         $this->element_width = 'col-' . $element_width;
@@ -461,13 +469,16 @@ class FormAbstract extends HtmlAbstract
     {
         $attrib = 'disabled';
 
-        if (! isset($state))
+        if (! isset($state)) {
             return $this->checkAttribute($attrib);
+        }
 
-        if ($state == 0)
+        if ($state == 0) {
             $this->removeAttribute($attrib);
-        else
+        }
+        else {
             $this->addAttribute($attrib);
+        }
 
         return $this;
     }

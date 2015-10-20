@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Url
+ * UrlRule.php
  *
- * Checks the value to be a valid url
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class UrlRule extends RuleAbstract
 {
@@ -23,7 +25,7 @@ class UrlRule extends RuleAbstract
                 'regexp' => $regexp
             ]
         ]);
-        
+
         if (! $result) {
             $this->msg = $this->txt('validator_url');
         }

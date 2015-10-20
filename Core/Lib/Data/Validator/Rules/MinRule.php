@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Min
+ * MinRule.php
  *
- * Checks the values for a minimum length (string) or amount (numeric).
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class MinRule extends RuleAbstract
 {

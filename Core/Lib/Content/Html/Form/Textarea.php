@@ -2,16 +2,24 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
+use Core\Lib\Content\Html\Form\Traits\MaxlengthTrait;
+use Core\Lib\Content\Html\Form\Traits\PlaceholderTrait;
 
 /**
- * Textarea Form Element
+ * Textarea.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license MIT
  * @copyright 2015
+ * @license MIT
  */
 class Textarea extends FormAbstract
 {
+
+    use ValueTrait;
+    use MaxlengthTrait;
+    use PlaceholderTrait;
 
     protected $element = 'textarea';
 
@@ -19,19 +27,19 @@ class Textarea extends FormAbstract
         'control' => 'textarea'
     ];
 
-    private $value = null;
-
-    public function setPlaceholder($placeholder)
-    {
-        $this->attribute['placeholder'] = $placeholder;
-
-        return $this;
-    }
-
+    /**
+     * Sets cols attribute
+     *
+     * @param integer $cols
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return \Core\Lib\Content\Html\Form\Textarea
+     */
     public function setCols($cols)
     {
-        if (! is_int($cols)) {
-            Throw new \InvalidArgumentException('A html form textareas cols attribute need to be of type integer');
+        if (empty((int) $cols)) {
+            Throw new InvalidArgumentException('A html form textareas cols attribute need to be of type integer');
         }
 
         $this->attribute['cols'] = $cols;
@@ -39,10 +47,19 @@ class Textarea extends FormAbstract
         return $this;
     }
 
+    /**
+     * Sets rows attribute.
+     *
+     * @param int $rows
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return \Core\Lib\Content\Html\Form\Textarea
+     */
     public function setRows($rows)
     {
-        if (! is_int($rows)) {
-            Throw new \InvalidArgumentException('A html form textareas rows attribute needs to be of type integer');
+        if (empty((int) $rows)) {
+            Throw new InvalidArgumentException('A html form textareas rows attribute needs to be of type integer');
         }
 
         $this->attribute['rows'] = $rows;
@@ -50,37 +67,8 @@ class Textarea extends FormAbstract
         return $this;
     }
 
-    public function setMaxlength($maxlength)
-    {
-        if (! is_int($maxlength)) {
-            Throw new \InvalidArgumentException('A html form textareas maxlenght attribute needs to be of type integer.');
-        }
-
-        $this->attribute['maxlength'] = $maxlength;
-
-        return $this;
-    }
-
-    public function setValue($value)
-    {
-        $this->value = $value;
-
-        return $this;
-    }
-
-    public function getValue()
-    {
-        return $this->value;
-    }
-
     public function build()
     {
-        if ($this->value === null) {
-            $this->value = '';
-        }
-
-        $this->inner = $this->value;
-
         return parent::build();
     }
 }

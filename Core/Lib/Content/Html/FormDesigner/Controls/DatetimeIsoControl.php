@@ -2,10 +2,10 @@
 namespace Core\Lib\Content\Html\FormDesigner\Controls;
 
 /**
- * FormDesigner Datetime Iso Control (dummy)
+ * DatetimeIsoControl.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class DatetimeIsoControl extends DatetimeControl

@@ -3,9 +3,11 @@ namespace Core\Lib\Content;
 
 use Core\Lib\Cfg;
 use Core\Lib\Content\Html\HtmlFactory;
+use Core\Lib\Errors\Exceptions\TemplateException;
+use Core\Lib\Cache\Cache;
 
 /**
- * Template parent class
+ * Template.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -28,19 +30,25 @@ class Template
      *
      * @var Cfg
      */
-    private $cfg;
+    protected $cfg;
 
     /**
      *
      * @var Content
      */
-    private $content;
+    protected $content;
 
     /**
      *
      * @var HtmlFactory
      */
-    private $html;
+    protected $html;
+
+    /**
+     *
+     * @var Cache
+     */
+    private $cache;
 
     /**
      * Constructor
@@ -49,11 +57,12 @@ class Template
      * @param Content $content
      * @param HtmlFactory $html
      */
-    public function __construct(Cfg $cfg, Content $content, HtmlFactory $html)
+    public function __construct(Cfg $cfg, Content $content, HtmlFactory $html, Cache $cache)
     {
         $this->cfg = $cfg;
         $this->content = $content;
         $this->html = $html;
+        $this->cache = $cache;
     }
 
     /**
@@ -63,13 +72,13 @@ class Template
      * runtime exception when a requested layer does not exist in the called
      * template file.
      *
-     * @throws \RuntimeException
+     * @throws TemplateException
      */
     final public function render()
     {
         foreach ($this->layers as $layer) {
             if (! method_exists($this, $layer)) {
-                Throw new \RuntimeException('Template Error: The requested layer "' . $layer . '" does not exist.');
+                Throw new TemplateException('Template Error: The requested layer "' . $layer . '" does not exist.');
             }
 
             $this->$layer();
@@ -94,22 +103,22 @@ class Template
             return $meta_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($meta_stack as $tag) {
 
-            $meta = $this->html->create('Elements\Meta');
+            // $meta = $this->html->create('Elements\Meta');
 
-            $html .= PHP_EOL . '<meta';
+            echo PHP_EOL . '<meta';
 
             foreach ($tag as $attribute => $value) {
-                $html .= ' ' . $attribute . '="' . $value . '"';
+                echo ' ', $attribute, '="', $value, '"';
             }
 
-            $html .= '>';
+            echo '>';
         }
 
-        return $html;
+        $html = ob_get_contents();
     }
 
     /**
@@ -132,7 +141,7 @@ class Template
     }
 
     /**
-     * Returns html navbar or only its data.
+     * Returns html navbar or only the menu structure.
      *
      * Set $data_only argument to true if you want to get get only the data
      * without a genereated html control.
@@ -141,20 +150,9 @@ class Template
      *
      * @return string|array
      */
-    final protected function getNavbar($data_only = false)
+    final protected function getMenu($name = '')
     {
-        if ($data_only) {
-            return [
-                'brand' => $this->content->getBrand(),
-                'items' => $this->content->navbar->getMenu()
-            ];
-        }
-
-        $navbar = $this->html->create('Controls\Navbar');
-        $navbar->setBrand($this->content->getBrand(), '/');
-        $navbar->setItems($this->content->navbar->getMenu());
-
-        return $navbar->build();
+        return $this->content->menu->getItems($name);
     }
 
     /**
@@ -175,11 +173,15 @@ class Template
             return $og_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($og_stack as $property => $content) {
-            $html .= '<meta property="' . $property . '" content="' . $content . '">' . PHP_EOL;
+            echo '<meta property="', $property, '" content="', $content, '">', PHP_EOL;
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -194,64 +196,15 @@ class Template
      *
      * @return array|string
      */
-    final protected function getCss($data_only = false)
+    final protected function getCss()
     {
-        $css_stack = $this->content->css->getObjectStack();
-
-        if ($data_only) {
-            return $css_stack;
-        }
-
-        $files = [];
-        $inline = [];
+        $files = $this->content->css->getFiles();
 
         $html = '';
 
-        /* @var $css Css */
-        foreach ($css_stack as $css) {
-
-            switch ($css->getType()) {
-                case 'file':
-                    $files[] = $css->getCss();
-                    break;
-
-                case 'inline':
-                    $inline[] = $css->getCss();
-                    break;
-            }
-        }
-
-        // create script for minifier
-        if ($this->cfg->get('Core', 'css_minify')) {
-
-            foreach ($files as $file) {
-
-                if (strpos($file['filename'], BASEURL) !== false) {
-
-                    $board_parts = parse_url(BASEURL);
-                    $url_parts = parse_url($file['filename']);
-
-                    // Do not try to minify ressorces from external host
-                    if ($board_parts['host'] != $url_parts['host'])
-                        continue;
-
-                        // Store filename in minify list
-                    $files_to_min[] = '/' . $url_parts['path'];
-                }
-            }
-
-            if ($files_to_min) {
-                $_SESSION['min_css'] = $files_to_min;
-                $files = (array) $this->cfg->get('Core', 'url_tools') . '/min/g=css';
-            }
-        }
-
+        // Start reading
         foreach ($files as $file) {
             $html .= PHP_EOL . '<link rel="stylesheet" type="text/css" href="' . $file . '">';
-        }
-
-        if ($inline) {
-            $html .= PHP_EOL . '<style>' . PHP_EOL . implode(PHP_EOL, $inline) . PHP_EOL . '</style>' . PHP_EOL;
         }
 
         return $html;
@@ -264,139 +217,20 @@ class Template
      * without a genereated html control.
      *
      * @param string $area Valid areas are 'top' and 'below'.
-     * @param boolean $data_only
      *
-     * @return array|string
+     * @return array
      */
-    final protected function getScript($area, $data_only = false)
+    final protected function getScript($area)
     {
-        // Get scripts of this area
-        $script_stack = $this->content->js->getScriptObjects($area);
 
-        if ($data_only) {
-            return $script_stack;
-        }
-
-        // Init js storages
-        $files = $blocks = $inline = $scripts = $ready = $vars = [];
-
-        // Include JSMin lib
-        if ($this->cfg->get('Core', 'js_minify')) {
-            require_once ($this->cfg->get('Core', 'dir_tools') . '/min/lib/JSMin.php');
-        }
-
-        /* @var $script Javascript */
-        foreach ($script_stack as $key => $script) {
-
-            switch ($script->getType()) {
-
-                // File to lin
-                case 'file':
-                    $files[] = $script->getScript();
-                    break;
-
-                // Script to create
-                case 'script':
-                    $inline[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
-                    break;
-
-                // Dedicated block to embaed
-                case 'block':
-                    $blocks[] = PHP_EOL . $script->getScript();
-                    break;
-
-                // A variable to publish to global space
-                case 'var':
-                    $var = $script->getScript();
-                    $vars[$var[0]] = $var[1];
-                    break;
-
-                // Script to add to $.ready()
-                case 'ready':
-                    $ready[] = $this->cfg->get('Core', 'js_minify') ? \JSMin::minify($script->getScript()) : $script->getScript();
-                    break;
-            }
-
-            // Remove worked script object
-            unset($script_stack[$key]);
-        }
-
-        // Are there files to minify?
-        if ($this->cfg->get('Core', 'js_minify')) {
-
-            if ($files) {
-                $to_minfiy = [];
-            }
-
-            foreach ($files as $file) {
-
-                // Process only files that come from the sitecontext
-                if (strpos($file['filename'], BASEURL) !== false) {
-
-                    // Compare host to get sure
-                    $board_parts = parse_url(BASEURL);
-                    $url_parts = parse_url($file['filename']);
-
-                    if ($board_parts['host'] != $url_parts['host']) {
-                        continue;
-                    }
-
-                    // Store filename in minify list
-                    if (! in_array('/' . $url_parts['path'], $files)) {
-                        $to_minfiy[] = '/' . $url_parts['path'];
-                    }
-                }
-            }
-
-            // Are there files to combine?
-            if ($to_minfiy) {
-
-                // Store files to minify in session
-                $_SESSION['min']['js-' . $area] = $to_minfiy;
-
-                // Add link to combined js file
-                $files = [
-                    $this->cfg->get('Core', 'url_tools') . '/min/g=js-' . $area
-                ];
-            }
-        }
+        $files = $this->content->js->getFiles($area);
 
         // Init output var
         $html = '';
 
-        // Create compiled output
-        if ($vars || $scripts || $ready || $files) {
-            $html .= PHP_EOL . '<!-- ' . strtoupper($area) . ' JAVASCRIPTS -->';
+        if (empty($files)) {
+            return $html;
         }
-
-        if ($vars || $scripts || $ready) {
-
-            // Create script html object
-            $script = '<script>';
-
-            foreach ($vars as $name => $val) {
-                $script .= (PHP_EOL . 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';');
-            }
-
-            // Create $(document).ready()
-            if ($ready) {
-                $script .= PHP_EOL . '$(document).ready(function() {' . PHP_EOL;
-                $script .= implode(PHP_EOL, $ready);
-                $script .= PHP_EOL . '});';
-            }
-
-            $script .= PHP_EOL . '</script>';
-
-            // Minify script?
-            if ($this->cfg->get('Core', 'js_minify')) {
-                $script = \JSMin::minify($script);
-            }
-
-            $html .= PHP_EOL . $script;
-        }
-
-        // Add complete blocks
-        $html .= implode(PHP_EOL, $blocks);
 
         // Create files
         foreach ($files as $file) {
@@ -426,18 +260,22 @@ class Template
             return $link_stack;
         }
 
-        $html = '';
+        ob_start();
 
         foreach ($link_stack as $link) {
 
-            $html .= PHP_EOL . '<link';
+            echo PHP_EOL . '<link';
 
             foreach ($link as $attribute => $value) {
-                $html .= ' ' . $attribute . '="' . $value . '"';
+                echo ' ', $attribute, '="', $value, '"';
             }
 
-            $html .= '>';
+            echo '>';
         }
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
@@ -460,34 +298,37 @@ class Template
             return $messages;
         }
 
-        $html = '';
+        ob_start();
+
+        echo '<div id="core-message">';
 
         foreach ($messages as $msg) {
 
-            $html .= PHP_EOL . '
-			<div class="alert alert-' . $msg->getType();
-
-            // Message dismissable?
-            if ($msg->getDismissable()) {
-                $html .= ' alert-dismissable';
-            }
+            echo PHP_EOL, '
+            <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
             // Fadeout message?
-            if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
-                $html .= ' fadeout';
+            if ($this->cfg->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                echo ' fadeout';
             }
 
-            $html .= '">
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-				' . $msg->getMessage() . '
-			</div>';
+            echo '">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                ', $msg->getMessage(), '
+            </div>';
         }
+
+        echo '</div>';
+
+        $html = ob_get_contents();
+
+        ob_end_clean();
 
         return $html;
     }
 
     /**
-     * Creates breadcrumb html control or returns it's data
+     * Creates breadcrumb html content or returns it's data-
      *
      * Set $data_only argument to true if you want to get get only the data
      * without a genereated html control.
@@ -516,30 +357,74 @@ class Template
 
         array_unshift($breadcrumbs, $home_crumb);
 
-        $html = '';
+        ob_start();
 
         if ($breadcrumbs) {
 
-            $html .= '<ol class="breadcrumb">';
+            echo '<ol class="breadcrumb">';
 
             foreach ($breadcrumbs as $breadcrumb) {
 
-                $html .= '<li';
+                echo '<li';
 
                 if ($breadcrumb->getActive()) {
-                    $html .= ' class="active">' . $breadcrumb->getText();
+                    echo ' class="active">' . $breadcrumb->getText();
                 }
                 else {
-                    $html .= '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
+                    echo '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
                 }
 
-                $html .= '</li>';
+                echo '</li>';
             }
 
-            $html .= '</ol>';
+            echo '</ol>';
         }
 
+        $html = ob_get_contents();
+
+        ob_end_clean();
+
         return $html;
+    }
+
+    /**
+     * Returns default "core-scrolltotop" div html.
+     *
+     * @return string
+     */
+    protected function getScrollToTop()
+    {
+        return '<div id="core-scrolltotop"></div>';
+    }
+
+    /**
+     * Returns default "core-modal" div html.
+     *
+     * @return string
+     */
+    protected function getModal()
+    {
+        return '<div id="core-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>';
+    }
+
+    /**
+     * Returns default "core-tooltip" div html.
+     *
+     * @return string
+     */
+    protected function getTooltip()
+    {
+        return '<div id="core-tooltip"></div>';
+    }
+
+    /**
+     * Returns default "core-tooltip", "core-modal" and "core-scrolltotop" divs html.
+     *
+     * @return string
+     */
+    protected function getDisplayEssentials()
+    {
+        return $this->getTooltip() . $this->getModal() . $this->getScrollToTop();
     }
 
     /**

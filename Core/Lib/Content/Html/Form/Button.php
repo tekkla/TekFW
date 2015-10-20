@@ -2,17 +2,20 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
+
 /**
- * Creates a html object for uses as button in forms.
+ * Button.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Form
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Button extends FormAbstract
 {
+
+    use ValueTrait;
 
     /**
      * Name of icon to use
@@ -43,10 +46,6 @@ class Button extends FormAbstract
      */
     protected $button_size;
 
-    // # ------------------------------------------
-    // # General html element settings
-    // # ------------------------------------------
-
     // Element type
     protected $element = 'button';
 
@@ -61,96 +60,81 @@ class Button extends FormAbstract
     ];
 
     /**
-     * Sets button value
-     *
-     * @param unknown $value
-     * @return \Core\Lib\Content\Html\Form\Button
-     */
-    public function setValue($value)
-    {
-        $this->attribute['value'] = $value;
-        return $this;
-    }
-
-    /**
-     * Returns button value.
-     *
-     * @return null|string
-     */
-    public function getValue()
-    {
-        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
-    }
-
-    /**
      * Sets name of the fontawesome icon to use with the button.
      *
-     * @param string $$button_icon Name of the icon without the leadin "fa-"
+     * @param string $$button_icon Name of the icon without the leading "fa-"
+     *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function useIcon($button_icon)
     {
         $this->button_icon = $button_icon;
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: default
+     * Sets buttontype to: default.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isDefault()
     {
         $this->button_type = 'default';
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: primary
+     * Sets buttontype to: primary.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isPrimary()
     {
         $this->button_type = 'primary';
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: danger
+     * Sets buttontype to: danger.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isDanger()
     {
         $this->button_type = 'danger';
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: info
+     * Sets buttontype to: info.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isInfo()
     {
         $this->button_type = 'info';
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: warning
+     * Sets buttontype to: warning.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isWarning()
     {
         $this->button_type = 'warning';
+
         return $this;
     }
 
     /**
-     * Sets buttontype to: success
+     * Sets buttontype to: success.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
@@ -161,98 +145,108 @@ class Button extends FormAbstract
     }
 
     /**
-     * Sets buttontype to: link
+     * Sets buttontype to: link.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isLink()
     {
         $this->button_type = 'link';
+
         return $this;
     }
 
     /**
-     * Set button size to: xs
+     * Set button size to: xs.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function sizeXs()
     {
         $this->button_size = 'xs';
+
         return $this;
     }
 
     /**
-     * Set button size to: sm
+     * Set button size to: sm.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function sizeSm()
     {
         $this->button_size = 'sm';
+
         return $this;
     }
 
     /**
-     * Set button size to: md
+     * Set button size to: md.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function sizeMd()
     {
         $this->button_size = 'md';
+
         return $this;
     }
 
     /**
-     * Set button size to: lg
+     * Set button size to: lg.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function sizeLg()
     {
         $this->button_size = 'lg';
+
         return $this;
     }
 
     /**
-     * Sets element type to: button (default)
+     * Sets element type to: button (default).
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isButton()
     {
         $this->type = 'button';
+
         return $this;
     }
 
     /**
-     * Sets element type to: submit
+     * Sets element type to: submit.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isSubmit()
     {
         $this->type = 'submit';
+
         return $this;
     }
 
     /**
-     * Sets element type to: reset
+     * Sets element type to: reset.
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function isReset()
     {
         $this->type = 'reset';
+
         return $this;
     }
 
     /**
-     * Sets element type
+     * Sets element type.
      *
      * @param string $type Type of element (submit, reset or button)
-     * @throws NoValidParameterError
+     *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function setType($type)
@@ -263,34 +257,40 @@ class Button extends FormAbstract
             'button'
         ];
 
-        if (! in_array($type, $types))
-            Throw new \InvalidArgumentException('Wrong button type set.', 1000);
+        if (! in_array($type, $types)) {
+            Throw new InvalidArgumentException('Wrong button type set.', 1000);
+        }
 
         $this->type = $type;
+
         return $this;
     }
 
     /**
-     * Set the id of the form this button belongs to
+     * Set the id of the form this button belongs to.
      *
-     * @param string $form->_is
+     * @param string $form_id
+     *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function setFormId($form_id)
     {
         $this->attribute['form'] = $form_id;
+
         return $this;
     }
 
     /**
-     * Sets the url where to send form data on submit (only on buttontype "submit")
+     * Sets the url where to send form data on submit (only on buttontype "submit").
      *
      * @param string|Url $url Url string or object used as form action
+     *
      * @return \Core\Lib\Content\Html\Form\Button
      */
     public function setFormAction($url)
     {
         $this->attribute['formaction'] = $url;
+
         return $this;
     }
 
@@ -300,7 +300,9 @@ class Button extends FormAbstract
      * Form elements are using post by default.
      *
      * @param string $method Value for the method attribute of from
-     * @throws NoValidParameterError
+     *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Elements\Form
      */
     public function setFormMethod($method)
@@ -311,8 +313,9 @@ class Button extends FormAbstract
         ];
 
         // Safety first. Only allow 'post' or 'get' here.
-        if (! in_array($method, $methods))
-            Throw new \InvalidArgumentException('Wrong method set.', 1000);
+        if (! in_array($method, $methods)) {
+            Throw new InvalidArgumentException('Wrong method set.', 1000);
+        }
 
         $this->attribute['formmethod'] = $method;
         return $this;
@@ -324,7 +327,9 @@ class Button extends FormAbstract
      * Form elements are using post by default.
      *
      * @param string $method Value for the method attribute of from
-     * @throws NoValidParameterError
+     *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Elements\Form
      */
     public function setFormEnctype($enctype)
@@ -336,10 +341,12 @@ class Button extends FormAbstract
         ];
 
         // Safety first. Only allow 'post' or 'get' here.
-        if (! in_array($enctype, $enctypes))
-            Throw new \InvalidArgumentException('Wrong method set.', 1000);
+        if (! in_array($enctype, $enctypes)) {
+            Throw new InvalidArgumentException('Wrong method set.', 1000);
+        }
 
         $this->attribute['formenctype'] = $enctype;
+
         return $this;
     }
 
@@ -347,11 +354,13 @@ class Button extends FormAbstract
      * Set target of form the button belongs to
      *
      * @param string $target
+     *
      * @return \Core\Lib\Content\Html\Elements\Form
      */
     public function setFormTarget($target)
     {
         $this->attribute['formtarget'] = $target;
+
         return $this;
     }
 
@@ -363,6 +372,7 @@ class Button extends FormAbstract
     public function setFormNoValidate()
     {
         $this->attribute['formnovalidate'] = false;
+
         return $this;
     }
 
@@ -376,15 +386,17 @@ class Button extends FormAbstract
         $this->attribute['type'] = $this->type;
 
         // Has this button an icon top add?
-        if (isset($this->button_icon))
+        if (isset($this->button_icon)) {
             $this->inner = '<i class="fa fa-' . $this->button_icon . '"></i> ' . $this->inner;
+        }
 
-            // Add button type css
+        // Add button type css
         $this->css[] = 'btn-' . $this->button_type;
 
         // Do we have to add cs for a specific button size?
-        if (isset($this->button_size))
+        if (isset($this->button_size)) {
             $this->css[] = 'btn-' . $this->button_size;
+        }
 
         return parent::build();
     }

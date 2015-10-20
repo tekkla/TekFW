@@ -4,10 +4,10 @@ namespace Core\AppsSec\Core;
 use Core\Lib\Amvc\App;
 
 /**
- * Core App
+ * Core.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 final class Core extends App
@@ -29,7 +29,7 @@ final class Core extends App
                 'array',
                 [
                     0 => 'top down',
-                    1 => 'horizontal',
+                    1 => 'horizontal'
                 ],
                 0
             ],
@@ -37,15 +37,14 @@ final class Core extends App
         ],
 
         // Security
-        'min_login_length' => [
+        'min_username_length' => [
             'group' => 'security',
             'control' => 'number',
             'default' => 8
         ],
-        'max_login_length' => [
+        'username_regexp' => [
             'group' => 'security',
-            'control' => 'number',
-            'default' => 5
+            'control' => 'input'
         ],
         'min_password_length' => [
             'group' => 'security',
@@ -55,15 +54,31 @@ final class Core extends App
         'max_password_length' => [
             'group' => 'security',
             'control' => 'number',
-            'default' => 50,
+            'default' => 4096,
             'validate' => [
                 'required',
                 [
-                    'range',
-                    [8,
-                    100]
+                    'max',
+                    [
+                        8,
+                        4096
+                    ]
                 ]
             ]
+        ],
+        'password_regexp' => [
+            'group' => 'security',
+            'control' => 'input'
+        ],
+        'autologin' => [
+            'group' => 'security',
+            'control' => 'switch',
+            'default' => 1
+        ],
+        'tries_before_ban' => [
+            'group' => 'security',
+            'control' => 'number',
+            'default' => 5
         ],
 
         // Group: Execute
@@ -78,9 +93,8 @@ final class Core extends App
         ],
         'default_action' => [
             'group' => 'execute',
-            'control' => 'input',
+            'control' => 'input'
         ],
-
 
         // Group: JS
         'js_default_position' => [
@@ -111,11 +125,6 @@ final class Core extends App
             'control' => 'switch',
             'default' => 0
         ],
-        'js_modernizr' => [
-            'group' => 'js',
-            'control' => 'switch',
-            'default' => 0
-        ],
         'js_fadeout_time' => [
             'group' => 'js',
             'control' => [
@@ -134,23 +143,11 @@ final class Core extends App
             ]
         ],
 
-        // Group: Minify
-        'css_minify' => [
-            'group' => 'minify',
-            'control' => 'switch',
-            'default' => 0
-        ],
-        'js_minify' => [
-            'group' => 'minify',
-            'control' => 'switch',
-            'default' => 0
-        ],
-
         // Bootstrap
         'bootstrap_version' => [
             'group' => 'style',
             'control' => 'input',
-            'default' => '3.1.1',
+            'default' => '3.3.5',
             'translate' => false,
             'validate' => [
                 'required'
@@ -177,7 +174,6 @@ final class Core extends App
             'default' => 0,
             'type' => 'int'
         ],
-
         'theme' => [
             'group' => 'style',
             'control' => 'text',
@@ -205,7 +201,7 @@ final class Core extends App
         ],
         'error_to_mail_address' => [
             'group' => 'error',
-            'control' => 'input',
+            'control' => 'input'
         ],
         'error_to_log' => [
             'group' => 'error',
@@ -217,7 +213,6 @@ final class Core extends App
             'control' => 'switch',
             'default' => 0
         ],
-
 
         // Logging
         'log' => [
@@ -253,6 +248,36 @@ final class Core extends App
             ],
             'default' => 'page',
             'translate' => false
+        ],
+
+        // Caching
+        'cache_ttl' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ],
+        'cache_ttl_js' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ],
+        'cache_ttl_css' => [
+            'group' => 'cache',
+            'control' => 'text',
+            'default' => '3600'
+        ],
+        'cache_memcache_use' => [
+            'group' => 'cache',
+            'control' => 'switch',
+            'default' => 0,
+        ],
+        'cache_memcache_server' => [
+            'group' => 'cache',
+            'control' => 'text',
+        ],
+        'cache_memcache_port' => [
+            'group' => 'cache',
+            'control' => 'text',
         ],
     ];
 
@@ -311,21 +336,23 @@ final class Core extends App
         ]
     ];
 
-    protected function addMenuItems()
+    public function Start()
     {
         if ($this->security->checkAccess('core_admin')) {
-            $this->content->navbar->createRootItem('admin', $this->txt('admin'), $this->router->url('core_admin'));
+
+            $root = $this->content->menu->createItem('admin', $this->txt('admin'));
+
+            $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
+
+            foreach ($apps as $app) {
+                $root->createItem('admin_app_' . $app, $app, $this->url('config', [
+                    'app_name' => $app
+                ]));
+            }
         }
 
-        if ($this->security->loggedIn()) {
-            $text = $this->txt('logout');
-            $route = 'core_logout';
-        }
-        else {
-            $text = $this->txt('login');
-            $route = 'core_login';
-        }
+        $key = $this->security->loggedIn() ? 'logout' : 'login';
 
-        $this->content->navbar->createRootItem('login', $text, $this->router->url($route));
+        $this->content->menu->createItem('login', $this->txt($key), $this->url($key));
     }
 }

@@ -4,15 +4,15 @@ namespace Core\Lib\Content\Html\Elements;
 use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
- * Adress Html Object
+ * Adress.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Abbr extends HtmlAbstract
 {
 
-	protected $element = 'adress';
+    protected $element = 'adress';
 }
 

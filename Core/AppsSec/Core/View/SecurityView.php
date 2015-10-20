@@ -4,16 +4,31 @@ namespace Core\AppsSec\Core\View;
 use Core\Lib\Amvc\View;
 
 /**
+ * SecurityView.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *        
+ * @copyright 2015
+ * @license MIT
  */
 final class SecurityView extends View
 {
 
     public function Login()
     {
-        echo $this->form;
+        echo '
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">', $this->form, '</div>
+        </div>';
+    }
+
+    public function AlreadyLoggedIn()
+    {
+        echo '
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <strong>', $this->loggedin, '</strong>
+            </div>
+        </div>';
     }
 }
 

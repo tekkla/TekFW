@@ -4,16 +4,14 @@ namespace Core\Lib\Content\Html\Elements;
 use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
- * Div Html Element
+ * Div.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Html\Elements
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Div extends HtmlAbstract
 {
 
-	protected $element = 'div';
+    protected $element = 'div';
 }

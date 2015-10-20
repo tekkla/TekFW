@@ -4,9 +4,11 @@ namespace Core\AppsSec\Core\Model;
 use Core\Lib\Amvc\Model;
 
 /**
+ * AdminModel.php
  *
- * @author Michael "Tekkla" Zorn
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class AdminModel extends Model
 {
@@ -28,7 +30,9 @@ class AdminModel extends Model
             $app = $this->di->get('core.amvc.creator')->getAppInstance($app_name);
 
             // Link only when config for app exists
-            $out[$app_name] = $app->hasConfig() ? $this->url('core_config', ['app_name' => $this->uncamelizeString($app_name)]) : '';
+            $out[$app_name] = $app->hasConfig() ? $this->url('core_config', [
+                'app_name' => $this->uncamelizeString($app_name)
+            ]) : '';
         }
 
         return $out;

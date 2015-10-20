@@ -2,16 +2,18 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Equals
+ * EqualsRule.php
  *
- * Checks the value against a compare value to proof both to be equal in type and value.
- * Compares only strings and numbers. All other types will return false.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class EqualsRule extends RuleAbstract
 {
 
     /**
      * (non-PHPdoc)
+     *
      * @see \Core\Lib\Data\Validator\Rules\RuleAbstract::execute()
      */
     public function execute()
@@ -28,7 +30,7 @@ class EqualsRule extends RuleAbstract
             $result = false;
         }
 
-        if (!$result) {
+        if (! $result) {
             $this->msg = $this->txt('validator_equals');
         }
     }

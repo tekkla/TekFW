@@ -3,13 +3,14 @@ namespace Core\Lib\Content\Html;
 
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Parent class for html all elements
+ * HtmlAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 abstract class HtmlAbstract
 {
@@ -28,14 +29,14 @@ abstract class HtmlAbstract
      *
      * @var string
      */
-    protected $name;
+    protected $name = '';
 
     /**
      * Attribute: id
      *
      * @var string
      */
-    protected $id;
+    protected $id = '';
 
     /**
      * Attribute: class
@@ -133,7 +134,7 @@ abstract class HtmlAbstract
      */
     public function removeName()
     {
-        unset($this->name);
+        $this->name = '';
 
         return $this;
     }
@@ -142,11 +143,11 @@ abstract class HtmlAbstract
      * Returns name if set.
      * No name set it returns boolean false.
      *
-     * @return string|boolean
+     * @return string
      */
     public function getName()
     {
-        return isset($this->name) ? $this->name : false;
+        return $this->name;
     }
 
     /**
@@ -158,7 +159,7 @@ abstract class HtmlAbstract
      */
     public function setId($id)
     {
-        $this->id = $id;
+        $this->id = (string) $id;
 
         return $this;
     }
@@ -170,7 +171,7 @@ abstract class HtmlAbstract
      */
     public function getId()
     {
-        return isset($this->id) ? $this->id : false;
+        return $this->id;
     }
 
     /**
@@ -180,15 +181,13 @@ abstract class HtmlAbstract
      */
     public function removeId()
     {
-        unset($this->id);
+        $this->id = '';
 
         return $this;
     }
 
     /**
      * Sets inner value of element like.
-     *
-     * Tries to load string from txt storage when argument begins with "txt-".
      *
      * <code>
      * &lt;div&gt;{inner}&lt;/div&gt;
@@ -200,13 +199,7 @@ abstract class HtmlAbstract
      */
     public function setInner($inner)
     {
-        $inner = (string) $inner;
-
-        if (substr($inner, 0, 4) == 'txt-') {
-            $inner = $this->txt(substr($inner, 4));
-        }
-
-        $this->inner = $inner;
+       $this->inner = (string) $inner;
 
         return $this;
     }
@@ -214,21 +207,13 @@ abstract class HtmlAbstract
     /**
      * Adds content to existing inner conntent.
      *
-     * Tries to load string from txt storage when argument begins with "txt-".
-     *
      * @param string $content
      *
      * @return \Core\Lib\Abstracts\HtmlAbstract
      */
     public function addInner($content)
     {
-        $content = (string) $content;
-
-        if (substr($content, 0, 4) == 'txt-') {
-            $content = $this->txt(substr($content, 4));
-        }
-
-        $this->inner .= $content;
+        $this->inner .= (string) $content;
 
         return $this;
     }
@@ -241,7 +226,7 @@ abstract class HtmlAbstract
      */
     public function getInner()
     {
-        return isset($this->inner) ? $this->inner : false;
+        return $this->inner;
     }
 
     /**
@@ -255,22 +240,14 @@ abstract class HtmlAbstract
      */
     public function setTitle($title)
     {
-        $title = (string) $title;
-
-        if (substr($title, 0, 4) == 'txt-') {
-            $title = $this->txt(substr($title, 4));
-        }
-
-        $this->addAttribute('title', $title);
+        $this->addAttribute('title', (string) $title);
 
         return $this;
     }
 
     public function setTabindex($index)
     {
-        $index = (int) $index;
-
-        $this->addAttribute('tabindex', $index);
+        $this->addAttribute('tabindex', (int) $index);
 
         return $this;
     }
@@ -421,14 +398,14 @@ abstract class HtmlAbstract
      *
      * @param string $attribute
      *
-     * @return string
+     * @throws InvalidArgumentException
      *
-     * @throws Error
+     * @return string
      */
     public function getAttribute($attribute)
     {
         if (! isset($this->attribute[$attribute])) {
-            Throw new \InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
+            Throw new InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
         }
         else {
             return $this->attribute[$attribute];
@@ -528,7 +505,7 @@ abstract class HtmlAbstract
             else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
-                if ($this->isAssoc($args[0])) {
+                if ($this->arrayIsAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }
@@ -558,11 +535,11 @@ abstract class HtmlAbstract
             $this->element = strtolower((new \ReflectionClass($this))->getShortName());
         }
 
-        if (isset($this->id)) {
+        if (!empty($this->id)) {
             $html_attr['id'] = $this->id;
         }
 
-        if (isset($this->name)) {
+        if (!empty($this->name)) {
             $html_attr['name'] = $this->name;
         }
 

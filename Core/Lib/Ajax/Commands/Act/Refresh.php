@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Ajax\Commands\Act;
 
-use Core\Lib\Ajax\AjaxCommand;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
  * Refresh.php
@@ -10,7 +10,7 @@ use Core\Lib\Ajax\AjaxCommand;
  * @copyright 2015
  * @license MIT
  */
-class Refresh extends AjaxCommand
+class Refresh extends AjaxCommandAbstract
 {
 
     protected $type = 'act';

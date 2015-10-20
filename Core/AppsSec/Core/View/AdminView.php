@@ -4,9 +4,11 @@ namespace Core\AppsSec\Core\View;
 use Core\Lib\Amvc\View;
 
 /**
+ * AdminView.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class AdminView extends View
 {
@@ -23,9 +25,9 @@ class AdminView extends View
                         <h2><strong>Applications:</strong></h2>
                         <ul class="list-group">';
 
-                        foreach ($this->loaded_apps as $app_name => $link) {
-                            echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
-                        }
+                    foreach ($this->loaded_apps as $app_name => $link) {
+                        echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
+                    }
 
                         echo '
                         </ul>

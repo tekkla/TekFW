@@ -2,12 +2,10 @@
 namespace Core\Lib\Content;
 
 /**
- * Handles menuhandler actions.
- * Gives r/w access to menu_buttons.
- * Checks for menu handler method in handler app and throws error if method is missing.
+ * Menu.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class Menu extends MenuItemAbstract

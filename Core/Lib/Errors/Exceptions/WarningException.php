@@ -7,6 +7,6 @@ namespace Core\Lib\Errors\Exceptions;
  * @copyright 2015
  * @license MIT
  */
-class WarningException extends \ErrorException
+class WarningException extends BasicException
 {
 }

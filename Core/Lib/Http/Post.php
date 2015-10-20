@@ -7,6 +7,7 @@ use Core\Lib\Security\Security;
 
 /**
  * Post.php
+ *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
@@ -106,7 +107,7 @@ class Post
 
         // Get container from matching app
         $container = $this->di->get('core.amvc.creator')
-            ->create($app)
+            ->getAppInstance($app)
             ->getContainer($key);
 
         // No container from app recieved? Create a generic one!
@@ -141,7 +142,7 @@ class Post
         }
 
         // Validate posted data with session token
-        if (!$this->security->validatePostToken()) {
+        if (! $this->security->validatePostToken()) {
 
             // Log attempt and start ban process with max 3 tries.
             $this->security->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
@@ -162,6 +163,12 @@ class Post
         if (! isset($_POST[$app_small][$key_small])) {
             return false;
         }
+
+        // Trim data
+        array_walk_recursive($_POST[$app_small][$key_small], function (&$data)
+        {
+            $data = trim($data);
+        });
 
         return $_POST[$app_small][$key_small];
     }

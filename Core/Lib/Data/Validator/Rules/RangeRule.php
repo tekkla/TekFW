@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Range
+ * RangeRule.php
  *
- * Checks the value for the minimum and maximum length (string) or amount (number) given by the parameters
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class RangeRule extends RuleAbstract
 {

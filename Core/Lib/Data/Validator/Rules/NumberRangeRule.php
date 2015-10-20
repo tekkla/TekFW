@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Number range
+ * NumberRangeRule.php
  *
- * Check the value to be within a range of numbers ($min, $max)
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class NumberRangeRule extends RuleAbstract
 {

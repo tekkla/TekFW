@@ -2,277 +2,297 @@
 namespace Core\Lib\Http;
 
 /**
- * Class handles cookie related stuff
+ * Cookie.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014 by author
- * @version 1.0.0
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
  */
 class Cookie
 {
 
-	/**
-	 * Cookie name
-	 *
-	 * @var string
-	 */
-	private $name = '';
+    /**
+     * Cookie name
+     *
+     * @var string
+     */
+    private $name = '';
 
-	/**
-	 * Cookie value
-	 *
-	 * @var mixed
-	 */
-	private $value = '';
+    /**
+     * Cookie value
+     *
+     * @var mixed
+     */
+    private $value = '';
 
-	/**
-	 * Days after cookie expires
-	 *
-	 * @var int
-	 */
-	private $expire = 0;
+    /**
+     * Days after cookie expires
+     *
+     * @var int
+     */
+    private $expire = 0;
 
-	/**
-	 * Path parameter
-	 *
-	 * @var string
-	 */
-	private $path = '/';
+    /**
+     * Path parameter
+     *
+     * @var string
+     */
+    private $path = '/';
 
-	/**
-	 * Domain
-	 *
-	 * @var string
-	 */
-	private $domain = '';
+    /**
+     * Domain
+     *
+     * @var string
+     */
+    private $domain = '';
 
-	/**
-	 * Secure flag
-	 *
-	 * @var boolean
-	 */
-	private $secure = false;
+    /**
+     * Secure flag
+     *
+     * @var boolean
+     */
+    private $secure = false;
 
-	/**
-	 * Httponly flag
-	 *
-	 * @var boolean
-	 */
-	private $httponly = false;
+    /**
+     * Httponly flag
+     *
+     * @var boolean
+     */
+    private $httponly = false;
 
-	public function __construct()
-	{}
+    /**
+     * Creates new instance.
+     *
+     * @return Cookie
+     */
+    public function getInstance()
+    {
+        return new self();
+    }
 
-	/**
-	 * Creates new instance
-	 *
-	 * @return Cookie
-	 */
-	public function getInstance()
-	{
-	    return new self;
-	}
+    /**
+     * Returns cookie name.
+     *
+     * @return the $name
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
 
-	/**
-	 * Returns cookie name
-	 *
-	 * @return the $name
-	 */
-	public function getName()
-	{
-		return $this->name;
-	}
+    /**
+     * Returns cookie value.
+     *
+     * @return the $value
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
 
-	/**
-	 * Returns cookie value
-	 *
-	 * @return the $value
-	 */
-	public function getValue()
-	{
-		return $this->value;
-	}
+    /**
+     * Returns cookie expire time.
+     *
+     * @return the $expire
+     */
+    public function getExpire()
+    {
+        return $this->expire;
+    }
 
-	/**
-	 * Returns cookie expire time
-	 *
-	 * @return the $expire
-	 */
-	public function getExpire()
-	{
-		return $this->expire;
-	}
+    /**
+     * Returns cookie path.
+     *
+     * @return the $path
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
 
-	/**
-	 * Returns cookie path
-	 *
-	 * @return the $path
-	 */
-	public function getPath()
-	{
-		return $this->path;
-	}
+    /**
+     * Returns cookie domain.
+     *
+     * @return the $domain
+     */
+    public function getDomain()
+    {
+        return $this->domain;
+    }
 
-	/**
-	 * Returns cookie domain
-	 *
-	 * @return the $domain
-	 */
-	public function getDomain()
-	{
-		return $this->domain;
-	}
+    /**
+     * Returns cookie secure flag.
+     *
+     * @return the $secure
+     */
+    public function getSecure()
+    {
+        return $this->secure;
+    }
 
-	/**
-	 * Returns cookie secure flag
-	 *
-	 * @return the $secure
-	 */
-	public function getSecure()
-	{
-		return $this->secure;
-	}
+    /**
+     * Returns cookie httponly flag.
+     *
+     * @return the $httponly
+     */
+    public function getHttponly()
+    {
+        return $this->httponly;
+    }
 
-	/**
-	 * Returns cookie httponly flag
-	 *
-	 * @return the $httponly
-	 */
-	public function getHttponly()
-	{
-		return $this->httponly;
-	}
+    /**
+     * Sets name to be used for cookie.
+     *
+     * @param string $name
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
 
-	/**
-	 * Sets name to be used for cookie
-	 *
-	 * @param string $name
-	 */
-	public function setName($name)
-	{
-		$this->name = $name;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Sets cookie value
-	 *
-	 * @param string $value
-	 */
-	public function setValue($value)
-	{
-		$this->value = $value;
-		return $this;
-	}
+    /**
+     * Sets cookie value.
+     *
+     * @param string $value
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setValue($value)
+    {
+        $this->value = $value;
 
-	/**
-	 * Set expire time
-	 *
-	 * @param int $expire
-	 */
-	public function setExpire($expire)
-	{
-		$this->expire = (int) $expire;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 *
-	 * @param string $path
-	 */
-	public function setPath($path)
-	{
-		$this->path = $path;
-		return $this;
-	}
+    /**
+     * Set expire time.
+     *
+     * @param int $expire
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setExpire($expire)
+    {
+        $this->expire = (int) $expire;
 
-	/**
-	 * Set domain
-	 *
-	 * @param string $domain
-	 */
-	public function setDomain($domain)
-	{
-		$this->domain = $domain;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Sets secure flag
-	 *
-	 * @param boolean $secure
-	 */
-	public function setSecure($secure)
-	{
-		$this->secure = $secure;
-		return $this;
-	}
+    /**
+     * Sets cookie path
+     *
+     * @param string $path
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setPath($path)
+    {
+        $this->path = $path;
 
-	/**
-	 * Sets httponly flag
-	 *
-	 * @param boolean $httponly
-	 */
-	public function setHttponly($httponly)
-	{
-		$this->httponly = $httponly;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Sets cookie by using given properties
-	 *
-	 * @return boolean
-	 */
-	public function set()
-	{
-		return setcookie($this->name, $this->value, $this->expire, $this->path, $this->domain, $this->secure, $this->httponly);
-	}
+    /**
+     * Set domain.
+     *
+     * @param string $domain
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setDomain($domain)
+    {
+        $this->domain = $domain;
 
-	/**
-	 * Returns the requested cookie.
-	 * Returns false if cookie is not set.
-	 *
-	 * @param string $name
-	 * @return boolean|string
-	 */
-	public static function get($name)
-	{
-		return isset($_COOKIE[$name]) ? $_COOKIE[$name] : false;
-	}
+        return $this;
+    }
 
-	/**
-	 * Removes the named cookie on next page load
-	 *
-	 * @param string $name
-	 */
-	public static function remove($name)
-	{
-		if (isset($_COOKIE[$name])) {
-			setcookie($name, '', time() - 3600);
-		}
-	}
+    /**
+     * Sets secure flag.
+     *
+     * @param boolean $secure
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setSecure($secure)
+    {
+        $this->secure = $secure;
 
-	/**
-	 * Checks the named cookies exists
-	 *
-	 * @param string $name
-	 * @return boolean
-	 */
-	public static function exists($name)
-	{
-		return isset($_COOKIE[$name]);
-	}
+        return $this;
+    }
 
-	/**
-	 * Checks cookie for emptiness
-	 *
-	 * @param string $name
-	 * @return boolean
-	 */
-	public static function isEmpty($name)
-	{
-		return isset($_COOKIE[$name]) && empty($_COOKIE['name']);
-	}
+    /**
+     * Sets httponly flag.
+     *
+     * @param boolean $httponly
+     *
+     * @return \Core\Lib\Http\Cookie
+     */
+    public function setHttponly($httponly)
+    {
+        $this->httponly = $httponly;
+
+        return $this;
+    }
+
+    /**
+     * Sets cookie by using given properties
+     *
+     * @return boolean
+     */
+    public function set()
+    {
+        return setcookie($this->name, $this->value, $this->expire, $this->path, $this->domain, $this->secure, $this->httponly);
+    }
+
+    /**
+     * Returns the requested cookie.
+     * Returns false if cookie is not set.
+     *
+     * @param string $name
+     * @return boolean|string
+     */
+    public static function get($name)
+    {
+        return isset($_COOKIE[$name]) ? $_COOKIE[$name] : false;
+    }
+
+    /**
+     * Removes the named cookie on next page load
+     *
+     * @param string $name
+     */
+    public static function remove($name)
+    {
+        if (isset($_COOKIE[$name])) {
+            setcookie($name, '', time() - 3600);
+        }
+    }
+
+    /**
+     * Checks the named cookies exists
+     *
+     * @param string $name
+     *
+     * @return boolean
+     */
+    public static function exists($name)
+    {
+        return isset($_COOKIE[$name]);
+    }
+
+    /**
+     * Checks cookie for emptiness
+     *
+     * @param string $name
+     *
+     * @return boolean
+     */
+    public static function isEmpty($name)
+    {
+        return isset($_COOKIE[$name]) && empty($_COOKIE['name']);
+    }
 }

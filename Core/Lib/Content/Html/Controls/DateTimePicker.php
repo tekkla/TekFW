@@ -3,13 +3,15 @@ namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Input;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
- * Creates a Bootstrap datepicker control
+ * DateTimePicker.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class DateTimePicker extends Input
 {
@@ -101,19 +103,19 @@ class DateTimePicker extends Input
      *
      * @var array
      */
-    protected $option_enabled_dates = array(
+    protected $option_enabled_dates = [
         '1/1/1970'
-    );
+    ];
 
     /**
      * Icons to use
      */
-    protected $option_icons = array(
+    protected $option_icons = [
         'time' => 'fa fa-time',
         'date' => 'fa fa-calendar',
         'up' => 'fa fa-chevron-up',
         'down' => 'fa fa-chevron-down'
-    );
+    ];
 
     /**
      * Today indicator
@@ -375,16 +377,20 @@ class DateTimePicker extends Input
      *
      * @param number $minute_step
      *
+     * @throws InvalidArgumentException
+     *
      * @return \Core\Lib\Content\Html\Controls\DateTimePicker
      */
     public function setMinuteStepping($minute_step)
     {
-        if (! is_int($minute_step)) {
-            Throw new \InvalidArgumentException('Datepicker minute step has to be of type integer');
+        $minute_step = (int) $minute_step;
+
+        if (empty($minute_step)) {
+            Throw new InvalidArgumentException('Datepicker minute step has to be of type integer');
         }
 
         if ($minute_step < 1 || $minute_step > 59) {
-            Throw new \InvalidArgumentException('Datepicker minute step has to be between 1 and 59.');
+            Throw new InvalidArgumentException('Datepicker minute step has to be between 1 and 59.');
         }
 
         $this->option_minute_stepping = $minute_step;
@@ -405,7 +411,7 @@ class DateTimePicker extends Input
     {
         if (isset($bool)) {
 
-            $this->option_pick_date = is_bool($bool) ? $bool : false;
+            $this->option_pick_date = (bool) $bool;
             $this->set_options['pick_date'] = 'pickDate';
 
             return $this;
@@ -429,7 +435,7 @@ class DateTimePicker extends Input
     {
         if (isset($bool)) {
 
-            $this->option_pick_time = is_bool($bool) ? $bool : false;
+            $this->option_pick_time = (bool) $bool;
             $this->set_options['pick_time'] = 'pickTime';
 
             return $this;
@@ -452,7 +458,7 @@ class DateTimePicker extends Input
     {
         if (isset($bool)) {
 
-            $this->option_use_minutes = is_bool($bool) ? $bool : false;
+            $this->option_use_minutes = (bool) $bool;
             $this->set_options['use_minutes'] = 'useMinutes';
 
             return $this;
@@ -475,7 +481,7 @@ class DateTimePicker extends Input
     {
         if (isset($bool)) {
 
-            $this->option_use_seconds = is_bool($bool) ? $bool : false;
+            $this->option_use_seconds = (bool) $bool;
             $this->set_options['use_seconds'] = 'useSeconds';
 
             return $this;
@@ -500,12 +506,13 @@ class DateTimePicker extends Input
             return;
         }
 
-        #$this->option_language = $this->txt('lang_dictionary');
+        // $this->option_language = $this->txt('lang_dictionary');
         $this->set_options['locale'] = 'locale';
 
         // Load non english languagefile
         if ($this->option_locale != 'en') {
-            $this->di->get('core.content.js')->file($this->di->get('core.cfg')->get('Core', 'url_js') . '/locale/moment/' . $this->option_locale . '.js');
+            $this->di->get('core.content.js')->file($this->di->get('core.cfg')
+                ->get('Core', 'url_js') . '/locale/moment/' . $this->option_locale . '.js');
         }
 
         // Set flag for loaded translation
@@ -514,6 +521,13 @@ class DateTimePicker extends Input
         return $this;
     }
 
+    /**
+     * (non-PHPdoc)
+     *
+     * @see \Core\Lib\Content\Html\Form\Input::build()
+     *
+     * @throws UnexpectedValueException
+     */
     public function build()
     {
         // Get translation
@@ -536,7 +550,7 @@ class DateTimePicker extends Input
                     foreach ($this->{$property} as $date) {
 
                         if (! is_int($date) || ! $date instanceof \DateTime || ! is_string($date)) {
-                            Throw new \RuntimeException('Datepicker controls ' . $option . ' date must by of type integer (timestamp), string or DateTime object.', 1000);
+                            Throw new UnexpectedValueException('Datepicker controls ' . $option . ' date must by of type integer (timestamp), string or DateTime object.', 1000);
                         }
 
                         if (is_string($date)) {
@@ -560,8 +574,6 @@ class DateTimePicker extends Input
         }
 
         $options->format = $this->format;
-
-        #var_dump($options);
 
         // Add options as json encoded data attribute
         $this->data['datepicker-options'] = json_encode($options);

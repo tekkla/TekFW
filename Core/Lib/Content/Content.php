@@ -8,13 +8,15 @@ use Core\Lib\Amvc\Creator;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Amvc\Controller;
+use Core\Lib\Errors\Exceptions\HttpException;
+use Core\Lib\Errors\Exceptions\ConfigException;
 
 /**
- * Content
+ * Content.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license MIT
  * @copyright 2015
+ * @license MIT
  */
 class Content
 {
@@ -80,7 +82,7 @@ class Content
      *
      * @var Menu
      */
-    public $navbar;
+    public $menu;
 
     /**
      *
@@ -126,7 +128,6 @@ class Content
      */
     private $headers = [];
 
-
     /**
      * Constructor
      *
@@ -145,7 +146,7 @@ class Content
         $this->cfg = $cfg;
         $this->app_creator = $app_creator;
         $this->html = $html;
-        $this->navbar = $menu;
+        $this->menu = $menu;
         $this->js = $js;
         $this->css = $css;
         $this->msg = $msg;
@@ -154,68 +155,77 @@ class Content
         $this->og = new OpenGraph();
         $this->link = new Link();
 
-        $this->breadcrumbs = new Breadcrumb();
+        $this->breadcrumbs = $this->html->create('Bootstrap\Breadcrumb\Breadcrumb');
 
         // Try to init possible content handler
-        if ($this->cfg->exists('Core', 'content_handler') && $this->router->isAjax()) {
+        if ($this->cfg->exists('Core', 'content_handler') && ! $this->router->isAjax()) {
 
             // Get instance of content handler app
-            $app = $this->app_creator->create($this->cfg->get('Core', 'content_handler'));
+            $app = $this->app_creator->getAppInstance($this->cfg->get('Core', 'content_handler'));
 
             // Init method to call exists?
-            if (method_exists($app, 'initContentHandler')) {
-                $app->initContentHandler();
+            if (method_exists($app, 'InitContentHandler')) {
+                $app->InitContentHandler();
             }
         }
     }
 
     public function create()
     {
-
         // Match request against stored routes
         $this->router->match();
 
-        // Try to use appname provided by router
         $app_name = $this->router->getApp();
 
-        // No app by request? Try to get default app from config or set Core as
-        // default app
-        if (! $app_name) {
-            $app_name = $this->cfg->exists('Core', 'default_app') ? $this->cfg->get('Core', 'default_app') : 'Core';
+        // Handle default settings when we have a default
+        if (empty($app_name) && $this->cfg->exists('Core', 'default_app')) {
+            $app_name = $this->cfg->get('Core', 'default_app');
         }
 
-        // Start with factoring the requested app
-
         /* @var $app \Core\Lib\Amvc\App */
-        $app = $this->app_creator->create($app_name);
+        $app = $this->app_creator->getAppInstance($app_name);
+
+        if (method_exists($app, 'Access')) {
+
+            // Call app wide access method. This is important for using forceLogin() security method.
+            $app->Access();
+
+            $app_check = $this->router->getApp();
+
+            // Check for redirect from Access() method!!!
+            if ($app_name != $app_check) {
+
+                /* @var $app \Core\Lib\Amvc\App */
+                $app = $this->app_creator->getAppInstance($app_check);
+            }
+        }
 
         /**
          * Each app can have it's own start procedure.
          * This procedure is used to init apps with more than the app creator does.
          * To use this feature the app needs a run() method in it's main file.
          */
-        if (method_exists($app, 'run')) {
-            $app->run();
+        if (method_exists($app, 'Run')) {
+            $app->Run();
         }
-        // Get name of requested controller
+
         $controller_name = $this->router->getController();
 
-        // Set controller name to "Index" when no controller name has been returned
-        // from request handler
-        if (empty($controller_name)) {
-            $controller_name = $this->router->checkParam('ctrl') ? $this->router->getParam('ctrl') : 'Index';
+        if (empty($controller_name) && $this->cfg->exists('Core', 'default_controller')) {
+            $controller_name = $this->cfg->get('Core', 'default_controller');
         }
 
         // Load controller object
         $this->controller = $app->getController($controller_name);
 
-        // Which controller action has to be run?
-        $this->action = $this->router->getAction();
+        $action_name = $this->router->getAction();
 
-        // No action => use Index as default
-        if (empty($this->action)) {
-            $this->action = $this->router->checkParam('action') ? $this->router->getParam('action') : 'Index';
+        if (empty($action_name) && $this->cfg->exists('Core', 'default_action')) {
+            $action_name = $this->cfg->get('Core', 'default_action');
         }
+
+        // Which controller action has to be run?
+        $this->action = $action_name;
 
         // Run controller and process result.
         return $this->router->isAjax() ? $this->createAjax() : $this->createFull();
@@ -241,11 +251,6 @@ class Content
         // Run ajax processor
         echo $this->di->get('core.ajax')->process();
 
-        // End end here
-        #exit();
-
-        #break;
-
         return false;
     }
 
@@ -255,23 +260,6 @@ class Content
 
             // Run controller and store result
             $result = $this->controller->run($this->action, $this->router->getParam());
-
-            /*
-             * // No content created? Check app for onEmpty() event which maybe gives us content.
-             * if (empty($result) && method_exists($app, 'onEmpty')) {
-             * $result = $app->onEmpty();
-             * }
-             *
-             * // Append content provided by apps onBefore() event method
-             * if (method_exists($app, 'onBefore')) {
-             * $result = $app->onBefore() . $result;
-             * }
-             *
-             * // Prepend content provided by apps onAfter() event method
-             * if (method_exists($app, 'onAfter')) {
-             * $result .= $app->onAfter();
-             * }
-             */
         }
         catch (\Exception $e) {
 
@@ -281,13 +269,13 @@ class Content
         switch ($this->router->getFormat()) {
 
             case 'json':
-                $this->headers[] = 'Content-type: application/json; charset=utf-8");';
+                $this->headers[] = 'Content-type: application/json; charset=utf-8';
                 $this->sendHeader();
                 echo json_encode($result);
                 return false;
 
             case 'xml':
-                $this->headers[] = "Content-Type: application/xml; charset=utf-8";
+                $this->headers[] = 'Content-Type: application/xml; charset=utf-8';
                 $this->sendHeader();
                 echo $result;
                 return false;
@@ -305,7 +293,7 @@ class Content
                 $this->js->init();
 
                 // Always use UTF-8
-                $this->headers[] ="Content-Type: text/html; charset=utf-8";
+                $this->headers[] = 'Content-Type: text/html; charset=utf-8';
 
                 // Add missing title
                 if (empty($this->title)) {
@@ -327,14 +315,14 @@ class Content
     /**
      * Sends all stored header data.
      *
-     * @throws \RuntimeException
+     * @throws HttpException
      *
      * @return Content
      */
     private function sendHeader()
     {
         if (headers_sent()) {
-            Throw new \RuntimeException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
+            Throw new HttpException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
         }
 
         foreach ($this->headers as $header) {
@@ -395,49 +383,42 @@ class Content
     /**
      * Handles, enhances and returns the content of the page
      *
-     * @throws \RuntimeException
+     * @throws ConfigException
      *
      * @return string
      */
     public function getContent()
     {
-        // Add messageblock
-        $this->content = '<div id="message"></div>' . $this->content;
 
-        // Fill in content
+        // ContentHandler defined?
         try {
 
             // Try to run set content handler on non ajax request
-            if ($this->cfg->exists('Core', 'content_handler') && ! $this->router->isAjax()) {
+            if ($this->cfg->exists('Core', 'content_handler')) {
 
                 // We need the name of the ContentCover app
                 $app_name = $this->cfg->get('Core', 'content_handler');
 
                 // Get instance of this app
-                $app = $this->app_creator->create($app_name);
+                $app = $this->app_creator->getAppInstance($app_name);
 
                 // Check for existing ContenCover method
-                if (! method_exists($app, 'runContentHandler')) {
-                    Throw new \RuntimeException('You set the app "' . $app_name . '" as content handler but it lacks of method "runContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
+                if (! method_exists($app, 'ContentHandler')) {
+                    Throw new ConfigException('You set the app "' . $app_name . '" as content handler but it lacks of method "ContentHandler()". Correct either the config or add the needed method to the apps mainfile (' . $app_name . '.php).');
                 }
 
                 // Everything is all right. Run content handler by giving the current content to it.
-                $this->content .= $app->runContentHandler($this->content);
+                $this->content = $app->ContentHandler($this->content);
             }
         }
         catch (\Exception $e) {
 
-            // Add error message above content
-            $this->content .= '<div class="alert alert-danger">' . $this->di->get('core.error')->handleException($e) . '</div>';
-        }
+            // Get error info
+            $error = $this->di->get('core.error')->handleException($e);
 
-        // Add framework status elements
-        $this->content .= '
-		<div id="status"><i class="fa fa-spinner fa-spin"></i></div>
-		<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-		<div id="debug"></div>
-		<div id="tooltip"></div>
-		<div id="scrolltotop"></div>';
+            // Add error message above content
+            $this->msg->danger($error);
+        }
 
         // # Insert content
         return $this->content;
@@ -456,7 +437,8 @@ class Content
         }
 
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
-        $template = new $class($this->cfg, $this, $this->html);
+
+        $template = new $class($this->cfg, $this, $this->html, $this->di->get('core.cache'));
 
         return $template->render();
     }
@@ -510,9 +492,9 @@ class Content
      *
      * @return \Core\Lib\Content\Content
      */
-    public function setHeader($headers=[])
+    public function setHeader($headers = [])
     {
-        if (!is_array($headers)) {
+        if (! is_array($headers)) {
             $headers = (array) $headers;
         }
 
@@ -528,9 +510,9 @@ class Content
      *
      * @return \Core\Lib\Content\Content
      */
-    public function addHeader($headers=[])
+    public function addHeader($headers = [])
     {
-        if (!is_array($headers)) {
+        if (! is_array($headers)) {
             $headers = (array) $headers;
         }
 

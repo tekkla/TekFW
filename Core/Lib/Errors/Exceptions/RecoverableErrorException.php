@@ -6,6 +6,6 @@ namespace Core\Lib\Errors\Exceptions;
  * @author Michael
  *
  */
-class RecoverableErrorException extends \ErrorException
+class RecoverableErrorException extends BasicException
 {
 }

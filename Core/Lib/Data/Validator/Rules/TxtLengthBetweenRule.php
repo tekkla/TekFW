@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: TxtMaxLength
+ * TxtLengthBetweenRule.php
  *
- * Checks the length of the value to be within min ($min) and max ($max) lenght.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class TxtLengthBetweenRule extends RuleAbstract
 {

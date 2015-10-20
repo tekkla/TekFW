@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Datetime
+ * DateTimeRule.php
  *
- * Checks the value to be valid date/time by trying to convert it into timestamp.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class DateTimeRule extends RuleAbstract
 {

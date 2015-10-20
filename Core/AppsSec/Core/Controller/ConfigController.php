@@ -2,7 +2,16 @@
 namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
+use Core\Lib\Errors\Exceptions\SecurityException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
+/**
+ * ConfigController.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
+ */
 class ConfigController extends Controller
 {
 
@@ -15,8 +24,11 @@ class ConfigController extends Controller
 
     /**
      *
-     * @param unknown $app_name
-     * @throws \RuntimeException
+     * @param string $app_name
+     *
+     * @throws SecurityException
+     * @throws RuntimeException
+     *
      * @return void|boolean
      */
     public function Config($app_name)
@@ -26,7 +38,7 @@ class ConfigController extends Controller
 
         // check permission
         if (! $this->checkAccess($app_name . '_config')) {
-            Throw new \RuntimeException('No accessrights');
+            Throw new SecurityException('No accessrights');
         }
 
         $data = $this->post->get();
@@ -36,7 +48,7 @@ class ConfigController extends Controller
 
             $this->model->saveConfig($data);
 
-            if (!$data->hasErrors()) {
+            if (! $data->hasErrors()) {
                 $this->content->msg->success($this->txt('config_saved'));
                 $redir_url = $this->url($this->router->getCurrentRoute(), [
                     'app_name' => $this->uncamelizeString($app_name)
@@ -60,9 +72,7 @@ class ConfigController extends Controller
         }
 
         // Use form designer
-        $form = $this->getFormDesigner();
-
-        $form->attachContainer($data);
+        $form = $this->getFormDesigner($data);
 
         // Set forms action route
         $form->setActionRoute($this->router->getCurrentRoute(), array(
@@ -77,8 +87,11 @@ class ConfigController extends Controller
         // storage for active group
         $groupname = '';
 
+        // App creator
+        $creator = $this->di->get('core.amvc.creator');
+
         // Get the config definition from app
-        $app = $this->di['core.amvc.creator']->create($app_name);
+        $app = $creator->getAppInstance($app_name);
         $app_cfg = $app->getConfig();
 
         // controls for each config key will be created as a loop
@@ -98,7 +111,7 @@ class ConfigController extends Controller
 
                 $group->addElement('Elements\Heading', [
                     'setInner' => $this->txt($this->uncamelizeString('cfg_group_' . $cfg['group'], $app_name)),
-                    'setSize' => 3
+                    'setSize' => 4
                 ]);
 
                 // Set this group as active group
@@ -106,6 +119,10 @@ class ConfigController extends Controller
             }
 
             // Is this a control with more settings or only the controltype
+            if (! isset($cfg['control'])) {
+                $cfg['control'] = 'text';
+            }
+
             $control_type = is_array($cfg['control']) ? $cfg['control'][0] : $cfg['control'];
 
             // Create control object
@@ -144,7 +161,7 @@ class ConfigController extends Controller
                 case 'multiselect':
 
                     if (! isset($cfg['data']) || isset($cfg['data']) && ! is_array($cfg['data'])) {
-                        Throw new \RuntimeException('No or not correct set data definition.');
+                        Throw new RuntimeException('No or not correct set data definition.');
                     }
 
                     // Load optiongroup datasource type
@@ -153,7 +170,7 @@ class ConfigController extends Controller
                         // DataType: model
                         case 'model':
                             list ($model_app, $model_name, $model_action) = explode('::', $cfg['data'][1]);
-                            $datasource = $this->di['core.amvc.creator']->create($model_app)->getModel($model_name);
+                            $datasource = $creator->getAppInstance($model_app)->getModel($model_name);
                             break;
 
                         // DataType: array
@@ -163,7 +180,7 @@ class ConfigController extends Controller
 
                         // Datasource has to be of type array or model. All other will result in an exception
                         default:
-                            Throw new \RuntimeException('Wrong or none datasource set for control "' . $key . '" of type "' . $cfg['control'] . '"');
+                            Throw new RuntimeException('Wrong or none datasource set for control "' . $key . '" of type "' . $cfg['control'] . '"');
                     }
 
                     // if no bound column number is set, set default to column 0
@@ -180,22 +197,21 @@ class ConfigController extends Controller
                         $option->setInner($ds_val);
                         $option->setValue($option_value);
 
-
-                            if (is_array($fld->getValue())) {
-                                foreach ($fld->getValue() as $k => $v) {
-                                    if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg['data'][2] == 0 && $k == $option_value) || ($cfg['data'][2] == 1 && $v == $option_value))) {
-                                        $option->isSelected(1);
-                                        continue;
-                                    }
-                                }
-                            }
-                            else {
-
-                                // this is for simple select control
-                                if (($cfg['data'][2] == 0 && $ds_key === $fld->getValue()) || ($cfg['data'][2] == 1 && $ds_val == $fld->getValue())) {
+                        if (is_array($fld->getValue())) {
+                            foreach ($fld->getValue() as $k => $v) {
+                                if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg['data'][2] == 0 && $k == $option_value) || ($cfg['data'][2] == 1 && $v == $option_value))) {
                                     $option->isSelected(1);
+                                    continue;
                                 }
                             }
+                        }
+                        else {
+
+                            // this is for simple select control
+                            if (($cfg['data'][2] == 0 && $ds_key === $fld->getValue()) || ($cfg['data'][2] == 1 && $ds_val == $fld->getValue())) {
+                                $option->isSelected(1);
+                            }
+                        }
                     }
 
                     break;
@@ -224,10 +240,14 @@ class ConfigController extends Controller
             $control->setDescription($this->txt($txt . '_desc', $app));
         }
 
+
+        $control = $group->addControl('Submit');
+        $group->addElement('Elements\Hr');
+
         $this->setVar('form', $form);
 
         // Add linktreee
-        $this->content->breadcrumbs->createItem('TekFW Admincenter', $this->router->url('core_admin'));
+        $this->content->breadcrumbs->createItem('Admin', $this->router->url('core_admin'));
 
         $this->content->breadcrumbs->createActiveItem($this->txt('name', $app_name));
     }

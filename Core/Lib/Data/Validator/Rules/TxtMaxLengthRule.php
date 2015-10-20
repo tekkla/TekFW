@@ -2,9 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: TxtMaxLength
+ * TxtMaxLengthRule.php
  *
- * Checks the length of the value against the given lenght ($max).
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class TxtMaxLengthRule extends RuleAbstract
 {

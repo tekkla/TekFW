@@ -14,22 +14,25 @@ use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Data\Vars;
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Cache\Cache;
+use Core\Lib\Ajax\Ajax;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
- * Controllers parent class.
- *
- * Each app controller has to be a child of this class.
+ * Controller.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
- *
  */
 class Controller extends MvcAbstract
 {
 
     use UrlTrait;
     use TextTrait;
+    use ArrayTrait;
 
     /**
      * Type of class
@@ -77,78 +80,95 @@ class Controller extends MvcAbstract
      * Stores the controller bound Model object.
      * Is false when controller has no model.
      *
-     * @var \Core\Lib\Amvc\Model
+     * @var Model
      */
     public $model;
 
     /**
      *
-     * @var \Core\Lib\Amvc\View
+     * @var View
      */
     private $view;
 
     /**
-     * Falg to signal that this controller is in ajax mode
      *
-     * @var bool
-     */
-    private $is_ajax = false;
-
-    /**
-     *
-     * @var \Core\Lib\Security\Security
+     * @var Security
      */
     protected $security;
 
     /**
      *
-     * @var\Core\Lib\Http\Post
+     * @var Post
      */
     protected $post;
 
     /**
      *
-     * @var \Core\Lib\Http\Router
+     * @var Router
      */
     protected $router;
 
     /**
      *
-     * @var \Core\Lib\Content\Message
+     * @var Message
      */
     protected $message;
 
     /**
      *
-     * @var \Core\Lib\Content\Content
+     * @var Content
      */
     protected $content;
 
-
     /**
      *
-     * @var \Core\Lib\Content\Menu
+     * @var Menu
      */
     protected $menu;
 
     /**
      *
-     * @var \Core\Lib\Content\Html\HtmlFactory
+     * @var HtmlFactory
      */
     protected $html;
 
     /**
      *
-     * @var \Core\Lib\Data\Vars
+     * @var Vars
      */
     protected $vars;
+
+    /**
+     *
+     * @var Cache
+     */
+    protected $cache;
+
+    /**
+     *
+     * @var Ajax
+     */
+    protected $ajax;
+
+    /**
+     * Flag to signal that this controller is in ajax mode
+     *
+     * @var bool
+     */
+    private $ajax_flag = false;
+
+    /**
+     *
+     * @var AjaxCommandAbstract
+     */
+    private $ajax_command;
 
     /**
      * Hidden constructor.
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -161,9 +181,17 @@ class Controller extends MvcAbstract
         $this->menu = $menu;
         $this->html = $html;
         $this->vars = $vars;
+        $this->cache = $cache;
+        $this->ajax = $ajax;
 
         // Model to bind?
         $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
+
+        // Controller of an ajax request?
+        if ($this->router->isAjax()) {
+            $this->ajax_flag = true;
+            $this->ajax_command = $this->ajax->createCommand('Dom\Html');
+        }
 
         // Run onload event
         $this->runEvent('load');
@@ -194,28 +222,24 @@ class Controller extends MvcAbstract
      * In this case you should provide the action an parameters needed to get the
      * wanted result.
      *
-     * @param string $action Optional action to run
-     * @param string $params Parameter to use
+     * @param string $action Action method to call.
+     * @param string $params Optional ssociative array to be uses as action method parameter.
      *
      * @return boolean bool|string
-     *
-     * @todo Controller access is deactivated
      */
     final public function run($action, $params = [])
     {
         $this->action = $action;
 
         // If accesscheck failed => stop here and return false!
-        /**
-         *
-         * @todo Does not work now. Important!!!
-         */
         if ($this->checkControllerAccess() == false) {
-            return true;
+            $this->message->warning($this->txt('missing_userrights', 'Core'));
+            $this->security->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '::' . $this->getName() . '::' . $action . '()');
+            return false;
         }
 
-        // Try to autodiscover params on empty param args
-        if (! empty($params)) {
+        // Use givem params
+        if ($this->arrayIsAssoc($params)) {
             $this->params = $params;
         }
 
@@ -295,22 +319,18 @@ class Controller extends MvcAbstract
      */
     final public function ajax($action = 'Index', $params = [], $selector = '')
     {
-        $this->is_ajax = true;
-
-        $this->ajax = $this->di->get('core.ajax')->createCommand('Dom\Html');
-
         $content = $this->run($action, $params);
 
         if ($content !== false) {
 
-            $this->ajax->setArgs($content);
-            $this->ajax->setId(get_called_class() . '::' . $action);
+            $this->ajax_command->setArgs($content);
+            $this->ajax_command->setId(get_called_class() . '::' . $action);
 
             if ($selector) {
-                $this->ajax->setSelector($selector);
+                $this->ajax_command->setSelector($selector);
             }
 
-            $this->ajax->send();
+            $this->ajax_command->send();
         }
 
         return $this;
@@ -423,15 +443,14 @@ class Controller extends MvcAbstract
      * Level 0 - App: Tries to check access on possible app wide access function
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
-     * @param boolean $smf Use the SMF permission system. You should only deactivate this, if you have your own rightsmanagement
      * @param bool $force Set this to true if you want to force a brutal stop
      *
      * @return boolean
      */
-    final protected function checkControllerAccess($mode = 'smf', $force = false)
+    final protected function checkControllerAccess($force = false)
     {
         // Is there an global access method in the app main class to call?
-        if (method_exists($this->app, 'appAccess') && $this->app->appAccess() === false) {
+        if (method_exists($this->app, 'Access') && $this->app->Access() === false) {
             return false;
         }
 
@@ -461,7 +480,7 @@ class Controller extends MvcAbstract
 
             // No perms until here means we can finish here and allow access by returning true
             if ($perm) {
-                return $this->security->checkAccess($perm, $mode, $force);
+                return $this->security->checkAccess($perm, $force);
             }
         }
 
@@ -488,6 +507,10 @@ class Controller extends MvcAbstract
      *
      * @param string|array $arg1 Name of var or list of vars in an array
      * @param mixed $arg2 Optional value to be ste when $arg1 is the name of a var
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Controller
      */
     final protected function setVar($arg1, $arg2 = null)
     {
@@ -520,7 +543,7 @@ class Controller extends MvcAbstract
             $this->view->setVar($arg1, $arg2);
         }
         else {
-            Throw new \InvalidArgumentException('The vars to set are not correct.', 1001);
+            Throw new InvalidArgumentException('The vars to set are not correct.', 1001);
         }
 
         return $this;
@@ -631,10 +654,13 @@ class Controller extends MvcAbstract
      *
      * @param string $params Paramertername
      * @param mixed $value Parametervalue
+     *
+     * @return \Core\Lib\Amvc\Controller
      */
     final protected function addParam($param, $value)
     {
         $this->params[$param] = $value;
+
         return $this;
     }
 
@@ -647,8 +673,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxTarget($target)
     {
-        if ($this->is_ajax) {
-            $this->ajax->setSelector($target);
+        if ($this->ajax_flag) {
+            $this->ajax_command->setSelector($target);
         }
 
         return $this;
@@ -663,8 +689,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxFunction($function)
     {
-        if ($this->is_ajax) {
-            $this->ajax->setFunction($function);
+        if ($this->ajax_flag) {
+            $this->ajax_command->setFunction($function);
         }
 
         return $this;
@@ -679,7 +705,7 @@ class Controller extends MvcAbstract
      */
     final public function getAjaxCommand($command_name = 'Dom\Html')
     {
-        return $this->di->get('core.ajax')->createCommand($command_name);
+        return $this->ajax->createCommand($command_name);
     }
 
     /**
@@ -699,7 +725,7 @@ class Controller extends MvcAbstract
         }
 
         // Append session id
-        $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
+        // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL . '?' . SID . ';', $location);
 
         header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
     }
@@ -722,5 +748,4 @@ class Controller extends MvcAbstract
      */
     public function Index()
     {}
-
 }

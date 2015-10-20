@@ -4,18 +4,19 @@ namespace Core\Lib\Content\Html\FormDesigner;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Content\Html\FormAbstract;
 use Core\Lib\Content\Html\HtmlAbstract;
-use Core\Lib\Traits\DebugTrait;
+use Core\Lib\Content\Html\Elements\Div;
 
 /**
+ * FormGroup.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
-class FormGroup
+class FormGroup extends Div
 {
 
     use StringTrait;
-    use DebugTrait;
 
     /**
      * FormGroups element storage
@@ -42,7 +43,12 @@ class FormGroup
         $control->factory = $this->di->get('core.content.html.factory');
 
         // set contols name
-        $control->setName($name);
+        if (!empty($name)) {
+            $control->setName($name);
+        }
+        else {
+            $control->setUnbound();
+        }
 
         // And optionally bind this control to a field with the same name
         if (! empty($name) && method_exists($control, 'setField')) {

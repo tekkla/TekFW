@@ -2,10 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Smaller
+ * SmallerRule.php
  *
- * Checks the value typsave to be shorter/smaller than the compare value.
- * Only strings and numbers can be compared. All othe types returns false.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class SmallerRule extends RuleAbstract
 {

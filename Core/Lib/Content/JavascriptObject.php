@@ -1,145 +1,187 @@
 <?php
 namespace Core\Lib\Content;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Class for managing and creating of javascript objects
+ * JavascriptObject.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @copyright 2014
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class JavascriptObject
 {
 
-	/**
-	 * Types can be "file", "script", "block", "ready" or "var".
-	 *
-	 * @var string
-	 */
-	private $type;
+    /**
+     * Types can be "file", "script", "block", "ready" or "var".
+     *
+     * @var string
+     */
+    private $type;
 
-	/**
-	 * Header (false) or scripts (true) below body? This is the target for.
-	 *
-	 * @var bool
-	 */
-	private $defer = false;
+    /**
+     * Header (false) or scripts (true) below body? This is the target for.
+     *
+     * @var bool
+     */
+    private $defer = false;
 
-	/**
-	 * The script to add.
-	 * This can be an url if its an file or a script block.
-	 *
-	 * @var string
-	 */
-	private $script;
+    /**
+     * The script to add.
+     * This can be an url if its an file or a script block.
+     *
+     * @var string
+     */
+    private $script;
 
-	/**
-	 * Flag for external files.
-	 * External files wont be minified.
-	 *
-	 * @var bool
-	 */
-	private $is_external = false;
+    /**
+     * Flag for external files.
+     * External files wont be minified.
+     *
+     * @var bool
+     */
+    private $is_external = false;
 
-	/**
-	 * Sets the objects type.
-	 * Select from "file", "script", "ready", "block" or "var".
-	 *
-	 * @param string $type
-	 * @throws Error
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setType($type)
-	{
-		$types = array(
-			'file',
-			'script',
-			'ready',
-			'block',
-			'var'
-		);
+    /**
+     * Flag to signal that this object has to be inside combined file.
+     *
+     * @var boolean
+     */
+    private $combine = true;
 
-		if (! in_array($type, $types)) {
-			Throw new \InvalidArgumentException('Javascript targets have to be "file", "script", "block", "var" or "ready"');
-		}
+    /**
+     * Sets the objects type.
+     * Select from "file", "script", "ready", "block" or "var".
+     *
+     * @param string $type
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return \Core\Lib\Javascript
+     */
+    public function setType($type)
+    {
+        $types = array(
+            'file',
+            'script',
+            'ready',
+            'block',
+            'var'
+        );
 
-		$this->type = $type;
-		return $this;
-	}
+        if (! in_array($type, $types)) {
+            Throw new InvalidArgumentException('Javascript targets have to be "file", "script", "block", "var" or "ready"');
+        }
 
-	/**
-	 * Sets the objects external flag.
-	 *
-	 * @param bool $bool
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setIsExternal($bool)
-	{
-		$this->is_external = is_bool($bool) ? $bool : false;
-		return $this;
-	}
+        $this->type = $type;
 
-	/**
-	 * Sets the objects script content.
-	 *
-	 * @param string $script
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setScript($script)
-	{
-		$this->script = $script;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns the objects type.
-	 *
-	 * @return string
-	 */
-	public function getType()
-	{
-		return $this->type;
-	}
+    /**
+     * Sets the objects external flag.
+     *
+     * @param bool $bool
+     *
+     * @return \Core\Lib\Javascript
+     */
+    public function setIsExternal($bool)
+    {
+        $this->is_external = is_bool($bool) ? $bool : false;
 
-	/*
-	 * + Returns the objects external flag state.
-	 */
-	public function getIsExternal()
-	{
-		return $this->is_external;
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns the objects script content.
-	 *
-	 * @return string
-	 */
-	public function getScript()
-	{
-		return $this->script;
-	}
+    /**
+     * Sets the objects script content.
+     *
+     * @param string $script
+     *
+     * @return \Core\Lib\Javascript
+     */
+    public function setScript($script)
+    {
+        $this->script = $script;
 
-	/**
-	 * Sets the objects defer state.
-	 *
-	 * @param bool $defer
-	 * @return \Core\Lib\Javascript
-	 */
-	public function setDefer($defer = false)
-	{
-		$this->defer = is_bool($defer) ? $defer : false;
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns the objects defer state
-	 *
-	 * @return boolean
-	 */
-	public function getDefer()
-	{
-		return $this->defer;
-	}
+    /**
+     * Returns the objects type.
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /*
+     * + Returns the objects external flag state.
+     */
+    public function getIsExternal()
+    {
+        return $this->is_external;
+    }
+
+    /**
+     * Returns the objects script content.
+     *
+     * @return string
+     */
+    public function getScript()
+    {
+        return $this->script;
+    }
+
+    /**
+     * Sets the objects defer state.
+     *
+     * @param bool $defer
+     *
+     * @return \Core\Lib\Javascript
+     */
+    public function setDefer($defer = false)
+    {
+        $this->defer = is_bool($defer) ? $defer : false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the objects defer state
+     *
+     * @return boolean
+     */
+    public function getDefer()
+    {
+        return $this->defer;
+    }
+
+    /**
+     * Sets combine flag.
+     *
+     * This is only be used file objects.
+     *
+     * @param boolean $combine
+     *
+     * @return \Core\Lib\Content\JavascriptObject
+     */
+    public function setCombine($combine)
+    {
+        $this->combine = (bool) $combine;
+
+        return $this;
+    }
+
+    /**
+     * Returns combine flag.
+     *
+     * @return boolean
+     */
+    public function getCombine()
+    {
+        return $this->combine;
+    }
 }

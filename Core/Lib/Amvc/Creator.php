@@ -4,8 +4,11 @@ namespace Core\Lib\Amvc;
 use Core\Lib\Cfg;
 
 /**
+ * Creator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class Creator
 {
@@ -49,42 +52,6 @@ class Creator
     }
 
     /**
-     * Get an unique app object by cloning an app instance.
-     *
-     * @param string $name
-     * @param boolean $do_init
-     *
-     * @return App
-     */
-    public function getAppInstance($name, $do_init = false)
-    {
-        if (! is_bool($do_init)) {
-            Throw new \InvalidArgumentException('Init flag for apps have to be of type boolean');
-        }
-
-        // Make sure to have an app instance already
-        if (! isset($this->instances[$name])) {
-
-            // Create new app instance
-            $this->create($name);
-
-            // Creation already did initiation
-            $do_init = false;
-        }
-
-        // Get clone of app
-        $app = clone $this->instances[$name];
-
-        // Init this app instance
-        if ($do_init) {
-            $app->init();
-        }
-
-        // Return referenc to app object in instance storage
-        return $app;
-    }
-
-    /**
      * Get a singleton app object
      *
      * @param string $name
@@ -92,23 +59,24 @@ class Creator
      *
      * @return App
      */
-    public function &create($name)
+    public function &getAppInstance($name)
     {
-        // Create app namespace and take care of secured apps.
-        $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
-
-        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
-
-        if (! file_exists($filename)) {
-            header("HTTP/1.0 404 Page not found.");
-            echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
-            error_log('AMVC Creator Error: App class file "' . $filename . '" was not found.');
-            exit();
+        if (empty($name)) {
+            $this->send404();
         }
 
         // Check for already existing instance of app
         // and create new instance when none is found
         if (! array_key_exists($name, $this->instances)) {
+
+            // Create app namespace and take care of secured apps.
+            $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
+
+            $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+
+            if (! file_exists($filename)) {
+                $this->send404();
+            }
 
             // Default arguments for each app instance
             $args = [
@@ -122,11 +90,19 @@ class Creator
             ];
 
             // Create an app instance
-            $app = $this->instances[$name] = $this->di->instance($class, $args);
+            $this->instances[$name] = $this->di->instance($class, $args);
         }
 
         // Return app instance
         return $this->instances[$name];
+    }
+
+    private function send404()
+    {
+        header("HTTP/1.0 404 Page not found.");
+        echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
+        error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null, 10), true));
+        exit();
     }
 
     /**
@@ -158,7 +134,7 @@ class Creator
                         }
 
                         // Create app by using the current dirs name as app name
-                        $this->create($name);
+                        $this->getAppInstance($name);
                     }
 
                     closedir($dh);
@@ -167,11 +143,9 @@ class Creator
         }
 
         // Run possible Start() method in apps
-        $apps = array_keys($this->instances);
-
-        foreach ($apps as $app) {
-            if (method_exists($this->instances[$app], 'Start')) {
-                $this->instances[$app]->Start();
+        foreach ($this->instances as $app) {
+            if (method_exists($app, 'Start')) {
+                $app->Start();
             }
         }
     }
@@ -187,7 +161,7 @@ class Creator
     public function initAppConfig($app_name)
     {
         // Init app
-        $cfg_app = $this->create($app_name)->getConfig();
+        $cfg_app = $this->getAppInstance($app_name)->getConfig();
 
         // Add default values for not set config
         foreach ($cfg_app as $key => $cfg_def) {

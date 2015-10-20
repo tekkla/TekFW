@@ -1,11 +1,14 @@
 <?php
 namespace Core\Lib\Data\Validator\Rules;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Validator Rule: Compare
+ * CompareRule.php
  *
- * Checks the value against a comparision value.
- * The comparemode can be defined by use.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class CompareRule extends RuleAbstract
 {
@@ -14,6 +17,8 @@ class CompareRule extends RuleAbstract
      * (non-PHPdoc)
      *
      * @see \Core\Lib\Data\Validator\Rules\RuleAbstract::execute()
+     *
+     * @throws InvalidArgumentException
      */
     public function execute()
     {
@@ -28,8 +33,9 @@ class CompareRule extends RuleAbstract
             '<='
         ];
 
-        if (! in_array($mode, $modes))
-            Throw new \InvalidArgumentException(sprintf('Parameter "%s" not allowed', $mode), 1001);
+        if (! in_array($mode, $modes)) {
+            Throw new InvalidArgumentException(sprintf('Parameter "%s" not allowed', $mode), 1001);
+        }
 
         switch ($mode) {
             case '=':

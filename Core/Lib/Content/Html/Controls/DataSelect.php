@@ -2,15 +2,14 @@
 namespace Core\Lib\Content\Html\Controls;
 
 use Core\Lib\Content\Html\Form\Select;
+use Core\Lib\Amvc\App;
 
 /**
- * Creates a data driven select element
+ * DataSelect.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html\Controls
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class DataSelect extends Select
 {
@@ -40,7 +39,7 @@ class DataSelect extends Select
     /**
      * Sets a datasource.
      *
-     * @param string $app Name of app the model is of
+     * @param App $app Name of app the model is of
      * @param string $model Name of model
      * @param string $func Action to run on model
      * @param string $params Array of parameter used by the model
@@ -48,10 +47,10 @@ class DataSelect extends Select
      *
      * @return \Core\Lib\Content\Html\Controls\DataSelect
      */
-    public function setDataSource($app_name, $model, $func, $params = array(), $datatype = 'assoc')
+    public function setDataSource(App $app, $model, $func, array $params = [], $datatype = 'assoc')
     {
         // Create model object
-        $model = $this->di['core.amvc.creator']->create($app_name)->getModel($model);
+        $model = $app->getModel($model);
 
         // Get data from model and use is as datasource
         $this->datasource = $this->di->invokeMethod($model, $func, $params);

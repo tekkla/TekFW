@@ -1,12 +1,15 @@
 <?php
 namespace Core\Lib\Data\Adapter\Db;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
+
 /**
- * Dataadapter db connection
+ * Connection.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2015 by author
  */
 class Connection
 {
@@ -138,13 +141,15 @@ class Connection
      * Sets PDO driver name.
      *
      * @param string $driver
+     *
+     * @throws InvalidArgumentException#
      */
     public function setDriver($driver)
     {
         $this->checkActiveConnection();
 
         if (! in_array($driver, \PDO::getAvailableDrivers())) {
-            throw new \InvalidArgumentException('The PDO driver "' . $driver . '" is not installed.');
+            throw new InvalidArgumentException('The PDO driver "' . $driver . '" is not installed.');
         }
 
         $this->driver = $driver;
@@ -254,10 +259,14 @@ class Connection
         $this->options = $options;
     }
 
+    /**
+     *
+     * @throws RuntimeException
+     */
     private function checkActiveConnection()
     {
         if ($this->dbh !== null) {
-            Throw new \RuntimeException('You cannot change databse connection properties while the connection is active.');
+            Throw new RuntimeException('You cannot change databse connection properties while the connection is active.');
         }
     }
 }

@@ -6,6 +6,6 @@ namespace Core\Lib\Errors\Exceptions;
  * @author Michael
  *
  */
-class UserWarningException extends \ErrorException
+class UserWarningException extends BasicException
 {
 }

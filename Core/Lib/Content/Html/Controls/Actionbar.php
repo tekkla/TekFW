@@ -4,15 +4,14 @@ namespace Core\Lib\Content\Html\Controls;
 use Core\Lib\Content\Html\Elements\Div;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\TextTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Creates an Actiobar control
+ * Actionbar.php
  *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.d
- * @package TekFW
- * @subpackage Html/Controls
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Actionbar extends Div
 {
@@ -64,8 +63,8 @@ class Actionbar extends Div
      */
     public function addUiButton($name, UiButton $button)
     {
-
         $this->buttons[$name] = $button;
+
         return $this;
     }
 
@@ -76,16 +75,19 @@ class Actionbar extends Div
      *
      * @return \Core\Lib\Content\Html\Controls\Actionbar
      *
-     * @throws Error
+     * @throws InvalidArgumentException
      */
     public function addUiButtons(array $ui_buttons)
     {
-        if (! $this->isAssoc($ui_buttons))
-            Throw new \InvalidArgumentException('Your list of ui buttons needs to be an assoc array with name an UiButton object.');
+        if (! $this->isAssoc($ui_buttons)) {
+            Throw new InvalidArgumentException('Your list of ui buttons needs to be an assoc array with name an UiButton object.');
+        }
 
         foreach ($ui_buttons as $name => $button) {
-            if (! $button instanceof UiButton)
-                Throw new \InvalidArgumentException('One button to be inserted into actionbar is not of type UiButton');
+
+            if (! $button instanceof UiButton) {
+                Throw new InvalidArgumentException('One button to be inserted into actionbar is not of type UiButton');
+            }
 
             $this->buttons[$name] = $button;
         }
@@ -108,12 +110,14 @@ class Actionbar extends Div
 
         // Add icons for edit, delete, save and cancel automatically
         // Also add title texts
-        if ($type == 'icon' && isset($this->icons[$name]))
+        if ($type == 'icon' && isset($this->icons[$name])) {
             $button->setIcon($this->icons[$name])->setTitle($this->txt('' . $name));
+        }
 
-            // Add confirm dialog by default to UiButtons named delete
-        if ($name == 'delete')
+        // Add confirm dialog by default to UiButtons named delete
+        if ($name == 'delete') {
             $button->setConfirm($this->txt('delete_confirm'));
+        }
 
         $this->buttons[$name] = $button;
 
@@ -128,8 +132,9 @@ class Actionbar extends Div
     public function build()
     {
         // no buttons no actionbar but an empty string
-        if (empty($this->buttons))
+        if (empty($this->buttons)) {
             return false;
+        }
 
         $this->css[] = 'actionbar';
 
@@ -139,11 +144,11 @@ class Actionbar extends Div
         // More than two buttons will be wrapped into a dropdown
         if ($count > 2) {
             $this->inner .= '
-			<div class="btn-group">
-				<button type="button" class="btn btn-default dropdown-toggle btn-' . $this->size . '" data-toggle="dropdown">
-					<i class="fa fa-angle-down"></i>
-				</button>
-				<ul class="dropdown-menu" role="menu">';
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-' . $this->size . '" data-toggle="dropdown">
+                    <i class="fa fa-angle-down"></i>
+                </button>
+                <ul class="dropdown-menu" role="menu">';
 
             // implode possible buttons array to a combinded string
             foreach ($this->buttons as $button) {
@@ -153,10 +158,10 @@ class Actionbar extends Div
             }
 
             $this->inner .= '
-				</ul>
-			</div>';
-
-        } else {
+                </ul>
+            </div>';
+        }
+        else {
 
             // implode possible buttons array to a combinded string
             foreach ($this->buttons as $button) {

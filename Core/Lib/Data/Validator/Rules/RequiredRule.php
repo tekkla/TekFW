@@ -2,10 +2,11 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Required
+ * RequiredRule.php
  *
- * Checks for a field to be set and empty.
- * Note: Same as EmptyRule only with different errortext.
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class RequiredRule extends RuleAbstract
 {

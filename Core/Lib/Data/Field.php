@@ -1,19 +1,14 @@
 <?php
 namespace Core\Lib\Data;
 
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+
 /**
- * Field Class
- *
- * Element of a data container. Wrapper for data provided by DataAdapter.
- * Each field has it's own definiton. Flags like serialize or primary can
- * be used to control how data has.
- *
- * Implements ArrayAccess interface to use object like an array.
+ * Field.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @version 1.0
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Field implements \ArrayAccess
 {
@@ -75,15 +70,12 @@ class Field implements \ArrayAccess
     private $default = '';
 
     /**
-     * Constructor
+     *
+     * @var array
      */
-    public function __construct()
-    {}
+    private $filter = [];
 
     /**
-     * On echo field .
-     *
-     * ..
      *
      * @return string
      */
@@ -145,8 +137,6 @@ class Field implements \ArrayAccess
 
     /**
      * Converts the field value explicite to the var type specified
-     *
-     * @throws \InvalidArgumentException
      */
     private function convValueToType()
     {
@@ -164,14 +154,15 @@ class Field implements \ArrayAccess
             case 'real':
                 $this->value = (float) $this->value;
                 break;
-            case 'string':
-                $this->value = (string) $this->value;
-                break;
             case 'array':
                 $this->value = (array) $this->value;
                 break;
             case 'object':
                 $this->value = (object) $this->value;
+                break;
+            case 'string':
+            default:
+                $this->value = (string) $this->value;
                 break;
         }
     }
@@ -193,14 +184,20 @@ class Field implements \ArrayAccess
      *
      * @param int $size
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Data\Field
      */
     public function setSize($size)
     {
+        $size = (int) $size;
+
+        if (empty($size)) {
+            Throw new InvalidArgumentException('field size cannot be zero.');
+        }
+
         if (! is_numeric($size)) {
-            Throw new \InvalidArgumentException('Only numbers are allowed as field size.');
+            Throw new InvalidArgumentException('Only numbers are allowed as field size.');
         }
 
         $this->size = $size;
@@ -239,23 +236,14 @@ class Field implements \ArrayAccess
 
     /**
      * Returns field value.
+     * Filters value with set field filters before returning it.
      *
      * @return mixed
      */
     public function getValue()
     {
-        return $this->value;
-    }
+        $this->filter();
 
-    /**
-     * Returns field value.
-     *
-     * Same as getValue() only shorter.
-     *
-     * @return mixed
-     */
-    public function get()
-    {
         return $this->value;
     }
 
@@ -293,32 +281,6 @@ class Field implements \ArrayAccess
     }
 
     /**
-     * Same as setValue only shorter.
-     *
-     * Takes care of serialized data.
-     *
-     * @param mixed $value
-     *
-     * @return \Core\Lib\Data\Field
-     */
-    public function set($value, $type = null)
-    {
-        // Is the data serialized?
-        if ($this->isSerialized($value)) {
-            $this->serialize = true;
-            $value = unserialize($value);
-        }
-
-        $this->value = $value;
-
-        if (isset($type)) {
-            $this->setType($type);
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets the control to use when field used in displayfunctions.
      *
      * @param string $control_type
@@ -335,7 +297,7 @@ class Field implements \ArrayAccess
     /**
      * Get control type.
      *
-     * @retur nstring
+     * @return string
      */
     public function getControl()
     {
@@ -408,7 +370,14 @@ class Field implements \ArrayAccess
      */
     public function addValidation($rule)
     {
-        $this->validate[] = $rule;
+        if (is_array($rule)) {
+            foreach ($rule as $val) {
+                $this->validate[] = $val;
+            }
+        }
+        else {
+	        $this->validate[] = $rule;
+        }
 
         return $this;
     }
@@ -433,6 +402,84 @@ class Field implements \ArrayAccess
     public function setSerialize($serialize)
     {
         $this->serialize = (bool) $serialize;
+
+        return $this;
+    }
+
+    /**
+     * Set filter statements for the field.
+     *
+     * @param string|array $filter
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function setFilter(array $filter)
+    {
+        if (! is_array($filter)) {
+            $filter = (array) $filter;
+        }
+        
+        $this->filter = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Adds a filter to the field
+     *
+     * @param string|array $filter
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function addFilter($filter)
+    {
+        if (is_array($filter)) {
+            foreach ($filter as $val) {
+                $this->filter[] = $val;
+            }
+        }
+        else {
+            $this->filter[] = $filter;
+        }        
+
+        return $this;
+    }
+
+    /**
+     * Returns the fields set filters
+     *
+     * @return array
+     */
+    public function getFilter()
+    {
+        return $this->filter;
+    }
+
+    /**
+     * Filters the fields value by using the set filter statements.
+     *
+     * It is possible to filter the field with multiple filters.
+     * This method uses filter_var_array() to filter the value.
+     *
+     * @return \Core\Lib\Data\Field
+     */
+    public function filter()
+    {
+        if (! empty($this->filter)) {
+
+            $var = [
+                'data' => $this->value
+            ];
+
+            foreach ($this->filter as $filter) {
+
+                $args = [
+                    'data' => $filter
+                ];
+
+                $this->value = filter_var_array($var, $args)['data'];
+            }
+        }
 
         return $this;
     }
@@ -465,11 +512,13 @@ class Field implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetSet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
-            Throw new \InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
+            Throw new InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
         }
         else {
             $this->$offset = $value;
@@ -500,6 +549,8 @@ class Field implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetGet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetGet($offset)
     {
@@ -507,7 +558,7 @@ class Field implements \ArrayAccess
             return $this->$offset;
         }
         else {
-            Throw new \InvalidArgumentException('Field property "' . $offset . '" does not exists.');
+            Throw new InvalidArgumentException('Field property "' . $offset . '" does not exists.');
         }
     }
 }

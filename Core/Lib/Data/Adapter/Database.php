@@ -6,6 +6,7 @@ use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Adapter\Db\QueryBuilder;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\DebugTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * Database adapter
@@ -102,19 +103,21 @@ class Database extends AdapterAbstract
      *
      * @param Connection $conn
      * @param string $prefix
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct(array $options)
     {
         if (! isset($options['conn'])) {
-            Throw new \InvalidArgumentException('No connection option found in database options');
+            Throw new InvalidArgumentException('No connection option found in database options');
         }
 
         if (! $options['conn'] instanceof Connection) {
-            Throw new \InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
+            Throw new InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
         }
 
         if (! isset($options['prefix'])) {
-            Throw new \InvalidArgumentException('No table prefix in database options');
+            Throw new InvalidArgumentException('No table prefix in database options');
         }
 
         $this->conn = $options['conn'];
@@ -184,36 +187,58 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * This is the db query method.
+     * Run query by QueryBuilder.
      *
-     * @param string $sql
-     * @param array $params
+     * @param array $definition QueryBuilder definition array
      * @param bool $autoexec
      *
      * @return \PDOStatement | queryresult
      */
-    public function query($sql, $params = [], $autoexec = false)
+    public function qb(array $definition, $autoexec = false)
+    {
+        $builder = new QueryBuilder($definition);
+
+        // Build sql string
+        $this->sql = $builder->build();
+
+        // Get params
+        $this->params = $builder->getParams();
+
+        return $this->query($autoexec);
+    }
+
+    /**
+     * Run query by sql string.
+     *
+     * @param unknown $sql
+     * @param unknown $params
+     * @param string $autoexec
+     * @return PDOStatement
+     */
+    public function sql($sql, array $params = [], $autoexec = false)
     {
         // Store Sql / definition and parameter
-        $this->sql = $sql;
+        $this->sql = (string) $sql;
         $this->params = $params;
 
+        return $this->query($autoexec);
+    }
+
+    /**
+     * This is the db query method.
+     *
+     * @param boolean $exec Optional autoexec flag
+     *
+     * @return \PDOStatement | queryresult
+     */
+    private function query($autoexec = false)
+    {
         // Reset PDO statement
         $this->stmt = null;
-
-        if (is_array($this->sql)) {
-
-            $builder = new QueryBuilder($this->sql);
-            $this->sql = $builder->build();
-
-            // Params?
-            $this->params = $builder->getParams();
-        }
 
         $this->stmt = $this->dbh->prepare(str_replace('{db_prefix}', $this->prefix, $this->sql));
 
         if (! empty($this->params)) {
-
             foreach ($this->params as $parameter => $value) {
                 $data_type = $value === null ? \PDO::PARAM_INT : \PDO::PARAM_STR;
                 $this->stmt->bindValue($parameter, $value, $data_type);
@@ -413,7 +438,8 @@ class Database extends AdapterAbstract
         return $this->rowCount();
     }
 
-    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC) {
+    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    {
         $query = [
             'table' => $tbl,
             'filter' => $key_field . '=:' . $key_field,
@@ -422,7 +448,7 @@ class Database extends AdapterAbstract
             ]
         ];
 
-        $this->query($query);
+        $this->qb($query);
 
         return $this->single($fetch_mode);
     }
@@ -651,7 +677,8 @@ class Database extends AdapterAbstract
      *
      * @return multitype:string array
      */
-    public function getSqlAndParams() {
+    public function getSqlAndParams()
+    {
         return [
             'sql' => $this->sql,
             'params' => $this->params

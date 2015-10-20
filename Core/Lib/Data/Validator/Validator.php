@@ -6,15 +6,11 @@ use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Validator\Rules\RuleAbstract;
 
 /**
- * Validator
- *
- * Validates fields of a Container object against their validation rules.
- * Adde errors on failed validation to Container errorlist.
+ * Validator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
- * @todo Split into validator and function?
  */
 final class Validator
 {
@@ -122,10 +118,10 @@ final class Validator
 
                 // If no error message is set, use the default validator error
                 if (empty($msg)) {
-                    $this->msg[] = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
+                    $msg = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
                 }
 
-                $this->msg[] = $msg;
+                $this->msg[] = htmlspecialchars($msg, ENT_COMPAT, 'UTF-8');
             }
         }
 
@@ -166,7 +162,7 @@ final class Validator
 
             $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
 
-            $this->rules[$rule_name] = $this->di->instance($rule_class, 'core.data.validator');
+            $this->rules[$rule_name] = new $rule_class($this);
         }
         else {
 

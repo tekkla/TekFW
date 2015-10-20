@@ -11,7 +11,7 @@ use Core\Lib\Content\Html\Elements\A;
  * @license MIT
  * @copyright 2015 by author
  */
-class BrandElement extends NavbarElementAbstract
+class BrandElement extends AbstractNavbarElement
 {
 
     /**

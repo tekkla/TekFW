@@ -2,9 +2,10 @@
 namespace Core\Lib\Traits;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * Text Trait
+ * TextTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -18,6 +19,8 @@ trait TextTrait
      *
      * @param string $key
      * @param string $app
+     *
+     * @throws RuntimeException
      *
      * @return string
      */

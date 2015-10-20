@@ -4,44 +4,35 @@ namespace Core\Lib\Content\Html\Elements;
 use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
- * Link Html Object
+ * Link.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Html\Elements
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Link extends HtmlAbstract
 {
 
-	protected $element = 'link';
+    protected $element = 'link';
 
-	public function setRel($rel)
-	{
-		$this->attribute['rel'] = $rel;
+    public function setRel($rel)
+    {
+        $this->attribute['rel'] = $rel;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setType($type)
-	{
-		$this->attribute['type'] = $type;
+    public function setType($type)
+    {
+        $this->attribute['type'] = $type;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function setHref($href)
-	{
-		$this->attribute['href'] = $href;
+    public function setHref($href)
+    {
+        $this->attribute['href'] = $href;
 
-		return $this;
-	}
-
-	public function setTtitle($title)
-	{
-		$this->attribute['title'] = $title;
-
-		return $this;
-	}
+        return $this;
+    }
 }

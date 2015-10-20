@@ -1,14 +1,18 @@
 <?php
 namespace Core\Lib\Ajax;
 
+use Core\Lib\Content\Message;
+use Core\Lib\IO\Files;
+use Core\Lib\Errors\Exceptions\AjaxException;
+
 /**
- * Ajax commands which are managed by framework.js
+ * Ajax.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
-final class Ajax
+class Ajax
 {
 
     /**
@@ -19,47 +23,34 @@ final class Ajax
     private $ajax = [];
 
     /**
-     * Kind of command
      *
-     * @var string
+     * @var Message
      */
-    private $type = 'dom';
+    private $message;
 
     /**
-     * The documents DOM ID the ajax content should go in
      *
-     * @var string
+     * @var Files
      */
-    private $selector = '';
+    private $files;
 
-    /**
-     * Parameters to pass into the controlleraction
-     *
-     * @var array
-     */
-    private $args = [];
-
-    /**
-     * The type of the current ajax.
-     *
-     * @var string
-     */
-    private $fn = 'html';
-
-    public function __construct()
-    {}
+    public function __construct(Message $message, Files $files)
+    {
+        $this->message = $message;
+        $this->files = $files;
+    }
 
     /**
      * Builds ajax definition and adds it to the ajaxlist
      */
-    public function add(AjaxCommand $cmd)
+    public function add(AjaxCommandAbstract $cmd)
     {
         // Create alert on missing target when type is in need-target list
         if ($cmd->getType() == 'dom' && ! $cmd->getSelector()) {
 
             $this->ajax['act'][] = [
                 'f' => 'console',
-                'a' => 'Your DOM ajax response from "' . $cmd->getId() . '" needs a selector but none is set'
+                'a' => 'Your DOM ajax response from "' . $cmd->getId() . '" needs a selector but none is set.'
             ];
 
             $this->ajax['act'][] = [
@@ -91,14 +82,14 @@ final class Ajax
     {
 
         // Add messages
-        $messages = $this->di->get('core.content.message')->getMessages();
+        $messages = $this->message->getMessages();
 
         if ($messages) {
 
             foreach ($messages as $msg) {
 
                 if ($msg->getType() == 'clear') {
-                    $this->ajax['dom']['#message'][] = [
+                    $this->ajax['dom']['#core-message'][] = [
                         'f' => 'html',
                         'a' => ''
                     ];
@@ -123,7 +114,7 @@ final class Ajax
                     ' . $msg->getMessage() . '
                     </div>';
 
-                $this->ajax['dom']['#message'][] = [
+                $this->ajax['dom']['#core-message'][] = [
                     'f' => 'append',
                     'a' => $html
                 ];
@@ -145,10 +136,24 @@ final class Ajax
     }
 
     /**
+     * Cleans the current ajax command stack.
+     *
+     * @return \Core\Lib\Ajax\Ajax
+     */
+    public function cleanCommandStack()
+    {
+        $this->ajax = [];
+
+        return $this;
+    }
+
+    /**
      * Creates and returns a named ajax command.
      * Commands are split into DOM (Dom) manipulation and predifined actions (Act) to call.
      *
      * @param string $command_name Name of command to create. Default: Dom\Html
+     *
+     * @throws AjaxException
      *
      * @return \Core\Lib\Ajax\Command
      */
@@ -160,6 +165,10 @@ final class Ajax
 
         $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
-        return $this->di->instance($class);
+        if (!$this->files->checkClassFileExists($class)) {
+            Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
+        }
+
+        return new $class($this);
     }
 }

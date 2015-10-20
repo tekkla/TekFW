@@ -8,7 +8,7 @@ namespace Core\Lib\Errors\Exceptions;
  * @category 2014
  * @license MIT
  */
-class InvalidArgumentException extends \ErrorException
+class InvalidArgumentException extends BasicException
 {
 }
 

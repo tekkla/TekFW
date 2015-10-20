@@ -2,12 +2,15 @@
 namespace Core\Lib\Data\Validator\Rules;
 
 /**
- * Validator Rule: Integer
+ * EmailRule.php
  *
- * Checks the value to be a valid email adress
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class EmailRule extends RuleAbstract
 {
+
     protected $execute_on_empty = false;
 
     /**
@@ -18,18 +21,27 @@ class EmailRule extends RuleAbstract
      */
     public function execute()
     {
+        $txt = 'validator_email';
+
         $result = filter_var($this->value, FILTER_VALIDATE_EMAIL);
 
-        /*
-         * @TODO
-         *
-         * list($userName, $mailDomain) = explode("@", $email);
-         * if (!checkdnsrr($mailDomain, "MX")) {
-         *     // Email is unreachable.
-         * }
-         */
+        if ($result) {
+
+            list ($user, $domain) = explode("@", $this->value);
+
+            // Perform dns check of mail domain
+            if (isset($domain)) {
+
+                $result = checkdnsrr($domain, "MX");
+
+                if (! $result) {
+                    $txt = 'validator_email_dnscheck';
+                }
+            }
+        }
+
         if (! $result) {
-            $this->msg = $this->txt('validator_email');
+            $this->msg = sprintf($this->txt($txt), $domain);
         }
     }
 }

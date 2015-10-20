@@ -4,16 +4,14 @@ namespace Core\Lib\Content\Html\Elements;
 use Core\Lib\Content\Html\HtmlAbstract;
 
 /**
- * Li Html Element
+ * Li.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @package TekFW
- * @subpackage Html\Elements
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
  */
 class Li extends HtmlAbstract
 {
 
-	protected $element = 'li';
+    protected $element = 'li';
 }

@@ -178,7 +178,7 @@ class User
 
         $adapter = $this->di->get('db.default');
 
-        $adapter->query([
+        $adapter->qb([
             'tbl' => 'users',
             'field' => [
                 'username',
@@ -202,7 +202,7 @@ class User
             // Load groups the user is in
             $adapter = $this->di->get('db.default');
 
-            $adapter->query([
+            $adapter->qb([
                 'tbl' => 'users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
@@ -220,6 +220,30 @@ class User
             if (in_array('core_admin', $this->perms)) {
                 $this->is_admin = true;
             }
+        }
+    }
+
+    public function create($username, $password, $activation_mail=false)
+    {
+        $activation_key = bin2hex($this->security->getRandomToken(64));
+
+        $query = [
+            'table' => 'users',
+            'data' => [
+                'username' => $username,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'activation' => $activation_key
+            ]
+        ];
+
+        $this->adapter->qb($query, true);
+
+        $id_user = $this->adapter->lastInsertId();
+
+        if ($activation_mail) {
+            $mail = 'activate?key=' . $activation_key;
+
+            echo $mail;
         }
     }
 }

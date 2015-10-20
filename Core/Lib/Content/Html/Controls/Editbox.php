@@ -1,14 +1,17 @@
 <?php
 namespace Core\Lib\Content\Html\Controls;
 
-use Core\AppsSec\Core\Exception\HtmlException;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\FormDesigner\FormDesigner;
-use Core\Lib\Content\Html\Bootstrap\Panel;
+use Core\Lib\Content\Html\Bootstrap\Panel\Panel;
+use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+
 /**
+ * Editbox.php
  *
- * @author Michael
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 class Editbox extends Panel
 {
@@ -50,13 +53,14 @@ class Editbox extends Panel
     }
 
     /**
-     * Sets ajax flag when parameter $ajax is set. Otherwise will returns current ajax flag status.
+     * Sets ajax flag when parameter $ajax is set.
+     * Otherwise will returns current ajax flag status.
      *
      * @param string $ajax
      *
      * @return boolean
      */
-    public function isAjax($ajax=null)
+    public function isAjax($ajax = null)
     {
         if (isset($ajax)) {
             $this->is_ajax = (bool) $ajax;
@@ -92,12 +96,15 @@ class Editbox extends Panel
 
     /**
      * (non-PHPdoc)
-     * @see \Core\Lib\Content\Html\Bootstrap\Panel::build()
+     *
+     * @see \Core\Lib\Content\Html\Bootstrap\Panel\Panel::build()
+     *
+     * @throws UnexpectedValueException
      */
     public function build()
     {
         if (empty($this->form)) {
-            Throw new HtmlException('Editbox control needs a form object.');
+            Throw new UnexpectedValueException('Editbox control needs a form object.');
         }
 
         // Editbox CSS class needed
@@ -129,7 +136,7 @@ class Editbox extends Panel
                 <strong>' . $this->caption . '</strong>
             </li>';
 
-            if (!empty($this->cancel_action)) {
+        if (! empty($this->cancel_action)) {
 
             $heading .= '
             <li class="pull-right">
@@ -137,10 +144,9 @@ class Editbox extends Panel
                     <i class="fa fa-times"></i>
                 </a>
             </li>';
+        }
 
-            }
-
-            $heading .= '
+        $heading .= '
         </ul>';
 
         $this->setHeading($heading);

@@ -2,12 +2,14 @@
 namespace Core\Lib;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * DI Container
+ * DI.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2015
  * @license MIT
  */
 class DI implements \ArrayAccess
@@ -56,9 +58,9 @@ class DI implements \ArrayAccess
         $this->mapValue('db.default.user', $cfg['db_user']);
         $this->mapValue('db.default.pass', $cfg['db_pass']);
         $this->mapValue('db.default.options', [
-            \PDO::ATTR_PERSISTENT => true,
-            \PDO::ATTR_ERRMODE => 2,
-            \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+            \PDO::ATTR_PERSISTENT => $cfg['db_persistent'],
+            \PDO::ATTR_ERRMODE => $cfg['db_errmode'],
+            \PDO::MYSQL_ATTR_INIT_COMMAND => $cfg['db_init_command']
         ]);
         $this->mapValue('db.default.prefix', $cfg['db_prefix']);
         $this->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
@@ -80,9 +82,6 @@ class DI implements \ArrayAccess
 
         // == CONFIG =======================================================
         $this->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
-
-        // == ERROR=========================================================
-        $this->mapFactory('core.error', '\Core\Lib\Error\Error');
 
         // == HTTP =========================================================
         $this->mapService('core.http.router', '\Core\Lib\Http\Router');
@@ -128,16 +127,27 @@ class DI implements \ArrayAccess
         $this->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
         $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
+        // == CACHE ========================================================
+        $this->mapService('core.cache', '\Core\Lib\Cache\Cache', [
+            'core.cfg'
+        ]);
+        $this->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
+
         // == IO ===========================================================
-        $this->mapFactory('core.io.file', '\Core\Lib\IO\File');
+        $this->mapService('core.io.files', '\Core\Lib\IO\Files', [
+            'core.log',
+            'core.cfg'
+        ]);
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
         // == LOGGING========================================================
-        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
+        $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
+            'db.default',
+            'core.http.session'
+        ]);
 
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
-        $this->mapFactory('core.data.container', '\Core\Lib\Data\Container');
         $this->mapFactory('core.data.vars', '\Core\Lib\Data\Vars');
 
         // == CONTENT =======================================================
@@ -152,23 +162,28 @@ class DI implements \ArrayAccess
             'core.content.message'
         ]);
         $this->mapService('core.content.lang', '\Core\Lib\Content\Language');
-        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', 'core.cfg');
+        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', [
+            'core.cfg',
+            'core.cache'
+        ]);
         $this->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
             'core.cfg',
-            'core.http.router'
+            'core.http.router',
+            'core.cache'
         ]);
-        $this->mapFactory('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
-        $this->mapFactory('core.content.url', '\Core\Lib\Content\Url', 'core.http.router');
+        $this->mapService('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
         $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
         $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
         $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
 
         // == AJAX ==========================================================
-        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax');
-        $this->mapFactory('core.ajax.cmd', '\Core\Lib\Ajax\AjaxCommand');
+        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', [
+            'core.content.message',
+            'core.io.files'
+        ]);
 
         // == ERROR =========================================================
-        $this->mapService('core.error', '\Core\Lib\Errors\Error', [
+        $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
             'core.http.router',
             'core.sec.user.current',
             'core.ajax',
@@ -306,20 +321,20 @@ class DI implements \ArrayAccess
      * @param $method Name of method to call
      * @param $params (Optional) Array of parameters to inject into method
      *
-     * @throws MethodNotExistsError
-     * @throws ParameterNotSetError
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      *
      * @return object
      */
     public function invokeMethod(&$obj, $method, array $params = [])
     {
         if (! is_array($params)) {
-            Throw new \InvalidArgumentException('Parameter to invoke needs to be of type array.');
+            Throw new InvalidArgumentException('Parameter to invoke needs to be of type array.');
         }
 
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
-            Throw new \InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
+            Throw new InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
         }
 
         // Get reflection method
@@ -339,7 +354,7 @@ class DI implements \ArrayAccess
 
             // Parameter is not optional and not set => throw error
             if (! $parameter->isOptional() && ! isset($params[$param_name])) {
-                Throw new \RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
+                Throw new RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
             }
 
             // If parameter is optional and not set, set argument to null
@@ -355,12 +370,14 @@ class DI implements \ArrayAccess
      *
      * @param string $name Name of the Service, Factory or Value to return
      *
+     * @throws InvalidArgumentException
+     *
      * @return unknown|Ambigous
      */
     private function getSFV($name)
     {
         if (! $this->offsetExists($name)) {
-            Throw new \InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
+            Throw new InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
         }
 
         $type = $this->map[$name]['type'];
@@ -433,11 +450,13 @@ class DI implements \ArrayAccess
      * (non-PHPdoc)
      *
      * @see ArrayAccess::offsetSet()
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetSet($name, $value)
     {
         // No mapping through this way.
-        Throw new \InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
+        Throw new InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
     }
 
     /**

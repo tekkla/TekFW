@@ -2,6 +2,12 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
+use Core\Lib\Content\Html\Form\Traits\MaxlengthTrait;
+use Core\Lib\Content\Html\Form\Traits\PlaceholderTrait;
+use Core\Lib\Content\Html\Form\Traits\IsCheckedTrait;
+use Core\Lib\Content\Html\Form\Traits\IsMultipleTrait;
 
 /**
  * Input Form Element
@@ -12,6 +18,12 @@ use Core\Lib\Content\Html\FormAbstract;
  */
 class Input extends FormAbstract
 {
+    use ValueTrait;
+    use MaxlengthTrait;
+    use PlaceholderTrait;
+    use IsCheckedTrait;
+    use IsMultipleTrait;
+
 
     // element specific value for
     // type: text|hidden|button|submit
@@ -29,7 +41,7 @@ class Input extends FormAbstract
      *
      * @param string $type
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\Form\Input
      */
@@ -62,7 +74,7 @@ class Input extends FormAbstract
         ];
 
         if (! in_array($type, $types)) {
-            Throw new \InvalidArgumentException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
+            Throw new InvalidArgumentException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
         }
 
         $this->type = $type;
@@ -80,68 +92,30 @@ class Input extends FormAbstract
         return $this->type;
     }
 
-    public function setValue($value)
-    {
-        $this->attribute['value'] = $value;
-
-        return $this;
-    }
-
-    public function getValue()
-    {
-        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
-    }
-
+    /**
+     * Sets size attribute.
+     *
+     * @param int $size
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return \Core\Lib\Content\Html\Form\Input
+     */
     public function setSize($size)
     {
-        if (! is_int($size))
-            Throw new \InvalidArgumentException('A html form inputs size needs to be an integer.');
+        if (empty((int) $size)) {
+            Throw new InvalidArgumentException('A html form inputs size needs to be an integer.');
+        }
 
         $this->attribute['size'] = $size;
-        return $this;
-    }
-
-    public function setMaxlength($maxlength)
-    {
-        if (! is_int($maxlength))
-            Throw new \InvalidArgumentException('A html form inputs maxlenght needs to be an integer.');
-
-        $this->attribute['maxlength'] = $maxlength;
-        return $this;
-    }
-
-    public function setPlaceholder($placeholder)
-    {
-        $this->attribute['placeholder'] = $placeholder;
-        return $this;
-    }
-
-    public function isChecked($state = null)
-    {
-        $attrib = 'checked';
-
-        if (! isset($state))
-            return $this->checkAttribute($attrib);
-
-        if ($state == 0)
-            $this->removeAttribute($attrib);
-        else
-            $this->attribute[$attrib] = false;
 
         return $this;
-    }
-
-    public function isMultiple($bool = true)
-    {
-        if ($bool == true)
-            $this->attribute['multiple'] = false;
-        else
-            $this->removeAttribute('multiple');
     }
 
     public function build()
     {
         $this->attribute['type'] = $this->type;
+
         return parent::build();
     }
 }

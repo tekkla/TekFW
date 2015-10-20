@@ -11,13 +11,19 @@ use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Traits\UrlTrait;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Errors\Exceptions\ConfigException;
+use Core\Lib\Errors\Exceptions\FileException;
+use Core\Lib\Data\Container;
 
 /**
- * Parent class for all apps
+ * App.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014 by author
+ *
+ * @todo Switch to options porperty to set app specfic flags.
  */
 class App
 {
@@ -236,7 +242,7 @@ class App
     /**
      * Inits the language file according to the current language the site/user uses
      *
-     * @throws \RuntimeException
+     * @throws ConfigException
      */
     final private function initLanguage()
     {
@@ -250,13 +256,16 @@ class App
 
             // Check
             if (! $this->cfg->exists($this->name, 'dir_language')) {
-                Throw new \RuntimeException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
+                Throw new ConfigException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
             }
 
-            // Include permission file
-            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
+            // Always load english language files.
+            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.english.php';
+            $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
 
-            $this->di['core.content.lang']->loadLanguageFile($this->name, $language_file);
+            // After that load set languenage file which can override the loaded english string.
+            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
+            $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
 
             self::$init_stages[$this->name]['language'] = true;
         }
@@ -288,7 +297,7 @@ class App
         // Create classname of component to create
         $class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
 
-        // Check existance of container objects becaus they are optional.
+        // Check existance of container objects because they are optional.
         if ($type == 'Container') {
 
             $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
@@ -296,6 +305,8 @@ class App
             if (! file_exists($container_class_path)) {
                 return false;
             }
+
+            return new $class();
         }
 
         // By default each MVC component constructor needs at least a name and
@@ -341,7 +352,7 @@ class App
      *
      * @return Model
      */
-    public function getModel($name='')
+    public function getModel($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -361,7 +372,7 @@ class App
      *
      * @return Controller
      */
-    final public function getController($name='')
+    final public function getController($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -375,7 +386,9 @@ class App
             'core.content',
             'core.content.menu',
             'core.content.html.factory',
-            'core.data.vars'
+            'core.data.vars',
+            'core.cache',
+            'core.ajax'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);
@@ -387,7 +400,7 @@ class App
      * @param string $name The viewss name
      * @return View
      */
-    final public function getView($name='')
+    final public function getView($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -403,7 +416,7 @@ class App
      *
      * @return Controller
      */
-    final public function getContainer($name, $init = true)
+    final public function getContainer($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -414,30 +427,23 @@ class App
         /* @var $container \Core\Lib\Data\Container */
         $container = $this->MVCFactory($name, 'Container', $args);
 
-        // Autoinit requested?
-        if ($container && $init) {
-
-            // init by current action?
-            $action = $init === true ? $this->router->getAction() : $init;
-
-            if (!method_exists($container, $action)) {
-
-                // ... and try to find and run Index method when no matching action is found
-                $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
-
-            }
-
-            // ... and call matching container action when method exists
-            $container->$action();
-
-            // finally try to parse field defintion
-            $container->parseFields();
+        if (! $container) {
+            Throw new InvalidArgumentException('The container "' . $name . '" does not exists');
         }
-        else {
 
-            // Forget the exception. Create a generic container instead.
-            $container = $this->di->get('core.data.container');
+        $action = $this->router->getAction();
+
+        if (! method_exists($container, $action)) {
+
+            // ... and try to find and run Index method when no matching action is found
+            $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
         }
+
+        // ... and call matching container action when method exists
+        $container->$action();
+
+        // finally try to parse field defintion
+        $container->parseFields();
 
         return $container;
     }
@@ -459,7 +465,7 @@ class App
      */
     final public function hasConfig()
     {
-        return !empty($this->config);
+        return ! empty($this->config);
     }
 
     /**
@@ -473,7 +479,7 @@ class App
      *
      * @return void boolean \Core\Lib\Cfg
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     final public function cfg($key = null, $val = null)
     {
@@ -493,7 +499,7 @@ class App
             return $this->cfg->get($this->name);
         }
 
-        Throw new \InvalidArgumentException('Values without keys can not be used in app config access');
+        Throw new InvalidArgumentException('Values without keys can not be used in app config access');
     }
 
     /**
@@ -514,7 +520,7 @@ class App
             if (! $this->cfg->exists($this->name, $key)) {
 
                 // Set missing default value to empty string
-                if (!isset($cfg_def['default'])) {
+                if (! isset($cfg_def['default'])) {
                     $cfg_def['default'] = '';
                 }
 
@@ -610,6 +616,8 @@ class App
      * In some cases the apps Css files has to be loaded even when no MVC object has been requested so far.
      * Use the app specifc Init() method to call initCss().
      *
+     * @throws FileException
+     *
      * @return \Core\Lib\Amvc\App
      */
     protected final function initCss()
@@ -624,7 +632,7 @@ class App
 
             // Check for existance of apps css file
             if (! file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
-                Throw new \RuntimeException('App "' . $this->name . '" css file does not exist. Either create the js file or remove the css flag in your app settings.');
+                Throw new FileException('App "' . $this->name . '" css file does not exist. Either create the js file or remove the css flag in your app settings.');
             }
 
             // Create css file link
@@ -644,9 +652,9 @@ class App
      * In some cases the apps Js file has to be loaded even when no MVC object has been requested so far.
      * Use the app specifc Init() method to call initJs().
      *
-     * @return \Core\Lib\Amvc\App
+     * @throws FileException
      *
-     * @throws \RuntimeException
+     * @return \Core\Lib\Amvc\App
      */
     protected final function initJs()
     {
@@ -662,7 +670,7 @@ class App
         if ($this->js_file) {
 
             if (! file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
-                Throw new \RuntimeException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
+                Throw new FileException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
             }
 
             $this->content->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
@@ -721,15 +729,15 @@ class App
             // Create target
             $target = [
                 // App not set means app will be set automatic.
-                'app' => ! isset($def['app']) ? $app_name : $def['app'],
+                'app' => ! isset($def['app']) ? $app_name : $def['app']
             ];
 
             // is there a defined controller?
-            if (!empty($def['controller'])) {
+            if (! empty($def['controller'])) {
                 $target['controller'] = $def['controller'];
             }
 
-            if (!empty($def['action'])) {
+            if (! empty($def['action'])) {
                 $target['action'] = $def['action'];
             }
 

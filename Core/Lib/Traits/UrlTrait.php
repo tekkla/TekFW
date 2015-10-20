@@ -2,13 +2,14 @@
 namespace Core\Lib\Traits;
 
 use Core\Lib\Amvc\App;
+use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
- * Url Trait
+ * UrlTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @license MIT
  * @copyright 2015
+ * @license MIT
  */
 trait UrlTrait
 {
@@ -16,13 +17,19 @@ trait UrlTrait
     use StringTrait;
 
     /**
-     * Generates url by using routename and optional prameters
+     * Generates url by using routename and optional prameters.
      *
      * @param string $route Name of route to compile
      * @param array $params Optional parameter list
+     *
+     * @throws RuntimeException
+     *
+     * @return string
      */
     protected function url($route, Array $params = [], $app = '')
     {
+        global $di;
+
         if (empty($app)) {
 
             if (! property_exists($this, 'app_name')) {

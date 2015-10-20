@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Ajax\Commands\Act;
 
-use Core\Lib\Ajax\AjaxCommand;
+use Core\Lib\Ajax\AjaxCommandAbstract;
 
 /**
  * PrintVar.php
@@ -10,7 +10,7 @@ use Core\Lib\Ajax\AjaxCommand;
  * @copyright 2015
  * @license MIT
  */
-class PrintVar extends AjaxCommand
+class PrintVar extends AjaxCommandAbstract
 {
 
     protected $type = 'act';

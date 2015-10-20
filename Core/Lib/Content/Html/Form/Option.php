@@ -2,6 +2,7 @@
 namespace Core\Lib\Content\Html\Form;
 
 use Core\Lib\Content\Html\FormAbstract;
+use Core\Lib\Content\Html\Form\Traits\ValueTrait;
 
 /**
  * Option Form Element
@@ -12,6 +13,7 @@ use Core\Lib\Content\Html\FormAbstract;
  */
 class Option extends FormAbstract
 {
+    use ValueTrait;
 
     protected $element = 'option';
 
@@ -20,67 +22,50 @@ class Option extends FormAbstract
     ];
 
     protected $attribute = [
-        'value' => 1,
+        'value' => 1
     ];
 
+    private $selected = false;
+
     /**
-     * Selected attribute setter and checker.
-     * Accepts parameter "null", "0" and "1".
-     * "null" means to check for a set disabled attribute
-     * "0" means to remove disabled attribute
-     * "1" means to set disabled attribute
+     * Set option to be selected.
      *
-     * @param int $state
      * @return \Core\Lib\Content\Html\Form\Option
      */
-    public function isSelected($state = null)
+    public function isSelected()
     {
-        $attrib = 'selected';
-
-        if (! isset($state)) {
-            return isset($this->attribute[$attrib]) ? $this->attribute[$attrib] : false;
-        }
-
-        if ($state == 0) {
-            unset($this->attribute[$attrib]);
-        }
-        else {
-            $this->attribute[$attrib] = false;
-        }
+        $this->selected = true;
 
         return $this;
     }
 
     /**
-     * Sets value of option
+     * Set option to not selected.
      *
-     * @param string|number $value
      * @return \Core\Lib\Content\Html\Form\Option
      */
-    public function setValue($value)
+    public function notSelected()
     {
-        if ($value === null) {
-            Throw new \InvalidArgumentException('Your are not allowed to set a NULL as value for a html option.');
-        }
-
-        $this->attribute['value'] = $value;
+        $this->selected = false;
 
         return $this;
     }
 
     /**
-     * Gets value of option
-     *
-     * @return \Core\Lib\Content\Html\Form\Option
+     * Returns options selcted state.
      */
-    public function getValue()
+    public function getSelected()
     {
-        return isset($this->attribute['value']) ? $this->attribute['value'] : null;
+        return $this->selected;
     }
 
     public function build()
     {
-        if (!$this->checkAttribute('value') && !empty($this->inner)) {
+        if ($this->selected) {
+            $this->attribute['selected'] = false;
+        }
+
+        if (! $this->checkAttribute('value') && ! empty($this->inner)) {
             $this->attribute['value'] = $this->inner;
         }
 

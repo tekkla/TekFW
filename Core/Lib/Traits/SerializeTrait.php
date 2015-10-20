@@ -29,10 +29,8 @@ trait SerializeTrait
      * <li>null: <code>N;</code></li>
      * </ul>
      *
-     * @param string $value
-     *            test for serialized form
-     * @param mixed $result
-     *            unserialize() of the $value
+     * @param string $value test for serialized form
+     * @param mixed $result unserialize() of the $value
      * @return boolean if $value is serialized data, otherwise false
      */
     function isSerialized($value, &$result = null)

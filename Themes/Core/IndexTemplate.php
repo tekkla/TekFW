@@ -5,45 +5,124 @@ use Core\Lib\Content\Template;
 
 class IndexTemplate extends Template
 {
-	function Head()
-	{
-		// Combine cached above and below with content
-		echo '
-<!DOCTYPE html>
 
-<html>
+    protected $layers = [
+        'htmlAbove',
+        'Header',
+        'Body',
+        'htmlBelow'
+    ];
 
-<head>',
+    public function htmlAbove()
+    {
+        echo '
+        <!DOCTYPE html>
 
-	$this->getTitle(),
-	$this->getCss(),
-	$this->getMeta(),
-	$this->getOpenGraph(),
-	$this->getScript('top'),
-'
-</head>';
+        <html>';
+    }
 
-	}
+    public function Header()
+    {
+        echo '
+        <head>';
 
-	function Body() {
+        echo $this->getTitle();
+        echo $this->getCss();
+        echo $this->getMeta();
+        echo $this->getScript('top');
 
-		echo '
-<body>',
+        echo '
+        </head>';
+    }
 
-	$this->getNavbar(),
-	'
-	<div class="container" id="breadcrumbs">',
-	$this->getBreadcrumbs(),
-	'</div>
-	<div class="container" id="content">',
-		$this->getMessages(),
-		$this->getContent(),
-	'</div>
-	<div class="container" id="footer">FOOTER</div>',
-		$this->getScript('below'),
-	'</body>
+    public function Body()
+    {
+        echo '
+        <body>';
 
-</html>';
+            // Navbar
+            $this->createMenu();
 
-	}
+            // Message container
+            echo '<div id="core-message" class="container">', $this->getMessages(), '</div>';
+
+            // Main content
+            echo '<div id="content" class="container">', $this->getContent(), '</div>',
+
+    		$this->getScript('below'),
+	   '</body>';
+    }
+
+    public function htmlBelow()
+    {
+        echo '</html>';
+    }
+
+    private function createMenu()
+    {
+        echo '
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">', $this->content->getBrand() , '</a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar">';
+
+            $service = $this->getMenu('service');
+
+            if ($service) {
+                echo '<ul class="nav navbar-nav">';
+
+                foreach($service->getItems() as $item) {
+                    echo '<li><a data-ajax href="',  $item->geTurl(), '">', $item->getText(), '</a></li>';
+                }
+
+                echo '</ul>';
+            }
+
+            //  Add admin menu and login button
+            $admin = $this->getMenu('admin');
+            $login = $this->getMenu('login');
+
+            if ($admin || $login) {
+
+                echo'
+                <ul class="nav navbar-nav navbar-right">';
+
+                    if ($admin) {
+                        echo '
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">', $admin->getText() ,' <span class="caret"></span></a>
+                            <ul class="dropdown-menu">';
+
+                            foreach($admin->getItems() as $item) {
+                                echo '<li><a href="',  $item->getUrl(), '">', $item->getText(), '</a></li>';
+                            }
+
+                            echo '
+                            </ul>
+                        </li>';
+                    }
+
+                    if ($login) {
+                        echo '<li><a href="',  $login->getUrl(), '">', $login->getText(), '</a></li>';
+                    }
+
+                echo '
+                </ul>';
+            }
+
+            echo '
+        </div>
+    </div>
+</nav>';
+
+    }
 }
+

@@ -28,6 +28,9 @@ define('APPSDIR', BASEDIR . '/Apps');
 // Define path to themes
 define('THEMESDIR', BASEDIR . '/Themes');
 
+// Define path to cache
+define('CACHEDIR', BASEDIR . '/Cache');
+
 // Define path to secured apps
 define('APPSSECDIR', BASEDIR . '/Core/AppsSec');
 
@@ -49,7 +52,7 @@ try {
     require_once (BASEDIR . '/vendor/autoload.php');
 
     // Register core classloader
-    require_once (COREDIR . '/Tools/autoload/SplClassLoader.php');
+    require_once (COREDIR . '/Lib/SplClassLoader.php');
 
     // Register Core classloader
     $loader = new SplClassLoader('Core', BASEDIR);
@@ -155,27 +158,7 @@ try {
     // --------------------------------------
 
     /* @var $content \Core\Lib\Content\Content */
-    $content = $di->get('core.content');
-
-    $content->create();
-
-    // --------------------------------------
-    // 8. Send some debug data to FirePhp
-    // --------------------------------------
-    $fb = [
-        'Runtime' => $timer->getDiff() . 's',
-        'Permissions' => $di->get('core.sec.permission')->getPermissions(),
-        'Admin' => $di->get('core.sec.user.current')->isAdmin(),
-    ];
-
-    $debug = $content->getDebug();
-
-    if ($debug) {
-        $fb['Content debug'] = $debug;
-    }
-
-    \FB::log($fb);
-
+    $di->get('core.content')->create();
 }
 catch (Exception $e) {
     echo $di->get('core.error')->handleException($e, true);

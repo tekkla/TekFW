@@ -4,7 +4,7 @@ namespace Core\Lib\Content;
 use Core\Lib\Http\Session;
 
 /**
- * Message class for flash messages.
+ * Message.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
@@ -41,7 +41,6 @@ class Message
      */
     private function generic($type, $message, $fadeout = true)
     {
-
         $msg = new MessageObject();
 
         $msg->setType($type);
@@ -60,7 +59,6 @@ class Message
      */
     public function clear()
     {
-
         $msg = new MessageObject();
 
         $msg->setType('clear');

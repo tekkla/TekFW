@@ -3,15 +3,14 @@ namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Content\Html\FormAbstract;
 use Core\Lib\Content\Html\HtmlAbstract;
-
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
- * Wrapper Class for FormDesigner elements.
+ * FormElement.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014
- *
  */
 class FormElement
 {
@@ -48,12 +47,13 @@ class FormElement
         }
         elseif ($content instanceof FormGroup) {
             $this->type = 'group';
-        } else {
+        }
+        else {
             $this->type = 'html';
         }
-
+        
         $this->content = $content;
-
+        
         return $content;
     }
 
@@ -70,9 +70,9 @@ class FormElement
     /**
      * Sets the elements type.
      *
-     * @param unknown $type
+     * @param string $type
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Content\Html\FormDesigner\FormElement
      */
@@ -84,13 +84,13 @@ class FormElement
             'html',
             'group'
         ];
-
+        
         if (! in_array($type, $types)) {
-            Throw new \InvalidArgumentException('The element type "' . $type . '" is not supported. Select from "' . implode('", ', $types) . '"');
+            Throw new InvalidArgumentException('The element type "' . $type . '" is not supported. Select from "' . implode('", ', $types) . '"');
         }
-
+        
         $this->type = $type;
-
+        
         return $this;
     }
 

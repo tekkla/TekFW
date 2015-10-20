@@ -10,7 +10,7 @@ use Core\AppsSec\Core\Exception\HtmlException;
  * @license MIT
  * @copyright 2015 by author
  */
-abstract class NavbarElementAbstract
+abstract class AbstractNavbarElement
 {
 
     /**
@@ -109,7 +109,6 @@ abstract class NavbarElementAbstract
     /**
      * Build method
      */
-    abstract function build()
-    {}
+    abstract function build();
 }
 

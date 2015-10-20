@@ -5,12 +5,11 @@ use Core\Lib\Traits\TextTrait;
 use Core\Lib\Data\Validator\Validator;
 
 /**
- * Abstract Rule Class
+ * RuleAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
  * @license MIT
- * @copyright 2014
- * @version 1.0
  */
 abstract class RuleAbstract
 {

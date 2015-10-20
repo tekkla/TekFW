@@ -2,12 +2,15 @@
 namespace Core\Lib\Content;
 
 /**
+ * MenuItemAbstract.php
  *
- * @author mzorn
- *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2015
+ * @license MIT
  */
 abstract class MenuItemAbstract
 {
+
     /**
      * Items childs.
      *
@@ -30,7 +33,7 @@ abstract class MenuItemAbstract
     }
 
     /**
-     * Creates new menuitem and adss it to current menu items child list.
+     * Creates new menuitem and adds it to items list.
      *
      * @param string $name Internal name of item
      * @param string $text Text to show
@@ -69,8 +72,16 @@ abstract class MenuItemAbstract
      *
      * @return array
      */
-    public function getItems()
+    public function getItems($name = '')
     {
-        return $this->items;
+        if (empty($name)) {
+            return $this->items;
+        }
+
+        if (! isset($this->items[$name])) {
+            return false;
+        }
+
+        return $this->items[$name];
     }
 }
