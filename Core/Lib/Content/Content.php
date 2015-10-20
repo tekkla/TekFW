@@ -456,6 +456,16 @@ class Content
     }
 
     /**
+     * Returns base url.
+     *
+     * @return string
+     */
+    public function getBaseUrl()
+    {
+        return $this->cfg->get('Core', 'url');
+    }
+
+    /**
      * Returns sitename
      *
      * @return \Core\Lib\mixed
