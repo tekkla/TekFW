@@ -168,6 +168,8 @@ class Content
                 $app->InitContentHandler();
             }
         }
+
+        $this->router->setBasePath($this->cfg->get('Core', 'url'));
     }
 
     public function create()
