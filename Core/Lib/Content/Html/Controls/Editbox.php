@@ -113,8 +113,6 @@ class Editbox extends Panel
         // No form designer buttons
         if ($this->form instanceof FormDesigner) {
 
-            $this->form->noButtons();
-
             if ($this->form->isAjax()) {
                 $this->is_ajax = true;
             }
