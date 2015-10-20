@@ -70,7 +70,7 @@ class IndexTemplate extends Template
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">', $this->content->getBrand() , '</a>
+            <a class="navbar-brand" href="', $this->content->getBaseUrl() , '">', $this->content->getBrand() , '</a>
         </div>
         <div class="collapse navbar-collapse" id="navbar">';
 
