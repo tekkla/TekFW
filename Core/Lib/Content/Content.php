@@ -169,7 +169,7 @@ class Content
             }
         }
 
-        $this->router->setBasePath($this->cfg->get('Core', 'url'));
+        $this->router->setBasePath($this->cfg->get('Core', 'router_base_path'));
     }
 
     public function create()
