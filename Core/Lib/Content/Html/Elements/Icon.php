@@ -88,9 +88,25 @@ class Icon extends HtmlAbstract
      *
      * @param string $icon
      *
+     * @deprecated
+     *
      * @return \Core\Lib\Content\Html\Elements\Icon
      */
     public function useIcon($icon)
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    /**
+     * Iconname of icon to use
+     *
+     * @param string $icon
+     *
+     * @return \Core\Lib\Content\Html\Elements\Icon
+     */
+    public function setIcon($icon)
     {
         $this->icon = $icon;
 
