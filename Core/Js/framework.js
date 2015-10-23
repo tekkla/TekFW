@@ -77,7 +77,7 @@ var coreFw = {
                     var id = $(element).data('form');
                     break;
                 default:
-                    console.log('CoreFW ajax POST: No form id to submit forund. Neither as "form" nor as "data-form" attribute. Aborting request.');
+                    console.log('CoreFW ajax POST: No form id to submit found. Neither as "form" nor as "data-form" attribute. Aborting request.');
                     return false;                
             }
 
