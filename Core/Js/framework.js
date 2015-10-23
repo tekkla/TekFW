@@ -44,7 +44,7 @@ var coreFw = {
         // indicates that we are going to send a
         // form. Without this, it is a normal link, that we are
         // going to load.
-        if ($(element).data('form') === undefined) {
+        if ($(element).data('form') === undefined && $(element).attr('form') === undefined) {
 
             // Ext links will be handled by GET
             ajaxOptions.type = 'GET';
@@ -57,8 +57,7 @@ var coreFw = {
             } else if ($(element).data('url') !== undefined) {
                 var url = $(element).data('url');
             } else {
-                console
-                        .log('No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
+                console.log('CoreFW ajax GET: No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
                 return false;
             }
         } else {
@@ -66,11 +65,44 @@ var coreFw = {
             // Ext forms will be handled py POST
             ajaxOptions.type = 'POST';
 
-            // Get the form ID from the clicked link
-            var id = $(element).data('form');
+            // Get form id
+            switch (true) {
+                case ($(element).attr('form') !== undefined):
+                    // Get the form ID from the clicked link
+                    var id = $(element).attr('form');                    
+                    break;
+                
+                case ($(element).data('form') !== undefined):
+                    // Get the form ID from the clicked link
+                    var id = $(element).data('form');
+                    break;
+                default:
+                    console.log('CoreFW ajax POST: No form id to submit forund. Neither as "form" nor as "data-form" attribute. Aborting request.');
+                    return false;                
+            }
 
             // Get action url
-            var url = $('#' + id).attr('action');
+            switch (true) {
+                // Buttons formaction attribute
+                case ($(element).attr('formaction') !== undefined):
+                    // Get the form ID from the clicked link
+                    var url = $(element).attr('formaction');                    
+                    break;
+                // Action from data attributes url or href
+                case ($(element).data('url') !== undefined):
+                    var url = $(element).data('url');
+                    break;
+                case ($(element).data('href') !== undefined):
+                    // Get the form ID from the clicked link
+                    var url = $(element).data('href');
+                    break;
+                case ($('#' + id).attr('action') !== undefined): 
+                    var url = $('#' + id).attr('action');
+                    break;
+                default:
+                    console.log('CoreFW ajax POST: No form action for submit found. Neither as "formaction" nor as "data-url", "data-href" or "action" attribute from the form itself. Aborting request.');
+                    return false;                
+            }           
 
             // experimental usage of ckeditor 4 inline editor. id is
             // the div where the content is present
@@ -102,10 +134,12 @@ var coreFw = {
             console.log(errortext);
         };
 
-        history.pushState({}, '', url);
-
         // Fire ajax request!
         $.ajax(ajaxOptions);
+        
+       // if ( ajaxOptions.type !== 'POST') {
+       //     history.pushState({}, '', url)            
+       // }
     },
 
     // ----------------------------------------------------------------------------
@@ -290,7 +324,7 @@ $(document).on('click', '*[data-confirm] + *:not([data-ajax])',
         });
 
 // ----------------------------------------------------------------------------
-// Ajax based click-handler to links with the data attribute 'data-ajax'
+// Ajax based click-handler for links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
 $(document).on('click', '*[data-ajax]', function(event) {
 
@@ -310,8 +344,19 @@ $(document).on('click', '*[data-ajax]', function(event) {
     event.preventDefault();
 });
 
-$(window).on("popstate", function(e) {
-    if (e.originalEvent.state !== null) {
-        location.href = location.href;
-    }
+// ----------------------------------------------------------------------------
+// WIP: Backbutton on ajax requests
+// ----------------------------------------------------------------------------
+// $(window).on("popstate", function(e) {
+// if (e.originalEvent.state !== null) {
+// location.href = location.href;
+// }
+// });
+
+// ----------------------------------------------------------------------------
+// Autoclose for collapseable navbar on link click
+// ----------------------------------------------------------------------------
+$(document).on('click', '.navbar-collapse a', function(){ 
+    $(".navbar-collapse").collapse('hide');
 });
+

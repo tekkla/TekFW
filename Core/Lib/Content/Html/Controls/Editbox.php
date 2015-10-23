@@ -126,7 +126,7 @@ class Editbox extends Panel
         $heading = '
         <ul class="list-inline">
             <li>
-                <button type="submit" form="' . $this->form->getId() . '" class="btn btn-sm btn-' . $this->getContext() . '"' . ($this->is_ajax ? ' data-ajax' : '') . ' data-form="' . $this->form->getId() . '">
+                <button type="submit" form="' . $this->form->getId() . '" class="btn btn-sm btn-' . $this->getContext() . '"' . ($this->is_ajax ? ' data-ajax' : '') . ' formaction="'. $this->form->getAttribute('action'). '">
                     <i class="fa fa-check"></i>
                 </button>
             </li>

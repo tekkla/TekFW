@@ -9,6 +9,7 @@ use Core\Lib\Content\Html\Form\Checkbox;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Content\Html\Form\Select;
+use Core\Lib\Content\Html\Form\Button;
 
 /**
  * FormDesigner.php
@@ -533,13 +534,36 @@ final class FormDesigner extends Form
                                     $content->setValue($value);
                                 }
                                 break;
-
                             default:
                                 if ($content->getValue() == false && $value !== false) {
                                     $content->setValue($value);
                                 }
                                 break;
                         }
+                    }
+
+                    // Handle buttons
+                    if ($content instanceof Button) {
+
+                        // Add needed ajax data attribute
+                        if ($this->isAjax()) {
+                            $content->addData('ajax');
+                        }
+
+                        // Submit buttons need the id and action of and for the form to submit
+                        if ($content->isSubmit()) {
+                            $content->setFormId($this->getId());
+                            $content->setFormAction($this->getAttribute('action'));
+                        }
+
+                        /*
+                        // It is important to add additional data attributes
+                        if ($this->isAjax() && $content->isSubmit()) {
+                            $content->addData([
+                                'form' => $this->getId(),
+                                'url' => $this->getAttribute('action')
+                            ]);
+                        }*/
                     }
 
                     $builder->setControl($content);
