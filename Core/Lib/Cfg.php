@@ -21,7 +21,7 @@ final class Cfg
      *
      * @var array
      */
-    private $cfg;
+    private $cfg = [];
 
     /**
      *
@@ -114,7 +114,7 @@ final class Cfg
      *
      * @throws ConfigException
      */
-    public function init($cfg = array())
+    public function init($cfg = [])
     {
         if (! is_array($cfg)) {
             Throw new ConfigException('Initial config needs to be an array', 0);
@@ -175,5 +175,15 @@ final class Cfg
         foreach ($urls as $key => $val) {
             $this->cfg[$app]['url_' . $key] = BASEURL . $val;
         }
+    }
+
+    /**
+     * Returns complete config array.
+     *
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->cfg;
     }
 }
