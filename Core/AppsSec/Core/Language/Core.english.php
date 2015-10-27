@@ -17,8 +17,11 @@ return [
 	 */
 
 	// States
-	'on' => 'On',
-    'off' => 'Off',
+	'on' => 'on',
+    'off' => 'off',
+
+    'yes' => 'yes',
+    'no' => 'no',
 
     // Settings
     'config' => 'Settings',
