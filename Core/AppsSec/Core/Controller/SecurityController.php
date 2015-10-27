@@ -46,8 +46,6 @@ class SecurityController extends Controller
         $form->setAction($this->url('login'));
 
         // Form save button
-        $form->setSaveButtonText($this->txt('login'));
-        $form->setIcon('submit', 'key');
 
         // Create element group
         $group = $form->addGroup();
@@ -63,7 +61,11 @@ class SecurityController extends Controller
         $control->setLabel($this->txt('password'));
 
         $control = $group->addControl('Submit');
-        $control->setInner($this->txt('login'));
+
+        $icon = $this->getHtmlObject('Elements\Icon');
+        $icon->useIcon('key');
+
+        $control->setInner($icon->build() . ' ' . $this->txt('login'));
 
         /* @var $control \Core\Lib\Content\Html\Form\Checkbox */
         $control = $group->addControl('Checkbox', 'remember');
