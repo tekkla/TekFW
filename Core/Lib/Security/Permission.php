@@ -17,7 +17,7 @@ class Permission
      *
      * @var array
      */
-    private static $permissions = [];
+    private $permissions = [];
 
     /**
      *
@@ -45,7 +45,7 @@ class Permission
             }
 
             foreach ($permissions as $perm) {
-                self::$permissions[] = $app_name . '_' . $perm;
+                $this->permissions[] = $app_name . '_' . $perm;
             }
         }
     }
@@ -59,7 +59,7 @@ class Permission
      */
     public function getPermissions($app = '')
     {
-        return $app ? self::$permissions[$app] : self::$permissions;
+        return $app ? $this->permissions[$app] : $this->permissions;
     }
 
     /**
@@ -89,18 +89,12 @@ class Permission
         $query = [
             'table' => 'permissions',
             'method' => 'SELECT DISTINCT',
-            'filter' => 'id_group IN (:prepared)',
-            'params' => [
-                ':prepared' => $prepared['sql']
-            ]
+            'filter' => 'id_group IN (' . $prepared['sql'] .')',
+            'params' => $prepared['values']
         ];
-
-        foreach ($prepared['values'] as $param => $value) {
-            $query['params'][$param] = $value;
-        }
 
         $this->adapter->qb($query);
 
-        return $this->adapter->column();
+        return $this->adapter->column(2);
     }
 }
