@@ -327,7 +327,7 @@ final class FormDesigner extends Form
      */
     public function isAjax()
     {
-        $this->setSendMode('ajax');
+        $this->send_mode = 'ajax';
 
         return $this;
     }
@@ -339,9 +339,19 @@ final class FormDesigner extends Form
      */
     public function isSubmit()
     {
-        $this->setSendMode('submit');
+        $this->send_mode = 'submit';
 
         return $this;
+    }
+
+    /**
+     * Returns forms send mode.
+     *
+     * @return string
+     */
+    public function getSendMode()
+    {
+        return $this->send_mode;
     }
 
     public function setActionRoute($route, $params = array())
@@ -546,7 +556,7 @@ final class FormDesigner extends Form
                     if ($content instanceof Button) {
 
                         // Add needed ajax data attribute
-                        if ($this->isAjax()) {
+                        if ($this->getSendMode() == 'ajax') {
                             $content->addData('ajax');
                         }
 
