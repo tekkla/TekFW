@@ -99,13 +99,13 @@ class Model extends MvcAbstract implements \ArrayAccess
      *
      * @return \Core\Lib\Data\Container
      */
-    final public function getContainer($container_name = null, $auto_init = true)
+    final public function getContainer($container_name = '')
     {
         if (empty($container_name)) {
             $container_name = $this->getName();
         }
 
-        return $this->app->getContainer($container_name, $auto_init);
+        return $this->app->getContainer($container_name);
     }
 
     /**
