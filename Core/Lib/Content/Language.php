@@ -18,7 +18,7 @@ class Language
     /**
      * Loads an app related language file.
      *
-     * Throws exception when the language file cannot be found.
+     * When text of an app already exists, the loaded texts are merged into the existing array.
      *
      * @param string $app_name
      * @param string $lang_file
