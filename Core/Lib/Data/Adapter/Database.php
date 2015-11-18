@@ -438,19 +438,29 @@ class Database extends AdapterAbstract
         return $this->rowCount();
     }
 
-    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    public function find($table, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
     {
-        $query = [
-            'table' => $tbl,
+        $this->qb([
+            'table' => $table,
             'filter' => $key_field . '=:' . $key_field,
             'params' => [
                 ':' . $key_field => $value
             ]
-        ];
-
-        $this->qb($query);
+        ]);
 
         return $this->single($fetch_mode);
+    }
+
+    public function delete($table, $key_field, $value)
+    {
+        $this->qb([
+            'table' => $table,
+            'method' => 'DELETE',
+            'filter' => $key_field . '=:' . $key_field,
+            'params' => [
+                ':' . $key_field => $value
+            ]
+        ], true);
     }
 
     /**

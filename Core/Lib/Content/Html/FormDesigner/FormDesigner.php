@@ -2,7 +2,6 @@
 namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Data\Container;
-use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\Form\Checkbox;
@@ -10,6 +9,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Content\Html\Form\Select;
 use Core\Lib\Content\Html\Form\Button;
+use Core\Lib\Traits\UrlTrait;
 
 /**
  * FormDesigner.php
@@ -20,8 +20,8 @@ use Core\Lib\Content\Html\Form\Button;
  */
 final class FormDesigner extends Form
 {
-    use StringTrait;
     use TextTrait;
+    use UrlTrait;
 
     /**
      * Forms group storage
@@ -360,7 +360,7 @@ final class FormDesigner extends Form
         $this->route = $route;
 
         // Compile route and set url as action url
-        $this->attribute['action'] = $this->di->get('core.http.router')->url($route, $params);
+        $this->attribute['action'] = $this->url($route, $params);
     }
 
     /**

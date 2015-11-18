@@ -338,6 +338,8 @@ final class Core extends App
 
     public function Start()
     {
+$this->debugFbLog($this->security->checkAccess('core_admin'));
+
         if ($this->security->checkAccess('core_admin')) {
 
             $root = $this->content->menu->createItem('admin', $this->txt('admin'));

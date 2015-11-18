@@ -83,10 +83,10 @@ class Ajax
 
         // With each ajax request processing all currently
         // diplayed messages will be cleared.
-        $this->ajax['dom']['#core-message'][] = [
+       /* $this->ajax['dom']['#core-message'][] = [
             'f' => 'html',
             'a' => ''
-        ];
+        ];*/
 
         // Add messages
         $messages = $this->message->getMessages();

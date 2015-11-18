@@ -24,9 +24,6 @@ class Model extends MvcAbstract implements \ArrayAccess
     use SerializeTrait;
     use ArrayTrait;
     use UrlTrait;
-    use ConvertTrait {
-        SerializeTrait::isSerialized insteadof ConvertTrait;
-    }
 
     /**
      * MVC component type
