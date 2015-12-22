@@ -88,16 +88,6 @@ final class Css
             $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/bootstrap.min.css');
         }
 
-        // Add existing local user/theme related bootstrap file or load it from cdn
-        $file = '/' . $this->cfg->get('Core', 'theme') . '/css/bootstrap-theme.min.css';
-
-        if ($this->cfg->get('Core', 'bootstrap_use_local') && file_exists(THEMESDIR . $file)) {
-            $this->link(THEMESURL . $file);
-        } else {
-            // Add bootstrap theme file from cdn
-            $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $this->cfg->get('Core', 'bootstrap_version') . '/css/bootstrap-theme.min.css');
-        }
-
         // Fontawesome file
         $file = '/' . $this->cfg->get('Core', 'theme') . '/css/font-awesome.min.css';
 
