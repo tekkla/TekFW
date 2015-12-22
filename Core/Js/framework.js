@@ -26,19 +26,27 @@ var coreFw = {
         $('.fadeout').delay(fadeout_time).slideUp(800, function() {
             $(this).remove();
         });
+
+        // $("#sortable tbody").sortable();
+        // $("#sortable tbody").disableSelection();
+
     },
 
-    loadAjax : function(element, callback) {
+    loadAjax : function(element, callback, ajaxOptions) {
 
-        // Prepare options object
-        var ajaxOptions = {
+        if (ajaxOptions === undefined) {
+            var ajaxOptions = {};
+        }
 
-            // On success the response parser is called
-            success : this.parseJSON,
+        // On success the response parser is called
+        if (ajaxOptions.hasOwnProperty('success') === false) {
+            ajaxOptions.success = this.parseJSON;
+        }
 
-            // Returntype is JSON
-            dataType : 'json'
-        };
+        // RETURNTYPE IS JSON
+        if (ajaxOptions.hasOwnProperty('dataType') === false) {
+            ajaxOptions.dataType = 'json';
+        }
 
         // Which url to reqest? The data attribute "form"
         // indicates that we are going to send a
@@ -52,15 +60,19 @@ var coreFw = {
             // Try to get url either from links href attribute or
             if ($(element).attr('href') !== undefined) {
                 var url = $(element).attr('href');
-            } else if ($(element).data('href') !== undefined) {
+            }
+            else if ($(element).data('href') !== undefined) {
                 var url = $(element).data('href');
-            } else if ($(element).data('url') !== undefined) {
+            }
+            else if ($(element).data('url') !== undefined) {
                 var url = $(element).data('url');
-            } else {
+            }
+            else {
                 console.log('CoreFW ajax GET: No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
                 return false;
             }
-        } else {
+        }
+        else {
 
             // Ext forms will be handled py POST
             ajaxOptions.type = 'POST';
@@ -69,16 +81,16 @@ var coreFw = {
             switch (true) {
                 case ($(element).attr('form') !== undefined):
                     // Get the form ID from the clicked link
-                    var id = $(element).attr('form');                    
+                    var id = $(element).attr('form');
                     break;
-                
+
                 case ($(element).data('form') !== undefined):
                     // Get the form ID from the clicked link
                     var id = $(element).data('form');
                     break;
                 default:
                     console.log('CoreFW ajax POST: No form id to submit found. Neither as "form" nor as "data-form" attribute. Aborting request.');
-                    return false;                
+                    return false;
             }
 
             // Get action url
@@ -86,7 +98,7 @@ var coreFw = {
                 // Buttons formaction attribute
                 case ($(element).attr('formaction') !== undefined):
                     // Get the form ID from the clicked link
-                    var url = $(element).attr('formaction');                    
+                    var url = $(element).attr('formaction');
                     break;
                 // Action from data attributes url or href
                 case ($(element).data('url') !== undefined):
@@ -96,21 +108,21 @@ var coreFw = {
                     // Get the form ID from the clicked link
                     var url = $(element).data('href');
                     break;
-                case ($('#' + id).attr('action') !== undefined): 
+                case ($('#' + id).attr('action') !== undefined):
                     var url = $('#' + id).attr('action');
                     break;
                 default:
-                    console.log('CoreFW ajax POST: No form action for submit found. Neither as "formaction" nor as "data-url", "data-href" or "action" attribute from the form itself. Aborting request.');
-                    return false;                
-            }           
+                    console
+                            .log('CoreFW ajax POST: No form action for submit found. Neither as "formaction" nor as "data-url", "data-href" or "action" attribute from the form itself. Aborting request.');
+                    return false;
+            }
 
             // experimental usage of ckeditor 4 inline editor. id is
             // the div where the content is present
             // control the hidden form where we put the content
             // before serialization gathers the form data
             // for ajax post.
-            if ($(element).data('inline-id') !== undefined
-                    && $(element).data('inline-control') !== undefined) {
+            if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
 
                 var control = $(element).data('inline-control');
                 var content = $('#' + $(element).data('inline-id')).html();
@@ -128,23 +140,20 @@ var coreFw = {
 
         // Add error handler
         ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-
-            var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText
-                    : 'Ajax Request Error: ' + textStatus;
-            console.log(errortext);
+            var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText : 'Ajax Request Error: ' + textStatus;
         };
 
         // Fire ajax request!
         $.ajax(ajaxOptions);
-        
-       // if ( ajaxOptions.type !== 'POST') {
-       //     history.pushState({}, '', url)            
-       // }
-        
+
+        if (ajaxOptions.type !== 'POST' && $(element).data('nostate') === undefined) {
+            history.pushState({}, '', url);
+        }
+
         if (callback !== undefined) {
             callback();
         }
-        
+
         return this;
     },
 
@@ -162,15 +171,17 @@ var coreFw = {
                     if ($(id).length) {
 
                         $.each(cmd, function(i, x) {
-                            
+
                             if (jQuery.isFunction($()[x.f])) {
                                 selector = $(id)[x.f](x.a);
-                            } else {
+                            }
+                            else {
                                 console.log('Unknown method/function "' + x.f + '"');
                             }
                         });
 
-                    } else {
+                    }
+                    else {
                         console.log('Selector "' + id + '" not found.');
                     }
                 });
@@ -178,45 +189,40 @@ var coreFw = {
 
             // Specific actions
             if (type == 'act') {
-                $.each(stack,
-                        function(i, cmd) {
+                $.each(stack, function(i, cmd) {
 
-                            switch (cmd.f) {
-                                case "alert":
-                                    bootbox.alert(cmd.a[0]);
-                                    break;
-                                case "error":
-                                    $('#core-message').addClass('fade in').append(
-                                            cmd.a[0]);
-                                    $('#core-message').bind(
-                                            'closed.bs.alert',
-                                            function() {
-                                                $(this).removeClass().html('')
-                                                        .unbind('closed.bs.alert');
-                                            });
-                                    break;
-                                case "dump":
-                                case "log":
-                                case "console":
-                                    console.log(cmd.a);
-                                    break;
-                                case "modal":
-    
-                                    // fill dialog with content
-                                    $('#core-modal').html(cmd.a).modal({
-                                        keyboard : false
-                                    });
-                                    break;
-    
-                                case 'load_script':
-                                    $.getScript(cmd.a);
-                                    break;
-    
-                                case 'href':
-                                    window.location.href = cmd.a;
-                                    return;
-                                }
-                        });
+                    switch (cmd.f) {
+                        case "alert":
+                            bootbox.alert(cmd.a[0]);
+                            break;
+                        case "error":
+                            $('#core-message').addClass('fade in').append(cmd.a[0]);
+                            $('#core-message').bind('closed.bs.alert', function() {
+                                $(this).removeClass().html('').unbind('closed.bs.alert');
+                            });
+                            break;
+                        case "dump":
+                        case "log":
+                        case "console":
+                            console.log(cmd.a);
+                            break;
+                        case "modal":
+
+                            // fill dialog with content
+                            $('#core-modal').html(cmd.a).modal({
+                                keyboard : false
+                            });
+                            break;
+
+                        case 'load_script':
+                            $.getScript(cmd.a);
+                            break;
+
+                        case 'href':
+                            window.location.href = cmd.a;
+                            return;
+                    }
+                });
             }
         });
 
@@ -235,13 +241,15 @@ $(document).ready(function() {
 
         if ($(this).scrollTop() > 100) {
             $('#core-scrolltotop').fadeIn();
-        } else {
+        }
+        else {
             $('#core-scrolltotop').fadeOut();
         }
     });
 
     // Run function with commands to be used on "ready" and "ajaxComplete"
     coreFw.readyAndAjax();
+
 });
 
 // ----------------------------------------------------------------------------
@@ -294,7 +302,8 @@ $(document).on('click', '#core-scrolltotop', function(event) {
 
     if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {
         window.scrollTo(0, 0);
-    } else {
+    }
+    else {
         $('html,body').animate({
             scrollTop : 0,
             scrollLeft : 0
@@ -316,18 +325,17 @@ $(document).on('click', '.btn-back', function(event) {
 // ----------------------------------------------------------------------------
 // ClickHandler for confirms
 // ----------------------------------------------------------------------------
-$(document).on('click', '*[data-confirm] + *:not([data-ajax])',
-        function(event) {
+$(document).on('click', '*[data-confirm] + *:not([data-ajax])', function(event) {
 
-            // confirmation wanted?
-            if ($(this).data('confirm') !== undefined) {
+    // confirmation wanted?
+    if ($(this).data('confirm') !== undefined) {
 
-                if (!confirm($(this).data('confirm'))) {
-                    event.preventDefault();
-                    return false;
-                }
-            }
-        });
+        if (!confirm($(this).data('confirm'))) {
+            event.preventDefault();
+            return false;
+        }
+    }
+});
 
 // ----------------------------------------------------------------------------
 // Ajax based click-handler for links with the data attribute 'data-ajax'
@@ -353,16 +361,15 @@ $(document).on('click', '*[data-ajax]', function(event) {
 // ----------------------------------------------------------------------------
 // WIP: Backbutton on ajax requests
 // ----------------------------------------------------------------------------
-// $(window).on("popstate", function(e) {
-// if (e.originalEvent.state !== null) {
-// location.href = location.href;
-// }
-// });
+$(window).on("popstate", function(e) {
+    if (e.originalEvent.state !== null) {
+        location.href = location.href;
+    }
+});
 
 // ----------------------------------------------------------------------------
 // Autoclose for collapseable navbar on link click
 // ----------------------------------------------------------------------------
-$(document).on('click', '.navbar-collapse a', function(){ 
+$(document).on('click', '.navbar-collapse a', function() {
     $(".navbar-collapse").collapse('hide');
 });
-
