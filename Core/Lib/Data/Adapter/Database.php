@@ -427,14 +427,32 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * Shorthand method for row count.
-     * Same as rowCount() method.
-     * Returns number or rows in resultset.
+     * Shorthand method to perform Count(*) query
      *
-     * @return int
+     * @param string $table Table to delete from
+     * @param string $filter Optional: Filterstatement (Defaul='')
+     * @param array $params Optional: Parameter array to be used in filter
+     *
+     * @return number
      */
-    public function count()
+    public function count($table, $filter = '', array $params = [])
     {
+        $query = [
+            'table' => $table,
+            'fields' => 'COUNT(*)'
+        ];
+
+        if ($filter) {
+
+            $query['filter'] = $filter;
+
+            if ($params) {
+                $query['params'] = $params;
+            }
+        }
+
+        $this->qb($query);
+
         return $this->rowCount();
     }
 
@@ -451,16 +469,31 @@ class Database extends AdapterAbstract
         return $this->single($fetch_mode);
     }
 
-    public function delete($table, $key_field, $value)
+    /**
+     * Shorthand delete method.
+     *
+     * @param string $table Table to delete from
+     * @param string $filter Optional: Filterstatement (Defaul='')
+     * @param array $params Optional: Parameter array to be used in filter
+     */
+    public function delete($table, $filter = '', array $params = [])
     {
-        $this->qb([
+        $query = [
             'table' => $table,
-            'method' => 'DELETE',
-            'filter' => $key_field . '=:' . $key_field,
-            'params' => [
-                ':' . $key_field => $value
-            ]
-        ], true);
+            'method' => 'DELETE'
+        ];
+
+        if ($filter) {
+            $query['filter'] = $filter;
+
+            if ($params) {
+                $query['params'] = $params;
+            }
+        }
+
+        $this->qb($query, true);
+
+        return true;
     }
 
     /**
@@ -538,7 +571,7 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * Nullifies stmd and dbh properties to close connection.
+     * Nullifies stmt and dbh properties to close connection.
      *
      * @return boolean
      */
@@ -609,7 +642,7 @@ class Database extends AdapterAbstract
      *
      * @return array
      */
-    public function prepareArrayQuery($params, $values = [])
+    public function prepareArrayQuery($params='param', $values = [])
     {
         $params_names = [];
         $params_val = [];
