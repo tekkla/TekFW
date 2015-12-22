@@ -438,6 +438,7 @@ final class Router extends \AltoRouter
     public function getStatus()
     {
         return [
+            'route' => $this->getCurrentRoute(),
             'is_ajax' => $this->is_ajax,
             'method' => $_SERVER['REQUEST_METHOD'],
             'app' => $this->getApp(),
