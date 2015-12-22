@@ -46,6 +46,8 @@ class QueryBuilder
 
     private $sql = '';
 
+    private $counter = [];
+
     /**
      *
      * @var array
@@ -292,6 +294,14 @@ class QueryBuilder
 
         $join = isset($tmp) ? implode(' ', $tmp) : '';
 
+        // Add counter
+        if ($this->counter) {
+
+            $tmp = '(@' . $this->counter['name'] . ':=' . '@' . $this->counter['name'] . '+' . $this->counter['step'] . ') AS ' . $this->counter['as'];
+
+            array_unshift($this->fields, $tmp);
+        }
+
         // Create fieldlist
         if ($this->fields) {
 
@@ -407,7 +417,14 @@ class QueryBuilder
                 break;
 
             default:
-                $this->sql = $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $tbl . $join . $filter . $group_by . $having . $order . $limit;
+
+                $this->sql = '';
+
+                if ($this->counter) {
+                    $this->sql .= 'SET @' . $this->counter['name'] . '=' . $this->counter['start'] . ';';
+                }
+
+                $this->sql .= $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $tbl . $join . $filter . $group_by . $having . $order . $limit;
                 break;
         }
 
@@ -477,6 +494,8 @@ class QueryBuilder
     private function processSelect()
     {
         $this->processTblDefinition();
+
+        $this->processCounter();
 
         $this->processFieldDefinition();
 
@@ -561,6 +580,30 @@ class QueryBuilder
 
         if (isset($this->definition['alias'])) {
             $this->alias = $this->definition['alias'];
+        }
+    }
+
+
+    private function processCounter()
+    {
+        if (!empty($this->definition['counter'])) {
+
+            // store counter definition
+            $this->counter = $this->definition['counter'];
+
+            // Check for values of counter and add needed values by setting default vlaues
+            $defaults = [
+                'name' => 'counter',
+                'as' => 'counter',
+                'start' => 1,
+                'step' => 1
+            ];
+
+            foreach ($defaults as $key => $val) {
+                if (!isset($this->counter[$key])) {
+                    $this->counter[$key] = $val;
+                }
+            }
         }
     }
 
