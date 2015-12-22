@@ -1,13 +1,12 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Data\Adapter\Db\Connection;
-use Core\Lib\Data\DataAdapter;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\UrlTrait;
-use Core\Lib\Traits\ConvertTrait;
+use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Data\Adapter\Db\Connection;
 use Core\Lib\Data\Vars;
 use Core\Lib\Data\Container;
 
@@ -82,7 +81,7 @@ class Model extends MvcAbstract implements \ArrayAccess
      *
      * @return Model
      */
-    final public function getModel($model_name = null)
+    final public function getModel($model_name = '')
     {
         if (empty($model_name)) {
             $model_name = $this->getName();
