@@ -24,10 +24,13 @@ class Editbox extends Panel
 
     private $is_ajax = false;
 
+    private $caption_size = 4;
+
     /**
      * Sets the DOMID of form to save.
      *
-     * @param string $form DomID of form
+     * @param string $form
+     *            DomID of form
      *
      * @return \Core\Lib\Content\Html\Controls\Editbox
      */
@@ -41,7 +44,7 @@ class Editbox extends Panel
     /**
      * Sets action for cancel button.
      *
-     * @param unknown $save_action
+     * @param string $save_action
      *
      * @return \Core\Lib\Content\Html\Controls\Editbox
      */
@@ -64,8 +67,7 @@ class Editbox extends Panel
     {
         if (isset($ajax)) {
             $this->is_ajax = (bool) $ajax;
-        }
-        else {
+        } else {
             return $this->is_ajax;
         }
     }
@@ -126,7 +128,7 @@ class Editbox extends Panel
         $heading = '
         <ul class="list-inline">
             <li>
-                <button type="submit" form="' . $this->form->getId() . '" class="btn btn-sm btn-' . $this->getContext() . '"' . ($this->is_ajax ? ' data-ajax' : '') . ' formaction="'. $this->form->getAttribute('action'). '">
+                <button type="submit" form="' . $this->form->getId() . '" class="btn btn-sm btn-success"' . ($this->is_ajax ? ' data-ajax' : '') . ' formaction="' . $this->form->getAttribute('action') . '">
                     <i class="fa fa-check"></i>
                 </button>
             </li>
@@ -138,7 +140,7 @@ class Editbox extends Panel
 
             $heading .= '
             <li class="pull-right">
-                <a class="btn btn-sm btn-' . $this->getContext() . '" href="' . $this->cancel_action . '"' . ($this->is_ajax ? ' data-ajax' : '') . '>
+                <a class="btn btn-sm btn-danger" href="' . $this->cancel_action . '"' . ($this->is_ajax ? ' data-ajax' : '') . '>
                     <i class="fa fa-times"></i>
                 </a>
             </li>';
