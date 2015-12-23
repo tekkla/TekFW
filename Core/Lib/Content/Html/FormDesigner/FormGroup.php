@@ -33,7 +33,7 @@ class FormGroup extends Div
      * @param string $type The type of control to create
      * @param string $name Name of the control. Ths name is used to bind the control to a model field.
      *
-     * @return FormAbstract @TODO Check container and autobind param to be neccessary.
+     * @return FormAbstract
      */
     public function &addControl($control, $name = '', $label = '', $value = '')
     {
