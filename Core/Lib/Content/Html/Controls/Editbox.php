@@ -106,7 +106,7 @@ class Editbox extends Panel
     public function build()
     {
         if (empty($this->form)) {
-            Throw new UnexpectedValueException('Editbox control needs a form object.');
+            Throw new UnexpectedValueException('Editbox control needs a set FormDesigner or Form object.');
         }
 
         // Editbox CSS class needed
