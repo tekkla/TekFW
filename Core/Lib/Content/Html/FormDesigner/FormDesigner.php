@@ -523,7 +523,7 @@ final class FormDesigner extends Form
                         $name = $content->getName();
                         $value = $this->container[$name];
 
-                        if ($this->container->hasErrors($name)) {
+                        if (!empty($name) && $this->container->hasErrors($name)) {
                             $builder->setErrors($this->container->getErrors($name));
                         }
 
@@ -565,15 +565,6 @@ final class FormDesigner extends Form
                             $content->setFormId($this->getId());
                             $content->setFormAction($this->getAttribute('action'));
                         }
-
-                        /*
-                        // It is important to add additional data attributes
-                        if ($this->isAjax() && $content->isSubmit()) {
-                            $content->addData([
-                                'form' => $this->getId(),
-                                'url' => $this->getAttribute('action')
-                            ]);
-                        }*/
                     }
 
                     $builder->setControl($content);
@@ -598,7 +589,7 @@ final class FormDesigner extends Form
             }
         }
 
-        $group->setInner($html);
+        $group->setInner($group->getInner() . $html);
 
         return $group->build();
     }
