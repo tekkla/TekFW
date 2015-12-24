@@ -46,15 +46,27 @@ class Button extends FormAbstract
      */
     protected $button_size;
 
-    // Element type
+    /**
+     * Element type
+     *
+     * @var $string
+     */
     protected $element = 'button';
 
-    // Basic css classes
+    /**
+     * Basic css classes
+     *
+     * @var array
+     */
     protected $css = [
         'btn'
     ];
 
-    // Basic data attributes
+    /**
+     * Basic data attributes
+     *
+     * @var array
+     */
     protected $data = [
         'control' => 'button'
     ];
@@ -62,7 +74,8 @@ class Button extends FormAbstract
     /**
      * Sets name of the fontawesome icon to use with the button.
      *
-     * @param string $$button_icon Name of the icon without the leading "fa-"
+     * @param string $$button_icon
+     *            Name of the icon without the leading "fa-"
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
@@ -243,7 +256,8 @@ class Button extends FormAbstract
     /**
      * Sets element type.
      *
-     * @param string $type Type of element (submit, reset or button)
+     * @param string $type
+     *            Type of element (submit, reset or button)
      *
      * @throws InvalidArgumentException
      *
@@ -283,7 +297,8 @@ class Button extends FormAbstract
     /**
      * Sets the url where to send form data on submit (only on buttontype "submit").
      *
-     * @param string|Url $url Url string or object used as form action
+     * @param string|Url $url
+     *            Url string or object used as form action
      *
      * @return \Core\Lib\Content\Html\Form\Button
      */
@@ -299,7 +314,8 @@ class Button extends FormAbstract
      * Use 'post' or 'get'.
      * Form elements are using post by default.
      *
-     * @param string $method Value for the method attribute of from
+     * @param string $method
+     *            Value for the method attribute of from
      *
      * @throws InvalidArgumentException
      *
@@ -326,7 +342,8 @@ class Button extends FormAbstract
      * Use 'post' or 'get'.
      * Form elements are using post by default.
      *
-     * @param string $method Value for the method attribute of from
+     * @param string $method
+     *            Value for the method attribute of from
      *
      * @throws InvalidArgumentException
      *
