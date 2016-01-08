@@ -34,8 +34,10 @@ class View extends MvcAbstract
     /**
      * Renders the view and returns the result
      *
-     * @param string $func Name of render method
-     * @param array $params Optional: Parameterlist to pass to render function
+     * @param string $func
+     *            Name of render method
+     * @param array $params
+     *            Optional: Parameterlist to pass to render function
      */
     public final function render($action, $params = array())
     {
@@ -52,7 +54,8 @@ class View extends MvcAbstract
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
      * @param string $key
-     * @param $val
+     * @param
+     *            $val
      */
     public final function setVar($key, $val)
     {
@@ -67,8 +70,7 @@ class View extends MvcAbstract
             // Handle data container
             elseif (method_exists($val, 'getArray')) {
                 $val = $val->getArray();
-            }
-            // Handle all other objects
+            }             // Handle all other objects
             else {
                 $val = get_object_vars($val);
             }
@@ -78,6 +80,27 @@ class View extends MvcAbstract
         $this->__magic_vars[$key] = $val;
 
         return $this;
+    }
+
+    /**
+     * Returns the value of a set var.
+     *
+     * Nearly the same as magic method __get() but in this method will throw an
+     * InvalidArgumentException when var does not exist.
+     *
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return mixed
+     */
+    final public function getVar($name)
+    {
+        if (! array_key_exists($name, $this->__magic_vars)) {
+            Throw new InvalidArgumentException(sprintf('The requested var "%s" does not exist in current view.', $name));
+        }
+
+        return $this->__magic_vars[$name];
     }
 
     /**
