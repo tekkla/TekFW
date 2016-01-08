@@ -7,7 +7,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
  * View.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class View extends MvcAbstract
@@ -70,8 +70,8 @@ class View extends MvcAbstract
             // Handle data container
             elseif (method_exists($val, 'getArray')) {
                 $val = $val->getArray();
-            }             // Handle all other objects
-            else {
+            }  // Handle all other objects
+else {
                 $val = get_object_vars($val);
             }
         }
