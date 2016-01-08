@@ -202,8 +202,10 @@ class Controller extends MvcAbstract
      *
      * Setting one parameter means you want to read a value. Both param writes a config value.
      *
-     * @param string $key Config to get
-     * @param mixed $val Value to set in the apps config
+     * @param string $key
+     *            Config to get
+     * @param mixed $val
+     *            Value to set in the apps config
      *
      * @return mixed config value
      */
@@ -222,8 +224,10 @@ class Controller extends MvcAbstract
      * In this case you should provide the action an parameters needed to get the
      * wanted result.
      *
-     * @param string $action Action method to call.
-     * @param string $params Optional ssociative array to be uses as action method parameter.
+     * @param string $action
+     *            Action method to call.
+     * @param string $params
+     *            Optional ssociative array to be uses as action method parameter.
      *
      * @return boolean bool|string
      */
@@ -298,8 +302,7 @@ class Controller extends MvcAbstract
             }
 
             return $content;
-        }
-        else {
+        } else {
 
             // Without view rendering we return the return value send from called controller action
             return $return;
@@ -312,10 +315,13 @@ class Controller extends MvcAbstract
      * even uses it. The difference is that the renderesult is wrapped by an ajax command object. This ajax command can
      * be controlled by setting the wanted parameters via $this->ajax->...
      *
-     * @param string $action Name of the action to call
-     * @param array $params Array of parameter to be used in action call
-     * @param string $selector Optional jQuery selector to html() the result.
-     *        Can be overridden by setAjaxTarget() method
+     * @param string $action
+     *            Name of the action to call
+     * @param array $params
+     *            Array of parameter to be used in action call
+     * @param string $selector
+     *            Optional jQuery selector to html() the result.
+     *            Can be overridden by setAjaxTarget() method
      */
     final public function ajax($action = 'Index', $params = [], $selector = '')
     {
@@ -360,8 +366,10 @@ class Controller extends MvcAbstract
     /**
      * Method to cleanup data in controllers model and the request handler
      *
-     * @param bool $model Flag to clean model data (default: true)
-     * @param string $post Flag to clean post data (default: true)
+     * @param bool $model
+     *            Flag to clean model data (default: true)
+     * @param string $post
+     *            Flag to clean post data (default: true)
      */
     final protected function cleanUp($post = true)
     {
@@ -398,8 +406,10 @@ class Controller extends MvcAbstract
     /**
      * Loads the associated viewobject
      *
-     * @param string $app Name of the views app
-     * @param string $view Name of the view
+     * @param string $app
+     *            Name of the views app
+     * @param string $view
+     *            Name of the view
      */
     final protected function loadView($view)
     {
@@ -418,8 +428,7 @@ class Controller extends MvcAbstract
         if ($this->router->isAjax()) {
             $this->ajax->refresh($url);
             $this->firephp('Ajax refresh command set: ' . $url);
-        }
-        else {
+        } else {
             $this->redirectExit($url);
         }
     }
@@ -443,7 +452,8 @@ class Controller extends MvcAbstract
      * Level 0 - App: Tries to check access on possible app wide access function
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
-     * @param bool $force Set this to true if you want to force a brutal stop
+     * @param bool $force
+     *            Set this to true if you want to force a brutal stop
      *
      * @return boolean
      */
@@ -462,8 +472,7 @@ class Controller extends MvcAbstract
             if (isset($this->access['*'])) {
                 if (! is_array($this->access['*'])) {
                     $perm[] = $this->access['*'];
-                }
-                else {
+                } else {
                     $perm += $this->access['*'];
                 }
             }
@@ -472,8 +481,7 @@ class Controller extends MvcAbstract
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
                     $perm[] = $this->access[$this->action];
-                }
-                else {
+                } else {
                     $perm += $this->access[$this->action];
                 }
             }
@@ -505,8 +513,10 @@ class Controller extends MvcAbstract
     /**
      * Publish a value to the view
      *
-     * @param string|array $arg1 Name of var or list of vars in an array
-     * @param mixed $arg2 Optional value to be ste when $arg1 is the name of a var
+     * @param string|array $arg1
+     *            Name of var or list of vars in an array
+     * @param mixed $arg2
+     *            Optional value to be ste when $arg1 is the name of a var
      *
      * @throws InvalidArgumentException
      *
@@ -538,15 +548,26 @@ class Controller extends MvcAbstract
             foreach ($arg1 as $var => $value) {
                 $this->view->setVar($var, $value);
             }
-        }
-        elseif (isset($arg2)) {
+        } elseif (isset($arg2)) {
             $this->view->setVar($arg1, $arg2);
-        }
-        else {
+        } else {
             Throw new InvalidArgumentException('The vars to set are not correct.', 1001);
         }
 
         return $this;
+    }
+
+    /**
+     * Returns value of a set var in view.
+     *
+     * When var is not found an InvalidArgumentException is thrown by the view.
+     *
+     * @param sting $name
+     *            Name of the var to get value from
+     */
+    final protected function getVar($name)
+    {
+        return $this->view->getVar($name);
     }
 
     /**
@@ -619,8 +640,10 @@ class Controller extends MvcAbstract
     /**
      * Creates an app related container
      *
-     * @param string $container_name Optional: Name of the container to load. When no name is given the name of the current model will be used.
-     * @param bool $auto_init Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
+     * @param string $container_name
+     *            Optional: Name of the container to load. When no name is given the name of the current model will be used.
+     * @param bool $auto_init
+     *            Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
      *
      * @return \Core\Lib\Data\Container
      */
@@ -652,8 +675,10 @@ class Controller extends MvcAbstract
      * Useful when redirecting to other controller action
      * which need additional parameters to function.
      *
-     * @param string $params Paramertername
-     * @param mixed $value Parametervalue
+     * @param string $params
+     *            Paramertername
+     * @param mixed $value
+     *            Parametervalue
      *
      * @return \Core\Lib\Amvc\Controller
      */
@@ -699,7 +724,8 @@ class Controller extends MvcAbstract
     /**
      * Returns an empty ajax command object
      *
-     * @param string $command_name Name of command to get. Default: Dom\Html
+     * @param string $command_name
+     *            Name of command to get. Default: Dom\Html
      *
      * @return \Core\Lib\Ajax\AjaxCommand
      */
@@ -711,8 +737,10 @@ class Controller extends MvcAbstract
     /**
      * Redirect function to make sure the browser doesn't come back and repost the form data.
      *
-     * @param string $location Location we redirtect to
-     * @param bool $refresh Use refresh instead of location
+     * @param string $location
+     *            Location we redirtect to
+     * @param bool $refresh
+     *            Use refresh instead of location
      */
     final protected function redirectExit($location = '', $permanent = false)
     {
