@@ -4,11 +4,11 @@ namespace Core\Lib\Amvc;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\UrlTrait;
-use Core\Lib\Data\DataAdapter;
-use Core\Lib\Data\Adapter\Database;
-use Core\Lib\Data\Adapter\Db\Connection;
-use Core\Lib\Data\Vars;
+use Core\Lib\Data\Connectors\Db\Db;
+use Core\Lib\Data\Connectors\Db\Connection;
 use Core\Lib\Data\Container;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+;
 
 /**
  * Model.php
@@ -34,24 +34,17 @@ class Model extends MvcAbstract implements \ArrayAccess
     protected $data = false;
 
     /**
-     *
-     * @var \Core\Lib\Data\Vars
-     */
-    protected $vars;
-
-    /**
      * Constructor
      *
      * @param unknown $name
      * @param App $app
      * @param Vars $vars
      */
-    final public function __construct($name, App $app, Vars $vars)
+    final public function __construct($name, App $app)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
-        $this->vars = $vars;
     }
 
     /**
@@ -77,7 +70,8 @@ class Model extends MvcAbstract implements \ArrayAccess
      * There is a little difference in using this method than the long term. Not setting a model name
      * means, that you get a new instance of the currently used model.
      *
-     * @param string $model_name Optional: When not set the name of the current model will be used
+     * @param string $model_name
+     *            Optional: When not set the name of the current model will be used
      *
      * @return Model
      */
@@ -93,8 +87,10 @@ class Model extends MvcAbstract implements \ArrayAccess
     /**
      * Creates an app related container
      *
-     * @param string $container_name Optional: Name of the container to load. When no name is given the name of the current model will be used.
-     * @param bool $auto_init Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
+     * @param string $container_name
+     *            Optional: Name of the container to load. When no name is given the name of the current model will be used.
+     * @param bool $auto_init
+     *            Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
      *
      * @return \Core\Lib\Data\Container
      */
@@ -124,44 +120,42 @@ class Model extends MvcAbstract implements \ArrayAccess
     }
 
     /**
-     * Creates a database Dataadapter object
+     * Creates a database connector driven DataAdapter object
      *
      * Uses default db DataAdapter when no Connection object is set.
      *
-     * @param Connection $conn Optional Connection object
-     * @param string $prefix Optional table prefix.
-     * @param array $fields Optional field definition list to be used as container scheme
+     * @param Connection $conn
+     *            Optional Connection object
+     * @param string $prefix
+     *            Optional table prefix.
+     * @param array $fields
+     *            Optional field definition list to be used as container scheme
      *
-     * @return Database
+     * @return Db
      */
-    final protected function getDbAdapter(Connection $conn = null, $prefix = '', array $fields = [])
+    final protected function getDbConnector($resource_name = 'db.default', $prefix = '', $fields = [])
     {
-        if ($conn === null) {
-            $adapter = $this->di->get('db.default');
-
-            if ($prefix) {
-                $adapter->setPrefix($prefix);
-            }
-        }
-        else {
-
-            if (! $prefix) {
-                $prefix = $this->di->get('db.default.prefix');
-            }
-
-            $adapter = new DataAdapter('db', [
-                'conn' => $conn,
-                'prefix' => $prefix
-            ]);
+        if (! $this->di->exists($resource_name)) {
+            Throw new InvalidArgumentException(sprintf('A database service with name "%s" ist not registered', $resource_name));
         }
 
-        // Try to get a container objects
-        $container = empty($fields)? $this->getContainer() : $this->getGenericContainer($fields);
+        /* @var $db Db */
+        $db = $this->di->get($resource_name);
 
-        // Pass it to the DataAdapter
-        $adapter->setContainer($container);
+        if ($prefix) {
+            $db->setPrefix($prefix);
+        }
 
-        return $adapter;
+        if ($fields !== false) {
+
+            // Try to get a container object
+            $container = empty($fields) ? $this->getContainer() : $this->getGenericContainer($fields);
+
+            // Pass it to the DataAdapter
+            $db->setContainer($container);
+        }
+
+        return $db;
     }
 
     /**
