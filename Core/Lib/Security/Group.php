@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Errors\Exceptions\DatabaseException;
 use Core\Lib\Errors\Exceptions\SecurityException;
 
@@ -34,17 +34,17 @@ class Group
     private $groups = [];
 
     /**
-     * DB Handler
+     * DB Connector
      *
-     * @var Database
+     * @var Db
      */
-    private $adapter;
+    private $db;
 
     /**
      */
-    function __construct(DataAdapter $adapter)
+    function __construct(Db $db)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
 
         $this->loadGroups();
     }
@@ -53,7 +53,7 @@ class Group
     {
         // Copy default groups to
         // $this->groups = $this->default_groups;
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'groups',
             'fields' => [
                 'id_group',
@@ -61,9 +61,9 @@ class Group
             ],
             'order' => 'id_group'
         ]);
-        $this->adapter->execute();
+        $this->db->execute();
 
-        $groups = $this->adapter->fetchAll();
+        $groups = $this->db->fetchAll();
 
         foreach ($groups as $g) {
             $this->addGroup($g['id_group'], $g['title']);
@@ -82,17 +82,17 @@ class Group
         try {
 
             // Important: Use a transaction!
-            $this->adapter->beginTransaction();
+            $this->db->beginTransaction();
 
             // Delete current groups
-            $this->adapter->qb([
+            $this->db->qb([
                 'table' => 'groups',
                 'method' => 'DELETE',
             ]);
-            $this->adapter->execute();
+            $this->db->execute();
 
             // Prepare statement for group insert
-            $this->adapter->qb([
+            $this->db->qb([
                 'table' => 'groups',
                 'method' => 'INSERT',
                 'fields' => [
@@ -103,16 +103,16 @@ class Group
 
             // Insert the groups each by each into the groups table
             foreach ($groups as $id_group => $title) {
-                $this->adapter->bindValue(':id_group', $id_group);
-                $this->adapter->bindValue(':title', $title);
-                $this->adapter->execute();
+                $this->db->bindValue(':id_group', $id_group);
+                $this->db->bindValue(':title', $title);
+                $this->db->execute();
             }
 
             // End end or transaction
-            $this->adapter->endTransaction();
+            $this->db->endTransaction();
         }
         catch (\PDOException $e) {
-            $this->adapter->cancelTransaction();
+            $this->db->cancelTransaction();
             Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
@@ -150,10 +150,10 @@ class Group
     {
         try {
 
-            $this->adapter->beginTransaction();
+            $this->db->beginTransaction();
 
             // Delete usergroup
-            $this->adapter->qb([
+            $this->db->qb([
                 'table' => 'groups',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',
@@ -161,10 +161,10 @@ class Group
                     ':id_group' => $id_group
                 ]
             ]);
-            $this->adapter->execute();
+            $this->db->execute();
 
             // Delete permissions related to this group
-            $this->adapter->qb([
+            $this->db->qb([
                 'table' => 'permissions',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',
@@ -172,15 +172,15 @@ class Group
                     ':id_group' => $id_group
                 ]
             ]);
-            $this->adapter->execute();
+            $this->db->execute();
 
             // Remove group from current grouplist
             unset($this->groups[$id_group]);
 
-            $this->adapter->endTransaction();
+            $this->db->endTransaction();
         }
         catch (\PDOException $e) {
-            $this->adapter->cancelTransaction();
+            $this->db->cancelTransaction();
 
             Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }

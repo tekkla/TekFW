@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * Permission.php
@@ -21,13 +21,13 @@ class Permission
 
     /**
      *
-     * @var DataAdapter
+     * @var Db
      */
-    private $adapter;
+    private $db;
 
-    public function __construct(DataAdapter $adapter)
+    public function __construct(Db $db)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
     }
 
     /**
@@ -83,7 +83,7 @@ class Permission
         }
 
         // Create a prepared string and param array to use in query
-        $prepared = $this->adapter->prepareArrayQuery('group', $groups);
+        $prepared = $this->db->prepareArrayQuery('group', $groups);
 
         // Get and return the permissions
         $query = [
@@ -93,8 +93,8 @@ class Permission
             'params' => $prepared['values']
         ];
 
-        $this->adapter->qb($query);
+        $this->db->qb($query);
 
-        return $this->adapter->column(2);
+        return $this->db->column(2);
     }
 }

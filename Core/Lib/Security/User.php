@@ -1,8 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\DataAdapter;
-
+use Core\Lib\Data\Connectors\Db\Db;
 /**
  * Wrapper class to access SMF user information from one point
  *
@@ -67,9 +66,9 @@ class User
 
     /**
      *
-     * @var DataAdapter
+     * @var Db
      */
-    private $adapter;
+    private $db;
 
     /**
      *
@@ -77,9 +76,9 @@ class User
      */
     private $permission;
 
-    public function __construct(DataAdapter $adapter, Permission $permission, $id_user = 0)
+    public function __construct(Db $db, Permission $permission, $id_user = 0)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
         $this->permission = $permission;
 
         if ($id_user > 0) {
@@ -176,9 +175,7 @@ class User
 
         $this->id_user = $id_user;
 
-        $adapter = $this->di->get('db.default');
-
-        $adapter->qb([
+        $this->db->qb([
             'tbl' => 'users',
             'field' => [
                 'username',
@@ -191,7 +188,7 @@ class User
             ]
         ]);
 
-        $data = $adapter->single();
+        $data =  $this->db->single();
 
         if ($data) {
 
@@ -199,10 +196,7 @@ class User
             $this->display_name = $data['display_name'];
             $this->password = $data['password'];
 
-            // Load groups the user is in
-            $adapter = $this->di->get('db.default');
-
-            $adapter->qb([
+            $this->db->qb([
                 'tbl' => 'users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
@@ -211,7 +205,7 @@ class User
                 ]
             ]);
 
-            $this->groups = $adapter->column();
+            $this->groups = $this->db->column();
 
             // Load user permissions based on groups of the user
             $this->perms = $this->permission->loadPermission($this->groups);
@@ -223,27 +217,39 @@ class User
         }
     }
 
-    public function create($username, $password, $activation_mail=false)
+    /**
+     * Creates a new user
+     *
+     * Uses given username and password and returns it's user id.
+     * Optional state flag to activate user on creation.
+     *
+     * Given password will be hashed by password_hash($password, PASSWORD_DEFAULT) by default.
+     *
+     * @param string $username Username
+     * @param string $password Password
+     * @param boolean $state Optional: Stateflag. 0=inactive | 1=active (default: 0)
+     * @param boolean $password_hash Optional: Flag to activate password hashing by using password_hash (Default: true)
+     *
+     * @return integer
+     */
+    public function create($username, $password, $state=0, $password_hash=true)
     {
-        $activation_key = bin2hex($this->security->getRandomToken(64));
+        $data = $this->db->adapter->getContainer(true);
 
-        $query = [
-            'table' => 'users',
-            'data' => [
-                'username' => $username,
-                'password' => password_hash($password, PASSWORD_DEFAULT),
-                'activation' => $activation_key
-            ]
-        ];
+        $data['username'] = $username;
 
-        $this->adapter->qb($query, true);
-
-        $id_user = $this->adapter->lastInsertId();
-
-        if ($activation_mail) {
-            $mail = 'activate?key=' . $activation_key;
-
-            echo $mail;
+        if ($password_hash == true) {
+            $password = password_hash($password, PASSWORD_DEFAULT);
         }
+
+        $data['password'] = $password;
+        $data['state'] = (int) $state;
+
+        $this->db->qb([
+            'table' => 'users',
+            'data' => $data
+        ], true);
+
+        return $this->db->lastInsertId();
     }
 }

@@ -4,9 +4,8 @@ namespace Core\Lib\Security;
 use Core\Lib\Cfg;
 use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
-use Core\Lib\Data\DataAdapter;
 use Core\Lib\Logging\Logging;
-use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Traits\DebugTrait;
 
 /**
@@ -54,7 +53,7 @@ class Security
      *
      * @var Database
      */
-    private $adapter;
+    private $db;
 
     /**
      *
@@ -101,7 +100,7 @@ class Security
     /**
      * Constructor
      *
-     * @param DataAdapter $adapter
+     * @param Db $db
      * @param Cfg $cfg
      * @param Session $session
      * @param Cookie $cookie
@@ -110,9 +109,9 @@ class Security
      * @param Permission $permission
      * @param Logging $logging
      */
-    public function __construct(DataAdapter $adapter, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission, Logging $logging)
+    public function __construct(Db $db, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission, Logging $logging)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
         $this->cfg = $cfg;
         $this->session = $session;
         $this->cookie = $cookie;
@@ -241,7 +240,7 @@ class Security
         }
 
         // Try to load user from db
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'users',
             'fields' => [
                 'id_user',
@@ -253,7 +252,7 @@ class Security
             ]
         ]);
 
-        $login = $this->adapter->single();
+        $login = $this->db->single();
 
         // No user found => login failed
         if (! $login) {
@@ -271,7 +270,7 @@ class Security
 
             // Needs hash to be updated?
             if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
-                $this->adapter->qb([
+                $this->db->qb([
                     'table' => 'users',
                     'method' => 'UPDATE',
                     'fields' => [
@@ -368,7 +367,7 @@ class Security
         // Let's find the user for the token in cookie
         list ($selector, $token) = explode(':', $this->cookie->get($cookie));
 
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'auth_tokens',
             'fields' => [
                 'id_auth_token',
@@ -382,7 +381,7 @@ class Security
                 ':selector' => $selector
             ]
         ]);
-        $data = $this->adapter->all();
+        $data = $this->db->all();
 
         foreach ($data as $auth_token) {
 
@@ -439,7 +438,7 @@ class Security
     private function deleteAuthTokenFromDb($id_user)
     {
         // Yep! Delete token and return false for failed autologin
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'auth_tokens',
             'method' => 'DELETE',
             'filter' => 'expires < :expires OR id_user=:id_user',
@@ -472,7 +471,7 @@ class Security
         $hash = hash('sha256', $token);
 
         // Store selector and hash in DB
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'auth_tokens',
             'method' => 'INSERT',
             'fields' => [
@@ -490,7 +489,7 @@ class Security
         ], true);
 
         // Set autologin token cookie only when token is stored successfully in db!!!
-        if ($this->adapter->lastInsertId()) {
+        if ($this->db->lastInsertId()) {
 
             // Get new cookie
             $cookie = $this->cookie->getInstance();
