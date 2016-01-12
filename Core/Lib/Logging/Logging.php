@@ -2,8 +2,7 @@
 namespace Core\Lib\Logging;
 
 use Core\Lib\Data\Container;
-use Core\Lib\Data\Adapter\Database;
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Http\Session;
 
 /**
@@ -18,13 +17,13 @@ class Logging
 
     /**
      *
-     * @var Database
+     * @var Db
      */
-    private $adapter;
+    private $db;
 
-    public function __construct(DataAdapter $adapter, Session $session)
+    public function __construct(Db $db, Session $session)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
         $this->session = $session;
     }
 
@@ -275,7 +274,7 @@ class Logging
      */
     private function saveLog(Container $message)
     {
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'logs',
             'data' => $message
         ], true);
@@ -290,7 +289,7 @@ class Logging
      */
     public function countBanLogEntries($ip)
     {
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'logs',
             'fields' => 'COUNT(ip)',
             'filter' => 'ip=:ip AND type="ban"',
@@ -299,7 +298,7 @@ class Logging
             ]
         ]);
 
-        return $this->adapter->value();
+        return $this->db->value();
     }
 
     /**
