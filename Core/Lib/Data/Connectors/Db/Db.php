@@ -1,21 +1,22 @@
 <?php
-namespace Core\Lib\Data\Adapter;
+namespace Core\Lib\Data\Connectors\Db;
 
-use Core\Lib\Data\Adapter\AdapterAbstract;
-use Core\Lib\Data\Adapter\Db\Connection;
-use Core\Lib\Data\Adapter\Db\QueryBuilder;
+use Core\Lib\Data\Connectors\ConnectorAbstract;
+use Core\Lib\Data\Connectors\Db\Connection;
+use Core\Lib\Data\Connectors\Db\QueryBuilder;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Data\DataAdapter;
 
 /**
- * Database adapter
+ * Database connector
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
-class Database extends AdapterAbstract
+class Db extends ConnectorAbstract
 {
     use SerializeTrait;
     use DebugTrait;
@@ -106,26 +107,15 @@ class Database extends AdapterAbstract
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(array $options)
+    public function __construct($conn, $prefix)
     {
-        if (! isset($options['conn'])) {
-            Throw new InvalidArgumentException('No connection option found in database options');
-        }
-
-        if (! $options['conn'] instanceof Connection) {
-            Throw new InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
-        }
-
-        if (! isset($options['prefix'])) {
-            Throw new InvalidArgumentException('No table prefix in database options');
-        }
-
-        $this->conn = $options['conn'];
-
-        $this->prefix = $options['prefix'];
+        $this->conn = $conn;
+        $this->prefix = $prefix;
 
         // Connect to db
         $this->dbh = $this->conn->connect();
+
+        $this->injectAdapter(new DataAdapter());
     }
 
     /**
@@ -708,7 +698,7 @@ class Database extends AdapterAbstract
     /**
      * Creates and return an QueryBuilder instance.
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function getQueryBuilder()
     {

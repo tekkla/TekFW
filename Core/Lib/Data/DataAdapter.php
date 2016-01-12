@@ -4,6 +4,7 @@ namespace Core\Lib\Data;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Data\Connectors\ConnectorAbstract;
 
 /**
  * DataAdapter.php
@@ -25,9 +26,9 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var AdapterInterface
+     * @var ConnectorAbstract
      */
-    private $adapter;
+    private $connector;
 
     /**
      *
@@ -48,40 +49,6 @@ class DataAdapter implements \IteratorAggregate
     private $callbacks = [];
 
     /**
-     *
-     * @var array
-     */
-    private static $adapters = [
-        'db' => '\Core\Lib\Data\Adapter\Database',
-        'xml' => '\Core\Lib\Data\Adapter\Xml',
-        'json' => '\Core\Lib\Data\Adapter\Json'
-    ];
-
-    /**
-     * Constructor
-     *
-     * @param string $type
-     * @param array $arguments
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __construct($type, array $arguments = [])
-    {
-        if (! array_key_exists($type, self::$adapters)) {
-            Throw new InvalidArgumentException('There is no data adapter of type "' . $type . '" registered');
-        }
-
-        $this->type = $type;
-
-        if (! is_array($arguments)) {
-            $arguments = (array) $arguments;
-        }
-
-        $this->adapter = new self::$adapters[$this->type]($arguments);
-        $this->adapter->injectAdapter($this);
-    }
-
-    /**
      * (non-PHPdoc)
      *
      * @see \Core\Lib\Data\Container::getIterator()
@@ -92,7 +59,7 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Access direct on adapter object
+     * Access direct on connector object
      *
      * @param string $name
      * @param array $arguments
@@ -100,7 +67,7 @@ class DataAdapter implements \IteratorAggregate
     public function __call($name, $arguments)
     {
         return call_user_func_array([
-            $this->adapter,
+            $this->connector,
             $name
         ], $arguments);
     }
@@ -137,33 +104,6 @@ class DataAdapter implements \IteratorAggregate
         }
 
         return unserialize(serialize($this->container));
-    }
-
-    /**
-     * Maps a new data apdapter class.
-     *
-     * @param string $name
-     *            Unique name of adapter
-     * @param string $class
-     *            Class to map as adapter
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return \Core\Lib\Data\DataAdapter
-     */
-    public function mapAdapter($name, $class)
-    {
-        if (array_key_exists($name, self::$adapters)) {
-            Throw new InvalidArgumentException('There is already a data adapter type with name "' . $name . '" registered');
-        }
-
-        if (in_array($class, self::$adapters)) {
-            Throw new InvalidArgumentException('There is already a data adapter with class "' . $class . '" registered');
-        }
-
-        self::$adapters[$name] = $class;
-
-        return $this;
     }
 
     /**
@@ -259,7 +199,7 @@ class DataAdapter implements \IteratorAggregate
      *
      * @return array|object
      */
-    private function fillContainer(array $data)
+    public function fillContainer(array $data)
     {
         $container = unserialize(serialize($this->container));
 

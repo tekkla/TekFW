@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Data\Adapter\Db;
+namespace Core\Lib\Data\Connectors\Db;
 
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\ArrayTrait;
@@ -71,7 +71,7 @@ class QueryBuilder
      *
      * @param array|string $fields Fieldlist as comma seperated string or value array.
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Select($fields = '')
     {
@@ -87,7 +87,7 @@ class QueryBuilder
      *
      * @param array|string $fields Fieldlist as comma seperated string or value array.
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function SelectDistinct($fields = '')
     {
@@ -101,7 +101,7 @@ class QueryBuilder
     /**
      * INSERT INTO statement
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function InsertInto()
     {
@@ -115,7 +115,7 @@ class QueryBuilder
      *
      * @param string $tbl Name of table
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Into($tbl)
     {
@@ -127,7 +127,7 @@ class QueryBuilder
     /**
      * DELETE statement
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Delete()
     {
@@ -141,7 +141,7 @@ class QueryBuilder
      *
      * @param array|string $fields Fieldlist as comma seperated string or value array.
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Columns($columns = '')
     {
@@ -164,7 +164,7 @@ class QueryBuilder
      * @param string $tbl Table name
      * @param string $alias Optional: Table alias
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function From($tbl, $alias = '')
     {
@@ -183,7 +183,7 @@ class QueryBuilder
      * @param string $filter Filterstring
      * @param array $params Optional: Paramenter list
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Where($filter, $params = [])
     {
@@ -198,7 +198,7 @@ class QueryBuilder
      *
      * @param string $order Orderstring
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Order($order)
     {
@@ -215,7 +215,7 @@ class QueryBuilder
      * @param string $by How to join
      * @param string $condition Join condition
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Join($tbl, $as, $by, $condition)
     {
@@ -234,7 +234,7 @@ class QueryBuilder
      *
      * @param string|array field name or list of field names as array
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function GroupBy($field)
     {
@@ -255,7 +255,7 @@ class QueryBuilder
      * @param int $lower Lower limit
      * @param int $upper Optional: Upper limit
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function Limit($lower, $upper = null)
     {

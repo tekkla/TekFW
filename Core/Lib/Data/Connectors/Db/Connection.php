@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Data\Adapter\Db;
+namespace Core\Lib\Data\Connectors\Db;
 
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\RuntimeException;

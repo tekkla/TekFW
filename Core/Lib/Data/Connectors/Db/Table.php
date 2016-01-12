@@ -1,7 +1,5 @@
 <?php
-namespace Core\Lib\Data\Adapter\Db;
-
-use Core\Lib\Data\Adapter\Database;
+namespace Core\Lib\Data\Connectors\Db;
 
 /**
  *
@@ -13,7 +11,7 @@ class Table
 
 	/**
 	 *
-	 * @var Database
+	 * @var Db
 	 */
 	private $db;
 
@@ -44,11 +42,11 @@ class Table
 	/**
 	 * Constructor
 	 *
-	 * @param Database $db
+	 * @param Db $db
 	 * @param string $tbl
 	 * @param string $prefix
 	 */
-	public function __construct(Database $db, $tbl, $prefix='')
+	public function __construct(Db $db, $tbl, $prefix='')
 	{
 		$this->db = $db;
 		$this->tbl = $tbl;
