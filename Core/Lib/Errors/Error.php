@@ -77,12 +77,13 @@ function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_
     $di->get('core.error')->handleException(new $exception($err_msg, 0, $err_severity, $err_file, $err_line));
 }
 
-function ExceptionHandler(\Exception $e)
+function ExceptionHandler($e)
 {
     global $di;
 
     if (! empty($di)) {
         echo $di->get('core.error')->handleException($e);
+        return;
     }
 }
 
