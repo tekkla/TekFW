@@ -120,16 +120,14 @@ class Model extends MvcAbstract implements \ArrayAccess
     }
 
     /**
-     * Creates a database connector driven DataAdapter object
+     * Creates a database connector
      *
-     * Uses default db DataAdapter when no Connection object is set.
-     *
-     * @param Connection $conn
-     *            Optional Connection object
+     * @param string $resource_name
+     *            Name of the registered db factory
      * @param string $prefix
      *            Optional table prefix.
      * @param array $fields
-     *            Optional field definition list to be used as container scheme
+     *            Optional field definition list to be used as containerscheme
      *
      * @return Db
      */
