@@ -4,6 +4,7 @@ namespace Core\Lib\Data;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
+use Core\Lib\Data\Connectors\ConnectorAbstract;
 
 /**
  * DataAdapter.php
@@ -25,9 +26,9 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var AdapterInterface
+     * @var ConnectorAbstract
      */
-    private $adapter;
+    private $connector;
 
     /**
      *
@@ -37,7 +38,7 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var mixed
+     * @var Container
      */
     private $container = [];
 
@@ -46,40 +47,6 @@ class DataAdapter implements \IteratorAggregate
      * @var array
      */
     private $callbacks = [];
-
-    /**
-     *
-     * @var array
-     */
-    private static $adapters = [
-        'db' => '\Core\Lib\Data\Adapter\Database',
-        'xml' => '\Core\Lib\Data\Adapter\Xml',
-        'json' => '\Core\Lib\Data\Adapter\Json'
-    ];
-
-    /**
-     * Constructor
-     *
-     * @param string $type
-     * @param array $arguments
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __construct($type, array $arguments = [])
-    {
-        if (! array_key_exists($type, self::$adapters)) {
-            Throw new InvalidArgumentException('There is no data adapter of type "' . $type . '" registered');
-        }
-
-        $this->type = $type;
-
-        if (! is_array($arguments)) {
-            $arguments = (array) $arguments;
-        }
-
-        $this->adapter = new self::$adapters[$this->type]($arguments);
-        $this->adapter->injectAdapter($this);
-    }
 
     /**
      * (non-PHPdoc)
@@ -92,7 +59,7 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Access direct on adapter object
+     * Access direct on connector object
      *
      * @param string $name
      * @param array $arguments
@@ -100,7 +67,7 @@ class DataAdapter implements \IteratorAggregate
     public function __call($name, $arguments)
     {
         return call_user_func_array([
-            $this->adapter,
+            $this->connector,
             $name
         ], $arguments);
     }
@@ -124,40 +91,19 @@ class DataAdapter implements \IteratorAggregate
      *
      * @throws UnexpectedValueException
      *
-     * @return \Core\Lib\Data\Container
+     * @return Container
      */
-    public function getContainer()
+    public function getContainer($generic = true)
     {
+        if ($generic == true) {
+            return new Container();
+        }
+
         if (! $this->container) {
             Throw new UnexpectedValueException('There is no data container in this DataAdapter.');
         }
 
         return unserialize(serialize($this->container));
-    }
-
-    /**
-     * Maps a new data apdapter class.
-     *
-     * @param string $name Unique name of adapter
-     * @param string $class Class to map as adapter
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return \Core\Lib\Data\DataAdapter
-     */
-    public function mapAdapter($name, $class)
-    {
-        if (array_key_exists($name, self::$adapters)) {
-            Throw new InvalidArgumentException('There is already a data adapter type with name "' . $name . '" registered');
-        }
-
-        if (in_array($class, self::$adapters)) {
-            Throw new InvalidArgumentException('There is already a data adapter with class "' . $class . '" registered');
-        }
-
-        self::$adapters[$name] = $class;
-
-        return $this;
     }
 
     /**
@@ -169,25 +115,21 @@ class DataAdapter implements \IteratorAggregate
      */
     public function setData($data)
     {
-        // Callbacks?
-        if ($this->callbacks) {
+        // We have callbacks to use
+        foreach ($this->callbacks as $cb) {
 
-            // We have callbacks to use
-            foreach ($this->callbacks as $callback) {
+            // Adds data in from of all callback parameters
+            array_unshift($cb[1], $data);
 
-                // Execute every callback registerd
-                foreach ($callback[1] as $function) {
-                    $data = $callback[0]->$function($data);
-                }
-            }
+            // Call method in callback object with given parameter
+            $data = call_user_func_array($cb[0], $cb[1]);
         }
 
         // When data is an assoc array we check here for an existing
         // Container object and fill the container with our data
         if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
             $this->data = $data;
-        }
-        else {
+        } else {
             $this->data = $this->fillContainer($data);
         }
 
@@ -213,29 +155,23 @@ class DataAdapter implements \IteratorAggregate
             $skip = false;
 
             // Callbacks?
-            if ($this->callbacks) {
+            foreach ($this->callbacks as $cb) {
 
-                // We have callbacks to use
-                foreach ($this->callbacks as $callback) {
+                if (! isset($cb[1])) {
+                    $cb[1] = [];
+                }
 
-                    // Execute every callback registerd
-                    foreach ($callback[1] as $function) {
+                // Adds data in from of all callback parameters
+                array_unshift($cb[1], $data);
 
-                        $data = $callback[0]->$function($data);
+                $data = call_user_func_array($cb[0], $cb[1]);
 
-                        // Callback returned boolean false?
-                        if ($data === false) {
+                // Callback returned boolean false?
+                if ($data === false) {
 
-                            // Set skip flag and stop callback
-                            $skip = true;
-                            break;
-                        }
-                    }
-
-                    // Skip other callbacks?
-                    if ($skip) {
-                        break;
-                    }
+                    // Set skip flag and stop callback
+                    $skip = true;
+                    break;
                 }
             }
 
@@ -248,8 +184,7 @@ class DataAdapter implements \IteratorAggregate
             // Container object and fill the container with our data
             if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
                 $this->data[] = $data;
-            }
-            else {
+            } else {
                 $this->data[] = $this->fillContainer($data);
             }
         }
@@ -264,7 +199,7 @@ class DataAdapter implements \IteratorAggregate
      *
      * @return array|object
      */
-    private function fillContainer(array $data)
+    public function fillContainer(array $data)
     {
         $container = unserialize(serialize($this->container));
 
@@ -298,16 +233,73 @@ class DataAdapter implements \IteratorAggregate
     /**
      * Sets one or more callback functions.
      *
-     * @param object $object Object the callbaks are calles from
-     * @param string|array $callbacks One or more callback functions
+     * @param array $callbacks
+     *            Array of callbacks to add. Callbacks need at least following index structure:
+     *            0 => Closure or [object, method] to call
+     *            1 => (optional) Args to pass to call additionally to always provided data.
+     * @param boolean $clear_callbacks_stack
+     *            (optional) Clears existing callback stack. Default: true
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setCallbacks($object, $callbacks = [])
+    public function addCallbacks(array $callbacks = [], $clear_callbacks_stack = true)
     {
+        if ($clear_callbacks_stack) {
+            $this->clearCallbacks();
+        }
+
+        foreach ($callbacks as $cb) {
+
+            // Check for closure or object. If none is found, throw exception
+            if (! is_callable($cb[0]) || (is_array($cb[0]) && ! is_object($cb[0][0]))) {
+                Throw new InvalidArgumentException('DataAdapter callbacks MUST be either a closure or a valid object.');
+            }
+
+            // Any callback arguments?
+            if (isset($cb[1])) {
+                if (! is_array($cb[1])) {
+                    $cb[1] = (array) $cb[1];
+                }
+                $args = $cb[1];
+            } else {
+                $args = [];
+            }
+
+            $this->callbacks[] = [
+                $cb[0],
+                $args
+            ];
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds one callback function.
+     *
+     * @param closure|array $call
+     *            The closure or array with object and method to call.
+     * @param array $args
+     *            (optional) Arguments to pass additionally to always added data.
+     * @param string $clear_callbacks_stack
+     *            (optional) Clears existing callback stack. Default: true
+     *
+     * @return \Core\Lib\Data\DataAdapter
+     */
+    public function addCallback($call, array $args = [], $clear_callbacks_stack = true)
+    {
+        // Check for closure or object. If none is found, throw exception
+        if (! is_callable($call) || (is_array($call) && ! is_object($call[0]))) {
+            Throw new InvalidArgumentException('DataAdapter callbacks MUST be either a closure or a valid object.');
+        }
+
+        if ($clear_callbacks_stack) {
+            $this->clearCallbacks();
+        }
+
         $this->callbacks[] = [
-            $object,
-            is_array($callbacks) ? $callbacks : (array) $callbacks
+            $call,
+            !is_array($args) ? (array) $args : $args
         ];
 
         return $this;

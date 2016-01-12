@@ -2,13 +2,14 @@
 namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Data\Container;
-use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\TextTrait;
 use Core\Lib\Content\Html\Form\Form;
 use Core\Lib\Content\Html\Form\Checkbox;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Content\Html\Form\Select;
+use Core\Lib\Content\Html\Form\Button;
+use Core\Lib\Traits\UrlTrait;
 
 /**
  * FormDesigner.php
@@ -19,8 +20,8 @@ use Core\Lib\Content\Html\Form\Select;
  */
 final class FormDesigner extends Form
 {
-    use StringTrait;
     use TextTrait;
+    use UrlTrait;
 
     /**
      * Forms group storage
@@ -326,7 +327,7 @@ final class FormDesigner extends Form
      */
     public function isAjax()
     {
-        $this->setSendMode('ajax');
+        $this->send_mode = 'ajax';
 
         return $this;
     }
@@ -338,9 +339,19 @@ final class FormDesigner extends Form
      */
     public function isSubmit()
     {
-        $this->setSendMode('submit');
+        $this->send_mode = 'submit';
 
         return $this;
+    }
+
+    /**
+     * Returns forms send mode.
+     *
+     * @return string
+     */
+    public function getSendMode()
+    {
+        return $this->send_mode;
     }
 
     public function setActionRoute($route, $params = array())
@@ -349,7 +360,7 @@ final class FormDesigner extends Form
         $this->route = $route;
 
         // Compile route and set url as action url
-        $this->attribute['action'] = $this->di->get('core.http.router')->url($route, $params);
+        $this->attribute['action'] = $this->url($route, $params);
     }
 
     /**
@@ -512,7 +523,7 @@ final class FormDesigner extends Form
                         $name = $content->getName();
                         $value = $this->container[$name];
 
-                        if ($this->container->hasErrors($name)) {
+                        if (!empty($name) && $this->container->hasErrors($name)) {
                             $builder->setErrors($this->container->getErrors($name));
                         }
 
@@ -533,12 +544,26 @@ final class FormDesigner extends Form
                                     $content->setValue($value);
                                 }
                                 break;
-
                             default:
                                 if ($content->getValue() == false && $value !== false) {
                                     $content->setValue($value);
                                 }
                                 break;
+                        }
+                    }
+
+                    // Handle buttons
+                    if ($content instanceof Button) {
+
+                        // Add needed ajax data attribute
+                        if ($this->getSendMode() == 'ajax') {
+                            $content->addData('ajax');
+                        }
+
+                        // Submit buttons need the id and action of and for the form to submit
+                        if ($content->isSubmit()) {
+                            $content->setFormId($this->getId());
+                            $content->setFormAction($this->getAttribute('action'));
                         }
                     }
 
@@ -564,7 +589,7 @@ final class FormDesigner extends Form
             }
         }
 
-        $group->setInner($html);
+        $group->setInner($group->getInner() . $html);
 
         return $group->build();
     }

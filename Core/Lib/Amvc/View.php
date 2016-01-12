@@ -2,13 +2,12 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Data\Container;
 
 /**
  * View.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class View extends MvcAbstract
@@ -35,8 +34,10 @@ class View extends MvcAbstract
     /**
      * Renders the view and returns the result
      *
-     * @param string $func Name of render method
-     * @param array $params Optional: Parameterlist to pass to render function
+     * @param string $func
+     *            Name of render method
+     * @param array $params
+     *            Optional: Parameterlist to pass to render function
      */
     public final function render($action, $params = array())
     {
@@ -53,24 +54,53 @@ class View extends MvcAbstract
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
      * @param string $key
-     * @param $val
+     * @param
+     *            $val
      */
     public final function setVar($key, $val)
     {
-        // Objects with Create methods can be passed as object, because the
-        // create method is called automatically
-        if (is_object($val) && method_exists($val, 'build')) {
-            $val = $val->build();
-        }
+        // Handle objects
+        if (is_object($val)) {
 
-        if ($val instanceof Container) {
-            $val = $val->getArray();
+            // Handle buildable objects
+            if (method_exists($val, 'build')) {
+                $val = $val->build();
+            }
+
+            // Handle data container
+            elseif (method_exists($val, 'getArray')) {
+                $val = $val->getArray();
+            }  // Handle all other objects
+else {
+                $val = get_object_vars($val);
+            }
         }
 
         // Another lazy thing. It's for accessing vars in the view by ->var_name
         $this->__magic_vars[$key] = $val;
 
         return $this;
+    }
+
+    /**
+     * Returns the value of a set var.
+     *
+     * Nearly the same as magic method __get() but in this method will throw an
+     * InvalidArgumentException when var does not exist.
+     *
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return mixed
+     */
+    final public function getVar($name)
+    {
+        if (! array_key_exists($name, $this->__magic_vars)) {
+            Throw new InvalidArgumentException(sprintf('The requested var "%s" does not exist in current view.', $name));
+        }
+
+        return $this->__magic_vars[$name];
     }
 
     /**
@@ -92,6 +122,12 @@ class View extends MvcAbstract
      */
     public final function __set($var, $val)
     {
+        // prevent DI from getting put into the views vars array
+        if ($var == 'di') {
+            $this->di = $val;
+            return;
+        }
+
         $this->setVar($var, $val);
     }
 
@@ -169,7 +205,7 @@ class View extends MvcAbstract
     }
 
     /**
-     * Wrapper method for encoding a value by  htmlenteties($val, ENT_COMPAT, 'UTF-8')
+     * Wrapper method for encoding a value by htmlenteties($val, ENT_COMPAT, 'UTF-8')
      *
      * @param string|number $val
      *
@@ -184,5 +220,21 @@ class View extends MvcAbstract
         }
 
         return htmlentities($val, ENT_COMPAT, 'UTF-8');
+    }
+
+    /**
+     * Default Index()
+     */
+    public function Index()
+    {}
+
+    /**
+     * Default Edit()
+     */
+    public function Edit()
+    {
+        if ($this->isVar('form')) {
+            echo $this->form;
+        }
     }
 }

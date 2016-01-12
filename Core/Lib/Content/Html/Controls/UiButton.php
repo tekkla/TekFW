@@ -156,7 +156,7 @@ class UiButton extends A
     public function setIcon($icon)
     {
         $this->icon = $this->factory->create('Elements\Icon');
-        $this->icon->useIcon($icon);
+        $this->icon->setIcon($icon);
 
         return $this;
     }

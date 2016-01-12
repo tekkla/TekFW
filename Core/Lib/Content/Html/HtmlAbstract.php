@@ -74,6 +74,13 @@ abstract class HtmlAbstract
     protected $data = [];
 
     /**
+     * Aria attributes
+     *
+     * @var array
+     */
+    protected $aria = [];
+
+    /**
      * Inner HTML of element
      *
      * @var string
@@ -479,6 +486,61 @@ abstract class HtmlAbstract
     }
 
     /**
+     * Adds a single aria attribute or an array of aria attributes to the element.
+     * Although no parameters are visible the method handles two different
+     * types of parameter. Set two params for "key" and "value" or an array
+     * with a collection of keys and values.
+     *
+     * @return \Core\Lib\HtmlAbstract
+     */
+    public function addAria()
+    {
+        $this->addTo(func_get_args());
+
+        return $this;
+    }
+
+    /**
+     * Returns the value of the requested aria attribute.
+     * Returns boolean false if aria attribute is not set.
+     *
+     * @param string $key
+     *
+     * @return string|boolean
+     */
+    public function getAria($key)
+    {
+        return isset($this->aria[$key]) ? $this->aria[$key] : false;
+    }
+
+    /**
+     * Checks the existance of a aria attribute
+     *
+     * @param string $key
+     *
+     * @return boolean
+     */
+    public function checkAria($key)
+    {
+        return isset($this->aria[$key]);
+    }
+
+    /**
+     * Removes a aria ttribute
+     *
+     * @param string $key
+     *
+     * @return \Core\Lib\HtmlAbstract
+     */
+    public function removeAria($key)
+    {
+        if (isset($this->aria[$key])) {
+            unset($this->aria[$key]);
+        }
+
+        return $this;
+    }
+    /**
      * Adds single and multiple elements to properties.
      *
      * @param unknown $args
@@ -568,6 +630,12 @@ abstract class HtmlAbstract
         if ($this->data) {
             foreach ($this->data as $attr => $val) {
                 $html_attr['data-' . $attr] = $val;
+            }
+        }
+
+        if ($this->aria) {
+            foreach ($this->aria as $attr => $val) {
+                $html_attr['aria-' . $attr] = $val;
             }
         }
 

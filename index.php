@@ -48,23 +48,24 @@ require_once (COREDIR . '/Lib/Errors/Error.php');
 
 try {
 
-    // Register composer classloader
-    require_once (BASEDIR . '/vendor/autoload.php');
-
     // Register core classloader
     require_once (COREDIR . '/Lib/SplClassLoader.php');
 
-    // Register Core classloader
-    $loader = new SplClassLoader('Core', BASEDIR);
-    $loader->register();
+    // Classloader to register
+    $register = [
+        'Core' => BASEDIR,
+        'Apps' => BASEDIR,
+        'Themes' => BASEDIR
+    ];
 
-    // Register app classloader
-    $loader = new SplClassLoader('Apps', BASEDIR);
-    $loader->register();
+    // Register classloader
+    foreach ($register as $key => $path) {
+        $loader = new SplClassLoader($key, $path);
+        $loader->register();
+    }
 
-    // Register themes classloader
-    $loader = new SplClassLoader('Themes', BASEDIR);
-    $loader->register();
+    // Register composer classloader for core
+    require_once (BASEDIR . '/vendor/autoload.php');
 
     // start output buffering
     ob_start();
@@ -118,6 +119,7 @@ try {
     ];
 
     $config->addUrls('Core', $urls);
+
 
     // --------------------------------------
     // 2. Start runtime measurement

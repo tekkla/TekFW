@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * Permission.php
@@ -17,17 +17,17 @@ class Permission
      *
      * @var array
      */
-    private static $permissions = [];
+    private $permissions = [];
 
     /**
      *
-     * @var DataAdapter
+     * @var Db
      */
-    private $adapter;
+    private $db;
 
-    public function __construct(DataAdapter $adapter)
+    public function __construct(Db $db)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
     }
 
     /**
@@ -45,7 +45,7 @@ class Permission
             }
 
             foreach ($permissions as $perm) {
-                self::$permissions[] = $app_name . '_' . $perm;
+                $this->permissions[] = $app_name . '_' . $perm;
             }
         }
     }
@@ -59,7 +59,7 @@ class Permission
      */
     public function getPermissions($app = '')
     {
-        return $app ? self::$permissions[$app] : self::$permissions;
+        return $app ? $this->permissions[$app] : $this->permissions;
     }
 
     /**
@@ -83,24 +83,18 @@ class Permission
         }
 
         // Create a prepared string and param array to use in query
-        $prepared = $this->adapter->prepareArrayQuery('group', $groups);
+        $prepared = $this->db->prepareArrayQuery('group', $groups);
 
         // Get and return the permissions
         $query = [
             'table' => 'permissions',
             'method' => 'SELECT DISTINCT',
-            'filter' => 'id_group IN (:prepared)',
-            'params' => [
-                ':prepared' => $prepared['sql']
-            ]
+            'filter' => 'id_group IN (' . $prepared['sql'] .')',
+            'params' => $prepared['values']
         ];
 
-        foreach ($prepared['values'] as $param => $value) {
-            $query['params'][$param] = $value;
-        }
+        $this->db->qb($query);
 
-        $this->adapter->qb($query);
-
-        return $this->adapter->column();
+        return $this->db->column(2);
     }
 }

@@ -358,11 +358,7 @@ class App
             $name = $this->getComponentsName();
         }
 
-        $args = [
-            'core.data.vars'
-        ];
-
-        return $this->MVCFactory($name, 'Model', $args);
+        return $this->MVCFactory($name, 'Model');
     }
 
     /**

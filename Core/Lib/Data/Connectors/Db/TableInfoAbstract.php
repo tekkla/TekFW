@@ -1,7 +1,5 @@
 <?php
-namespace Core\Lib\Data\Adapter\Db;
-
-use Core\Lib\Data\Adapter\Database;
+namespace Core\Lib\Data\Connectors\Db;
 
 /**
  * TableInfoAbstract.php
@@ -16,7 +14,7 @@ abstract class TableInfoAbstract
     /**
      * DB Service
      *
-     * @var Database
+     * @var Db
      */
     protected $db;
 
@@ -37,9 +35,9 @@ abstract class TableInfoAbstract
     /**
      * Constructor
      *
-     * @param Database $db
+     * @param Db $db
      */
-    public function __construct(Database $db, $tbl)
+    public function __construct(Db $db, $tbl)
     {
         $this->db = $db;
     }

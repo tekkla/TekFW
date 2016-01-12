@@ -168,6 +168,8 @@ class Content
                 $app->InitContentHandler();
             }
         }
+
+        $this->router->setBasePath($this->cfg->get('Core', 'router_base_path'));
     }
 
     public function create()
@@ -451,6 +453,16 @@ class Content
     public function getTitle()
     {
         return $this->title;
+    }
+
+    /**
+     * Returns base url.
+     *
+     * @return string
+     */
+    public function getBaseUrl()
+    {
+        return $this->cfg->get('Core', 'url');
     }
 
     /**

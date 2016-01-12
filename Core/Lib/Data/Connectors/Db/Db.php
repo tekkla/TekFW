@@ -1,21 +1,22 @@
 <?php
-namespace Core\Lib\Data\Adapter;
+namespace Core\Lib\Data\Connectors\Db;
 
-use Core\Lib\Data\Adapter\AdapterAbstract;
-use Core\Lib\Data\Adapter\Db\Connection;
-use Core\Lib\Data\Adapter\Db\QueryBuilder;
+use Core\Lib\Data\Connectors\ConnectorAbstract;
+use Core\Lib\Data\Connectors\Db\Connection;
+use Core\Lib\Data\Connectors\Db\QueryBuilder;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\DebugTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Data\DataAdapter;
 
 /**
- * Database adapter
+ * Database connector
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
-class Database extends AdapterAbstract
+class Db extends ConnectorAbstract
 {
     use SerializeTrait;
     use DebugTrait;
@@ -106,26 +107,15 @@ class Database extends AdapterAbstract
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(array $options)
+    public function __construct($conn, $prefix)
     {
-        if (! isset($options['conn'])) {
-            Throw new InvalidArgumentException('No connection option found in database options');
-        }
-
-        if (! $options['conn'] instanceof Connection) {
-            Throw new InvalidArgumentException('Provided connection option "conn" is no valid Connection object.');
-        }
-
-        if (! isset($options['prefix'])) {
-            Throw new InvalidArgumentException('No table prefix in database options');
-        }
-
-        $this->conn = $options['conn'];
-
-        $this->prefix = $options['prefix'];
+        $this->conn = $conn;
+        $this->prefix = $prefix;
 
         // Connect to db
         $this->dbh = $this->conn->connect();
+
+        $this->injectAdapter(new DataAdapter());
     }
 
     /**
@@ -427,30 +417,73 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * Shorthand method for row count.
-     * Same as rowCount() method.
-     * Returns number or rows in resultset.
+     * Shorthand method to perform Count(*) query
      *
-     * @return int
+     * @param string $table Table to delete from
+     * @param string $filter Optional: Filterstatement (Defaul='')
+     * @param array $params Optional: Parameter array to be used in filter
+     *
+     * @return number
      */
-    public function count()
+    public function count($table, $filter = '', array $params = [])
     {
+        $query = [
+            'table' => $table,
+            'fields' => 'COUNT(*)'
+        ];
+
+        if ($filter) {
+
+            $query['filter'] = $filter;
+
+            if ($params) {
+                $query['params'] = $params;
+            }
+        }
+
+        $this->qb($query);
+
         return $this->rowCount();
     }
 
-    public function find($tbl, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    public function find($table, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
     {
-        $query = [
-            'table' => $tbl,
+        $this->qb([
+            'table' => $table,
             'filter' => $key_field . '=:' . $key_field,
             'params' => [
                 ':' . $key_field => $value
             ]
-        ];
-
-        $this->qb($query);
+        ]);
 
         return $this->single($fetch_mode);
+    }
+
+    /**
+     * Shorthand delete method.
+     *
+     * @param string $table Table to delete from
+     * @param string $filter Optional: Filterstatement (Defaul='')
+     * @param array $params Optional: Parameter array to be used in filter
+     */
+    public function delete($table, $filter = '', array $params = [])
+    {
+        $query = [
+            'table' => $table,
+            'method' => 'DELETE'
+        ];
+
+        if ($filter) {
+            $query['filter'] = $filter;
+
+            if ($params) {
+                $query['params'] = $params;
+            }
+        }
+
+        $this->qb($query, true);
+
+        return true;
     }
 
     /**
@@ -528,7 +561,7 @@ class Database extends AdapterAbstract
     }
 
     /**
-     * Nullifies stmd and dbh properties to close connection.
+     * Nullifies stmt and dbh properties to close connection.
      *
      * @return boolean
      */
@@ -599,7 +632,7 @@ class Database extends AdapterAbstract
      *
      * @return array
      */
-    public function prepareArrayQuery($params, $values = [])
+    public function prepareArrayQuery($params='param', $values = [])
     {
         $params_names = [];
         $params_val = [];
@@ -665,7 +698,7 @@ class Database extends AdapterAbstract
     /**
      * Creates and return an QueryBuilder instance.
      *
-     * @return \Core\Lib\Data\Adapter\Db\QueryBuilder
+     * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
     public function getQueryBuilder()
     {

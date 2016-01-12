@@ -1,8 +1,8 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Data\DataAdapter;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * Session.php
@@ -18,16 +18,16 @@ final class Session
      *
      * @var Database
      */
-    private $adapter;
+    private $db;
 
     /**
      * Constructor
      *
-     * @param DataAdapter $adapter
+     * @param Db $db
      */
-    public function __construct(DataAdapter $adapter)
+    public function __construct(Db $db)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
 
         // Set sssion garbage collector lifetime to one hour
         ini_set('session.gc_maxlifetime', 3600);
@@ -167,7 +167,7 @@ final class Session
     public function open()
     {
         // If successful return true
-        return $this->adapter ? true : false;
+        return $this->db ? true : false;
     }
 
     /**
@@ -176,7 +176,7 @@ final class Session
     public function close()
     {
         // Close the database connection - If successful return true
-        return $this->adapter->close() ? true : false;
+        return $this->db->close() ? true : false;
     }
 
     /**
@@ -185,7 +185,7 @@ final class Session
     public function read($id_session)
     {
         // Set query
-        $this->adapter->qb([
+        $this->db->qb([
             'tbl' => 'sessions',
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
@@ -194,7 +194,7 @@ final class Session
             ]
         ]);
 
-        $data = $this->adapter->single();
+        $data = $this->db->single();
 
         return $data ? $data['data'] : '';
     }
@@ -205,7 +205,7 @@ final class Session
     public function write($id_session, $data)
     {
         // Set query
-        $this->adapter->qb([
+        $this->db->qb([
             'method' => 'REPLACE',
             'tbl' => 'sessions',
             'fields' => [
@@ -221,7 +221,7 @@ final class Session
         ]);
 
         // Attempt Execution - If successful return true
-        return $this->adapter->execute() ? true : false;
+        return $this->db->execute() ? true : false;
     }
 
     /**
@@ -230,7 +230,7 @@ final class Session
     public function destroy($id_session)
     {
         // Set query
-        $this->adapter->qb([
+        $this->db->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'id_session=:id_session',
@@ -240,7 +240,7 @@ final class Session
         ]);
 
         // Attempt execution - If successful return True
-        return $this->adapter->execute() ? true : false;
+        return $this->db->execute() ? true : false;
     }
 
     /**
@@ -252,7 +252,7 @@ final class Session
         $old = time() - $max;
 
         // Set query
-        $this->adapter->qb([
+        $this->db->qb([
             'method' => 'DELETE',
             'tbl' => 'sessions',
             'filter' => 'access<:old',
@@ -262,6 +262,6 @@ final class Session
         ]);
 
         // Attempt execution
-        return $this->adapter->execute() ? true : false;
+        return $this->db->execute() ? true : false;
     }
 }

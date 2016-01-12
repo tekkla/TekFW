@@ -18,7 +18,7 @@ class Language
     /**
      * Loads an app related language file.
      *
-     * Throws exception when the language file cannot be found.
+     * When text of an app already exists, the loaded texts are merged into the existing array.
      *
      * @param string $app_name
      * @param string $lang_file
@@ -27,8 +27,18 @@ class Language
      */
     public function loadLanguageFile($app_name, $lang_file)
     {
-        if ( file_exists($lang_file)) {
-            $this->txt[$app_name] = include ($lang_file);
+        if (file_exists($lang_file)) {
+
+            $lang_array = include ($lang_file);
+
+            if (is_array($lang_array)) {
+                if (array_key_exists($app_name, $this->txt)) {
+                    $this->txt[$app_name] = array_merge($this->txt[$app_name], $lang_array);
+                }
+                else {
+                    $this->txt[$app_name] = $lang_array;
+                }
+            }
         }
     }
 

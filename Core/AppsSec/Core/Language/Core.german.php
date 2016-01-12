@@ -17,19 +17,19 @@ return [
 	 */
 
 	// States
-	'on' => 'on',
-    'off' => 'off',
+	'on' => 'an',
+    'off' => 'aus',
 
-    'yes' => 'yes',
-    'no' => 'no',
+	'yes' => 'ja',
+    'no' => 'nein',
 
     // Settings
-    'config' => 'Settings',
-    'info' => 'Informations',
+    'config' => 'Einstellungen',
+    'info' => 'Informationen',
     'init' => 'Init...',
 
 	/* ERRORS */
-	'error' => 'Error',
+	'error' => 'Fehler',
     'error_general' => 'A general error occured.',
     'error_404' => 'The requested document does not exist.',
     'error_403' => 'You are not allowed to access the requested document',
@@ -40,24 +40,24 @@ return [
     'next' => '&gt,&gt,',
     'prev' => '&lt,&lt,',
 
-    'save' => 'Save',
-    'cancel' => 'Cancel',
+    'save' => 'Speichern',
+    'cancel' => 'Abbruch',
 
     'login' => 'Login',
     'logout' => 'Logout',
 
-    'username' => 'Username',
-    'password' => 'Password',
-    'remember_me' => 'Stay logged in',
-    'already_loggedin' => 'You are already logged in.',
+    'username' => 'Benutzername',
+    'password' => 'Passwort',
+    'remember_me' => 'Angemeldet bleiben',
+    'already_loggedin' => 'Sie sind bereits angemeldet.',
 
     'admin' => 'Administration',
 
     // NED texts
-    'delete' => 'Delete',
-    'delete_confirm' => 'Should data really be deleted?',
-    'new' => 'New',
-    'edit' => 'Edit',
+    'delete' => 'Löschen',
+    'delete_confirm' => 'Sollen die Daten wirklich gelöscht werden?',
+    'new' => 'Neu',
+    'edit' => 'Bearbeiten',
 
     // allow or deny
     'access_allow' => 'Allowed to selected groups',
@@ -68,7 +68,7 @@ return [
      * CONFIG
      * **************************************************************************
      */
-    'cfg_headline' => 'TekFW Framework Settings',
+    'cfg_headline' => 'Core Framework Settings',
 
     'cfg_group_config' => 'Config display',
     'cfg_config_display_style' => 'How to display Config?',
@@ -179,23 +179,23 @@ return [
      * VALIDATORS
      * ****************************************************************************
      */
-    'validator_required' => 'This field has to be set.',
-    'validator_empty' => 'This field is not alloed to be empty.',
+    'validator_required' => 'Dieses feld muss gesetzt sein.',
+    'validator_empty' => 'Dieses Feld darf nicht leer sein.',
 
     // Strings
-    'validator_textrange' => 'Strings number of chars has to be between %d and %d. The checked string contains %d chars.',
-    'validator_textminlength' => 'The number of chars has to be %d at minimum.',
-    'validator_textmaxlength' => 'The number of chars has to be %d at maximum.',
+    'validator_textrange' => 'Der Text muss zwischen %d und %d Zeichen lang sein. Dieser Text hat %d Zeichen.',
+    'validator_textminlength' => 'Der Text muss mind. %d Zeichen haben.',
+    'validator_textmaxlength' => 'Der Text dar max. %d Zeichen haben.',
 
     // Dates
-    'validator_date_iso' => 'Date in ISO Format (YYYY-MM-DD) expected.',
-    'validator_date' => 'Please provide proper date.',
+    'validator_date_iso' => 'Datum in ISO Format (YYYY-MM-DD) erwartet.',
+    'validator_date' => 'Bitte ein gültiges Datum eingeben.',
 
     // Time
-    'validator_time24' => 'Time in 24h format (HH:II:ss) expected',
+    'validator_time24' => 'Zeit im 24h Format (HH:II:ss) erwartet.',
 
     // Number
-    'validator_compare' => 'Comparecheck failed. Checked: $1 $3 $2',
+    'validator_compare' => 'Vergleich fehlgeschlagen. Es wurde verglichen: $1 $3 $2',
     'validator_numbermin' => 'The value is not allowed to be smaller then %d.',
     'validator_numbermax' => 'The value exeeds the set maximum of $1',
     'validator_numberrange' => 'The value has to be between %d and %d.',
@@ -203,13 +203,6 @@ return [
     // Email
     'validator_email' => 'This is not a valid mailadress.',
     'validator_email_dnscheck' => 'The email host "%s" is unknown eg does not exist.',
-
-    /**
-     * **************************************************************************
-     * Models
-     * ****************************************************************************
-     */
-    'model_error_field_not_exist' => 'Column [%s does not exist in model [%s].',
 
     /**
      * **************************************************************************

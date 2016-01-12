@@ -60,10 +60,11 @@ class DI implements \ArrayAccess
         $this->mapValue('db.default.options', [
             \PDO::ATTR_PERSISTENT => $cfg['db_persistent'],
             \PDO::ATTR_ERRMODE => $cfg['db_errmode'],
-            \PDO::MYSQL_ATTR_INIT_COMMAND => $cfg['db_init_command']
+            \PDO::MYSQL_ATTR_INIT_COMMAND => $cfg['db_init_command'],
+            \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1
         ]);
         $this->mapValue('db.default.prefix', $cfg['db_prefix']);
-        $this->mapService('db.default.conn', '\Core\Lib\Data\Adapter\Db\Connection', [
+        $this->mapService('db.default.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
             'db.default.name',
             'db.default.driver',
             'db.default.host',
@@ -72,12 +73,9 @@ class DI implements \ArrayAccess
             'db.default.pass',
             'db.default.options'
         ]);
-        $this->mapFactory('db.default', '\Core\Lib\Data\DataAdapter', [
-            'db',
-            [
-                'conn::db.default.conn',
-                'prefix::db.default.prefix'
-            ]
+        $this->mapFactory('db.default', '\Core\Lib\Data\Connectors\Db\Db', [
+            'db.default.conn',
+            'db.default.prefix'
         ]);
 
         // == CONFIG =======================================================
