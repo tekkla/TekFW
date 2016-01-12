@@ -6,8 +6,8 @@ use Core\Lib\Http\Router;
 use Core\Lib\Security\User;
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Content\Message;
-use Core\Lib\Data\DataAdapter;
 use Core\Lib\Cfg;
+use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * ExceptionHandler.php
@@ -47,7 +47,7 @@ class ExceptionHandler
      *
      * @var Database
      */
-    private $adapter;
+    private $db;
 
     /**
      *
@@ -79,16 +79,16 @@ class ExceptionHandler
      * @param Router $router
      * @param User $user
      * @param Ajax $ajax
-     * @param DataAdapter $adapter
+     * @param Db $db
      * @param Cfg $cfg
      */
-    public function __construct(Router $router, User $user, Ajax $ajax, Message $message, DataAdapter $adapter, Cfg $cfg)
+    public function __construct(Router $router, User $user, Ajax $ajax, Message $message, Db $db, Cfg $cfg)
     {
         $this->router = $router;
         $this->user = $user;
         $this->ajax = $ajax;
         $this->message = $message;
-        $this->adapter = $adapter;
+        $this->db = $db;
         $this->cfg = $cfg;
 
         $this->error_id = uniqid('#error_');
@@ -106,8 +106,10 @@ class ExceptionHandler
      *
      * @return boolean|string
      */
-    public function handleException(\Exception $e, $fatal = false, $clean_buffer = false, $error_log = true, $send_mail = false, $to_db = true, $public = false)
+    public function handleException($e, $fatal = false, $clean_buffer = false, $error_log = true, $send_mail = false, $to_db = true, $public = false)
     {
+
+
         // Store exception
         $this->exception = $e;
 
@@ -138,7 +140,7 @@ class ExceptionHandler
         }
 
         // Log error
-        if ($this->cfg->get('Core', 'error_logger')) {
+        if ($this->cfg->exists('Core', 'error_logger')) {
 
             // Write to error log?
             if ($error_log == true || $this->cfg->get('Core', 'error_to_log') == true) {
@@ -150,7 +152,7 @@ class ExceptionHandler
 
                 try {
 
-                    $this->adapter->qb([
+                    $this->db->qb([
                         'method' => 'INSERT',
                         'tbl' => 'error_log',
                         'fields' => [
@@ -169,7 +171,7 @@ class ExceptionHandler
                         ]
                     ]);
 
-                    $this->adapter->execute();
+                    $this->db->execute();
                 }
                 catch (\Exception $e) {
                     // Handle this exception without trying to save it to db
@@ -229,16 +231,15 @@ class ExceptionHandler
             case (bool) $this->user->isAdmin():
             case (bool) $this->cfg->get('Core', 'skip_security_check'):
                 $this->error_html .= '
-                <p><small>Error Code ' . $this->exception->getCode() . '</small></p>
-                <h4 class="no-top-margin">' . $this->exception->getMessage() . '</h4>
-                <p><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</p>
-                <hr>
-                <h4>Router</h4>
-                <div style="max-height: 200px; overflow-y: scroll;">
-                    <pre><small>' . print_r($this->router->getStatus(), true) . '</small></pre>
-                </div>
-                <hr>
-                <pre><small>' . $this->exception->getTraceAsString() . '</small></pre>';
+                <h3 class="no-v-margin">' . $this->exception->getMessage() . '<br>
+                <small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></h3>
+                <strong>Details</strong>
+                <div style="max-height: 200px; overflow-y: scroll; border: 1px solid #333; padding: 5px; margin: 5px 0;">
+                    <strong>Trace</strong>
+                    <pre>' . $this->exception->getTraceAsString() . '</pre>
+                    <strong>Router</strong>
+                    <pre>' . print_r($this->router->getStatus(), true) . '</pre>
+                </div>';
 
                 break;
 
