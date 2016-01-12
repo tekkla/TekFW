@@ -13,8 +13,6 @@ interface CallbackInterface
      *            1 => (optional) Args to pass to call additionally to always provided data.
      * @param boolean $clear_callbacks_stack
      *            (optional) Clears existing callback stack. Default: true
-     *
-     * @return \Core\Lib\Data\DataAdapter
      */
     public function addCallbacks(array $callbacks = [], $clear_callbacks_stack = true);
 
@@ -27,15 +25,11 @@ interface CallbackInterface
      *            (optional) Arguments to pass additionally to always added data.
      * @param string $clear_callbacks_stack
      *            (optional) Clears existing callback stack. Default: true
-     *
-     * @return \Core\Lib\Data\DataAdapter
      */
     public function addCallback($call, array $args = [], $clear_callbacks_stack = true);
 
     /**
      * Removes all callback functions.
-     *
-     * @return \Core\Lib\Data\DataAdapter
      */
     public function clearCallbacks();
 }
