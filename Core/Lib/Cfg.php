@@ -1,8 +1,7 @@
 <?php
 namespace Core\Lib;
 
-use Core\Lib\Data\DataAdapter;
-use Core\Lib\Data\Adapter\Database;
+use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Errors\Exceptions\ConfigException;
 
@@ -27,16 +26,16 @@ final class Cfg
      *
      * @var Database
      */
-    private $adapter;
+    private $db;
 
     /**
      * Constructor
      *
-     * @param DataAdapter $adapter
+     * @param Db $db
      */
-    public function __construct(DataAdapter $adapter)
+    public function __construct(Db $db)
     {
-        $this->adapter = $adapter;
+        $this->db = $db;
     }
 
     /**
@@ -132,12 +131,12 @@ final class Cfg
      */
     public function load()
     {
-        $this->adapter->qb([
+        $this->db->qb([
             'table' => 'config',
             'order' => 'app, cfg'
         ]);
 
-        $results = $this->adapter->all(\PDO::FETCH_NUM);
+        $results = $this->db->all(\PDO::FETCH_NUM);
 
         foreach ($results as $row) {
             // Check for serialized data and unserialize it
