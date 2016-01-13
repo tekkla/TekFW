@@ -10,7 +10,7 @@ use Core\Lib\Content\Html\Elements\Div;
  * FormGroup.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class FormGroup extends Div
@@ -30,8 +30,10 @@ class FormGroup extends Div
     /**
      * Creates a formcontrol and adds it by it's name to the controls list.
      *
-     * @param string $type The type of control to create
-     * @param string $name Name of the control. Ths name is used to bind the control to a model field.
+     * @param string $type
+     *            The type of control to create
+     * @param string $name
+     *            Name of the control. Ths name is used to bind the control to a model field.
      *
      * @return FormAbstract
      */
@@ -43,10 +45,9 @@ class FormGroup extends Div
         $control->factory = $this->di->get('core.content.html.factory');
 
         // set contols name
-        if (!empty($name)) {
+        if (! empty($name)) {
             $control->setName($name);
-        }
-        else {
+        } else {
             $control->setUnbound();
         }
 
@@ -73,7 +74,8 @@ class FormGroup extends Div
     /**
      * Creates a new group element based on pure html string.
      *
-     * @param string$html
+     * @param string $html
+     *            Creates a FormElement with html content
      */
     public function addHtml($html)
     {
@@ -83,8 +85,10 @@ class FormGroup extends Div
     /**
      * Create an new html object and adds it as new FormElement
      *
-     * @param string $element Name/Path of element to create
-     * @param array $args Optional arguments to be passed on element creation call.
+     * @param string $element
+     *            Name/Path of element to create
+     * @param array $args
+     *            Optional arguments to be passed on element creation call.
      *
      * @return HtmlAbstract
      */
@@ -100,7 +104,8 @@ class FormGroup extends Div
     /**
      * Creates a new FormGroup objects and adds it as new FormElement
      *
-     * @param bool $unshift Optional flag to add group at beginning of controls array.
+     * @param bool $unshift
+     *            Optional flag to add group at beginning of controls array.
      *
      * @return FormGroup
      */
@@ -108,7 +113,7 @@ class FormGroup extends Div
     {
         $group = $this->di->instance(__NAMESPACE__ . '\FormGroup');
 
-        $element = $this->elementFactory('group', $group, $unshift);
+        $this->elementFactory('group', $group, $unshift);
 
         return $group;
     }
@@ -116,9 +121,12 @@ class FormGroup extends Div
     /**
      * Factory mehtod to create new FormElement object within this group object.
      *
-     * @param string $type Elementtype to create
+     * @param string $type
+     *            Elementtype to create
      * @param string|FormAbstract|HtmlAbstract|FormGroup $content
-     * @param bool $unshift Optional boolean flag to add element on top of elements stack of this group
+     *            Content of the element to create
+     * @param bool $unshift
+     *            Optional boolean flag to add element on top of elements stack of this group
      */
     private function elementFactory($type, $content, $unshift = false)
     {
@@ -127,8 +135,7 @@ class FormGroup extends Div
 
         if ($unshift == true) {
             array_unshift($this->elements, $element);
-        }
-        else {
+        } else {
             $this->elements[] = $element;
         }
 
@@ -138,7 +145,7 @@ class FormGroup extends Div
     /**
      * Returns all element objects of the FormGroup
      *
-     * @return multitype:
+     * @return array
      */
     public function getElements()
     {
