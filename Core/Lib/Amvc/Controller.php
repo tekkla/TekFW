@@ -2,24 +2,24 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Http\Router;
+use Core\Lib\Http\Post;
 use Core\Lib\Security\Security;
+use Core\Lib\Content\Content;
 use Core\Lib\Content\Message;
 use Core\Lib\Content\Menu;
+use Core\Lib\Content\Html\HtmlAbstract;
 use Core\Lib\Content\Html\HtmlFactory;
-use Core\Lib\Content\Content;
-use Core\Lib\Http\Post;
-use Core\Lib\Data\Container;
 use Core\Lib\Content\Html\FormDesigner\FormDesigner;
+use Core\Lib\Data\Container;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Traits\TextTrait;
-use Core\Lib\Content\Html\HtmlAbstract;
-use Core\Lib\Data\Vars;
 use Core\Lib\Traits\ArrayTrait;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Cache\Cache;
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Ajax\AjaxCommandAbstract;
-
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Http\Session;
+use Core\Lib\Http\Cookie;
 /**
  * Controller.php
  *
@@ -134,9 +134,9 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var Vars
+     * @var Session
      */
-    protected $vars;
+    protected $session;
 
     /**
      *
@@ -168,7 +168,7 @@ class Controller extends MvcAbstract
      *
      * Runs the onLoad eventmethod and inits the internal view and model.
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Vars $vars, Cache $cache, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Session $session, Cookie $cookie, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -180,7 +180,8 @@ class Controller extends MvcAbstract
         $this->content = $content;
         $this->menu = $menu;
         $this->html = $html;
-        $this->vars = $vars;
+        $this->session = $session;
+        $this->cookie = $cookie;
         $this->cache = $cache;
         $this->ajax = $ajax;
 

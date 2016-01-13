@@ -382,7 +382,8 @@ class App
             'core.content',
             'core.content.menu',
             'core.content.html.factory',
-            'core.data.vars',
+            'core.http.session',
+            'core.http.cookie',
             'core.cache',
             'core.ajax'
         ];
