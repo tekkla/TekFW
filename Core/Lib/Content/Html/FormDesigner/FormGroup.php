@@ -108,7 +108,9 @@ class FormGroup extends Div
     {
         $group = $this->di->instance(__NAMESPACE__ . '\FormGroup');
 
-        $this->elementFactory('group', $group, $unshift);
+        $element = $this->elementFactory('group', $group, $unshift);
+
+        var_dump($element);
 
         return $group;
     }
@@ -123,7 +125,6 @@ class FormGroup extends Div
     private function elementFactory($type, $content, $unshift = false)
     {
         $element = $this->di->instance(__NAMESPACE__ . '\FormElement');
-        $element->setType($type);
         $element->setContent($content);
 
         if ($unshift == true) {
@@ -132,6 +133,8 @@ class FormGroup extends Div
         else {
             $this->elements[] = $element;
         }
+
+        return $element;
     }
 
     /**

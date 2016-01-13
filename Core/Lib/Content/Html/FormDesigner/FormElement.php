@@ -3,13 +3,12 @@ namespace Core\Lib\Content\Html\FormDesigner;
 
 use Core\Lib\Content\Html\FormAbstract;
 use Core\Lib\Content\Html\HtmlAbstract;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * FormElement.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class FormElement
@@ -39,21 +38,21 @@ class FormElement
     public function &setContent($content)
     {
         // Set element type by analyzing the element
-        if ($content instanceof FormAbstract) {
+        if ($content instanceof FormGroup) {
+            $this->type = 'group';
+        }
+        elseif ($content instanceof FormAbstract) {
             $this->type = 'control';
         }
         elseif ($content instanceof HtmlAbstract) {
             $this->type = 'factory';
         }
-        elseif ($content instanceof FormGroup) {
-            $this->type = 'group';
-        }
         else {
             $this->type = 'html';
         }
-        
+
         $this->content = $content;
-        
+
         return $content;
     }
 
@@ -65,33 +64,6 @@ class FormElement
     public function getContent()
     {
         return $this->content;
-    }
-
-    /**
-     * Sets the elements type.
-     *
-     * @param string $type
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return \Core\Lib\Content\Html\FormDesigner\FormElement
-     */
-    public function setType($type)
-    {
-        $types = [
-            'control',
-            'factory',
-            'html',
-            'group'
-        ];
-        
-        if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('The element type "' . $type . '" is not supported. Select from "' . implode('", ', $types) . '"');
-        }
-        
-        $this->type = $type;
-        
-        return $this;
     }
 
     /**
