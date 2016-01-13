@@ -110,8 +110,6 @@ class FormGroup extends Div
 
         $element = $this->elementFactory('group', $group, $unshift);
 
-        var_dump($element);
-
         return $group;
     }
 
