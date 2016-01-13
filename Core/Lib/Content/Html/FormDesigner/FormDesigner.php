@@ -476,12 +476,12 @@ final class FormDesigner extends Form
         // Control html container
         $html = '';
 
+        // Create hidden field with unique session token
+        $html .= '<input type="hidden" name="token" value="' . $this->di->get('core.http.session')->get('token') . '">';
+
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group);
         }
-
-        // Create hidden field with unique session token
-        $html .= '<input type="hidden" name="token" value="' . $this->di->get('core.http.session')->get('token') . '">';
 
         $this->setInner($html);
 
