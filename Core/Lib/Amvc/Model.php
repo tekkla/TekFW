@@ -5,7 +5,6 @@ use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Data\Connectors\Db\Db;
-use Core\Lib\Data\Connectors\Db\Connection;
 use Core\Lib\Data\Container;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 ;
