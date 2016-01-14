@@ -206,7 +206,7 @@ abstract class HtmlAbstract
      */
     public function setInner($inner)
     {
-       $this->inner = (string) $inner;
+        $this->inner = (string) $inner;
 
         return $this;
     }
@@ -289,7 +289,8 @@ abstract class HtmlAbstract
     /**
      * Checks for the existance of a css property in a html object or for a css class / array of css classes in the css property
      *
-     * @param string array $css Optional parameter can be a single css class as string or a list of classes in an array
+     * @param
+     *            string array $css Optional parameter can be a single css class as string or a list of classes in an array
      *
      * @return boolean
      */
@@ -305,8 +306,7 @@ abstract class HtmlAbstract
 
             // Is css to check already in objects css array?
             $check = array_intersect($check, $this->css) ? true : false;
-        }
-        else {
+        } else {
             // Without set css param we only check if css is used
             $check = $this->css ? true : false;
         }
@@ -373,6 +373,28 @@ abstract class HtmlAbstract
     }
 
     /**
+     * Sets role attribute
+     *
+     * @param string $role
+     */
+    public function setRole($role)
+    {
+        $this->attribute['role'] = $role;
+
+        return $this;
+    }
+
+    /**
+     * Returns value of set role attribute
+     *
+     * @throws InvalidArgumentException
+     */
+    public function getRole()
+    {
+        return $this->getAttribute('role');
+    }
+
+    /**
      * Adds a single style or an array of styles to the element.
      * Although no parameters are visible the method handles two different
      * types of parameter. Set two params for "key" and "value" or an array
@@ -413,8 +435,7 @@ abstract class HtmlAbstract
     {
         if (! isset($this->attribute[$attribute])) {
             Throw new InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
-        }
-        else {
+        } else {
             return $this->attribute[$attribute];
         }
     }
@@ -540,6 +561,7 @@ abstract class HtmlAbstract
 
         return $this;
     }
+
     /**
      * Adds single and multiple elements to properties.
      *
@@ -563,23 +585,20 @@ abstract class HtmlAbstract
             // This is when you set attributes without values like selected, disabled etc.
             if (! is_array($args[0])) {
                 $this->{$func}[$args[0]] = false;
-            }
-            else {
+            } else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
                 if ($this->arrayIsAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }
-                }
-                else {
+                } else {
                     foreach ($args[0] as $val) {
                         $this->{$func}[] = $val;
                     }
                 }
             }
-        }
-        else {
+        } else {
             $this->{$func}[$args[0]] = $args[1];
         }
     }
@@ -597,11 +616,11 @@ abstract class HtmlAbstract
             $this->element = strtolower((new \ReflectionClass($this))->getShortName());
         }
 
-        if (!empty($this->id)) {
+        if (! empty($this->id)) {
             $html_attr['id'] = $this->id;
         }
 
-        if (!empty($this->name)) {
+        if (! empty($this->name)) {
             $html_attr['name'] = $this->name;
         }
 
