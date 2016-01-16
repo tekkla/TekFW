@@ -14,6 +14,16 @@ class Message
 {
 
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        
+        // Init messages stack
+        $_SESSION['messages'] = [];
+    }
+
+    /**
      * Generic function to create a message object
      *
      * This method is called by public message methods
