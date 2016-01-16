@@ -36,14 +36,14 @@ final class Router extends \AltoRouter
      *
      * @var string
      */
-    private $controller = 'Index';
+    private $controller = '';
 
     /**
      * Routeret action
      *
      * @var string
      */
-    private $action = 'Index';
+    private $action = '';
 
     /**
      * Target parameter used in AJAX requestshandling
