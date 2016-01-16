@@ -201,7 +201,7 @@ class DI implements \ArrayAccess
             'core.http.router',
             'core.cache'
         ]);
-        $this->mapService('core.content.message', '\Core\Lib\Content\Message', 'core.http.session');
+        $this->mapService('core.content.message', '\Core\Lib\Content\Message');
         $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
         $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
         $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
