@@ -302,44 +302,7 @@ class QueryBuilder
             array_unshift($this->fields, $tmp);
         }
 
-        // Create fieldlist
-        if ($this->fields) {
-
-            if (! is_array($this->fields)) {
-                $this->fields = (array) $this->fields;
-            }
-
-            // Add `` to some field names as reaction to those stupid developers who chose systemnames as fieldnames
-            foreach ($this->fields as $key_field => $field) {
-
-                // Subquery?
-                if (is_array($field)) {
-                    $builder = new QueryBuilder($this->sql);
-                    $field = '(' . PHP_EOL . $builder->build() . PHP_EOL . ')';
-                }
-
-                $fields_to_quote = [
-                    'date',
-                    'time'
-                ];
-
-                if (in_array($field, $fields_to_quote)) {
-                    $field = '`' . $field . '`';
-                }
-
-                // Extend fieldname either by table alias or name when no dot as alias/table indicator is found.
-                // if (strpos($field, '.') === false) {
-                // $field .= ($this->alias ? $this->alias : $this->tbl) . '.' . $field;
-                // }
-
-                $this->fields[$key_field] = $field;
-            }
-
-            $fieldlist = implode(', ', $this->fields);
-        }
-        else {
-            $fieldlist = ($this->alias ? $this->alias : $this->tbl) . '.*';
-        }
+        $fieldlist = $this->buildFieldlist();
 
         // Create filterstatement
         $filter = $this->filter ? ' WHERE ' . $this->filter : '';
@@ -445,6 +408,35 @@ class QueryBuilder
 
         return $this->sql;
     }
+
+    private function buildFieldlist()
+    {
+        // Create fieldlist
+        if ($this->fields) {
+
+            if (! is_array($this->fields)) {
+                $this->fields = (array) $this->fields;
+            }
+
+            // Add `` to some field names as reaction to those stupid developers who chose systemnames as fieldnames
+            foreach ($this->fields as $key_field => $field) {
+
+                // Subquery?
+                if (is_array($field)) {
+                    $builder = new QueryBuilder($this->sql);
+                    $field = '(' . PHP_EOL . $builder->build() . PHP_EOL . ')';
+                }
+
+                $this->fields[$key_field] = $field;
+            }
+
+            return implode(', ', $this->fields);
+        }
+
+        // Return complete all fields
+        return ($this->alias ? $this->alias : $this->tbl) . '.*';
+
+     }
 
     private function processQueryDefinition($def)
     {
