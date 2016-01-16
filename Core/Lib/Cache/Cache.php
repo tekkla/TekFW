@@ -26,15 +26,14 @@ class Cache
      */
     private $memcache = false;
 
-
     /**
      *
-     * @param Cfg $cfg
-    */
+     * @param Cfg $cfg            
+     */
     public function __construct(Cfg $cfg)
     {
         $this->cfg = $cfg;
-
+        
         // Connect to memcache server?
         $this->connectMemcached();
     }
@@ -52,34 +51,31 @@ class Cache
     /**
      * Creates cachefile.
      *
-     * @param CacheObject $object
+     * @param CacheObject $object            
      */
     public function put(CacheObject $object)
     {
         $filename = $object->getFilename();
-
+        
         if ($object->getExtension() == 'php') {
-
+            
             if ($this->memcache) {
                 $object->setTimestamp();
                 $data = $object->export();
-            }
-            else {
+            } else {
                 $data = $object->export(true);
             }
-        }
-        else {
+        } else {
             $fp = fopen($filename, 'w+');
             // Important to set the filemodification as objects timestamp!
             $object->setTimestamp(filemtime($filename));
-
+            
             $data = $object->getContent();
         }
-
+        
         if ($this->memcache) {
             $this->memcache->put($filename, $data, $object->getExpiresOn());
-        }
-        else {
+        } else {
             $fw = fwrite($fp, $data);
             fclose($fp);
         }
@@ -89,7 +85,7 @@ class Cache
      * Fills cacheobject with data.
      * Data
      *
-     * @param string $key
+     * @param string $key            
      *
      * @return boolean
      */
@@ -99,46 +95,44 @@ class Cache
         if ($this->checkExpired($object)) {
             return false;
         }
-
+        
         $filename = $object->getFilename();
-
+        
         if ($object->getExtension() == 'php') {
-
+            
             $content = $this->memcache ? $this->memcache->get($filename) : include ($filename);
-
+            
             $object->import($content);
-        }
-        else {
+        } else {
             $object->setContent(file_get_contents($filename));
         }
-
+        
         return true;
     }
 
     /**
      * Checks a CacheObject to be expired.
      *
-     * @param CacheObject $object
+     * @param CacheObject $object            
      *
      * @return boolean
      */
     public function checkExpired(CacheObject $object)
     {
         $filename = $object->getFilename();
-
+        
         if (! file_exists($filename)) {
             return true;
         }
-
+        
         // While data based cache objects have stored their creation timestamp within
         // the data itself, file based objects need to use the time of the filecreation.
         if ($object->getExtension() == 'php') {
             $object->import(include ($filename));
-        }
-        else {
+        } else {
             $object->setTimestamp(filemtime($filename));
         }
-
+        
         return $object->checkExpired();
     }
 
@@ -150,17 +144,17 @@ class Cache
     private function connectMemcached()
     {
         return true;
-
-        if ($this->cfg->exists('Core', 'cache_memcache_server') && class_exists('\Memcache')) {
-
-            $host = $this->cfg->get('Core', 'cache_memcache_server');
-            $port = $this->cfg->get('Core', 'cache_memcache_port');
-
+        
+        if ($this->cfg->exists('Core', 'cache.memcache_server') && class_exists('\Memcache')) {
+            
+            $host = $this->cfg->get('Core', 'cache.memcache_server');
+            $port = $this->cfg->get('Core', 'cache.memcache_port');
+            
             $this->memcache = new \Memcache();
-
+            
             $connected = $this->memcache->connect($host, $port);
-
-            if (!$connected){
+            
+            if (! $connected) {
                 Throw new RuntimeException('Unable to connect to memcache server');
             }
         }
