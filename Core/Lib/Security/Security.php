@@ -17,7 +17,7 @@ use Core\Lib\Traits\DebugTrait;
  */
 class Security
 {
-
+    
     use DebugTrait;
 
     /**
@@ -100,14 +100,14 @@ class Security
     /**
      * Constructor
      *
-     * @param Db $db
-     * @param Cfg $cfg
-     * @param Session $session
-     * @param Cookie $cookie
-     * @param User $user
-     * @param Group $group
-     * @param Permission $permission
-     * @param Logging $logging
+     * @param Db $db            
+     * @param Cfg $cfg            
+     * @param Session $session            
+     * @param Cookie $cookie            
+     * @param User $user            
+     * @param Group $group            
+     * @param Permission $permission            
+     * @param Logging $logging            
      */
     public function __construct(Db $db, Cfg $cfg, Session $session, Cookie $cookie, User $user, Group $group, Permission $permission, Logging $logging)
     {
@@ -128,22 +128,25 @@ class Security
      */
     public function init()
     {
+        // Ban check for this visitor
+        $this->session->set('ban', $this->checkBan());
+        
         // Set parameter
-        if ($this->cfg->exists('Core', 'cookie_name')) {
-            $this->cookie_name = $this->cfg->get('Core', 'cookie_name');
+        if ($this->cfg->exists('Core', 'cookie.name')) {
+            $this->cookie_name = $this->cfg->get('Core', 'cookie.name');
         }
-
-        if ($this->cfg->exists('Core', 'security_pepper')) {
-            $this->pepper = $this->cfg->get('Core', 'security_pepper');
+        
+        if ($this->cfg->exists('Core', 'security.pepper')) {
+            $this->pepper = $this->cfg->get('Core', 'security.pepper');
         }
-
-        if ($this->cfg->exists('Core', 'security_autologin_expire_days')) {
-            $this->days = $this->cfg->get('Core', 'security_autologin_expire_days');
+        
+        if ($this->cfg->exists('Core', 'security.autologin_expire_days')) {
+            $this->days = $this->cfg->get('Core', 'security.autologin_expire_days');
         }
-
+        
         // Create random session token
         $this->generateRandomSessionToken();
-
+        
         // Try autologin
         $this->doAutoLogin();
     }
@@ -151,44 +154,44 @@ class Security
     /**
      * Sets the cookie name to be used in autologin cookie name
      *
-     * @param string $cookie_name
+     * @param string $cookie_name            
      * @return \Core\Lib\Security
      */
     public function setCookieName($cookie_name)
     {
         $this->cookie_name = $cookie_name;
-
+        
         return $this;
     }
 
     /**
      * Sets custom pepper string used to create usertoken
      *
-     * @param string $pepper
+     * @param string $pepper            
      *
      * @return \Core\Lib\Security
      */
     public function setPepper($pepper)
     {
         $this->pepper = $pepper;
-
+        
         return $this;
     }
 
     /**
      * Sets the number of days the login cookie should be valid when user requests autologin.
      *
-     * @param int $days
+     * @param int $days            
      *
      * @return \Core\Lib\Security
      */
     public function setDaysUntilCookieExpires($days)
     {
         $this->days = (int) $days;
-
+        
         // Auto calculate expiretime
         $this->generateExpireTime();
-
+        
         return $this;
     }
 
@@ -226,48 +229,68 @@ class Security
      * Validates the provided data against user data to perform user login.
      * Offers option to activate autologin.
      *
-     * @param unknown $login Login name
-     * @param unknown $password Password to validate
-     * @param boolean $remember_me Option to activate autologin
-     *
+     * @param unknown $login
+     *            Login name
+     * @param unknown $password
+     *            Password to validate
+     * @param boolean $remember_me
+     *            Option to activate autologin
+     *            
      * @return boolean|mixed
      */
     public function login($username, $password, $remember_me = false)
     {
         // Empty username or password
-        if (empty(trim($username)) || empty(trim($password))) {
+        if (empty($username) || empty($password)) {
+            
+            if (empty($username)) {
+                $username = 'none';
+            }
+            
+            $this->logLogin($username, $username == 'none' ? true : false, empty($password));
             return false;
         }
-
+        
+        $username = trim($username);
+        $password = trim($password);
+        
         // Try to load user from db
         $this->db->qb([
             'table' => 'users',
             'fields' => [
                 'id_user',
-                'password'
+                'password',
+                'state'
             ],
             'filter' => 'username=:username',
             'params' => [
                 ':username' => $username
             ]
         ]);
-
+        
         $login = $this->db->single();
-
+        
         // No user found => login failed
         if (! $login) {
-
+            
             // Log login try with not existing username
-            $this->logLogin(0, $username, false, true);
+            $this->logLogin($username, true, false);
             return false;
         }
-
-        // @todo Append pepper. But is it neccessary?
+        
+        // User needs activation?
+        if ($login['state'] == 0) {
+            $this->session->set('display_activation_notice', true);
+            $this->logging->suspicious(sprintf('User "%s" treid to login on not activated account.', $username));
+            return false;
+        }
+        
+        // Append pepper to password
         $password .= $this->pepper;
-
+        
         // Password ok?
         if (password_verify($password, $login['password'])) {
-
+            
             // Needs hash to be updated?
             if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
                 $this->db->qb([
@@ -283,29 +306,31 @@ class Security
                     ]
                 ], true);
             }
-
+            
             // Load User
             $this->user->load($login['id_user']);
-
+            
             // Store essential userdata in session
             $this->session->set('logged_in', true);
             $this->session->set('id_user', $login['id_user']);
-
+            
             // Remember for autologin?
             if ($remember_me === true) {
                 $this->setAutoLoginCookies($login['id_user']);
             }
-
+            
+            // Remove possible login_failed flag from session
+            $this->session->remove('login_failed');
+            
             // Log successfull login
-            $this->logLogin($login['id_user']);
-
+            $this->logLogin($username);
+            
             // Login is ok, return user id
             return $login['id_user'];
-        }
-        else {
-
+        } else {
+            
             // Log try with wrong password and start ban counter
-            $this->logLogin(0,false,true, true);
+            $this->logLogin($username, false, true);
             return false;
         }
     }
@@ -315,20 +340,17 @@ class Security
      */
     public function logout()
     {
-
         $id_user = $this->session->get('id_user');
-
+        
         // Clean up session
         $this->session->set('autologin_failed', true);
         $this->session->set('id_user', 0);
         $this->session->set('logged_in', false);
-
+        
         // Calling logout means to revoke autologin cookies
         $this->cookie->remove($this->cookie_name . 'Token');
-
-
+        
         $this->logging->logout('User:' . $id_user);
-
     }
 
     /**
@@ -339,34 +361,36 @@ class Security
     public function doAutoLogin()
     {
         // User already logged in?
-        if ($this->session->exists('logged_in') && $this->session->get('logged_in') === true) {
+        if ($this->session->get('logged_in')) {
+            
             $this->user->load($this->session->get('id_user'));
+            
             return true;
         }
-
+        
         // Cookiename of token cookie
         $cookie = $this->cookie_name . 'Token';
-
+        
         // No autologin when autologin already failed
         if ($this->session->exists('autologin_failed')) {
-
+            
             // Remove fragments/all of autologin cookies
             $this->cookie->remove($cookie);
-
+            
             // Remove the flag which forces the log off
             $this->session->remove('autologin_failed');
-
+            
             return false;
         }
-
+        
         // No autologin cookie no autologin ;)
         if (! $this->cookie->exists($cookie)) {
             return false;
         }
-
+        
         // Let's find the user for the token in cookie
         list ($selector, $token) = explode(':', $this->cookie->get($cookie));
-
+        
         $this->db->qb([
             'table' => 'auth_tokens',
             'fields' => [
@@ -382,50 +406,50 @@ class Security
             ]
         ]);
         $data = $this->db->all();
-
+        
         foreach ($data as $auth_token) {
-
+            
             // Check if token is expired?
             if (strtotime($auth_token['expires']) < time()) {
                 $this->deleteAuthTokenFromDb($auth_token['id_user']);
             }
-
+            
             // Matches the hash in db with the provided token?
             if (hash_equals($auth_token['token'], $token)) {
-
+                
                 // Refresh autologin cookie so the user stays logged in
                 // as long as he comes back before his cookie has been expired.
                 $this->setAutoLoginCookies($auth_token['id_user']);
-
+                
                 // Login user, set session flags and return true
                 $this->session->set('logged_in', true);
                 $this->session->set('id_user', $auth_token['id_user']);
-
+                
                 // Remove possible autologin failed flag
                 $this->session->remove('autologin_failed');
-
+                
                 // And finally load user
                 $this->user->load($auth_token['id_user']);
-
+                
                 return true;
             }
         }
-
+        
         // !!! Reaching this point means autologin validation failed in all ways
         // Clean up the mess and return a big bad fucking false as failed autologin result.
-
+        
         // Remove token cookie
         $this->cookie->remove($cookie);
-
+        
         // Set flag that autologin failed
         $this->session->set('autologin_failed', true);
-
+        
         // Set logged in flag explicit to false
         $this->session->set('logged_in', false);
-
+        
         // Set id of user explicit to 0 (guest)
         $this->session->set('id_user', 0);
-
+        
         // sorry, no autologin
         return false;
     }
@@ -433,7 +457,7 @@ class Security
     /**
      * Removes the token of a user from auth_token table and all tokens expired.
      *
-     * @param int $id_user
+     * @param int $id_user            
      */
     private function deleteAuthTokenFromDb($id_user)
     {
@@ -452,7 +476,7 @@ class Security
     /**
      * Set auto login cookies with user generated token
      *
-     * @param int $id_user
+     * @param int $id_user            
      *
      * @throws Error
      *
@@ -464,12 +488,12 @@ class Security
         if (! $this->expire_time) {
             $this->generateExpireTime();
         }
-
+        
         $selector = bin2hex($this->generateRandomToken(6));
         $token = $this->generateRandomToken(64);
-
+        
         $hash = hash('sha256', $token);
-
+        
         // Store selector and hash in DB
         $this->db->qb([
             'table' => 'auth_tokens',
@@ -487,16 +511,16 @@ class Security
                 ':expires' => date('Y-m-d H:i:s', $this->expire_time)
             ]
         ], true);
-
+        
         // Set autologin token cookie only when token is stored successfully in db!!!
         if ($this->db->lastInsertId()) {
-
+            
             // Get new cookie
             $cookie = $this->cookie->getInstance();
-
+            
             // Expiretime for both cookies
             $cookie->setExpire($this->expire_time);
-
+            
             // Set token cookie
             $cookie->setName($this->cookie_name . 'Token');
             $cookie->setValue($selector . ':' . $hash);
@@ -524,13 +548,13 @@ class Security
         if ($this->loggedIn()) {
             return true;
         }
-
+        
         /* @var $router \Core\Lib\Http\Router */
         $router = $this->di->get('core.http.router');
         $router->setApp('Core');
         $router->setController('Security');
         $router->setAction('Login');
-
+        
         return false;
     }
 
@@ -563,8 +587,8 @@ class Security
     /**
      * Checks user access by permissions
      *
-     * @param array $perms
-     * @param boolean $force
+     * @param array $perms            
+     * @param boolean $force            
      *
      * @return boolean
      */
@@ -572,34 +596,29 @@ class Security
     {
         // Guests are not allowed by default
         if ($this->user->isGuest()) {
-            $this->debugFbLog('is Guest');
             return false;
         }
-
+        
         // Allow access to all users when perms argument is empty
         if (empty($perms)) {
-            $this->debugFbLog('no Perms');
             return true;
         }
-
+        
         // Administrators are supermen :P
         if ($this->user->isAdmin()) {
-            $this->debugFbLog('is Admin');
-            $this->debugFbLog($this->user->getGroups());
             return true;
         }
-
+        
         // Explicit array conversion of perms arg
         if (! is_array($perms)) {
             $perms = (array) $perms;
-            $this->debugFbLog($perms);
         }
-
+        
         // User has the right to do this?
         if (count(array_intersect($perms, $this->user->getPermissions())) > 0) {
             return true;
         }
-
+        
         // You aren't allowed, by default.
         return false;
     }
@@ -607,25 +626,25 @@ class Security
     /**
      * Generates a random session token.
      *
-     * @param number $size
+     * @param number $size            
      *
      * @return Security
      */
-    public function generateRandomSessionToken($size = 32)
+    public function generateRandomSessionToken($size = 32, $force = false)
     {
-        if (! $this->session->exists('token')) {
-
+        if (! $this->session->exists('token') || $force == true) {
+            
             // Store random token in session
             $this->session->set('token', hash('sha256', $this->generateRandomToken($size)));
         }
-
+        
         return $this;
     }
 
     /**
      * Generates a random token.
      *
-     * @param number $size
+     * @param number $size            
      *
      * @return string
      */
@@ -637,7 +656,7 @@ class Security
     /**
      * Validates $token against the random token stored in session.
      *
-     * @param string $token
+     * @param string $token            
      *
      * @return boolean
      */
@@ -657,16 +676,16 @@ class Security
         if (! isset($_POST['token'])) {
             return false;
         }
-
+        
         // Token sent so let's check it
         if (isset($_POST['token'])) {
-
+            
             if (! $this->validateRandomSessionToken($_POST['token'])) {
                 return false;
             }
-
+            
             unset($_POST['token']);
-
+            
             return true;
         }
     }
@@ -674,78 +693,116 @@ class Security
     /**
      * Security method to log suspisious actions and start banning process.
      *
-     * @param string $msg Message to log
-     * @param boolean|int $ban Set this to the number of tries the user is allowed to do other suspicious things until he gets banned.
-     *
+     * @param string $msg
+     *            Message to log
+     * @param boolean|int $ban
+     *            Set this to the number of tries the user is allowed to do other suspicious things until he gets banned.
+     *            
      * @return Security
      */
     public function logSuspicious($msg, $ban = false)
     {
         $this->logging->suspicious($msg);
-
+        
         return $this;
     }
 
     /**
-     * Logs login attemps.
+     * Logs login process.
      *
-     * @param integer $id_user
      * @param boolean $username
-     * @param boolean $password
+     *            Username to use in logentries text
+     * @param boolean $error_username
+     *            Flag to signal that there was a problem with the username
+     * @param boolean $error_password
+     *            Flag to signal that there was a problem with the password
      * @param boolean $ban
+     *            Flag to signal that this is a banable action
      */
-    private function logLogin($id_user, $username = false, $password = false, $ban = false)
+    private function logLogin($username, $error_username = false, $error_password = false, $ban = true)
     {
-        $text = 'Login for user:' . $id_user;
+        $text = sprintf('Login for user "%s"', $username);
         $state = 0;
-
-        if (! $username || !$password) {
-
-            $text .= ' failed!';
-
-            if (!$username) {
-                $state = 1;
+        
+        if ($error_username || $error_password) {
+            
+            $text .= ' failed because of wrong ';
+            
+            if ($error_username) {
+                $state += 1;
+                $text .= 'username';
             }
-
-            if (!$password) {
-                $state = 2;
+            
+            if ($error_password) {
+                $state += 2;
+                $text .= 'password';
+            }
+            
+            if ($ban == false) {
+                $this->logging->suspicious($text, $state);
+                return;
             }
         }
-        else  {
-            $text .= ' success';
-        }
-
-
-        $this->logging->login($text, $state);
-
-        // Start ban process only when requested and only when state
-        // indicates a login error from user credentials
+        
+        // Start ban process only when requested and only when state indicates a login error from user credentials
         if ($state > 0 && $ban) {
-            $this->logging->ban('Ban event');
+            $this->logging->ban($text, 1);
+            return;
         }
+        
+        // Still here? Log success!
+        $this->logging->login($text . ' success');
     }
 
     /**
-     * Ban check
+     * Ban check for current ip
+     *
+     * @return boolean Returns true when user is banned
      */
     public function checkBan()
     {
-            // Get max tries until get banned from config
-            $max_tries = $this->cfg->get('Core', 'ban_max_counter');
-
-            // Max tries of 0 means no ban check at all
-            if ($max_tries == 0) {
-                return true;
-            }
-
-            // Get ban counter for the visitors IP
-            $counter = $this->logging->countBanLogEntries($_SERVER['REMOTE_ADDR']);
-
-            // As long as the ban counter is smaller than allowed the check is ok.
-            if ($counter < $max_tries) {
-                return true;
-            }
-
-            //
+        $ban_duration = $this->cfg->get('Core', 'security.ban_duration');
+        
+        // No ban without ban time
+        if ($ban_duration == 0) {
+            return false;
+        }
+        
+        // Is this ip already banned?
+        $time_of_last_ban = $this->logging->getBanActiveTimestamp($_SERVER['REMOTE_ADDR']);
+        
+        // If so, is the ban still active or already expired?
+        if ($time_of_last_ban + $ban_duration > time()) {
+            return true;
+        }
+        
+        // Get max tries until get banned from config
+        $max_tries = $this->cfg->get('Core', 'security.tries_before_ban');
+        
+        // Max tries of 0 means no ban check at all
+        if ($max_tries == 0) {
+            return false;
+        }
+        
+        // Get seconds for how long the ban log entries are relevant for ban check
+        $ban_log_relevance_duration = $this->cfg->get('Core', 'security.ban_log_relevance_duration');
+        
+        // Zero sconds means that this check is not needed.
+        if ($ban_log_relevance_duration == 0) {
+            return false;
+        }
+        
+        // Get ban counter for the visitors IP
+        $counter = $this->logging->countBanLogEntries($_SERVER['REMOTE_ADDR'], $ban_log_relevance_duration);
+        
+        // As long as the ban counter is smaller than allowed the check is ok.
+        if ($counter < $max_tries) {
+            return false;
+        }
+        
+        // User is banned
+        $this->logging->ban('User got banned because of too many tries.', 2);
+        
+        return true;
     }
 }
