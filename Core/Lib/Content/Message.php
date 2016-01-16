@@ -7,64 +7,51 @@ use Core\Lib\Http\Session;
  * Message.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Message
 {
 
     /**
+     * Generic function to create a message object
      *
-     * @var Session
-     */
-    private $session;
-
-    /**
-     * Constructor
-     *
-     * @param Session $session
-     */
-    public function __construct(Session $session)
-    {
-        $this->session = $session;
-    }
-
-    /**
-     * Generice function to create a message object
-     * Called by public mapper methods
+     * This method is called by public message methods
      *
      * @param string $type
+     *            Message type, which should be "info", "success", "warning" or "danger"
      * @param string $message
+     *            The message to show
      * @param string $fadeout
-     *
+     *            Optional flag to signal that this message should fadeout after some time
+     *            
      * @return MessageObject
      */
     private function generic($type, $message, $fadeout = true)
     {
         $msg = new MessageObject();
-
+        
         $msg->setType($type);
         $msg->setMessage($message);
         $msg->setFadeout($fadeout);
-
+        
         $this->add($msg);
-
+        
         return $msg;
     }
 
     /**
-     * Clears message area.
+     * Clears message area
      *
      * @return MessageObject
      */
     public function clear()
     {
         $msg = new MessageObject();
-
         $msg->setType('clear');
-
+        
         $this->add($msg);
-
+        
         return $msg;
     }
 
@@ -72,18 +59,21 @@ class Message
      * Adds a message object to the message storage in session
      *
      * @param MessageObject $msg
+     *            MessageObject to add
      */
     public function add(MessageObject &$msg)
     {
-        $this->session->add('messages', $msg);
+        $_SESSION['messages'][] = $msg;
     }
 
     /**
-     * Creates "succcess" message and returns reference to this messages.
+     * Creates "succcess" message and returns reference to this messages
      *
-     * @param string $message Message content
-     * @param bool $fadeout Automatic fadeout. Set to false dto disable.
-     *
+     * @param string $message
+     *            The message to show
+     * @param bool $fadeout
+     *            Optional flag to switch Automatic fadeout
+     *            
      * @return MessageObject
      */
     public function success($message, $fadeout = true)
@@ -92,11 +82,13 @@ class Message
     }
 
     /**
-     * Creates "info" message and returns reference to this messages.
+     * Creates "info" message and returns reference to this messages
      *
-     * @param string $message Message content
-     * @param bool $fadeout Automatic fadeout. Set to false dto disable.
-     *
+     * @param string $message
+     *            The message to show
+     * @param bool $fadeout
+     *            Optional flag to switch Automatic fadeout
+     *            
      * @return MessageObject
      */
     public function info($message, $fadeout = true)
@@ -105,11 +97,13 @@ class Message
     }
 
     /**
-     * Creates "warning" message and returns reference to this messages.
+     * Creates "warning" message and returns reference to this messages
      *
-     * @param string $message Message content
-     * @param bool $fadeout Automatic fadeout. Set to false dto disable.
-     *
+     * @param string $message
+     *            The message to show
+     * @param bool $fadeout
+     *            Optional flag to switch Automatic fadeout
+     *            
      * @return MessageObject
      */
     public function warning($message, $fadeout = true)
@@ -118,11 +112,13 @@ class Message
     }
 
     /**
-     * Creates "danger" message and returns reference to this messages.
+     * Creates "danger" message and returns reference to this messages
      *
-     * @param string $message Message content
-     * @param bool $fadeout Automatic fadeout. Set to false dto disable.
-     *
+     * @param string $message
+     *            The message to show
+     * @param bool $fadeout
+     *            Optional flag to switch Automatic fadeout
+     *            
      * @return MessageObject
      */
     public function danger($message, $fadeout = true)
@@ -131,37 +127,25 @@ class Message
     }
 
     /**
-     * Checks for existing messages
-     */
-    public static function checkMessages()
-    {
-        return $this->session->exists('messages');
-    }
-
-    /**
-     * Returns set messages and resets the the message storage.
-     * If no message is set the method returns boolean false.
+     * Returns messages stack, which may be empty, and resets it
+     *
+     * @return array
      */
     public function getMessages()
     {
-        if (! $this->session->exists('messages')) {
-            return [];
-        }
-
-        $messages = $this->session->get('messages');
-
-        if ($messages) {
-            $this->resetMessages();
-        }
-
+        $messages = $_SESSION['messages'];
+        $this->resetMessages();
+        
         return $messages;
     }
 
     /**
-     * Resets messages in session
+     * Resets messages stack
      */
     public function resetMessages()
     {
-        $this->session->remove('messages');
+        if ($_SESSION['messages']) {
+            $_SESSION['messages'] = [];
+        }
     }
 }
