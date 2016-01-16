@@ -182,7 +182,7 @@ class Db extends ConnectorAbstract
      * @param array $definition QueryBuilder definition array
      * @param bool $autoexec
      *
-     * @return \PDOStatement | queryresult
+     * @return \PDOStatement
      */
     public function qb(array $definition, $autoexec = false)
     {
@@ -443,7 +443,7 @@ class Db extends ConnectorAbstract
 
         $this->qb($query);
 
-        return $this->rowCount();
+        return $this->value();
     }
 
     public function find($table, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
