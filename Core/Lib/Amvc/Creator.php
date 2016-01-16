@@ -7,7 +7,7 @@ use Core\Lib\Cfg;
  * Creator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Creator
@@ -35,6 +35,11 @@ class Creator
         'Core'
     ];
 
+    /**
+     * Storage for app instances
+     *
+     * @var array
+     */
     private $instances = [];
 
     /**
@@ -44,7 +49,10 @@ class Creator
     private $cfg;
 
     /**
-     * Make this class defintive a singleton
+     * Constructor
+     *
+     * @param Cfg $cfg
+     *            Cfg dependency
      */
     public function __construct(Cfg $cfg)
     {
@@ -55,53 +63,54 @@ class Creator
      * Get a singleton app object
      *
      * @param string $name
-     * @param bool $do_init
-     *
-     * @return App
+     *            Name of app instance to get
+     *            
+     * @return \core\Lib\Amvc\App
      */
     public function &getAppInstance($name)
     {
         if (empty($name)) {
             $this->send404();
         }
-
-        // Check for already existing instance of app
-        // and create new instance when none is found
-        if (! array_key_exists($name, $this->instances)) {
-
-            // Create app namespace and take care of secured apps.
-            $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
-
-            $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
-
-            if (! file_exists($filename)) {
-                $this->send404();
-            }
-
-            // Default arguments for each app instance
-            $args = [
-                $name,
-                'core.cfg',
-                'core.http.router',
-                'core.content',
-                'core.sec.permission',
-                'core.sec.security',
-                'core.di'
-            ];
-
-            // Create an app instance
-            $this->instances[$name] = $this->di->instance($class, $args);
+        
+        // Check for already existing instance of app and return reference to app if is
+        if (array_key_exists($name, $this->instances)) {
+            return $this->instances[$name];
         }
-
+        
+        // New app instance Create app namespace and take care of secured apps.
+        $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
+        
+        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+        
+        if (! file_exists($filename)) {
+            $this->send404();
+        }
+        
+        // Default arguments for each app instance
+        $args = [
+            $name,
+            'core.cfg',
+            'core.http.router',
+            'core.content',
+            'core.sec.permission',
+            'core.sec.security',
+            'core.di'
+        ];
+        
+        // Create an app instance
+        $this->instances[$name] = $this->di->instance($class, $args);
+        
         // Return app instance
         return $this->instances[$name];
     }
 
     private function send404()
     {
-        header("HTTP/1.0 404 Page not found.");
-        echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
         error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null, 10), true));
+        
+        header("HTTP/1.0 404 Page not found.");
+        echo '<h1>404 - Not Found</h1><p>The requested page does not exists.</p><p><a href="/">Goto to Homepage?</a></p>';
         exit();
     }
 
@@ -109,39 +118,40 @@ class Creator
      * Autodiscovers installed apps in the given path.
      * When an app is found an instance of it will be created.
      *
-     * @param string|array $path Path to check for apps. Can be an array of paths.
+     * @param string|array $path
+     *            Path to check for apps. Can be an array of paths.
      */
     public function autodiscover($path)
     {
         if (! is_array($path)) {
             $path = (array) $path;
         }
-
+        
         foreach ($path as $apps_dir) {
-
+            
             // Dir found?
             if (is_dir($apps_dir)) {
-
+                
                 // Try to open apps dir
                 if (($dh = opendir($apps_dir)) !== false) {
-
+                    
                     // Check each dir member for apps
                     while (($name = readdir($dh)) !== false) {
-
+                        
                         // Skip Core app and parent names
                         if ($name == '..' || $name == '.' || $name == 'Core' || substr($name, 0, 1) == '.') {
                             continue;
                         }
-
+                        
                         // Create app by using the current dirs name as app name
                         $this->getAppInstance($name);
                     }
-
+                    
                     closedir($dh);
                 }
             }
         }
-
+        
         // Run possible Start() method in apps
         foreach ($this->instances as $app) {
             if (method_exists($app, 'Start')) {
@@ -157,18 +167,26 @@ class Creator
      * config definition for missing config values.
      *
      * @param string $app_name
+     *            Name of app to init it's config
      */
     public function initAppConfig($app_name)
     {
         // Init app
         $cfg_app = $this->getAppInstance($app_name)->getConfig();
-
+        
         // Add default values for not set config
-        foreach ($cfg_app as $key => $cfg_def) {
-
-            // Set possible vaue from apps default config when no config was loaded from db
-            if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default'])) {
-                $this->cfg->set($app_name, $key, $cfg_def['default']);
+        
+        foreach ($cfg_app as $group => $configs) {
+            
+            foreach ($configs as $key => $cfg_def) {
+                
+                // Create key with leading groupname
+                $key = $group . '.' . $key;
+                
+                // Set possible vaue from apps default config when no config was loaded from db
+                if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default'])) {
+                    $this->cfg->set($app_name, $key, $cfg_def['default']);
+                }
             }
         }
     }
