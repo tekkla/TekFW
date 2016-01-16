@@ -29,21 +29,21 @@ final class Router extends \AltoRouter
      *
      * @var string
      */
-    private $app = '';
+    private $app = 'Core';
 
     /**
      * Routered conroller
      *
      * @var string
      */
-    private $controller = '';
+    private $controller = 'Index';
 
     /**
      * Routeret action
      *
      * @var string
      */
-    private $action = '';
+    private $action = 'Index';
 
     /**
      * Target parameter used in AJAX requestshandling
@@ -80,9 +80,14 @@ final class Router extends \AltoRouter
      * Generate the URL for a named route.
      * Replace regexes with supplied parameters
      *
-     * @param string $route_name The name of the route.
-     * @param array @params Associative array of parameters to replace placeholders with.
+     * @param string $route_name
+     *            The name of the route.
+     * @param
+     *            array @params
+     *            Associative array of parameters to replace placeholders with.
+     *            
      * @return string The URL of the route with named parameters in place.
+     *        
      * @todo Add access check
      */
     public function url($route_name, $params = [])
@@ -93,24 +98,24 @@ final class Router extends \AltoRouter
     /**
      * Match a given request url against stored routes
      *
-     * @param string $request_url
-     * @param string $request_method
+     * @param string $request_url            
+     * @param string $request_method            
      *
      * @return array boolean with route information on success, false on failure (no match).
      */
     public function match($request_url = null, $request_method = null)
     {
-
+        
         // Set Request Url if it isn't passed as parameter
         if ($request_url === null) {
             $request_url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
         }
-
+        
         // Set Request Method if it isn't passed as a parameter
         if ($request_method === null) {
             $request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
         }
-
+        
         // Framework.js adds automatically an /ajax flag @ the end of the requested URI.
         // Here we check for this flag, remembers if it's present and then remove the flag
         // so the following URI matching process runs without flaw.
@@ -118,52 +123,52 @@ final class Router extends \AltoRouter
             $this->is_ajax = true;
             $request_url = str_replace('/ajax', '', $request_url);
         }
-
+        
         $this->raw = parent::match($request_url, $request_method);
-
+        
         // Try to match request
         $match = $this->raw;
-
+        
         if ($match) {
-
+            
             if (isset($match['name'])) {
                 $this->name = $match['name'];
             }
-
+            
             // Map target results to request properties
             foreach ($match['target'] as $key => $val) {
                 if (property_exists($this, $key)) {
                     $this->{$key} = $this->camelizeString($val);
                 }
             }
-
+            
             // When no target controller defined in route but provided by parameter
             // we use the parameter as requested controller
             if (! $this->controller && isset($match['params']['controller'])) {
                 $this->controller = $this->camelizeString($match['params']['controller']);
             }
-
+            
             // Same for action as for controller
             if (! $this->action && isset($match['params']['action'])) {
                 $this->action = $this->camelizeString($match['params']['action']);
             }
-
+            
             // Is this an ajax request?
             // @TODO Still needed?
             if (isset($match['params']['ajax'])) {
                 $this->is_ajax = true;
             }
-
+            
             // Handle format parameter seperately and remove it from match params array.
             if (isset($match['params']['format'])) {
                 $this->format = $match['params']['format'];
                 unset($match['params']['format']);
             }
-
+            
             // Stroe params
             $this->params = $match['params'];
         }
-
+        
         return $match;
     }
 
@@ -220,14 +225,14 @@ final class Router extends \AltoRouter
     /**
      * Set appname manually
      *
-     * @param string $val
+     * @param string $val            
      *
      * @return \Core\Lib\Http\Router
      */
     public function setApp($app)
     {
         $this->app = $app;
-
+        
         return $this;
     }
 
@@ -254,22 +259,23 @@ final class Router extends \AltoRouter
     /**
      * Sets the requested controller manually
      *
-     * @param string $controller
+     * @param string $controller            
      *
      * @return \Core\Lib\Http\Router
      */
     public function setController($controller)
     {
         $this->controller = $controller;
-
+        
         return $this;
     }
 
     /**
      * Sets requested output format
      *
-     * @param string $format Output format: xml, json or html
-     *
+     * @param string $format
+     *            Output format: xml, json or html
+     *            
      * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Http\Router
@@ -282,13 +288,13 @@ final class Router extends \AltoRouter
             'json',
             'file'
         ];
-
+        
         if (! in_array(strtolower($format), $allowed)) {
             Throw new InvalidArgumentException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
         }
-
+        
         $this->format = $format;
-
+        
         return $this;
     }
 
@@ -313,12 +319,12 @@ final class Router extends \AltoRouter
     /**
      * Set the requested func manually
      *
-     * @param string $action
+     * @param string $action            
      */
     public function setAction($action)
     {
         $this->action = $action;
-
+        
         return $this;
     }
 
@@ -339,7 +345,8 @@ final class Router extends \AltoRouter
     /**
      * Boolean check if parameter exists
      *
-     * @param string parametername
+     * @param
+     *            string parametername
      * @return boolean
      */
     public function checkParam($key)
@@ -352,50 +359,50 @@ final class Router extends \AltoRouter
      * Set $arg1 as assoc array to add multiple parameter.
      * Both args ($arg1 and $arg2) set means to add a parameter by key ($arg1) and value ($arg2)
      *
-     * @param string|array $arg1
+     * @param string|array $arg1            
      *
-     * @param string $arg2
+     * @param string $arg2            
      *
      * @return \Core\Lib\Router
      */
     public function addParam($arg1, $arg2 = null)
     {
         if ($arg2 === null && is_array($arg1)) {
-
+            
             $arg1 = $this->convertObjectToArray($arg1);
-
+            
             foreach ($arg1 as $key => $val) {
                 $this->params[$key] = $val;
             }
         }
-
+        
         if ($arg2 !== null) {
             $this->params[$arg1] = $this->convertObjectToArray($arg2);
         }
-
+        
         return $this;
     }
 
     /**
      * Returns the value of a paramter as long as it exists.
      *
-     * @param string $key
+     * @param string $key            
      */
     public function getParam($key = null)
     {
         if (isset($key)) {
             return isset($this->params[$key]) ? $this->params[$key] : false;
         }
-
+        
         return $this->params;
     }
 
     /**
      * Sets one or more router parameter.
      *
-     * @param string $param
+     * @param string $param            
      *
-     * @param mnixed $value
+     * @param mnixed $value            
      *
      * @throws InvalidArgumentException
      *
@@ -406,17 +413,17 @@ final class Router extends \AltoRouter
         if (! is_array($param) && $value === null) {
             Throw new InvalidArgumentException('Setting router parameter with NULL value is not allowed');
         }
-
+        
         if (! is_array($param)) {
             $param = [
                 $param => $value
             ];
         }
-
+        
         foreach ($param as $key => $value) {
             $this->params[$key] = $value;
         }
-
+        
         return $this;
     }
 
