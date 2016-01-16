@@ -20,9 +20,9 @@ use Core\Lib\Data\Container;
  * App.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
- *
+ *         
  * @todo Switch to options porperty to set app specfic flags.
  */
 class App
@@ -44,6 +44,11 @@ class App
      */
     private static $init_done = [];
 
+    /**
+     * Storage for init stages
+     *
+     * @var array
+     */
     private static $init_stages = [];
 
     /**
@@ -152,12 +157,19 @@ class App
      * Constructor
      *
      * @param string $app_name
+     *            This apps name
      * @param Cfg $cfg
+     *            Cfg dependency
      * @param Router $router
+     *            Router dependency
      * @param Content $content
+     *            Content dependency
      * @param Permission $permission
+     *            Permission dependency
      * @param Security $security
+     *            Security dependence
      * @param DI $di
+     *            Visible DI dependency
      */
     final public function __construct($app_name, Cfg $cfg, Router $router, Content $content, Permission $permission, Security $security, DI $di)
     {
@@ -169,10 +181,10 @@ class App
         $this->permission = $permission;
         $this->security = $security;
         $this->di = $di;
-
+        
         // Set path property which is used on including additional app files like settings, routes, config etc
         $this->path = BASEDIR . '/' . str_replace('\\', '/', $this->getNamespace());
-
+        
         // Set default init stages which are used to prevent initiation of app parts when not needed and
         // to prevent multiple initiations when dealing with multiple app instances
         if (! isset(self::$init_stages[$this->name])) {
@@ -186,23 +198,23 @@ class App
                 'js' => false
             ];
         }
-
-        // Config will always be initiated. no matter what else follows.
+        
+        // Config will always be initiated. no matter what else follows
         $this->initCfg();
-
+        
         // Init paths
         $this->initPaths();
-
+        
         // Apps only needs to be initiated once
         if (in_array($this->name, self::$init_done)) {
             return;
         }
-
+        
         // Run init methods
         $this->initRoutes();
         $this->initPermissions();
         $this->initLanguage();
-
+        
         // Finally call a possible app specific Init() method
         if (method_exists($this, 'Init')) {
             $this->Init();
@@ -210,10 +222,10 @@ class App
     }
 
     /**
-     * Checks app settings for permissions to load, checks for existing permissions
-     * file and adds permissions to core permission service.
-     * Throws runtimeexception
-     * when permissions are set to be loaded but no permissions file is found.
+     * Checks app settings for permissions to load, checks for existing permissions file
+     * and adds permissions to core permission service
+     *
+     * Throws a RuntTmeexception when permissions are set to be loaded but no permissions file is found
      *
      * @throws \RuntimeException
      */
@@ -221,20 +233,20 @@ class App
     {
         // We need lowercase app name
         $app_name = $this->uncamelizeString($this->name);
-
+        
         // Add admin permission by default
         $this->permission->addPermission($app_name, 'admin');
-
+        
         // Having a config means we have to add an admin permission
         if ($this->config) {
             $this->permission->addPermission($app_name, 'config');
         }
-
+        
         // Add permissions to permission service
         if ($this->permissions) {
             $this->permission->addPermission($app_name, $this->permissions);
         }
-
+        
         // Set flat that permission init is done
         self::$init_stages[$this->name]['permissions'] = true;
     }
@@ -250,83 +262,84 @@ class App
         if (self::$init_stages[$this->name]['lang']) {
             return;
         }
-
+        
         // Do we have permissions do add?
         if ($this->language) {
-
+            
             // Check
-            if (! $this->cfg->exists($this->name, 'dir_language')) {
+            if (! $this->cfg->exists($this->name, 'dir.language')) {
                 Throw new ConfigException('Languagefile for app "' . $this->name . '" has to be loaded but no Language folder was found.');
             }
-
+            
             // Always load english language files.
-            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.english.php';
+            $language_file = $this->cfg('dir.language') . '/en.php';
             $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
-
+            
             // After that load set languenage file which can override the loaded english string.
-            $language_file = $this->cfg('dir_language') . '/' . $this->name . '.' . $this->cfg->get('Core', 'language') . '.php';
+            $language_file = $this->cfg('dir.language') . '/' . $this->cfg->get('Core', 'site.language') . '.php';
             $this->di->get('core.content.lang')->loadLanguageFile($this->name, $language_file);
-
+            
             self::$init_stages[$this->name]['language'] = true;
         }
     }
 
     /**
-     * Hidden method to factory mvc components like models, views or controllers.
+     * Hidden method to factory mvc components like models, views or controllers
      *
-     * @param string $name Components name
-     * @param string $type Components type
-     *
+     * @param string $name
+     *            Components name
+     * @param string $type
+     *            Components type
+     *            
      * @return Model|View|Controller|Container
      */
     final private function MVCFactory($name, $type, $arguments = null)
     {
         // Here we make sure that CSS and JS will correctly and only once be initiated!
         if (! in_array($this->name, self::$init_done)) {
-
+            
             // Init css and js only on non ajax requests
             if (! $this->router->isAjax()) {
                 $this->initCss();
                 $this->initJs();
             }
-
+            
             // Store our apps name to be initiated
             self::$init_done[] = $this->name;
         }
-
+        
         // Create classname of component to create
         $class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
-
-        // Check existance of container objects because they are optional.
+        
+        // Check existance of container objects because they are optional
         if ($type == 'Container') {
-
+            
             $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
-
+            
             if (! file_exists($container_class_path)) {
                 return false;
             }
-
+            
             return new $class();
         }
-
-        // By default each MVC component constructor needs at least a name and
-        // this app object as argument
+        
+        // By default each MVC component constructor needs at least a name and this app object as argument
         $args = [
             $name,
             $this
         ];
-
+        
         // Add additional arguments
         if (isset($arguments)) {
             if (! is_array($arguments)) {
                 $arguments = (array) $arguments;
             }
-
+            
             foreach ($arguments as $arg) {
                 $args[] = $arg;
             }
         }
-
+        
         // Create component be using di instance factory to get sure the
         // di services the container itself is injected properly
         return $this->di->instance($class, $args);
@@ -345,27 +358,30 @@ class App
     }
 
     /**
-     * Creates an app related model object.
+     * Creates an app related model object
      *
-     * @param string $name The models name
-     * @param string $db_container Name of the db container to use with this model
-     *
+     * @param string $name
+     *            The models name
+     * @param string $db_container
+     *            Name of the db container to use with this model
+     *            
      * @return Model
      */
-    public function getModel($name = '')
+    final public function getModel($name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
-
+        
         return $this->MVCFactory($name, 'Model');
     }
 
     /**
-     * Creates an app related controller object.
+     * Creates an app related controller object
      *
-     * @param string $name The controllers name
-     *
+     * @param string $name
+     *            The controllers name
+     *            
      * @return Controller
      */
     final public function getController($name = '')
@@ -373,7 +389,7 @@ class App
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
-
+        
         $args = [
             'core.http.router',
             'core.http.post',
@@ -387,14 +403,15 @@ class App
             'core.cache',
             'core.ajax'
         ];
-
+        
         return $this->MVCFactory($name, 'Controller', $args);
     }
 
     /**
      * Creates an app related view object.
      *
-     * @param string $name The viewss name
+     * @param string $name
+     *            The viewss name
      * @return View
      */
     final public function getView($name = '')
@@ -402,46 +419,52 @@ class App
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
-
+        
         return $this->MVCFactory($name, 'View');
     }
 
     /**
      * Creates an app related container object.
      *
-     * @param string $name The controllers name
-     *
+     * @param string $name
+     *            The controllers name
+     *            
      * @return Controller
      */
     final public function getContainer($name = '')
     {
+        // Autodiscover componentsname on demand
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
-
+        
+        // Init args array
         $args = [];
-
+        
         /* @var $container \Core\Lib\Data\Container */
         $container = $this->MVCFactory($name, 'Container', $args);
-
+        
         if (! $container) {
-            Throw new InvalidArgumentException('The container "' . $name . '" does not exists');
+            Throw new InvalidArgumentException(sprintf('Container "%s" does not exist.', $name));
         }
-
+        
+        // We need our action so we can call a possible existing function that gives us only
+        // those fields needed for this action
         $action = $this->router->getAction();
-
+        
+        // Do we have such method?
         if (! method_exists($container, $action)) {
-
+            
             // ... and try to find and run Index method when no matching action is found
             $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
         }
-
+        
         // ... and call matching container action when method exists
         $container->$action();
-
+        
         // finally try to parse field defintion
         $container->parseFields();
-
+        
         return $container;
     }
 
@@ -466,16 +489,17 @@ class App
     }
 
     /**
-     * Gives access on the apps config.
+     * Gives access on the apps config
+     *
      * Calling only with key returns the set value.
      * Calling with key and value will set the apps config.
      * Calling without any parameter will return complete app config
      *
-     * @param string $key
-     * @param string $val
+     * @param string $key            
+     * @param string $val            
      *
      * @return void boolean \Core\Lib\Cfg
-     *
+     *        
      * @throws InvalidArgumentException
      */
     final public function cfg($key = null, $val = null)
@@ -484,18 +508,18 @@ class App
         if (isset($key) && ! isset($val)) {
             return $this->cfg->exists($this->name, $key) ? $this->cfg->get($this->name, $key) : false;
         }
-
+        
         // Setting config
         if (isset($key) && isset($val)) {
             $this->cfg->set($this->name, $key, $val);
             return;
         }
-
+        
         // Return complete config
         if (! isset($key) && ! isset($val)) {
             return $this->cfg->get($this->name);
         }
-
+        
         Throw new InvalidArgumentException('Values without keys can not be used in app config access');
     }
 
@@ -506,22 +530,41 @@ class App
     final private function initCfg()
     {
         // Add general app id an name
-        $this->cfg->set($this->name, 'app', $this->name);
-
+        $this->cfg->set($this->name, 'app.name', $this->name);
+        
         // Check the loaded config against the keys of the default config
         // and set the default value if no cfg value is found
-        foreach ($this->config as $key => $cfg_def) {
-
-            // When there is no config set but a default value defined for the app,
-            // the default value will be used then
-            if (! $this->cfg->exists($this->name, $key)) {
-
-                // Set missing default value to empty string
-                if (! isset($cfg_def['default'])) {
-                    $cfg_def['default'] = '';
+        foreach ($this->config as $group => $configs) {
+            
+            foreach ($configs as $key => $cfg_def) {
+                
+                $check_default = [
+                    'translate' => false,
+                    'data' => false,
+                    'validate' => [],
+                    'filter' => []
+                ];
+                
+                foreach ($check_default as $property => $default) {
+                    if (! isset($cfg_def[$property])) {
+                        $this->config[$group][$key][$property] = $default;
+                    }
                 }
-
-                $this->cfg->set($this->name, $key, $cfg_def['default']);
+                
+                // Create key with leading groupname
+                $key = $group . '.' . $key;
+                
+                // When there is no config set but a default value defined for the app,
+                // the default value will be used then
+                if (! $this->cfg->exists($this->name, $key)) {
+                    
+                    // Set missing default value to empty string
+                    if (! isset($cfg_def['default'])) {
+                        $cfg_def['default'] = '';
+                    }
+                    
+                    $this->cfg->set($this->name, $key, $cfg_def['default']);
+                }
             }
         }
     }
@@ -564,40 +607,40 @@ class App
     {
         // Get directory path of app
         $dir = $this->path;
-
+        
         // Get dir handle
         $handle = opendir($dir);
-
+        
         // Read dir
         while (($file = readdir($handle)) !== false) {
-
+            
             // No '.' or '..'
             if ('.' == $file || '..' == $file || strpos($file, '.') === 0) {
                 continue;
             }
-
+            
             if (is_dir($dir . '/' . $file)) {
-
+                
                 // Is dir and not in the excludelist? Continue if it is so.
                 if (isset($this->exlude_dirs) && in_array($file, $this->exclude_dirs)) {
                     continue;
                 }
-
+                
                 // Add dir and url to app config
                 $key = $this->uncamelizeString($file);
-
-                $this->cfg->set($this->name, 'dir_' . $key, $dir . '/' . $file);
-                $this->cfg->set($this->name, 'url_' . $key, $this->cfg->get('Core', 'url_' . $this->getAppType()) . '/' . $this->name . '/' . $file);
+                
+                $this->cfg->set($this->name, 'dir.' . $key, $dir . '/' . $file);
+                $this->cfg->set($this->name, 'url.' . $key, $this->cfg->get('Core', 'url.' . $this->getAppType()) . '/' . $this->name . '/' . $file);
             }
         }
-
+        
         // Add apps base dir and url to app config
-        $this->cfg->set($this->name, 'dir_app', $this->cfg->get('Core', 'dir_' . $this->getAppType()) . '/' . $this->name);
-        $this->cfg->set($this->name, 'url_app', $this->cfg->get('Core', 'url_' . $this->getAppType()) . '/' . $this->name);
-
+        $this->cfg->set($this->name, 'dir.app', $this->cfg->get('Core', 'dir.' . $this->getAppType()) . '/' . $this->name);
+        $this->cfg->set($this->name, 'url.app', $this->cfg->get('Core', 'url.' . $this->getAppType()) . '/' . $this->name);
+        
         // Cleanup
         closedir($handle);
-
+        
         // App specific paths to add?
         if (method_exists($this, 'addPaths')) {
             $this->addPaths();
@@ -605,7 +648,8 @@ class App
     }
 
     /**
-     * Initiates apps css.
+     * Initiates apps css
+     *
      * Each app can have it's own css file. The css file needs to be placed in an Css folder within
      * the apps folder. App settings need a css flag, otherwise the css file won't be loaded.
      *
@@ -623,22 +667,22 @@ class App
         if (self::$init_stages[$this->name]['css']) {
             return;
         }
-
+        
         // Css flag set that indicates app has a css file?
         if ($this->css_file) {
-
+            
             // Check for existance of apps css file
-            if (! file_exists($this->cfg->get($this->name, 'dir_css') . '/' . $this->name . '.css')) {
+            if (! file_exists($this->cfg->get($this->name, 'dir.css') . '/' . $this->name . '.css')) {
                 Throw new FileException('App "' . $this->name . '" css file does not exist. Either create the js file or remove the css flag in your app settings.');
             }
-
+            
             // Create css file link
-            $this->content->css->link($this->cfg->get($this->name, 'url_css') . '/' . $this->name . '.css');
+            $this->content->css->link($this->cfg->get($this->name, 'url.css') . '/' . $this->name . '.css');
         }
-
+        
         // Set flag for initiated css
         self::$init_stages[$this->name]['css'] = true;
-
+        
         return $this;
     }
 
@@ -659,28 +703,28 @@ class App
         if (self::$init_stages[$this->name]['js']) {
             return;
         }
-
+        
         // Each app can (like css) have it's own javascript file. If you want to have this file included, you have to set the public property $js in
         // your app mainclass. Unlike the css include procedure, the $js property holds also the information where to include the apps .js file.
         // You hve to set this property to "scripts" (included on the bottom of website) or "header" (included in header section of website).
         // the apps js file is stored within the app folder structure in an directory named "js".
         if ($this->js_file) {
-
-            if (! file_exists($this->cfg->get($this->name, 'dir_js') . '/' . $this->name . '.js')) {
+            
+            if (! file_exists($this->cfg->get($this->name, 'dir.js') . '/' . $this->name . '.js')) {
                 Throw new FileException('App "' . $this->name . '" js file does not exist. Either create the js file or remove the js flag in your app mainclass.');
             }
-
-            $this->content->js->file($this->cfg->get($this->name, 'url_js') . '/' . $this->name . '.js');
+            
+            $this->content->js->file($this->cfg->get($this->name, 'url.js') . '/' . $this->name . '.js');
         }
-
+        
         // Js method in app to run?
         if (method_exists($this, 'addJs')) {
             $this->addJs();
         }
-
+        
         // Set flag for initated js
         self::$init_stages[$this->name]['js'] = true;
-
+        
         return $this;
     }
 
@@ -695,61 +739,59 @@ class App
         if (self::$init_stages[$this->name]['routes'] == true) {
             return;
         }
-
-        /* @var $router AltoRouter */
-
+        
         if (! $this->routes) {
-
+            
             // No routes set? Map at least index as default route
             $target = [
                 'app' => $this->name,
                 'controller' => 'Index',
                 'action' => 'Index'
             ];
-
+            
             $this->router->map('GET', '/', $target, $this->name . '_index');
-
+            
             self::$init_stages[$this->name]['routes'] = true;
-
+            
             return;
         }
-
+        
         // Get uncamelized app name
         $app_name = $this->uncamelizeString($this->name);
-
+        
         // Map routes to request handler router
         foreach ($this->routes as $def) {
-
+            
             // Create route string
             $route = $def['route'] == '/' ? '/' . $app_name : '/' . (strpos($def['route'], '../') === false ? $app_name . $def['route'] : str_replace('../', '', $def['route']));
-
+            
             // Create target
             $target = [
                 // App not set means app will be set automatic.
                 'app' => ! isset($def['app']) ? $app_name : $def['app']
             ];
-
+            
             // is there a defined controller?
             if (! empty($def['controller'])) {
                 $target['controller'] = $def['controller'];
             }
-
+            
             if (! empty($def['action'])) {
                 $target['action'] = $def['action'];
             }
-
+            
             // The name of the route is set by the key in the routes array.
             // Is the name of type string it will be extended by the current
             // apps name.
             if (isset($def['name'])) {
                 $name = (! isset($def['app']) ? $app_name : $def['app']) . '_' . $def['name'];
             }
-
+            
             $method = isset($def['method']) ? $def['method'] : 'GET';
-
+            
             $this->router->map($method, $route, $target, isset($name) ? $name : null);
         }
-
+        
         self::$init_stages[$this->name]['routes'] = true;
     }
 
@@ -786,7 +828,7 @@ class App
     /**
      * Returns loading state of an app.
      *
-     * @param string $app_name
+     * @param string $app_name            
      *
      * @return boolean
      */
@@ -808,47 +850,55 @@ class App
     /**
      * Registers an app related service to di container.
      *
-     * @param string $name Name of service
-     * @param string $class Class name this service uses
-     * @param array $args Optional arguments
-     *
+     * @param string $name
+     *            Name of service
+     * @param string $class
+     *            Class name this service uses
+     * @param array $args
+     *            Optional arguments
+     *            
      * @return \Core\Lib\Amvc\App
      */
     final protected function registerService($name, $class, $args = [])
     {
         $this->di->mapService($this->name . '.' . $name, $class, $args);
-
+        
         return $this;
     }
 
     /**
      * Registers an app related class factor to di container.
      *
-     * @param string $name Name of factory
-     * @param string $class Class name this service uses
-     * @param array $args Optional arguments
-     *
+     * @param string $name
+     *            Name of factory
+     * @param string $class
+     *            Class name this service uses
+     * @param array $args
+     *            Optional arguments
+     *            
      * @return \Core\Lib\Amvc\App
      */
     final protected function registerFactory($name, $class, $args = [])
     {
         $this->di->mapFactory($this->name . '.' . $name, $class, $args);
-
+        
         return $this;
     }
 
     /**
      * Registers an app related value to di container
      *
-     * @param string $name Name of value
-     * @param string $value The value itsel
-     *
+     * @param string $name
+     *            Name of value
+     * @param string $value
+     *            The value itsel
+     *            
      * @return \Core\Lib\Amvc\App
      */
     final protected function registerValue($name, $value)
     {
         $this->di->mapValue($this->name . '.' . $name, $value);
-
+        
         return $this;
     }
 }
