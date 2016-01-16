@@ -35,62 +35,63 @@ define('CACHEDIR', BASEDIR . '/Cache');
 define('APPSSECDIR', BASEDIR . '/Core/AppsSec');
 
 // Load basic config from Settings.php
-$cfg = include (BASEDIR . '/Settings.php');;
+$cfg = include (BASEDIR . '/Settings.php');
+;
 
 // Define url to Core
-define('BASEURL', $cfg['url']);
+define('BASEURL', $cfg['site.url']);
 
 // Define url of themes
-define('THEMESURL', $cfg['url'] . '/Themes');
+define('THEMESURL', $cfg['site.url'] . '/Themes');
 
 // Include error handler
 require_once (COREDIR . '/Lib/Errors/Error.php');
 
 try {
-
+    
     // Register core classloader
     require_once (COREDIR . '/Lib/SplClassLoader.php');
-
+    
     // Classloader to register
     $register = [
         'Core' => BASEDIR,
         'Apps' => BASEDIR,
         'Themes' => BASEDIR
     ];
-
+    
     // Register classloader
     foreach ($register as $key => $path) {
         $loader = new SplClassLoader($key, $path);
         $loader->register();
     }
-
+    
     // Register composer classloader for core
     require_once (BASEDIR . '/vendor/autoload.php');
-
+    
     // start output buffering
     ob_start();
-
+    
     // Create core di container
     $di = new DI();
-
+    
     // --------------------------------------
     // 1. Init basic config
     // --------------------------------------
-
+    
     /* @var $config \Core\Lib\Cfg */
     $config = $di->get('core.cfg');
-
+    
     // Init config with config from Settings.php
     $config->init($cfg);
-
+    
     // Load additiona configs from DB
     $config->load();
-
+    
     // Add dirs to config
     $dirs = [
         // Framework directory
         'fw' => '/Core',
-
+        
         // Framwork subdirectories
         'css' => '/Core/Css',
         'js' => '/Core/Js',
@@ -98,16 +99,16 @@ try {
         'html' => '/Core/Html',
         'tools' => '/Core/Tools',
         'cache' => '/Cache',
-
+        
         // Public application dir
         'apps' => '/Apps',
-
+        
         // Secure application dir
         'appssec' => '/Core/AppsSec'
     ];
-
+    
     $config->addPaths('Core', $dirs);
-
+    
     // Add urls to config
     $urls = [
         'apps' => '/Apps',
@@ -117,52 +118,50 @@ try {
         'tools' => '/Core/Tools',
         'cache' => '/Cache'
     ];
-
+    
     $config->addUrls('Core', $urls);
-
-
+    
     // --------------------------------------
     // 2. Start runtime measurement
     // --------------------------------------
-
+    
     /* @var $timer \Core\Lib\Utilities\Timer */
     $timer = $di->get('core.util.timer')->start();
-
+    
     // --------------------------------------
     // 3. Init session handler
     // --------------------------------------
     $di->get('core.http.session')->init();
-
+    
     // --------------------------------------
-    // 4. Init security system
+    // 4. Init essential Core app
     // --------------------------------------
-    $di->get('core.sec.security')->init();
-
-    // --------------------------------------
-    // 5. Init essential Core app
-    // --------------------------------------
-
+    
     /* @var $creator \Core\Lib\Amvc\Creator */
     $creator = $di->get('core.amvc.creator');
-
+    
     $creator->initAppConfig('Core');
-
+    
+    // --------------------------------------
+    // 5. Init security system
+    // --------------------------------------
+    $di->get('core.sec.security')->init();
+    
     // --------------------------------------
     // 6. Start app autodiscover process
     // --------------------------------------
     $creator->autodiscover([
-        $config->get('Core', 'dir_appssec'),
-        $config->get('Core', 'dir_apps')
+        $config->get('Core', 'dir.appssec'),
+        $config->get('Core', 'dir.apps')
     ]);
-
+    
     // --------------------------------------
     // 7. Create content
     // --------------------------------------
-
+    
     /* @var $content \Core\Lib\Content\Content */
     $di->get('core.content')->create();
-}
-catch (Exception $e) {
+} catch (Exception $e) {
     echo $di->get('core.error')->handleException($e, true);
 }
 
