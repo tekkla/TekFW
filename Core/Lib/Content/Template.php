@@ -54,8 +54,11 @@ class Template
      * Constructor
      *
      * @param Cfg $cfg
+     *            Cfg dependency
      * @param Content $content
+     *            Content dependency
      * @param HtmlFactory $html
+     *            HtmlFactory dependency
      */
     public function __construct(Cfg $cfg, Content $content, HtmlFactory $html, Cache $cache)
     {
@@ -77,10 +80,11 @@ class Template
     final public function render()
     {
         foreach ($this->layers as $layer) {
+            
             if (! method_exists($this, $layer)) {
                 Throw new TemplateException('Template Error: The requested layer "' . $layer . '" does not exist.');
             }
-
+            
             $this->$layer();
         }
     }
@@ -88,65 +92,58 @@ class Template
     /**
      * Creates and returns meta tags
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getMeta($data_only = false)
     {
         $meta_stack = $this->content->meta->getTags();
-
+        
         if ($data_only) {
             return $meta_stack;
         }
-
-        ob_start();
-
+        
+        $html = '';
+        
         foreach ($meta_stack as $tag) {
-
+            
             // $meta = $this->html->create('Elements\Meta');
-
-            echo PHP_EOL . '<meta';
-
+            
+            $html .= PHP_EOL . '<meta';
+            
             foreach ($tag as $attribute => $value) {
-                echo ' ', $attribute, '="', $value, '"';
+                $html .= ' ' . $attribute . '="' . $value . '"';
             }
-
-            echo '>';
+            
+            $html .= '>';
         }
-
-        $html = ob_get_contents();
+        
+        return $html;
     }
 
     /**
      * Creates and returns the title tag
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getTitle($data_only = false)
     {
         if ($data_only) {
             return $this->content->getTitle();
         }
-
+        
         return PHP_EOL . '<title>' . $this->content->getTitle() . '</title>';
     }
 
     /**
      * Returns html navbar or only the menu structure.
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
-     * @param boolean $data_only
+     * @param boolean $data_only            
      *
      * @return string|array
      */
@@ -158,233 +155,208 @@ class Template
     /**
      * Creates and return OpenGraph tags
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getOpenGraph($data_only = false)
     {
         $og_stack = $this->content->og->getTags();
-
+        
         if ($data_only) {
             return $og_stack;
         }
-
-        ob_start();
-
+        
+        $html = '';
+        
         foreach ($og_stack as $property => $content) {
-            echo '<meta property="', $property, '" content="', $content, '">', PHP_EOL;
+            $html .= '<meta property="' . $property . '" content="' . $content . '">' . PHP_EOL;
         }
-
-        $html = ob_get_contents();
-
-        ob_end_clean();
-
+        
         return $html;
     }
 
     /**
      * Creates and returns all css realted content
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return array|string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
-    final protected function getCss()
+    final protected function getCss($data_only = false)
     {
         $files = $this->content->css->getFiles();
-
+        
+        if ($data_only) {
+            return $files;
+        }
+        
         $html = '';
-
+        
         // Start reading
         foreach ($files as $file) {
             $html .= PHP_EOL . '<link rel="stylesheet" type="text/css" href="' . $file . '">';
         }
-
+        
         return $html;
     }
 
     /**
      * Creates and returns js script stuff for the requested area.
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
-     * @param string $area Valid areas are 'top' and 'below'.
-     *
-     * @return array
+     * @param string $area
+     *            Valid areas are 'top' and 'below'.
+     * @param boolean $data_only
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
-    final protected function getScript($area)
+    final protected function getScript($area, $data_only = false)
     {
-
         $files = $this->content->js->getFiles($area);
-
+        
+        if ($data_only) {
+            return $files;
+        }
+        
         // Init output var
         $html = '';
-
-        if (empty($files)) {
-            return $html;
-        }
-
+        
         // Create files
         foreach ($files as $file) {
-
+            
             // Create script html object
             $html .= PHP_EOL . '<script src="' . $file . '"></script>';
         }
-
+        
         return $html;
     }
 
     /**
      * Create and returns head link elements
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return array|string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getHeadLinks($data_only = false)
     {
         $link_stack = $this->content->link->getLinkStack();
-
+        
         if ($data_only) {
             return $link_stack;
         }
-
-        ob_start();
-
+        
+        $html = '';
+        
         foreach ($link_stack as $link) {
-
-            echo PHP_EOL . '<link';
-
+            
+            $html .= PHP_EOL . '<link';
+            
             foreach ($link as $attribute => $value) {
-                echo ' ', $attribute, '="', $value, '"';
+                $html .= ' ' . $attribute . '="' . $value . '"';
             }
-
-            echo '>';
+            
+            $html .= '>';
         }
-
-        $html = ob_get_contents();
-
-        ob_end_clean();
-
+        
         return $html;
     }
 
     /**
      * Creates and returns stored messages
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return array|string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getMessages($data_only = false)
     {
         $messages = $this->content->msg->getMessages();
-
+        
         if ($data_only) {
             return $messages;
         }
-
+        
         ob_start();
-
+        
         echo '<div id="core-message">';
-
+        
         foreach ($messages as $msg) {
-
+            
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
-
+            
             // Fadeout message?
-            if ($this->cfg->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+            if ($this->cfg->get('Core', 'js.fadeout_time') > 0 && $msg->getFadeout()) {
                 echo ' fadeout';
             }
-
+            
             echo '">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                 ', $msg->getMessage(), '
             </div>';
         }
-
+        
         echo '</div>';
-
-        $html = ob_get_contents();
-
-        ob_end_clean();
-
-        return $html;
+        
+        return ob_get_clean();
     }
 
     /**
      * Creates breadcrumb html content or returns it's data-
      *
-     * Set $data_only argument to true if you want to get get only the data
-     * without a genereated html control.
-     *
      * @param boolean $data_only
-     *
-     * @return array|string
+     *            Set to true if you want to get get only the data without a generated html
+     *            
+     * @return string|array
      */
     final protected function getBreadcrumbs($data_only = false)
     {
         $breadcrumbs = $this->content->breadcrumbs->getBreadcrumbs();
-
+        
         if ($data_only) {
             return $breadcrumbs;
         }
-
+        
         // Add home button
         $text = $this->content->txt('home');
-
+        
         if ($breadcrumbs) {
             $home_crumb = $this->content->breadcrumbs->createItem($text, BASEURL, $text);
-        }
-        else {
+        } else {
             $home_crumb = $this->content->breadcrumbs->createActiveItem($text, $text);
         }
-
+        
         array_unshift($breadcrumbs, $home_crumb);
-
+        
         ob_start();
-
+        
         if ($breadcrumbs) {
-
+            
             echo '<ol class="breadcrumb">';
-
+            
             foreach ($breadcrumbs as $breadcrumb) {
-
+                
                 echo '<li';
-
+                
                 if ($breadcrumb->getActive()) {
                     echo ' class="active">' . $breadcrumb->getText();
-                }
-                else {
+                } else {
                     echo '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
                 }
-
+                
                 echo '</li>';
             }
-
+            
             echo '</ol>';
         }
-
-        $html = ob_get_contents();
-
-        ob_end_clean();
-
-        return $html;
+        
+        return ob_get_clean();
     }
 
     /**
