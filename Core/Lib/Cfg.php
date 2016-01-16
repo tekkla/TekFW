@@ -4,6 +4,7 @@ namespace Core\Lib;
 use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Traits\SerializeTrait;
 use Core\Lib\Errors\Exceptions\ConfigException;
+use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * Cfg.php
@@ -31,7 +32,7 @@ final class Cfg
     /**
      * Constructor
      *
-     * @param Db $db
+     * @param Db $db            
      */
     public function __construct(Db $db)
     {
@@ -41,8 +42,8 @@ final class Cfg
     /**
      * Get a cfg value.
      *
-     * @param string $app
-     * @param string $key
+     * @param string $app            
+     * @param string $key            
      *
      * @throws ConfigException
      *
@@ -54,12 +55,27 @@ final class Cfg
         if (! isset($key) && isset($this->cfg[$app])) {
             return $this->cfg[$app];
         }
-
+        
         // Calls with app and key are normal cfg requests
-        if (isset($key) && isset($this->cfg[$app]) && isset($this->cfg[$app][$key])) {
-            return $this->cfg[$app][$key];
+        if (isset($key)) {
+            
+            if (strpos($key, '.') === false) {
+                Throw new InvalidArgumentException('Config keys need a leading groupname seperated by a . from the config key. For example: security.password_length');
+            }
+            
+            list ($group, $key) = explode('.', $key);
+            
+            if (! isset($this->cfg[$app][$group])) {
+                Throw new InvalidArgumentException(sprintf('Config group "%s" does not exist.', $group));
+            }
+            
+            if (! isset($this->cfg[$app][$group][$key])) {
+                Throw new InvalidArgumentException(sprintf('Config key "%s" does not exist in group "%s"', $key, $group));
+            }
+            
+            return $this->cfg[$app][$group][$key];
         }
-
+        
         // All other will result in an error exception
         Throw new ConfigException(sprintf('Config "%s" of app "%s" not found.', $key, $app));
     }
@@ -67,13 +83,19 @@ final class Cfg
     /**
      * Set a cfg value.
      *
-     * @param string $app
-     * @param string $key
-     * @param mixed $val
+     * @param string $app            
+     * @param string $key            
+     * @param mixed $val            
      */
     public function set($app, $key, $val)
     {
-        $this->cfg[$app][$key] = $val;
+        if (strpos($key, '.') === false) {
+            Throw new InvalidArgumentException('Config keys need a leading groupname seperated by a . from the config key. For example: security.password_length');
+        }
+        
+        list ($group, $key) = explode('.', $key);
+        
+        $this->cfg[$app][$group][$key] = $val;
     }
 
     /**
@@ -81,8 +103,8 @@ final class Cfg
      *
      * Returns true for set and false for not set.
      *
-     * @param string $app
-     * @param string $key
+     * @param string $app            
+     * @param string $key            
      */
     public function exists($app, $key = null)
     {
@@ -90,26 +112,28 @@ final class Cfg
         if (! isset($this->cfg[$app])) {
             return false;
         }
-
+        
         // app found and no key requested? true
         if (! isset($key)) {
             return true;
         }
-
-        // key requested and found? true
-        if (isset($key) && isset($this->cfg[$app][$key])) {
-            return true;
+        
+        // check for config
+        if (strpos($key, '.') === false) {
+            Throw new InvalidArgumentException('Config keys need a leading groupname seperated by a . from the config key. For example: security.password_length');
         }
-
-        // All other: false
-        return false;
+        
+        list ($group, $key) = explode('.', $key);
+        
+        // key requested and found? true
+        return isset($this->cfg[$app][$group][$key]) && ! empty($this->cfg[$app][$group][$key]);
     }
 
     /**
      * Init config.
      * Parameter is used as initial core config
      *
-     * @param array $cfg
+     * @param array $cfg            
      *
      * @throws ConfigException
      */
@@ -118,11 +142,17 @@ final class Cfg
         if (! is_array($cfg)) {
             Throw new ConfigException('Initial config needs to be an array', 0);
         }
-
+        
+        $this->cfg['Core'] = [];
+        
         if ($cfg) {
-            $this->cfg = array(
-                'Core' => $cfg
-            );
+            
+            foreach ($cfg as $config => $val) {
+                
+                list ($group, $key) = explode('.', $config);
+                
+                $this->cfg['Core'][$group][$key] = $val;
+            }
         }
     }
 
@@ -133,46 +163,54 @@ final class Cfg
     {
         $this->db->qb([
             'table' => 'config',
+            'fields' => [
+                'app',
+                'cfg',
+                'val'
+            ],
             'order' => 'app, cfg'
         ]);
-
-        $results = $this->db->all(\PDO::FETCH_NUM);
-
+        
+        $results = $this->db->all();
+        
         foreach ($results as $row) {
-            // Check for serialized data and unserialize it
-            if ($this->isSerialized($row[3])) {
-                $row[3] = unserialize($row[3]);
-            }
-
-            $this->cfg[$row[1]][$row[2]] = $row[3];
+            
+            // Check for serialized config value and unserialize it
+            $val = $this->isSerialized($row['val']) ? unserialize($row['val']) : $row['val'];
+            
+            // Extract group name and config key
+            list ($group, $key) = explode('.', $row['cfg']);
+            
+            // Set config
+            $this->cfg[$row['app']][$group][$key] = $val;
         }
     }
 
     /**
      * Adds app related file paths to the config.
      *
-     * @param string $app
-     * @param array $dirs
+     * @param string $app            
+     * @param array $dirs            
      */
     public function addPaths($app = 'Core', array $dirs = array())
     {
         // Write dirs to config storage
         foreach ($dirs as $key => $val) {
-            $this->cfg[$app]['dir_' . $key] = BASEDIR . $val;
+            $this->cfg[$app]['dir'][$key] = BASEDIR . $val;
         }
     }
 
     /**
      * Adds app related urls to the config.
      *
-     * @param string $app
-     * @param array $urls
+     * @param string $app            
+     * @param array $urls            
      */
     public function addUrls($app = 'Core', array $urls = array())
     {
         // Write urls to config storage
         foreach ($urls as $key => $val) {
-            $this->cfg[$app]['url_' . $key] = BASEURL . $val;
+            $this->cfg[$app]['url'][$key] = BASEURL . $val;
         }
     }
 
