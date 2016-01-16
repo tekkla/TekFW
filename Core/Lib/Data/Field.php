@@ -12,7 +12,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
  */
 class Field implements \ArrayAccess
 {
-
+    
     use \Core\Lib\Traits\SerializeTrait;
 
     /**
@@ -77,6 +77,12 @@ class Field implements \ArrayAccess
 
     /**
      *
+     * @var array
+     */
+    private $custom_properties = [];
+
+    /**
+     *
      * @return string
      */
     public function __toString()
@@ -97,14 +103,14 @@ class Field implements \ArrayAccess
     /**
      * Sets field name.
      *
-     * @param string $name
+     * @param string $name            
      *
      * @return \Core\Lib\Data\Field
      */
     public function setName($name)
     {
         $this->name = (string) $name;
-
+        
         return $this;
     }
 
@@ -121,22 +127,25 @@ class Field implements \ArrayAccess
     /**
      * Sets field type.
      *
-     * @param $type
-     *
+     * @param
+     *            $type
+     *            
      * @return \Core\Lib\Data\Field
      */
     public function setType($type)
     {
         $this->type = $type;
-
+        
         // Call explicite type conversion
         $this->convValueToType();
-
+        
         return $this;
     }
 
     /**
      * Converts the field value explicite to the var type specified
+     * 
+     * @todo Look at float, double, real!!!
      */
     private function convValueToType()
     {
@@ -182,7 +191,7 @@ class Field implements \ArrayAccess
      *
      * Adds automatic validation check against the size.
      *
-     * @param int $size
+     * @param int $size            
      *
      * @throws InvalidArgumentException
      *
@@ -191,22 +200,22 @@ class Field implements \ArrayAccess
     public function setSize($size)
     {
         $size = (int) $size;
-
+        
         if (empty($size)) {
             Throw new InvalidArgumentException('field size cannot be zero.');
         }
-
+        
         if (! is_numeric($size)) {
             Throw new InvalidArgumentException('Only numbers are allowed as field size.');
         }
-
+        
         $this->size = $size;
-
+        
         $this->validate[] = [
             'max',
             $size
         ];
-
+        
         return $this;
     }
 
@@ -223,14 +232,14 @@ class Field implements \ArrayAccess
     /**
      * Sets primary flag.
      *
-     * @param bool $primary
+     * @param bool $primary            
      *
      * @return \Core\Lib\Data\Field
      */
     public function setPrimary($primary)
     {
         $this->primary = (bool) $primary;
-
+        
         return $this;
     }
 
@@ -243,7 +252,7 @@ class Field implements \ArrayAccess
     public function getValue()
     {
         $this->filter();
-
+        
         return $this->value;
     }
 
@@ -252,7 +261,7 @@ class Field implements \ArrayAccess
      *
      * Takes care of serialized data.
      *
-     * @param mixed $value
+     * @param mixed $value            
      *
      * @return \Core\Lib\Data\Field
      */
@@ -263,34 +272,33 @@ class Field implements \ArrayAccess
             $this->serialize = true;
             $value = unserialize($value);
         }
-
+        
         $this->value = $value;
-
+        
         if (! empty($type)) {
-
+            
             // Set field type
             $this->setType($type);
-        }
-        else {
-
+        } else {
+            
             // Call explicite type conversion
             $this->convValueToType();
         }
-
+        
         return $this;
     }
 
     /**
      * Sets the control to use when field used in displayfunctions.
      *
-     * @param string $control_type
+     * @param string $control_type            
      *
      * @return \Core\Lib\Data\Field
      */
     public function setControl($control_type)
     {
         $this->control = $control_type;
-
+        
         return $this;
     }
 
@@ -307,19 +315,19 @@ class Field implements \ArrayAccess
     /**
      * Sets fields default value.
      *
-     * @param mixed $default_value
+     * @param mixed $default_value            
      *
      * @return \Core\Lib\Data\Field
      */
     public function setDefault($default_value)
     {
         $this->default = $default_value;
-
+        
         // @TODO Remember this when setting default values over 0
         if (empty($this->value)) {
             $this->value = $default_value;
         }
-
+        
         return $this;
     }
 
@@ -346,8 +354,9 @@ class Field implements \ArrayAccess
     /**
      * Sets validation rule by resetting existing rules.
      *
-     * @param string|array $rule Validation rule
-     *
+     * @param string|array $rule
+     *            Validation rule
+     *            
      * @return \Core\Lib\Data\Field
      */
     public function setValidation($rule)
@@ -355,17 +364,18 @@ class Field implements \ArrayAccess
         if (! is_array($rule)) {
             $rule = (array) $rule;
         }
-
+        
         $this->validate = $rule;
-
+        
         return $this;
     }
 
     /**
      * Adds validation rule to already exsiting rules.
      *
-     * @param string|array $rule Validation rule
-     *
+     * @param string|array $rule
+     *            Validation rule
+     *            
      * @return \Core\Lib\Data\Field
      */
     public function addValidation($rule)
@@ -374,11 +384,10 @@ class Field implements \ArrayAccess
             foreach ($rule as $val) {
                 $this->validate[] = $val;
             }
+        } else {
+            $this->validate[] = $rule;
         }
-        else {
-	        $this->validate[] = $rule;
-        }
-
+        
         return $this;
     }
 
@@ -395,21 +404,21 @@ class Field implements \ArrayAccess
     /**
      * Set serialize flag
      *
-     * @param bool $serialize
+     * @param bool $serialize            
      *
      * @return \Core\Lib\Data\Field
      */
     public function setSerialize($serialize)
     {
         $this->serialize = (bool) $serialize;
-
+        
         return $this;
     }
 
     /**
      * Set filter statements for the field.
      *
-     * @param string|array $filter
+     * @param string|array $filter            
      *
      * @return \Core\Lib\Data\Field
      */
@@ -420,14 +429,14 @@ class Field implements \ArrayAccess
         }
         
         $this->filter = $filter;
-
+        
         return $this;
     }
 
     /**
      * Adds a filter to the field
      *
-     * @param string|array $filter
+     * @param string|array $filter            
      *
      * @return \Core\Lib\Data\Field
      */
@@ -437,11 +446,10 @@ class Field implements \ArrayAccess
             foreach ($filter as $val) {
                 $this->filter[] = $val;
             }
-        }
-        else {
+        } else {
             $this->filter[] = $filter;
-        }        
-
+        }
+        
         return $this;
     }
 
@@ -466,21 +474,21 @@ class Field implements \ArrayAccess
     public function filter()
     {
         if (! empty($this->filter)) {
-
+            
             $var = [
                 'data' => $this->value
             ];
-
+            
             foreach ($this->filter as $filter) {
-
+                
                 $args = [
                     'data' => $filter
                 ];
-
+                
                 $this->value = filter_var_array($var, $args)['data'];
             }
         }
-
+        
         return $this;
     }
 
@@ -498,11 +506,11 @@ class Field implements \ArrayAccess
         if (is_string($this->value)) {
             return strlen($this->value);
         }
-
+        
         if (is_numeric($this->value)) {
             return $this->value;
         }
-
+        
         if (is_array($this->value)) {
             return count($this->value);
         }
@@ -519,9 +527,13 @@ class Field implements \ArrayAccess
     {
         if (is_null($offset)) {
             Throw new InvalidArgumentException('Anonymous data field access is not allowed. Provide a field name.');
-        }
-        else {
-            $this->$offset = $value;
+        } else {
+            
+            if (property_exists(__CLASS__, $offset)) {
+                $this->$offset = $value;
+            } else {
+                $this->custom_properties[$offset] = $value;
+            }
         }
     }
 
@@ -532,7 +544,15 @@ class Field implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
-        return isset($this->$offset) && ! empty($this->$offset);
+        if (isset($this->$offset)) {
+            return ! empty($this->$offset);
+        }
+        
+        if (isset($this->custom_properties[$offset])) {
+            return ! empty($this->custom_properties[$offset]);
+        }
+        
+        return false;
     }
 
     /**
@@ -542,7 +562,14 @@ class Field implements \ArrayAccess
      */
     public function offsetUnset($offset)
     {
-        unset($this->$offset);
+        if (isset($this->$offset)) {
+            unset($this->$offset);
+            return;
+        }
+        
+        if (isset($this->custom_properties[$offset])) {
+            unset($this->custom_properties[$offset]);
+        }
     }
 
     /**
@@ -556,8 +583,9 @@ class Field implements \ArrayAccess
     {
         if (isset($this->$offset)) {
             return $this->$offset;
-        }
-        else {
+        } elseif (isset($this->custom_properties[$offset])) {
+            return $this->custom_properties[$offset];
+        } else {
             Throw new InvalidArgumentException('Field property "' . $offset . '" does not exists.');
         }
     }
