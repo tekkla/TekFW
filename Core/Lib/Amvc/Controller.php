@@ -341,7 +341,8 @@ class Controller extends MvcAbstract
             }
             
             return $content;
-        } else {
+        }
+        else {
             
             // Without view rendering we return the return value send from called controller action
             return $return;
@@ -360,9 +361,10 @@ class Controller extends MvcAbstract
      *            Array of parameter to be used in action call
      * @param string $selector
      *            Optional jQuery selector to html() the result.
-     *            Can be overridden by setAjaxTarget() method
+     *            Can be overridden by setAjaxTarget() method.
+     *            Default: '#content'
      */
-    final public function ajax($action = 'Index', $params = [], $selector = '')
+    final public function ajax($action = 'Index', $params = [], $selector = '#content')
     {
         $content = $this->run($action, $params);
         
@@ -371,7 +373,7 @@ class Controller extends MvcAbstract
             $this->ajax_command->setArgs($content);
             $this->ajax_command->setId(get_called_class() . '::' . $action);
             
-            if ($selector) {
+            if (! $this->ajax_command->getSelector() && $selector) {
                 $this->ajax_command->setSelector($selector);
             }
             
@@ -442,7 +444,8 @@ class Controller extends MvcAbstract
                 foreach ($func as $function) {
                     $this->di->invokeMethod($this, $function, $this->router->getAllParams());
                 }
-            } else {
+            }
+            else {
                 $this->di->invokeMethod($this, $func, $this->router->getAllParams());
             }
         }
@@ -474,7 +477,8 @@ class Controller extends MvcAbstract
     {
         if ($this->router->isAjax()) {
             $this->ajax->refresh($url);
-        } else {
+        }
+        else {
             $this->redirectExit($url);
         }
     }
@@ -519,7 +523,8 @@ class Controller extends MvcAbstract
             if (isset($this->access['*'])) {
                 if (! is_array($this->access['*'])) {
                     $perm[] = $this->access['*'];
-                } else {
+                }
+                else {
                     $perm += $this->access['*'];
                 }
             }
@@ -528,7 +533,8 @@ class Controller extends MvcAbstract
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
                     $perm[] = $this->access[$this->action];
-                } else {
+                }
+                else {
                     $perm += $this->access[$this->action];
                 }
             }
@@ -595,9 +601,11 @@ class Controller extends MvcAbstract
             foreach ($arg1 as $var => $value) {
                 $this->view->setVar($var, $value);
             }
-        } elseif (isset($arg2)) {
+        }
+        elseif (isset($arg2)) {
             $this->view->setVar($arg1, $arg2);
-        } else {
+        }
+        else {
             Throw new InvalidArgumentException('The vars to set are not correct.', 1001);
         }
         
@@ -630,7 +638,7 @@ class Controller extends MvcAbstract
         $form = $this->di->get('core.content.html.factory')->create('FormDesigner\FormDesigner');
         
         $form->setAppName($this->app->getName());
-        $form->setControlName($this->name);
+        $form->setControllerName($this->name);
         $form->setLabelPrefix($this->uncamelizeString($this->getName()) . '_');
         
         if ($container !== null) {
