@@ -3,6 +3,7 @@ namespace Core\Lib\Traits;
 
 use Core\Lib\Amvc\App;
 use Core\Lib\Errors\Exceptions\RuntimeException;
+use Core\Lib\Http\Router;
 
 /**
  * UrlTrait.php
@@ -19,16 +20,18 @@ trait UrlTrait
     /**
      * Generates url by using routename and optional prameters.
      *
-     * @param string $route Name of route to compile
-     * @param array $params Optional parameter list
+     * @param string $route
+     *            Name of route to compile
+     * @param array $params
+     *            Optional parameter list
      *
      * @throws RuntimeException
      *
      * @return string
      */
-    protected function url($route, Array $params = [], $app = '')
+    protected function url($route, Array $params = [], $app = '', $append_baseurl = true)
     {
-        global $di;
+        static $router;
 
         if (empty($app)) {
 
@@ -55,6 +58,16 @@ trait UrlTrait
             $route = $app . '_' . $route;
         }
 
-        return $this->di->get('core.http.router')->url($route, $params);
+        if (!$router instanceof Router) {
+            $router = \Core\Lib\Di::getInstance()->get('core.http.router');
+        }
+
+        $url = $router->url($route, $params);
+
+        if ($append_baseurl) {
+            $url = BASEURL . $url;
+        }
+
+        return $url;
     }
 }
