@@ -4,6 +4,7 @@ namespace Core\Lib\Ajax;
 use Core\Lib\Content\Message;
 use Core\Lib\IO\Files;
 use Core\Lib\Errors\Exceptions\AjaxException;
+use Core\Lib\Cfg;
 
 /**
  * Ajax.php
@@ -34,10 +35,17 @@ class Ajax
      */
     private $files;
 
-    public function __construct(Message $message, Files $files)
+    /**
+     *
+     * @var Cfg
+     */
+    private $cfg;
+
+    public function __construct(Message $message, Files $files, Cfg $cfg)
     {
         $this->message = $message;
         $this->files = $files;
+        $this->cfg = $cfg;
     }
 
     /**
@@ -112,7 +120,7 @@ class Ajax
                 }
 
                 // Fadeout message?
-                if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                if ($this->cfg->data['Core']['js.style.fadeout_time'] > 0 && $msg->getFadeout()) {
                     $html .= ' fadeout';
                 }
 
