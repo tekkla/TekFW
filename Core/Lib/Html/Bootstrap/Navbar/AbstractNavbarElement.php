@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Html\Bootstrap\Navbar;
 
-use Core\Lib\Errors\Exceptions\HtmlException;
+use Core\Lib\Html\HtmlException;
 
 /**
  * Abstract NavbarElement

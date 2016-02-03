@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Html\FormDesigner;
 
-use Core\Lib\Errors\Exceptions\HtmlException;
+use Core\Lib\Html\HtmlException;
 
 /**
  * HtmlException.php

@@ -2,14 +2,14 @@
 namespace Core\Lib\Html\Bootstrap\Navbar;
 
 use Core\Lib\Html\Elements\Nav;
-use Core\Lib\Errors\Exceptions\HtmlException;
+use Core\Lib\Html\HtmlException;
 
 /**
- * Navbar object
+ * Navbar.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2016
  * @license MIT
- * @copyright 2015 by author
  */
 class Navbar extends Nav
 {
@@ -56,9 +56,10 @@ class Navbar extends Nav
     ];
 
     /**
-     * Sets or gets fixed to top flag.
+     * Sets or gets fixed to top flag
      *
-     * @param bool $fixed_to_top
+     * @param string $position
+     *            Optional position of navbar which also controls the fixed displaymode. (Default: 'top')
      *
      * @return \Core\Lib\Html\Bootstrap\Navbar\Navbar|boolean
      */
@@ -69,7 +70,7 @@ class Navbar extends Nav
             'bottom'
         ];
 
-        if (!in_array($position, $positions)) {
+        if (! in_array($position, $positions)) {
             Throw new HtmlException(sprintf('They type "%s" is not a valid navbar elementtype. Allowed are %s.', $position, implode(', ', $positions)));
         }
 
@@ -90,8 +91,7 @@ class Navbar extends Nav
         if (isset($fluid)) {
             $this->fluid = (bool) $fluid;
             return $this;
-        }
-        else {
+        } else {
             return $this->fluid;
         }
     }
@@ -108,8 +108,7 @@ class Navbar extends Nav
         if (isset($collapsible)) {
             $this->collapsible = (bool) $collapsible;
             return $this;
-        }
-        else {
+        } else {
             return $this->collapsible;
         }
     }
@@ -220,15 +219,13 @@ class Navbar extends Nav
                 $html .= '
 					</ul>
 				</li>';
-            }
-            else {
+            } else {
 
                 $url = $item->getUrl();
 
                 if ($url) {
                     $html .= '<li><a href="' . $url . '">' . $item->getText() . '</a></li>';
-                }
-                else {
+                } else {
                     $html .= '<li><a href="#" onClick="return false">' . $item->getText() . '</a></li>';
                 }
             }
