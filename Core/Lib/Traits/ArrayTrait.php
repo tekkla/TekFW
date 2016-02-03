@@ -25,7 +25,7 @@ trait ArrayTrait
      *            Key to search and insert after
      * @param number $position
      *            Position after the found key to insert into
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return array
@@ -35,30 +35,30 @@ trait ArrayTrait
         if (! is_array($array)) {
             throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
-        
+
         $counter = 0;
         $keylist = array_keys($array);
-        
+
         foreach ($keylist as $key) {
             if ($key == $search) {
                 break;
             }
             $counter ++;
         }
-        
+
         $counter += $position;
-        
+
         $array = array_slice($array, 0, $counter, true) + $insert + array_slice($array, $counter, null, true);
-        
+
         return $array;
     }
 
     /**
      * Slices an array at the search point and returns both slices.
      *
-     * @param array $array            
-     * @param string $search            
-     * @param number $position            
+     * @param array $array
+     * @param string $search
+     * @param number $position
      *
      * @throws InvalidArgumentException
      *
@@ -69,20 +69,20 @@ trait ArrayTrait
         if (! is_array($array)) {
             throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
-        
+
         $counter = 0;
         $keylist = array_keys($array);
-        
+
         foreach ($keylist as $key) {
             if ($key == $search) {
                 break;
             }
-            
+
             $counter ++;
         }
-        
+
         $counter += $position;
-        
+
         return [
             array_slice($array, 0, $counter, true),
             array_slice($array, $counter, null, true)
@@ -94,7 +94,7 @@ trait ArrayTrait
      *
      * @param array $array
      *            The array to check
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return boolean
@@ -104,11 +104,11 @@ trait ArrayTrait
         if (! is_array($array)) {
             Throw new InvalidArgumentException('ArrayTrait::arrayIsAssoc() : You can only check arrays to be associative.');
         }
-        
+
         if (empty($array)) {
             return false;
         }
-        
+
         return (bool) count(array_filter(array_keys($array), 'is_string'));
     }
 
@@ -123,13 +123,13 @@ trait ArrayTrait
      *            With this optional flag and a set __preserve key in the array the array will be still flattended but
      *            also be stored as array with an ending .array key. Those arrays will not be flattened further more.
      *            This means any nesting array will stay arrays in this array.
-     *            
+     *
      * @return string|array
      */
     function arrayFlatten(array $array, $prefix = '', $glue = '.', $preserve_flagged_arrays = false)
     {
         $result = [];
-        
+
         foreach ($array as $key => $value) {
 
             // Subarrray handling needed?
@@ -140,7 +140,7 @@ trait ArrayTrait
                     $result[$prefix . $key . $glue . 'array'] = $value;
                     unset($value['__preserve']);
                 }
-                
+
                 // Flatten the array
                 $result = $result + $this->arrayFlatten($value, $prefix . $key . $glue, $glue, $preserve_flagged_arrays);
             } else {
