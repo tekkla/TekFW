@@ -4,6 +4,7 @@ namespace Core\Lib\Http;
 use Core\Lib\Data\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Security\Security;
+use Core\Lib\Router\Router;
 
 /**
  * Post.php
@@ -156,8 +157,8 @@ class Post
             $key = $this->router->getController();
         }
 
-        $app_small = $this->uncamelizeString($app);
-        $key_small = $this->uncamelizeString($key);
+        $app_small = $this->stringUncamelize($app);
+        $key_small = $this->stringUncamelize($key);
 
         // Return false on missing data
         if (! isset($_POST[$app_small][$key_small])) {
