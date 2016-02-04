@@ -1,9 +1,6 @@
 <?php
 namespace Core\Lib\Data\Connectors\Db;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Errors\Exceptions\RuntimeException;
-
 /**
  * Connection.php
  *
@@ -15,49 +12,42 @@ class Connection
 {
 
     /**
-     * Databasename
      *
      * @var string
      */
     private $db;
 
     /**
-     * PDO Driver
      *
      * @var string
      */
     private $driver = 'mysql';
 
     /**
-     * DB host
      *
      * @var string
      */
     private $host = 'localhost';
 
     /**
-     * Serverport
      *
      * @var int
      */
     private $port = 3306;
 
     /**
-     * Username
      *
      * @var string
      */
     private $user = '';
 
     /**
-     * Password
      *
      * @var string
      */
     private $password = '';
 
     /**
-     * Connection options
      *
      * @var array
      */
@@ -69,7 +59,25 @@ class Connection
      */
     private $dbh = null;
 
-    function __construct($db, $driver = 'mysql', $host = 'localhost', $port = 3306, $user = '', $password = '', $options = [])
+    /**
+     * Constructor
+     *
+     * @param string $db
+     *            Name of database to connet to
+     * @param string $driver
+     *            Optional Name of the PDO driver (Default: 'mysql')
+     * @param string $host
+     *            Optional host the database lies on (Default: 'localhost')
+     * @param number $port
+     *            Optional port of the database host (Default: 3306)
+     * @param string $user
+     *            Optional username to us for connection (Default: 'root')
+     * @param string $password
+     *            Optional passwort to use for connection (Default empty)
+     * @param array $options
+     *            Optional array of options to use for connection (Default: empty)
+     */
+    function __construct($db, $driver = 'mysql', $host = 'localhost', $port = 3306, $user = 'root', $password = '', $options = [])
     {
         $this->db = $db;
         $this->host = $host;
@@ -121,10 +129,15 @@ class Connection
      * Sets name of database
      *
      * @param string $db
+     *            Name of the database
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setDb($db)
     {
         $this->db = $db;
+
+        return $this;
     }
 
     /**
@@ -138,21 +151,26 @@ class Connection
     }
 
     /**
-     * Sets PDO driver name.
+     * Sets PDO driver name
      *
      * @param string $driver
+     *            Name of the PDO driver to use
      *
-     * @throws InvalidArgumentException#
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setDriver($driver)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         if (! in_array($driver, \PDO::getAvailableDrivers())) {
-            throw new InvalidArgumentException('The PDO driver "' . $driver . '" is not installed.');
+            Throw new DbException('The PDO driver "' . $driver . '" is not installed.');
         }
 
         $this->driver = $driver;
+
+        return $this;
     }
 
     /**
@@ -166,15 +184,22 @@ class Connection
     }
 
     /**
-     * Sets db host.
+     * Sets db host
      *
-     * @param string $server
+     * @param string $host
+     *            Adress of the host the database resides on
+     *
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setHost($host)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         $this->host = $host;
+
+        return $this;
     }
 
     /**
@@ -188,14 +213,22 @@ class Connection
     }
 
     /**
+     * Sets port number to use
      *
-     * @param $port
+     * @param int $port
+     *            Portnumber to use
+     *
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setPort($port)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         $this->port = $port;
+
+        return $this;
     }
 
     /**
@@ -208,37 +241,45 @@ class Connection
     }
 
     /**
+     * Sets the username to use on connection
      *
-     * @param $user
+     * @param string $user
+     *            Username
+     *
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setUser($user)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         $this->user = $user;
+
+        return $this;
     }
 
     /**
+     * Sets passwort to use
      *
-     * @return the string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    /**
+     * @param string $password
+     *            The password
      *
-     * @param $password
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setPassword($password)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         $this->password = $password;
+
+        return $this;
     }
 
     /**
+     * Returns set connection options
      *
      * @return the array
      */
@@ -251,22 +292,30 @@ class Connection
      * Sets connection options
      *
      * @param array $options
+     *            Array of connection options
+     *
+     * @throws DbException
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Connection
      */
     public function setOptions(array $options)
     {
-        $this->checkActiveConnection();
+        $this->errorOnActiveConnection();
 
         $this->options = $options;
+
+        return $this;
     }
 
     /**
+     * Throws exception on an active databasehandler connection
      *
-     * @throws RuntimeException
+     * @throws DbException
      */
-    private function checkActiveConnection()
+    private function errorOnActiveConnection()
     {
         if ($this->dbh !== null) {
-            Throw new RuntimeException('You cannot change databse connection properties while the connection is active.');
+            Throw new DbException('You cannot change databse connection properties while the connection is active.');
         }
     }
 }
