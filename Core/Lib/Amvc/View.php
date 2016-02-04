@@ -1,8 +1,6 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-
 /**
  * View.php
  *
@@ -23,7 +21,10 @@ class View extends MvcAbstract
     /**
      * Making the contructor private to only allow object creation by Factory method
      *
+     * @param string $name
+     *            Objects name
      * @param string $app
+     *            Related App object
      */
     public final function __construct($name, App $app)
     {
@@ -49,97 +50,112 @@ class View extends MvcAbstract
     }
 
     /**
-     * Passes a value by name to the view.
-     * If $val is an obect, it will be checked for a build() method.
+     * Passes a value by name to the view
+     *
+     * If $val is an obect, it will be checked for a build() and a getArray() method.
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
-     * @param string $key
-     * @param
-     *            $val
+     * @param string $name
+     *            The name of the var
+     * @param mixed $val
+     *            The vars value
+     *
+     * @return \Core\Lib\Amvc\View
      */
-    public final function setVar($key, $val)
+    public final function setVar($name, $val)
     {
         // Handle objects
         if (is_object($val)) {
 
-            // Handle buildable objects
-            if (method_exists($val, 'build')) {
-                $val = $val->build();
-            }
+            switch (true) {
 
-            // Handle data container
-            elseif (method_exists($val, 'getArray')) {
-                $val = $val->getArray();
-            }  // Handle all other objects
-else {
-                $val = get_object_vars($val);
+                // Handle buildable objects
+                case method_exists($val, 'build'):
+                    $val = $val->build();
+                    break;
+
+                // Handle data container
+                case method_exists($val, 'getArray'):
+                    $val = $val->getArray();
+                    break;
+
+                // Handle all other objects
+                default:
+                    $val = get_object_vars($val);
+                    break;
             }
         }
 
         // Another lazy thing. It's for accessing vars in the view by ->var_name
-        $this->__magic_vars[$key] = $val;
+        $this->__magic_vars[$name] = $val;
 
         return $this;
     }
 
     /**
-     * Returns the value of a set var.
+     * Returns the value of a set var
      *
      * Nearly the same as magic method __get() but in this method will throw an
-     * InvalidArgumentException when var does not exist.
+     * ViewException when var does not exist.
      *
      * @param string $name
      *
-     * @throws InvalidArgumentException
+     * @throws ViewException
      *
      * @return mixed
      */
     final public function getVar($name)
     {
         if (! array_key_exists($name, $this->__magic_vars)) {
-            Throw new InvalidArgumentException(sprintf('The requested var "%s" does not exist in current view.', $name));
+            Throw new ViewException(sprintf('The requested var "%s" does not exist in current view.', $name));
         }
 
         return $this->__magic_vars[$name];
     }
 
     /**
-     * Checks if the $var exists in the view.
+     * Checks if the $name exists in the view
      *
-     * @param string $var
+     * @param string $name
+     *            The vars name
+     *
      * @return boolean
      */
-    public final function isVar($var)
+    public final function isVar($name)
     {
-        return isset($this->__magic_vars[$var]);
+        return isset($this->__magic_vars[$name]);
     }
 
     /**
      * Magic method for setting the view vars
      *
-     * @param string $var
-     * @param mixed $val0
+     * @param string $name
+     *            The name of the var
+     * @param mixed $val
+     *            The value to set
      */
-    public final function __set($var, $val)
+    public final function __set($name, $val)
     {
         // prevent DI from getting put into the views vars array
-        if ($var == 'di') {
+        if ($name == 'di') {
             $this->di = $val;
             return;
         }
 
-        $this->setVar($var, $val);
+        $this->setVar($name, $val);
     }
 
     /**
      * Magic method for accessing the view vars
      *
-     * @param string $var
+     * @param string $name
+     *            The name of the var
+     *
      * @return Ambigous <boolean, multitype
      */
-    public final function __get($var)
+    public final function __get($name)
     {
-        return isset($this->__magic_vars[$var]) ? $this->__magic_vars[$var] : 'var:' . $var;
+        return isset($this->__magic_vars[$name]) ? $this->__magic_vars[$name] : 'var:' . $name;
     }
 
     /**
@@ -153,7 +169,7 @@ else {
     }
 
     /**
-     * Returns a dump of all set vars.
+     * Returns a dump of all set vars
      *
      * @return string
      */
@@ -169,8 +185,9 @@ else {
      * Shorthand method für htmlE() or htmlS().
      *
      * @param string|number $val
+     *            The value to encode
      *
-     * @throws InvalidArgumentException
+     * @throws ViewException
      *
      * @return string
      */
@@ -183,22 +200,23 @@ else {
                 return $this->htmlS($val);
         }
 
-        Throw new InvalidArgumentException(sprintf('Mode "%s" is a not supported View::html() output mode.', $mode));
+        Throw new ViewException(sprintf('Mode "%s" is a not supported View::html() output mode.', $mode));
     }
 
     /**
-     * Wrapper method for encoding a value by htmlspecialchars($var, ENT_COMPAT, 'UTF-8')
+     * Wrapper method for encoding a value by htmlspecialchars($name, ENT_COMPAT, 'UTF-8')
      *
-     * @param string|number $var
+     * @param string|number $val
+     *            The value to encode
      *
-     * @throws InvalidArgumentException
+     * @throws ViewException
      *
      * @return string
      */
     protected function htmlS($val)
     {
         if (is_array($val) || is_object($val)) {
-            Throw new InvalidArgumentException('It is not allowed to uses arrays or objects for htmlS() output.');
+            Throw new ViewException('It is not allowed to uses arrays or objects for htmlS() output.');
         }
 
         return htmlspecialchars($val, ENT_COMPAT, 'UTF-8');
@@ -208,15 +226,16 @@ else {
      * Wrapper method for encoding a value by htmlenteties($val, ENT_COMPAT, 'UTF-8')
      *
      * @param string|number $val
+     *            The value to encode
      *
-     * @throws InvalidArgumentException
+     * @throws ViewException
      *
      * @return string
      */
     protected function htmlE($val)
     {
         if (is_array($val) || is_object($val)) {
-            Throw new InvalidArgumentException('It is not allowed to uses arrays or objects for htmlE() output.');
+            Throw new ViewException('It is not allowed to uses arrays or objects for htmlE() output.');
         }
 
         return htmlentities($val, ENT_COMPAT, 'UTF-8');
