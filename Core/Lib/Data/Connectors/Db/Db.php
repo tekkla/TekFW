@@ -2,10 +2,10 @@
 namespace Core\Lib\Data\Connectors\Db;
 
 // Data Libs
+use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\Connectors\ConnectorAbstract;
 use Core\Lib\Data\Connectors\Db\Connection;
-use Core\Lib\Data\Connectors\Db\QueryBuilder;
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\QueryBuilder\QueryBuilder;
 
 /**
  * Database connector
