@@ -11,9 +11,9 @@ var coreFw = {
 
         // Bind error popover
         $('.form-control[data-error]').coreErrorPop();
+        
+     	$('[data-toggle="popover"]').popover();
 
-        // Bind selectpicker
-        $('.selectpicker').selectpicker();
 
         // beautifiying xdebug oputput including ajax return values add styling
         // hooks to any XDEBUG output
@@ -26,9 +26,24 @@ var coreFw = {
         $('.fadeout').delay(fadeout_time).slideUp(800, function() {
             $(this).remove();
         });
-
-        // $("#sortable tbody").sortable();
-        // $("#sortable tbody").disableSelection();
+   
+        
+        $(".sortable tbody").sortable({
+            axis: 'y',
+            update: function(event, ui) {
+                
+                var data = $(this).sortable('serialize');
+                
+                if ($(this).data('url') !== undefined) {
+                    // POST to server using $.post or $.ajax
+                    $.ajax({
+                        data: data,
+                        type: 'POST',
+                        url: $(this).data('url') + '/ajax'
+                    });
+                }
+            }
+        });
 
     },
 
@@ -161,7 +176,7 @@ var coreFw = {
     // Json parser for Ext ajax response
     // ----------------------------------------------------------------------------
     parseJSON : function(json) {
-
+        
         $.each(json, function(type, stack) {
 
             // DOM manipulations
