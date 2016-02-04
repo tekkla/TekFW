@@ -43,7 +43,7 @@ class FormGroup extends Div
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->stringCamelize($control) . 'Control');
         
         // Inject html factory for controls which are creating html controls by themself
-        $control->factory = $this->di->get('core.content.html.factory');
+        $control->factory = $this->di->get('core.html.factory');
         
         // set contols name
         if (! empty($name)) {
@@ -100,7 +100,7 @@ class FormGroup extends Div
      */
     public function &addElement($element, $args = [])
     {
-        $element = $this->di->get('core.content.html.factory')->create($element, $args);
+        $element = $this->di->get('core.html.factory')->create($element, $args);
         
         $this->elementFactory('factory', $element);
         
