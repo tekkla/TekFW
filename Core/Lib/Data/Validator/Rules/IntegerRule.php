@@ -22,7 +22,7 @@ class IntegerRule extends RuleAbstract
         $result = is_int($this->value);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_integer');
+            $this->msg = $this->text('validator.integer');
         }
     }
 }

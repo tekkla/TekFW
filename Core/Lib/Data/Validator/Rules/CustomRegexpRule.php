@@ -27,7 +27,7 @@ class CustomRegexpRule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_customregex');
+            $this->msg = $this->text('validator.customregex');
         }
     }
 }

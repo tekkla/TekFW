@@ -28,7 +28,7 @@ class EmptyRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = $this->txt('validator_empty');
+            $this->msg = $this->text('validator.empty');
         }
     }
 }

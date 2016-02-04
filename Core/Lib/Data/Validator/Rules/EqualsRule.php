@@ -31,7 +31,7 @@ class EqualsRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = $this->txt('validator_equals');
+            $this->msg = $this->text('validator.equals');
         }
     }
 }

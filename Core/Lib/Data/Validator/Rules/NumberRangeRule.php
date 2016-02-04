@@ -25,7 +25,7 @@ class NumberRangeRule extends RuleAbstract
         $result = $this->value >= $min && $this->value <= $max;
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_numberrange'), $min, $max);
+            $this->msg = sprintf($this->text('validator.numberrange'), $min, $max);
         }
     }
 }

@@ -27,7 +27,7 @@ class IpV6Rule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_ipv4');
+            $this->msg = $this->text('validator.ipv4');
         }
     }
 }

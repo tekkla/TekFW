@@ -27,7 +27,7 @@ class TxtLengthBetweenRule extends RuleAbstract
         $result = strlen($value) >= $min && strlen($value) <= $max;
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_textrange'), $min, $max, strlen($this->value));
+            $this->msg = sprintf($this->text('validator.textrange'), $min, $max, strlen($this->value));
         }
     }
 }

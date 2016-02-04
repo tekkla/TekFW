@@ -24,7 +24,7 @@ class NumberMinRule extends RuleAbstract
         $result = $this->value >= $min;
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_numbermin'), $min);
+            $this->msg = sprintf($this->text('validator.numbermin'), $min);
         }
     }
 }

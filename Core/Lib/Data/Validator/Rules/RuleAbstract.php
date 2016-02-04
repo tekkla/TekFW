@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Validator\Rules;
 
-use Core\Lib\Traits\TextTrait;
+use Core\Lib\Language\TextTrait;
 use Core\Lib\Data\Validator\Validator;
 
 /**

@@ -60,7 +60,7 @@ class CompareRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_compare'), $this->value, $to_compare_with, $mode);
+            $this->msg = sprintf($this->text('validator.compare'), $this->value, $to_compare_with, $mode);
         }
     }
 }

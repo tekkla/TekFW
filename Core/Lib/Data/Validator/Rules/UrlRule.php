@@ -27,7 +27,7 @@ class UrlRule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_url');
+            $this->msg = $this->text('validator.url');
         }
     }
 }

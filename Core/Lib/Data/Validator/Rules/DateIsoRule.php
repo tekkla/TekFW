@@ -40,7 +40,7 @@ class DateIsoRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = $this->txt('validator_date_iso');
+            $this->msg = $this->text('validator.date_iso');
         }
     }
 }

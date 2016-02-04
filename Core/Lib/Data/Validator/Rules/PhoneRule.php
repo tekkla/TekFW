@@ -28,7 +28,7 @@ class PhoneRule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_phone');
+            $this->msg = $this->text('validator.phone');
         }
     }
 }
