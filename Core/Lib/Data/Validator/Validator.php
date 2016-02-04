@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Validator;
 
-use Core\Lib\Traits\TextTrait;
+use Core\Lib\Language\TextTrait;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Validator\Rules\RuleAbstract;
 
@@ -9,22 +9,21 @@ use Core\Lib\Data\Validator\Rules\RuleAbstract;
  * Validator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class Validator
 {
-    use TextTrait, StringTrait;
+    use TextTrait;
+    use StringTrait;
 
     /**
-     * The messages from the current check
      *
      * @var array
      */
     private $msg = [];
 
     /**
-     * Storage for loaded rule objects
      *
      * @var array
      */
@@ -40,7 +39,10 @@ final class Validator
      * Validates a value against the wanted rules.
      *
      * @param mixed $value
-     * @param string|array $rules One or more rules
+     *            The value to validate
+     * @param string|array $rules
+     *            One or more rules
+     *
      * @return multitype:
      */
     public function validate($value, $rules)
@@ -63,19 +65,19 @@ final class Validator
 
             // Array type rules are for checks where the func needs one or more parameter
             // So $rule[0] is the func name and $rule[1] the parameter.
-            // Parameters can be of type array where the elements are used as function parameters in the .. they are set.
+            // Parameters can be of type array where the elements are used as function parameters in the .. they are
+            // set.
             if (is_array($rule)) {
 
                 // Get the functionname
-                $rule_name = $this->camelizeString($rule[0]);
+                $rule_name = $this->stringCamelize($rule[0]);
 
                 // Parameters set?
                 if (isset($rule[1])) {
                     $args = ! is_array($rule[1]) ? [
                         $rule[1]
                     ] : $rule[1];
-                }
-                else {
+                } else {
                     $args = [];
                 }
 
@@ -83,9 +85,8 @@ final class Validator
                 if (isset($rule[2])) {
                     $custom_message = $rule[2];
                 }
-            }
-            else {
-                $rule_name = $this->camelizeString($rule);
+            } else {
+                $rule_name = $this->stringCamelize($rule);
                 $args = [];
                 unset($custom_message);
             }
@@ -118,7 +119,7 @@ final class Validator
 
                 // If no error message is set, use the default validator error
                 if (empty($msg)) {
-                    $msg = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
+                    $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
                 }
 
                 $this->msg[] = htmlspecialchars($msg, ENT_COMPAT, 'UTF-8');
@@ -129,7 +130,7 @@ final class Validator
     }
 
     /**
-     * Returns the last validation result.
+     * Returns the last validation result
      *
      * @return bool
      */
@@ -139,7 +140,7 @@ final class Validator
     }
 
     /**
-     * Returns the last validation msg.
+     * Returns the last validation msg
      *
      * @return array
      */
@@ -149,22 +150,33 @@ final class Validator
     }
 
     /**
-     * Creates and returns a rule object.
+     * Creates and returns a rule object
      *
      * @param string $rule_name
+     *            Name of the rule
      *
      * @return RuleAbstract
      */
     public function &createRule($rule_name)
     {
-        // Rules are singletons
+        // Rules have to be singletons
         if (! array_key_exists($rule_name, $this->rules)) {
 
-            $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
+            // Without a leading \ in the rulename it is assumened that we use a Core FW builtin rule
+            // otherwise the $rule_name points to a class somewhere outsite of the frasmworks default rules.
+            $rule_class = strpos($rule_name, '\\') == 0 ? '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule' : $rule_name;
 
+            // Create the rule obejct instance
+            $rule_object = new $rule_class($this);
+
+            // The rule object must be a child of RuleAbstract!
+            if (! $rule_object instanceof RuleAbstract) {
+                Throw new ValidatorException('Validator rules MUST BE a child of RuleAbstract');
+            }
+
+            // Add rule to the rules stack
             $this->rules[$rule_name] = new $rule_class($this);
-        }
-        else {
+        } else {
 
             // Reset existing rules
             $this->rules[$rule_name]->reset();
