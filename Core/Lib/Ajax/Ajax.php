@@ -1,9 +1,9 @@
 <?php
 namespace Core\Lib\Ajax;
 
-use Core\Lib\Content\Message;
 use Core\Lib\IO\Files;
 use Core\Lib\Cfg\Cfg;
+use Core\Lib\Page\Body\Message\Message;
 
 /**
  * Ajax.php
