@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Logging;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Http\Session;
 
@@ -53,7 +53,7 @@ class Logging
      *            
      * @return integer
      */
-    private function log($text, $type = 'general', $code = 0)
+    public function log($text, $type = 'general', $code = 0)
     {
         $time = time();
         
