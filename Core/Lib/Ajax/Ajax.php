@@ -3,23 +3,21 @@ namespace Core\Lib\Ajax;
 
 use Core\Lib\Content\Message;
 use Core\Lib\IO\Files;
-use Core\Lib\Errors\Exceptions\AjaxException;
-use Core\Lib\Cfg;
+use Core\Lib\Cfg\Cfg;
 
 /**
  * Ajax.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Ajax
 {
 
     /**
-     * Storage for ajax commands
      *
-     * @var \stdClass
+     * @var array
      */
     private $ajax = [];
 
@@ -41,6 +39,16 @@ class Ajax
      */
     private $cfg;
 
+    /**
+     * Constructor
+     *
+     * @param Message $message
+     *            Message service dependency
+     * @param Files $files
+     *            Files services dependency
+     * @param Cfg $cfg
+     *            Cfg service dependency
+     */
     public function __construct(Message $message, Files $files, Cfg $cfg)
     {
         $this->message = $message;
@@ -77,8 +85,7 @@ class Ajax
 
         if ($cmd->getType() == 'dom') {
             $this->ajax['dom'][$cmd->getSelector()][] = $ajax;
-        }
-        else {
+        } else {
             $this->ajax['act'][] = $ajax;
         }
     }
@@ -91,10 +98,12 @@ class Ajax
 
         // With each ajax request processing all currently
         // diplayed messages will be cleared.
-       /* $this->ajax['dom']['#core-message'][] = [
-            'f' => 'html',
-            'a' => ''
-        ];*/
+        /*
+         * $this->ajax['dom']['#core-message'][] = [
+         * 'f' => 'html',
+         * 'a' => ''
+         * ];
+         */
 
         // Add messages
         $messages = $this->message->getMessages();
@@ -151,7 +160,7 @@ class Ajax
     }
 
     /**
-     * Cleans the current ajax command stack.
+     * Cleans the current ajax command stack
      *
      * @return \Core\Lib\Ajax\Ajax
      */
@@ -163,10 +172,12 @@ class Ajax
     }
 
     /**
-     * Creates and returns a named ajax command.
+     * Creates and returns a named ajax command
+     *
      * Commands are split into DOM (Dom) manipulation and predifined actions (Act) to call.
      *
-     * @param string $command_name Name of command to create. Default: Dom\Html
+     * @param string $command_name
+     *            Name of command to create. Default: Dom\Html
      *
      * @throws AjaxException
      *
@@ -180,7 +191,7 @@ class Ajax
 
         $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
-        if (!$this->files->checkClassFileExists($class)) {
+        if (! $this->files->checkClassFileExists($class)) {
             Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
         }
 
