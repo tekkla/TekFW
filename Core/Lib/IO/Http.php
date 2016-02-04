@@ -1,13 +1,11 @@
 <?php
 namespace Core\Lib\IO;
 
-use Core\Lib\Errors\Exceptions\HttpException;
-
 /**
  * Http.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Http
@@ -16,10 +14,12 @@ class Http
     /**
      * Loads an url and writes the returned content to a file
      *
-     * @param string $url URL to request
-     * @param string $target Filepath to store the result
+     * @param string $url
+     *            URL to request
+     * @param string $target
+     *            Filepath to store the result
      *
-     * @throws HttpException
+     * @throws IOException
      */
     public static function saveUrlToFile($url, $target)
     {
@@ -36,19 +36,19 @@ class Http
             fclose($fp);
 
             return true;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
 
-            Throw new HttpException('Error on webload: ' . $url);
+            Throw new IOException('Error on webload: ' . $url);
 
             return false;
         }
     }
 
     /**
-     * Queries an Url
+     * Queries an Url and returns the returned data
      *
-     * @param string $url Url to load
+     * @param string $url
+     *            Url to load
      * @param number $return
      * @param number $timeout
      * @param string $lang
@@ -101,8 +101,7 @@ class Http
 
         if (! isset($statuses[$code])) {
             header($protocol . ' 500 Internal Server Error');
-        }
-        else {
+        } else {
             header($protocol . ' ' . $code . ' ' . $status[$code]);
         }
     }
