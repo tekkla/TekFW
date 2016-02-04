@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Html\FormDesigner;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Html\Form\Form;
 use Core\Lib\Html\Form\Checkbox;
@@ -144,14 +144,14 @@ final class FormDesigner extends Form
     /**
      * Injects a Container object
      *
-     * @param Container $container            
+     * @param Container $container
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function attachContainer(Container $container)
     {
         $this->container = $container;
-        
+
         return $this;
     }
 
@@ -160,7 +160,7 @@ final class FormDesigner extends Form
      *
      * @param string $size
      *            Bootstrap Grid size type aka "xs", "sm", "md" or "lg"
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
@@ -173,13 +173,13 @@ final class FormDesigner extends Form
             'md',
             'lg'
         ];
-        
+
         if (! in_array($grid_size, $sizes)) {
             Throw new InvalidArgumentException(sprintf('FormDesigner allowed grid sizes are %s. The size "%s" is not supported.', implode(', ', $sizes), $grid_size));
         }
-        
+
         $this->grid_size = $grid_size;
-        
+
         return $this;
     }
 
@@ -188,7 +188,7 @@ final class FormDesigner extends Form
      *
      * @param int $label_width
      *            Value between 1 and 12 as label width
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
@@ -198,9 +198,9 @@ final class FormDesigner extends Form
         if ($label_width < 1 || $label_width > 12) {
             Throw new InvalidArgumentException('FormDesigner label width needs to be a value between 1 and 12');
         }
-        
+
         $this->label_width = $label_width;
-        
+
         return $this;
     }
 
@@ -209,7 +209,7 @@ final class FormDesigner extends Form
      *
      * @param string $glue
      *            The glue to connect strings
-     *            
+     *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function setGlue($glue)
@@ -221,14 +221,14 @@ final class FormDesigner extends Form
     /**
      * Extends the form name and id on creation with this extensiondata
      *
-     * @param int|string $name_ext            
+     * @param int|string $name_ext
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function extendName($name_ext)
     {
         $this->name_ext = $name_ext;
-        
+
         return $this;
     }
 
@@ -238,7 +238,7 @@ final class FormDesigner extends Form
      *
      * @param string $send_mode
      *            Send mode which can be 'ajax' or 'submit'
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
@@ -249,13 +249,13 @@ final class FormDesigner extends Form
             'ajax',
             'submit'
         ];
-        
+
         if (! in_array($send_mode, $modes)) {
             Throw new InvalidArgumentException(sprintf('"%s" is not an allowed form sendmode.', $send_mode), 1000);
         }
-        
+
         $this->send_mode = $send_mode;
-        
+
         return $this;
     }
 
@@ -263,14 +263,14 @@ final class FormDesigner extends Form
      * Set prefix tp be used when creating label for a control.
      * Useful for categorized language strings.
      *
-     * @param string $label_prefix            
+     * @param string $label_prefix
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function setLabelPrefix($label_prefix)
     {
         $this->label_prefix = $label_prefix;
-        
+
         return $this;
     }
 
@@ -279,34 +279,34 @@ final class FormDesigner extends Form
      *
      * @param bool $unshift
      *            Optional flag to add group at beginning of controls array.
-     *            
+     *
      * @return FormGroup
      */
     public function &addGroup($unshift = false)
     {
         $group = $this->di->instance(__NAMESPACE__ . '\FormGroup');
-        
+
         if ($unshift == true) {
             array_unshift($this->groups, $group);
         }
         else {
             $this->groups[] = $group;
         }
-        
+
         return $group;
     }
 
     /**
      * Sets name of app to be used on element creation.
      *
-     * @param sting $app_name            
+     * @param sting $app_name
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function setAppName($app_name)
     {
         $this->app_name = $app_name;
-        
+
         return $this;
     }
 
@@ -315,13 +315,13 @@ final class FormDesigner extends Form
      *
      * @param string $controller_name
      *            Name of the controller this data is for
-     *            
+     *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function setControllerName($control_name)
     {
         $this->controller_name = $control_name;
-        
+
         return $this;
     }
 
@@ -340,11 +340,11 @@ final class FormDesigner extends Form
      *
      * @param string $size
      *            Optional Bootstrap gridsize type aka "xs", "sm", "md" or "lg". Default: 'sm'
-     *            
+     *
      * @param int $label_width
      *            Optional label with between 1 and 12. Default: 3
-     *            
-     *            
+     *
+     *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function isHorizontal($grid_size = 'sm', $label_with = '3')
@@ -352,7 +352,7 @@ final class FormDesigner extends Form
         $this->display_mode = 'h';
         $this->setGridSize($grid_size);
         $this->setLabelWidth($label_with);
-        
+
         return $this;
     }
 
@@ -364,7 +364,7 @@ final class FormDesigner extends Form
     public function isVertical()
     {
         $this->display_mode = 'v';
-        
+
         return $this;
     }
 
@@ -376,7 +376,7 @@ final class FormDesigner extends Form
     public function isInline()
     {
         $this->display_mode = 'i';
-        
+
         return $this;
     }
 
@@ -388,7 +388,7 @@ final class FormDesigner extends Form
     public function isAjax()
     {
         $this->send_mode = 'ajax';
-        
+
         return $this;
     }
 
@@ -400,7 +400,7 @@ final class FormDesigner extends Form
     public function isSubmit()
     {
         $this->send_mode = 'submit';
-        
+
         return $this;
     }
 
@@ -418,7 +418,7 @@ final class FormDesigner extends Form
     {
         // Store routename for later use
         $this->route = $route;
-        
+
         // Compile route and set url as action url
         $this->attribute['action'] = $this->url($route, $params);
     }
@@ -434,36 +434,36 @@ final class FormDesigner extends Form
         if (! isset($this->app_name)) {
             Throw new UnexpectedValueException('The FormDesigner needs a name of a related app.', 10000);
         }
-        
+
         if (! isset($this->controller_name)) {
             Throw new UnexpectedValueException('The FormDesigner needs a name for the controls,', 10000);
         }
-        
+
         $this->lower_app_name = $this->stringUncamelize($this->app_name);
         $this->controller_name = $this->stringUncamelize($this->controller_name);
-        
+
         // Create formname
         if (! $this->name) {
-            
+
             // Create control id prefix based on the model name
             $this->control_id_prefix = $this->controller_name;
-            
+
             // Create form name based on model name and possible extensions
             $this->name = $this->control_name . (isset($this->name_ext) ? $this->glue . $this->name_ext : '');
         }
         else {
             // Create control id prefix based on the provided form name
             $this->control_id_prefix = $this->name;
-            
+
             // Create form name based on th provided form name
             $this->name = $this->name . (isset($this->name_ext) ? $this->glue . $this->name_ext : '');
         }
-        
+
         // Use formname as id when not set
         if (! $this->id) {
             $this->id = str_replace($this->glue, '-', $this->name);
         }
-        
+
         // Create control name prefix
         $this->control_name_prefix = $this->lower_app_name . '[' . $this->controller_name . ']';
     }
@@ -475,19 +475,19 @@ final class FormDesigner extends Form
     {
         // Are there global and not control related errors in attached container?
         if ($this->hasContainer() && $this->container->hasErrors('@')) {
-            
+
             // Add a group on top of exiting groups
             $group = $this->addGroup(true);
-            
+
             $div = $group->addElement('Elements\Div');
             $div->addCss('alert alert-danger alert-dismissable');
-            
+
             if ($this->di->get('core.cfg')->get('Core', 'js.style.fadeout_time') > 0) {
                 $div->addCss('fadeout');
             }
-            
+
             $html = '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . implode('<br>', $this->container->getErrors('@'));
-            
+
             $div->setInner($html);
         }
     }
@@ -521,51 +521,51 @@ final class FormDesigner extends Form
         if (empty($this->groups)) {
             Throw new UnexpectedValueException('Your form has no groups to show. Add groups and try again.');
         }
-        
+
         // Create needed IDs and control names
         $this->createNames();
-        
+
         // Handle global container errors
         $this->handleGlobalContainerErrors();
-        
+
         // Handle display mode
         $this->handleDisplayMode();
-        
+
         // Control html container
         $html = '';
-        
+
         // Create hidden field with unique session token
         $html .= '<input type="hidden" name="token" value="' . $this->di->get('core.http.session')->get('token') . '">';
-        
+
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group);
         }
-        
+
         $this->setInner($html);
-        
+
         return parent::build();
     }
 
     /**
      * Recursivable method to build the created groups and the controls stroed as FormElement objects within each FormGroup object.
      *
-     * @param FormGroup $group            
+     * @param FormGroup $group
      *
      * @return string
      */
     private function buildGroup(FormGroup $group)
     {
         $html = '';
-        
+
         $elements = $group->getElements();
-        
+
         /* @var $element \Core\Lib\Html\FormDesigner\FormElement */
         foreach ($elements as $element) {
-            
+
             $content = $element->getContent();
-            
+
             switch ($element->getType()) {
-                
+
                 case 'control':
 
                     /* @var $builder \Core\Lib\Html\FormDesigner\ControlBuilder */
@@ -574,29 +574,29 @@ final class FormDesigner extends Form
                     $builder->setNamePrefix($this->control_name_prefix);
                     $builder->setIdPrefix($this->control_id_prefix);
                     $builder->setLabelPrefix($this->label_prefix);
-                    
+
                     // Any errors in container
                     if (isset($this->container)) {
-                        
+
                         $name = $content->getName();
                         $value = $this->container[$name];
-                        
+
                         if (! empty($name) && $this->container->hasErrors($name)) {
                             $builder->setErrors($this->container->getErrors($name));
                         }
-                        
+
                         // Log notice when field does not exist in container
                         if ($value === false && $content->isBound()) {
                             Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner. If you want to use a control without binding it to a container field, you have to use the "notBound()" method for this control.', $name));
                         }
-                        
+
                         switch (true) {
                             case ($content instanceof Checkbox):
                                 if ($content->getValue() == $value) {
                                     $content->isChecked();
                                 }
                                 break;
-                            
+
                             case ($content instanceof Select):
                                 if (empty($content->getValue()) && $value !== false) {
                                     $content->setValue($value);
@@ -611,46 +611,46 @@ final class FormDesigner extends Form
                                 break;
                         }
                     }
-                    
+
                     // Handle buttons
                     if ($content instanceof Button) {
-                        
+
                         // Add needed ajax data attribute
                         if ($this->getSendMode() == 'ajax') {
                             $content->addData('ajax');
                         }
-                        
+
                         // Submit buttons need the id and action of and for the form to submit
                         if ($content->isSubmit()) {
                             $content->setFormId($this->getId());
                             $content->setFormAction($this->getAttribute('action'));
                         }
                     }
-                    
+
                     $builder->setControl($content);
                     $builder->setDisplayMode($this->display_mode, $this->grid_size, $this->label_width);
-                    
+
                     // Build control
                     $html .= $builder->build();
-                    
+
                     break;
-                
+
                 case 'factory':
                     $html .= $content->build();
                     break;
-                
+
                 case 'html':
                     $html .= $content;
                     break;
-                
+
                 case 'group':
                     $html .= $this->buildGroup($content);
                     break;
             }
         }
-        
+
         $group->setInner($group->getInner() . $html);
-        
+
         return $group->build();
     }
 }
