@@ -1,3 +1,7 @@
+body {
+	padding-top: 70px;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Actionbar
@@ -51,11 +55,15 @@
 
 /*
 |--------------------------------------------------------------------------
-| To remove top or all vertical margins from elements
+| To remove top, bottom or all vertical margins from elements
 |--------------------------------------------------------------------------
 */
 .no-top-margin {
 	margin-top: 0;
+}
+
+.no-bottom-margin {
+    margin-bottom: 0;
 }
 
 .no-v-margin {
