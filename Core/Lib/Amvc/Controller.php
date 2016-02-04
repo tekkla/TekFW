@@ -10,10 +10,8 @@ use Core\Lib\Http\Cookie;
 // Security Libs
 use Core\Lib\Security\Security;
 
-// Content Libs
-use Core\Lib\Content\Content;
-use Core\Lib\Content\Message;
-use Core\Lib\Content\Menu;
+// Page Libs
+use Core\Lib\Page\Page;
 
 // HTML Libs
 use Core\Lib\Html\HtmlAbstract;
@@ -29,7 +27,6 @@ use Core\Lib\Cache\Cache;
 // AjaxLibs
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Ajax\AjaxCommandAbstract;
-
 
 // Traits
 use Core\Lib\Router\UrlTrait;
@@ -128,21 +125,9 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var Message
+     * @var Page
      */
-    protected $message;
-
-    /**
-     *
-     * @var Content
-     */
-    protected $content;
-
-    /**
-     *
-     * @var Menu
-     */
-    protected $menu;
+    protected $page;
 
     /**
      *
@@ -195,12 +180,8 @@ class Controller extends MvcAbstract
      *            Post dependency
      * @param Security $security
      *            Security dependency
-     * @param Message $message
-     *            Message dependency
-     * @param Content $content
-     *            Content dependency
-     * @param Menu $menu
-     *            Menu dependency
+     * @param Page $page
+     *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
      * @param Session $session
@@ -212,7 +193,7 @@ class Controller extends MvcAbstract
      * @param Ajax $ajax
      *            Ajax dependency
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Message $message, Content $content, Menu $menu, HtmlFactory $html, Session $session, Cookie $cookie, Cache $cache, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Page $page, HtmlFactory $html, Session $session, Cookie $cookie, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -220,9 +201,7 @@ class Controller extends MvcAbstract
         $this->router = $router;
         $this->post = $post;
         $this->security = $security;
-        $this->message = $message;
-        $this->content = $content;
-        $this->menu = $menu;
+        $this->page = $page;
         $this->html = $html;
         $this->session = $session;
         $this->cookie = $cookie;
@@ -341,7 +320,8 @@ class Controller extends MvcAbstract
             }
 
             return $content;
-        } else {
+        }
+        else {
 
             // Without view rendering we return the return value send from called controller action
             return $return;
@@ -443,7 +423,8 @@ class Controller extends MvcAbstract
                 foreach ($func as $function) {
                     $this->di->invokeMethod($this, $function, $this->router->getAllParams());
                 }
-            } else {
+            }
+            else {
                 $this->di->invokeMethod($this, $func, $this->router->getAllParams());
             }
         }
@@ -475,7 +456,8 @@ class Controller extends MvcAbstract
     {
         if ($this->router->isAjax()) {
             $this->ajax->refresh($url);
-        } else {
+        }
+        else {
             $this->redirectExit($url);
         }
     }
@@ -520,7 +502,8 @@ class Controller extends MvcAbstract
             if (isset($this->access['*'])) {
                 if (! is_array($this->access['*'])) {
                     $perm[] = $this->access['*'];
-                } else {
+                }
+                else {
                     $perm += $this->access['*'];
                 }
             }
@@ -529,7 +512,8 @@ class Controller extends MvcAbstract
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
                     $perm[] = $this->access[$this->action];
-                } else {
+                }
+                else {
                     $perm += $this->access[$this->action];
                 }
             }
@@ -596,9 +580,11 @@ class Controller extends MvcAbstract
             foreach ($arg1 as $var => $value) {
                 $this->view->setVar($var, $value);
             }
-        } elseif (isset($arg2)) {
+        }
+        elseif (isset($arg2)) {
             $this->view->setVar($arg1, $arg2);
-        } else {
+        }
+        else {
             Throw new ControllerException('The vars to set are not correct.', 1001);
         }
 
@@ -628,7 +614,7 @@ class Controller extends MvcAbstract
     final protected function getFormDesigner(Container $container = null)
     {
         /* @var $form \Core\Lib\Html\FormDesigner\FormDesigner */
-        $form = $this->di->get('core.content.html.factory')->create('FormDesigner\FormDesigner');
+        $form = $this->di->get('core.html.factory')->create('FormDesigner\FormDesigner');
 
         $form->setAppName($this->app->getName());
         $form->setControllerName($this->name);
@@ -653,7 +639,7 @@ class Controller extends MvcAbstract
      */
     final protected function getHtmlObject($object_name)
     {
-        return $this->di->get('core.content.html.factory')->create($object_name);
+        return $this->di->get('core.html.factory')->create($object_name);
     }
 
     /**

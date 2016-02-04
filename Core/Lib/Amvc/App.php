@@ -25,6 +25,7 @@ use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Cfg\CfgTrait;
+use Core\Lib\Page\Page;
 
 /**
  * App.php
@@ -142,9 +143,9 @@ class App
 
     /**
      *
-     * @var Content
+     * @var Page
      */
-    protected $content;
+    protected $page;
 
     /**
      * Permission service
@@ -174,8 +175,8 @@ class App
      *            Cfg dependency
      * @param Router $router
      *            Router dependency
-     * @param Content $content
-     *            Content dependency
+     * @param Page $page
+     *            Page dependency
      * @param Permission $permission
      *            Permission dependency
      * @param Security $security
@@ -183,13 +184,13 @@ class App
      * @param DI $di
      *            Visible DI dependency
      */
-    final public function __construct($app_name, Cfg $cfg, Router $router, Content $content, Permission $permission, Security $security, DI $di)
+    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Permission $permission, Security $security, DI $di)
     {
         // Setting properties
         $this->name = $app_name;
         $this->cfg = $cfg;
         $this->router = $router;
-        $this->content = $content;
+        $this->page = $page;
         $this->permission = $permission;
         $this->security = $security;
         $this->di = $di;
@@ -410,10 +411,8 @@ class App
             'core.router',
             'core.http.post',
             'core.sec.security',
-            'core.content.message',
-            'core.content',
-            'core.content.menu',
-            'core.content.html.factory',
+            'core.page',
+            'core.html.factory',
             'core.http.session',
             'core.http.cookie',
             'core.cache',
@@ -672,7 +671,7 @@ class App
             }
 
             // Create css file link
-            $this->content->css->link($this->cfg->data[$this->name]['url.css'] . '/' . $this->name . '.css');
+            $this->page->css->link($this->cfg->data[$this->name]['url.css'] . '/' . $this->name . '.css');
         }
 
         // Set flag for initiated css
@@ -712,7 +711,7 @@ class App
                 Throw new AppException(sprintf('App "%s" js file does not exist. Either create the js file or remove the js flag in your app mainclass.', $this->name));
             }
 
-            $this->content->js->file($this->cfg->data[$this->name]['url.js'] . '/' . $this->name . '.js');
+            $this->page->js->file($this->cfg->data[$this->name]['url.js'] . '/' . $this->name . '.js');
         }
 
         // Js method in app to run?

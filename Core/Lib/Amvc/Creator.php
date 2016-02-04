@@ -92,7 +92,7 @@ class Creator
             $name,
             'core.cfg',
             'core.router',
-            'core.content',
+            'core.page',
             'core.sec.permission',
             'core.sec.security',
             'core.di'
