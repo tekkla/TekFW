@@ -5,6 +5,7 @@ use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Data\Connectors\ConnectorAbstract;
+use Core\Lib\Data\Container\Container;
 
 /**
  * DataAdapter.php
@@ -51,7 +52,7 @@ class DataAdapter implements \IteratorAggregate
     /**
      * (non-PHPdoc)
      *
-     * @see \Core\Lib\Data\Container::getIterator()
+     * @see \Core\Lib\Data\Container\Container::getIterator()
      */
     public function getIterator()
     {
