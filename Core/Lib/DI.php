@@ -16,6 +16,12 @@ class DI implements \ArrayAccess
 {
 
     /**
+     *
+     * @var array
+     */
+    private $settings = [];
+
+    /**
      * Mapped services, factories and values
      *
      * @var array
@@ -29,17 +35,32 @@ class DI implements \ArrayAccess
      */
     private $names = [];
 
+    private static $instance = false;
+
     /**
      * Constructor
-     *
-     * @param boolean $defaults
-     *            Optional flag to map default services, factories and values. Default: true
      */
-    public function __construct($defaults = true)
+    private function __construct(array $settings)
     {
-        if ($defaults == true) {
-            $this->mapDefaults();
+        $this->settings = $settings;
+        $this->mapDefaults();
+    }
+
+    /**
+     * Creates and returns singleton instance of DI service
+     *
+     * @param array $settings
+     *            Optional settings array which is only needed once on instance creation
+     *
+     * @return \Core\Lib\DI
+     */
+    public static function getInstance(array $settings = [])
+    {
+        if (! self::$instance) {
+            self::$instance = new DI($settings);
         }
+
+        return self::$instance;
     }
 
     /**
@@ -47,8 +68,6 @@ class DI implements \ArrayAccess
      */
     private function mapDefaults()
     {
-        global $cfg;
-        
         $to_map = [
             [
                 'value',
@@ -56,42 +75,60 @@ class DI implements \ArrayAccess
                 $this
             ]
         ];
-        
+
         foreach ($to_map as $map) {
-            
+
             switch ($map[0]) {
-                
+
                 case 'value':
                     $this->mapValue($map[1], $map[2]);
                     break;
-                
+
                 case 'factory':
                     $this->mapFactory($map[1], $map[2], isset($map[3]) ? $map[3] : null);
                     break;
-                
+
                 case 'service':
                     $this->mapService($map[1], $map[2], isset($map[3]) ? $map[3] : null);
                     break;
-                
+
                 default:
                     Throw new InvalidArgumentException(sprintf('Mappingtype "%s" is not supported by DI container', $map[0]));
             }
         }
-        
+
         // == DB ===========================================================
-        $this->mapValue('db.default.driver', $cfg['db.driver']);
-        $this->mapValue('db.default.host', $cfg['db.host']);
-        $this->mapValue('db.default.port', $cfg['db.port']);
-        $this->mapValue('db.default.name', $cfg['db.name']);
-        $this->mapValue('db.default.user', $cfg['db.user']);
-        $this->mapValue('db.default.pass', $cfg['db.pass']);
+        $check = [
+            'db.driver',
+            'db.host',
+            'db.port',
+            'db.name',
+            'db.user',
+            'db.pass',
+            'db.persistent',
+            'db.errmode',
+            'db.init_command',
+            'db.prefix'
+        ];
+
+        if (! in_array($check, $this->settings)) {
+            die('Missing db config. Check settings file.');
+        }
+
+        // == DB ===========================================================
+        $this->mapValue('db.default.driver', $this->settings['db.driver']);
+        $this->mapValue('db.default.host', $this->settings['db.host']);
+        $this->mapValue('db.default.port', $this->settings['db.port']);
+        $this->mapValue('db.default.name', $this->settings['db.name']);
+        $this->mapValue('db.default.user', $this->settings['db.user']);
+        $this->mapValue('db.default.pass', $this->settings['db.pass']);
         $this->mapValue('db.default.options', [
-            \PDO::ATTR_PERSISTENT => $cfg['db.persistent'],
-            \PDO::ATTR_ERRMODE => $cfg['db.errmode'],
-            \PDO::MYSQL_ATTR_INIT_COMMAND => $cfg['db.init_command'],
+            \PDO::ATTR_PERSISTENT => $this->settings['db.persistent'],
+            \PDO::ATTR_ERRMODE => $this->settings['db.errmode'],
+            \PDO::MYSQL_ATTR_INIT_COMMAND => $this->settings['db.init_command'],
             \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1
         ]);
-        $this->mapValue('db.default.prefix', $cfg['db.prefix']);
+        $this->mapValue('db.default.prefix', $this->settings['db.prefix']);
         $this->mapService('db.default.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
             'db.default.name',
             'db.default.driver',
@@ -105,19 +142,21 @@ class DI implements \ArrayAccess
             'db.default.conn',
             'db.default.prefix'
         ]);
-        
+
         // == CONFIG =======================================================
-        $this->mapService('core.cfg', '\Core\Lib\Cfg', 'db.default');
-        
+        $this->mapService('core.cfg', '\Core\Lib\Cfg\Cfg', 'db.default');
+
+        // == ROUTER =======================================================
+        $this->mapService('core.router', '\Core\Lib\Router\Router');
+
         // == HTTP =========================================================
-        $this->mapService('core.http.router', '\Core\Lib\Http\Router');
         $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
         $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
         $this->mapService('core.http.post', '\Core\Lib\Http\Post', [
-            'core.http.router',
+            'core.router',
             'core.sec.security'
         ]);
-        
+
         // == UTILITIES ====================================================
         $this->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
         $this->mapFactory('core.util.time', '\Core\Lib\Utilities\Time');
@@ -125,7 +164,7 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.util.date', '\Core\Lib\Utilities\Date');
         $this->mapFactory('core.util.debug', '\Core\Lib\Utilities\Debug');
         $this->mapService('core.util.fire', '\FB');
-        
+
         // == SECURITY =====================================================
         $this->mapService('core.sec.security', '\Core\Lib\Security\Security', [
             'db.default',
@@ -140,7 +179,8 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.sec.users', '\Core\Lib\Security\Users', [
             'db.default',
             'core.sec.security',
-            'core.cfg'
+            'core.cfg',
+            'core.log'
         ]);
         $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
             'db.default',
@@ -153,71 +193,82 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
         $this->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
         $this->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
-        
+
         // == AMVC =========================================================
         $this->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
         $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
-        
+
         // == CACHE ========================================================
         $this->mapService('core.cache', '\Core\Lib\Cache\Cache', [
             'core.cfg'
         ]);
         $this->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
-        
+
         // == IO ===========================================================
         $this->mapService('core.io.files', '\Core\Lib\IO\Files', [
             'core.log',
             'core.cfg'
         ]);
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
-        
+
         // == LOGGING========================================================
         $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
             'db.default',
             'core.http.session'
         ]);
-        
+
+        // == MAILER =======================================================
+        $this->mapService('core.mailer', '\Core\Lib\Mailer\Mailer', [
+            'core.cfg',
+            'core.log'
+        ]);
+
         // == DATA ==========================================================
         $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
-        
+
+        // == LANGUAGE ======================================================
+        $this->mapService('core.language', '\Core\Lib\Language\Language');
+
         // == CONTENT =======================================================
-        $this->mapService('core.content', '\Core\Lib\Content\Content', [
-            'core.http.router',
+        $this->mapService('core.page', '\Core\Lib\Page\Page', [
+            'core.router',
             'core.cfg',
             'core.amvc.creator',
-            'core.content.html.factory',
-            'core.content.nav',
-            'core.content.css',
-            'core.content.js',
-            'core.content.message'
+            'core.html.factory',
+            'core.page.body.nav',
+            'core.page.head.css',
+            'core.page.head.js',
+            'core.page.body.message'
         ]);
-        $this->mapService('core.content.lang', '\Core\Lib\Content\Language');
-        $this->mapFactory('core.content.css', '\Core\Lib\Content\Css', [
+        $this->mapFactory('core.page.head.css', '\Core\Lib\Page\Head\Css\Css', [
             'core.cfg',
             'core.cache'
         ]);
-        $this->mapFactory('core.content.js', '\Core\Lib\Content\Javascript', [
+        $this->mapFactory('core.page.head.js', '\Core\Lib\Page\Head\Javascript\Javascript', [
             'core.cfg',
-            'core.http.router',
+            'core.router',
             'core.cache'
         ]);
-        $this->mapService('core.content.message', '\Core\Lib\Content\Message');
-        $this->mapService('core.content.nav', '\Core\Lib\Content\Menu');
-        $this->mapFactory('core.content.menu', '\Core\Lib\Content\Menu');
-        $this->mapService('core.content.html.factory', '\Core\Lib\Content\Html\HtmlFactory');
-        
+        $this->mapService('core.page.body.message', '\Core\Lib\Page\Body\Message\Message');
+        $this->mapService('core.page.body.nav', '\Core\Lib\Page\Body\Menu\Menu');
+        $this->mapFactory('core.page.body.menu', '\Core\Lib\Page\Body\Menu\Menu');
+
+        // == HTML ==========================================================
+        $this->mapService('core.html.factory', '\Core\Lib\Html\HtmlFactory');
+
         // == AJAX ==========================================================
         $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', [
-            'core.content.message',
-            'core.io.files'
+            'core.page.body.message',
+            'core.io.files',
+            'core.cfg'
         ]);
-        
+
         // == ERROR =========================================================
         $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
-            'core.http.router',
+            'core.router',
             'core.sec.user.current',
             'core.ajax',
-            'core.content.message',
+            'core.page.body.message',
             'db.default',
             'core.cfg'
         ]);
@@ -230,8 +281,8 @@ class DI implements \ArrayAccess
      * into the object instance. A so created object instance gets always the
      * di container object injected.
      *
-     * @param string $class_name            
-     * @param string $arguments            
+     * @param string $class_name
+     * @param string $arguments
      *
      * @return object
      */
@@ -239,57 +290,57 @@ class DI implements \ArrayAccess
     {
         // Initialized the ReflectionClass
         $reflection = new \ReflectionClass($class_name);
-        
+
         // Creating an instance of the class when no arguments provided
         if (empty($arguments) || count($arguments) == 0) {
             $obj = new $class_name();
-        }         
+        }
 
         // Creating instance of class with provided arguments
         else {
-            
+
             if (! is_array($arguments)) {
                 $arguments = (array) $arguments;
             }
-            
+
             // Replace text arguments with objects
             foreach ($arguments as $key => $arg) {
-                
+
                 if (is_array($arg)) {
-                    
+
                     $options = [];
-                    
+
                     foreach ($arg as $arr_arg) {
-                        
+
                         list ($arg_key, $di_service) = explode('::', $arr_arg);
-                        
+
                         if (strpos($di_service, '.') === false) {
                             continue;
                         }
-                        
+
                         $options[$arg_key] = $this->get($di_service);
                     }
-                    
+
                     $arguments[$key] = $options;
-                    
+
                     continue;
                 }
-                
+
                 // Skip strings without di container typical dot
                 if (($arg instanceof App) || strpos($arg, '.') === false) {
                     continue;
                 }
-                
+
                 $arguments[$key] = $this->get($arg);
             }
-            
+
             $obj = $reflection->newInstanceArgs($arguments);
         }
-        
+
         if (! property_exists($obj, 'di')) {
             $obj->di = $this;
         }
-        
+
         // Inject and return the created instance
         return $obj;
     }
@@ -361,7 +412,7 @@ class DI implements \ArrayAccess
      *            of method to call
      * @param $params (Optional)
      *            Array of parameters to inject into method
-     *            
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
      *
@@ -372,36 +423,36 @@ class DI implements \ArrayAccess
         if (! is_array($params)) {
             Throw new InvalidArgumentException('Parameter to invoke needs to be of type array.');
         }
-        
+
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
             Throw new InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
         }
-        
+
         // Get reflection method
         $method = new \ReflectionMethod($obj, $method);
-        
+
         // Init empty arguments array
         $args = [];
-        
+
         // Get list of parameters from reflection method object
         $method_parameter = $method->getParameters();
-        
+
         // Let's see what arguments are needed and which are optional
         foreach ($method_parameter as $parameter) {
-            
+
             // Get current paramobject name
             $param_name = $parameter->getName();
-            
+
             // Parameter is not optional and not set => throw error
             if (! $parameter->isOptional() && ! isset($params[$param_name])) {
                 Throw new RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
             }
-            
+
             // If parameter is optional and not set, set argument to null
             $args[] = $parameter->isOptional() && ! isset($params[$param_name]) ? null : $params[$param_name];
         }
-        
+
         // Return result executed method
         return $method->invokeArgs($obj, $args);
     }
@@ -411,7 +462,7 @@ class DI implements \ArrayAccess
      *
      * @param string $name
      *            Name of the Service, Factory or Value to return
-     *            
+     *
      * @throws InvalidArgumentException
      *
      * @return unknown|Ambigous
@@ -421,20 +472,22 @@ class DI implements \ArrayAccess
         if (! $this->offsetExists($name)) {
             Throw new InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
         }
-        
+
         $type = $this->map[$name]['type'];
         $value = $this->map[$name]['value'];
-        
+
         if ($type == 'value') {
             return $value;
-        } elseif ($type == 'factory') {
+        }
+        elseif ($type == 'factory') {
             return $this->instance($value, $this->map[$name]['arguments']);
-        } else {
-            
+        }
+        else {
+
             if (! isset($this->services[$name])) {
                 $this->services[$name] = $this->instance($value, $this->map[$name]['arguments']);
             }
-            
+
             return $this->services[$name];
         }
     }
@@ -444,7 +497,7 @@ class DI implements \ArrayAccess
      *
      * @param string $name
      *            Name of service, factory or value to check
-     *            
+     *
      * @return boolean
      */
     public function exists($name)
