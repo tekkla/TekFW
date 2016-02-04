@@ -1,13 +1,13 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Body\Message;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Page\PageException;
 
 /**
  * MessageObject.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class MessageObject
@@ -83,7 +83,7 @@ class MessageObject
         ];
 
         if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('Wrong type set for message.');
+            Throw new PageException('Wrong type set for message.');
         }
 
         $this->type = $type;

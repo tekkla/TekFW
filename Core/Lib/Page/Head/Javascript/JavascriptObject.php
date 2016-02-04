@@ -1,13 +1,12 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Head\Javascript;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-
+use Core\Lib\Page\PageException;
 /**
  * JavascriptObject.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class JavascriptObject
@@ -71,7 +70,7 @@ class JavascriptObject
         );
 
         if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('Javascript targets have to be "file", "script", "block", "var" or "ready"');
+            Throw new PageException('Javascript targets have to be "file", "script", "block", "var" or "ready"');
         }
 
         $this->type = $type;

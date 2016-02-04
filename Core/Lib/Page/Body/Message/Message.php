@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Body\Message;
 
 use Core\Lib\Http\Session;
 
@@ -18,7 +18,7 @@ class Message
      */
     public function __construct()
     {
-        
+
         // Init messages stack
         $_SESSION['messages'] = [];
     }
@@ -34,19 +34,19 @@ class Message
      *            The message to show
      * @param string $fadeout
      *            Optional flag to signal that this message should fadeout after some time
-     *            
+     *
      * @return MessageObject
      */
     private function generic($type, $message, $fadeout = true)
     {
         $msg = new MessageObject();
-        
+
         $msg->setType($type);
         $msg->setMessage($message);
         $msg->setFadeout($fadeout);
-        
+
         $this->add($msg);
-        
+
         return $msg;
     }
 
@@ -59,9 +59,9 @@ class Message
     {
         $msg = new MessageObject();
         $msg->setType('clear');
-        
+
         $this->add($msg);
-        
+
         return $msg;
     }
 
@@ -83,7 +83,7 @@ class Message
      *            The message to show
      * @param bool $fadeout
      *            Optional flag to switch Automatic fadeout
-     *            
+     *
      * @return MessageObject
      */
     public function success($message, $fadeout = true)
@@ -98,7 +98,7 @@ class Message
      *            The message to show
      * @param bool $fadeout
      *            Optional flag to switch Automatic fadeout
-     *            
+     *
      * @return MessageObject
      */
     public function info($message, $fadeout = true)
@@ -113,7 +113,7 @@ class Message
      *            The message to show
      * @param bool $fadeout
      *            Optional flag to switch Automatic fadeout
-     *            
+     *
      * @return MessageObject
      */
     public function warning($message, $fadeout = true)
@@ -128,7 +128,7 @@ class Message
      *            The message to show
      * @param bool $fadeout
      *            Optional flag to switch Automatic fadeout
-     *            
+     *
      * @return MessageObject
      */
     public function danger($message, $fadeout = true)
@@ -145,7 +145,7 @@ class Message
     {
         $messages = $_SESSION['messages'];
         $this->resetMessages();
-        
+
         return $messages;
     }
 

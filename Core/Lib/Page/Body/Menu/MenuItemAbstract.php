@@ -1,11 +1,11 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Body\Menu;
 
 /**
  * MenuItemAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class MenuItemAbstract
@@ -68,7 +68,7 @@ abstract class MenuItemAbstract
     }
 
     /**
-     * Returns all child items.
+     * Returns all child items
      *
      * @return array
      */

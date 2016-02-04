@@ -1,5 +1,5 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Head;
 
 /**
  * Meta.php
@@ -36,6 +36,17 @@ class Meta
         $this->tags[] = $properties;
     }
 
+    /**
+     * Sets vieport tag
+     *
+     * @param string $width
+     * Description of used device width
+     * @param string $initial_scale
+     * Initial scale factor (Default: '1')
+     * @param string $user_scalable
+     * @param string $minimum_scale
+     * @param string $maximum_scale
+     */
     public function setViewport($width = 'device-width', $initial_scale = '1', $user_scalable = '', $minimum_scale = '', $maximum_scale = '')
     {
         $tag = [
@@ -62,6 +73,7 @@ class Meta
      * Sets charset tag
      *
      * @param string $charset
+     *            Page charset
      *
      * @return \Core\Lib\Content\Meta
      */
@@ -78,6 +90,7 @@ class Meta
      * Sets description tag
      *
      * @param string $description
+     *            Content of description tag
      *
      * @return \Core\Lib\Content\Meta
      */
@@ -95,6 +108,7 @@ class Meta
      * Sets keywords tag
      *
      * @param string $keywords
+     *            Content of keywords tag
      *
      * @return \Core\Lib\Content\Meta
      */

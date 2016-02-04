@@ -1,16 +1,16 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page;
 
-use Core\Lib\Cfg;
-use Core\Lib\Content\Html\HtmlFactory;
-use Core\Lib\Errors\Exceptions\TemplateException;
+use Core\Lib\Cfg\Cfg;
+use Core\Lib\Html\HtmlFactory;
 use Core\Lib\Cache\Cache;
+use Core\Lib\Page\PageException;
 
 /**
  * Template.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Template
@@ -55,15 +55,15 @@ class Template
      *
      * @param Cfg $cfg
      *            Cfg dependency
-     * @param Content $content
-     *            Content dependency
+     * @param Page $page
+     *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
      */
-    public function __construct(Cfg $cfg, Content $content, HtmlFactory $html, Cache $cache)
+    public function __construct(Cfg $cfg, Page $page, HtmlFactory $html, Cache $cache)
     {
         $this->cfg = $cfg;
-        $this->content = $content;
+        $this->page = $page;
         $this->html = $html;
         $this->cache = $cache;
     }
@@ -80,11 +80,11 @@ class Template
     final public function render()
     {
         foreach ($this->layers as $layer) {
-            
+
             if (! method_exists($this, $layer)) {
-                Throw new TemplateException('Template Error: The requested layer "' . $layer . '" does not exist.');
+                Throw new PageException('Template Error: The requested layer "' . $layer . '" does not exist.');
             }
-            
+
             $this->$layer();
         }
     }
@@ -94,32 +94,32 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getMeta($data_only = false)
     {
-        $meta_stack = $this->content->meta->getTags();
-        
+        $meta_stack = $this->page->meta->getTags();
+
         if ($data_only) {
             return $meta_stack;
         }
-        
+
         $html = '';
-        
+
         foreach ($meta_stack as $tag) {
-            
+
             // $meta = $this->html->create('Elements\Meta');
-            
+
             $html .= PHP_EOL . '<meta';
-            
+
             foreach ($tag as $attribute => $value) {
                 $html .= ' ' . $attribute . '="' . $value . '"';
             }
-            
+
             $html .= '>';
         }
-        
+
         return $html;
     }
 
@@ -128,28 +128,28 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getTitle($data_only = false)
     {
         if ($data_only) {
-            return $this->content->getTitle();
+            return $this->page->getTitle();
         }
-        
-        return PHP_EOL . '<title>' . $this->content->getTitle() . '</title>';
+
+        return PHP_EOL . '<title>' . $this->page->getTitle() . '</title>';
     }
 
     /**
      * Returns html navbar or only the menu structure.
      *
-     * @param boolean $data_only            
+     * @param boolean $data_only
      *
      * @return string|array
      */
     final protected function getMenu($name = '')
     {
-        return $this->content->menu->getItems($name);
+        return $this->page->menu->getItems($name);
     }
 
     /**
@@ -157,23 +157,23 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getOpenGraph($data_only = false)
     {
-        $og_stack = $this->content->og->getTags();
-        
+        $og_stack = $this->page->og->getTags();
+
         if ($data_only) {
             return $og_stack;
         }
-        
+
         $html = '';
-        
+
         foreach ($og_stack as $property => $content) {
             $html .= '<meta property="' . $property . '" content="' . $content . '">' . PHP_EOL;
         }
-        
+
         return $html;
     }
 
@@ -182,24 +182,24 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getCss($data_only = false)
     {
-        $files = $this->content->css->getFiles();
-        
+        $files = $this->page->css->getFiles();
+
         if ($data_only) {
             return $files;
         }
-        
+
         $html = '';
-        
+
         // Start reading
         foreach ($files as $file) {
             $html .= PHP_EOL . '<link rel="stylesheet" type="text/css" href="' . $file . '">';
         }
-        
+
         return $html;
     }
 
@@ -210,27 +210,27 @@ class Template
      *            Valid areas are 'top' and 'below'.
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getScript($area, $data_only = false)
     {
-        $files = $this->content->js->getFiles($area);
-        
+        $files = $this->page->js->getFiles($area);
+
         if ($data_only) {
             return $files;
         }
-        
+
         // Init output var
         $html = '';
-        
+
         // Create files
         foreach ($files as $file) {
-            
+
             // Create script html object
             $html .= PHP_EOL . '<script src="' . $file . '"></script>';
         }
-        
+
         return $html;
     }
 
@@ -239,30 +239,30 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getHeadLinks($data_only = false)
     {
-        $link_stack = $this->content->link->getLinkStack();
-        
+        $link_stack = $this->page->link->getLinkStack();
+
         if ($data_only) {
             return $link_stack;
         }
-        
+
         $html = '';
-        
+
         foreach ($link_stack as $link) {
-            
+
             $html .= PHP_EOL . '<link';
-            
+
             foreach ($link as $attribute => $value) {
                 $html .= ' ' . $attribute . '="' . $value . '"';
             }
-            
+
             $html .= '>';
         }
-        
+
         return $html;
     }
 
@@ -271,39 +271,39 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
-    final protected function getMessages($data_only = false)
+    final protected function getMessages($data_only = false, $container = 'container')
     {
-        $messages = $this->content->msg->getMessages();
-        
+        $messages = $this->page->msg->getMessages();
+
         if ($data_only) {
             return $messages;
         }
-        
+
         ob_start();
-        
-        echo '<div id="core-message">';
-        
+
+        echo '<div id="core-message"', ($container ? ' class="' . $container . '"' : ''), '>';
+
         foreach ($messages as $msg) {
-            
+
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
-            
+
             // Fadeout message?
-            if ($this->cfg->get('Core', 'js.fadeout_time') > 0 && $msg->getFadeout()) {
+            if ($this->cfg->get('Core', 'js.style.fadeout_time') > 0 && $msg->getFadeout()) {
                 echo ' fadeout';
             }
-            
+
             echo '">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                 ', $msg->getMessage(), '
             </div>';
         }
-        
+
         echo '</div>';
-        
+
         return ob_get_clean();
     }
 
@@ -312,50 +312,52 @@ class Template
      *
      * @param boolean $data_only
      *            Set to true if you want to get get only the data without a generated html
-     *            
+     *
      * @return string|array
      */
     final protected function getBreadcrumbs($data_only = false)
     {
-        $breadcrumbs = $this->content->breadcrumbs->getBreadcrumbs();
-        
+        $breadcrumbs = $this->page->breadcrumbs->getBreadcrumbs();
+
         if ($data_only) {
             return $breadcrumbs;
         }
-        
+
         // Add home button
-        $text = $this->content->txt('home');
-        
+        $text = $this->page->txt('home');
+
         if ($breadcrumbs) {
-            $home_crumb = $this->content->breadcrumbs->createItem($text, BASEURL, $text);
-        } else {
-            $home_crumb = $this->content->breadcrumbs->createActiveItem($text, $text);
+            $home_crumb = $this->page->breadcrumbs->createItem($text, BASEURL, $text);
         }
-        
+        else {
+            $home_crumb = $this->page->breadcrumbs->createActiveItem($text, $text);
+        }
+
         array_unshift($breadcrumbs, $home_crumb);
-        
+
         ob_start();
-        
+
         if ($breadcrumbs) {
-            
+
             echo '<ol class="breadcrumb">';
-            
+
             foreach ($breadcrumbs as $breadcrumb) {
-                
+
                 echo '<li';
-                
+
                 if ($breadcrumb->getActive()) {
                     echo ' class="active">' . $breadcrumb->getText();
-                } else {
+                }
+                else {
                     echo '><a href="' . $breadcrumb->getHref() . '">' . $breadcrumb->getText() . '</a>';
                 }
-                
+
                 echo '</li>';
             }
-            
+
             echo '</ol>';
         }
-        
+
         return ob_get_clean();
     }
 
@@ -402,8 +404,12 @@ class Template
     /**
      * Returns the content generated by app call
      */
-    final protected function getContent()
+    final protected function getContent($data_only = false, $fluid = false)
     {
-        return $this->content->getContent();
+        if ($data_only) {
+            return $this->page->getContent();
+        }
+
+        return '<div id="content" class="container' . ($fluid ? '-fluid' : '') . '">' . $this->page->getContent() . '</div>';
     }
 }

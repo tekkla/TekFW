@@ -1,13 +1,14 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Body\Menu;
 
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
+use Core\Lib\Page\PageException;
 
 /**
  * MenuItem.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class MenuItem extends MenuItemAbstract
@@ -22,6 +23,7 @@ class MenuItem extends MenuItemAbstract
 
     /**
      * Unique name of this menu item
+     *
      * This name will be used as DOM id to address a menu item or, in case of
      * sub_buttons, a complete menu tree.
      * It is also important to know, that
@@ -91,20 +93,22 @@ class MenuItem extends MenuItemAbstract
     }
 
     /**
-     * Sets name of menu item.
+     * Sets name of menu item
+     *
      * This name has to be unique. Using an already set name will result in a
      * InvalidArgumentException().
      *
      * @param string $name
+     *            Name of MenuItem
      *
      * @throws InvalidArgumentException
      *
-     * @return MenuItem
+     * @return \Core\Lib\Page\Body\Menu\MenuItem
      */
     public function setName($name)
     {
         if (in_array($name, self::$used_names)) {
-            Throw new InvalidArgumentException('The menuitem name "' . $name . '" is already in use.');
+            Throw new PageException(sprintf('The menuitem name "%s" is already in use.', $name));
         }
 
         $this->name = $name;
@@ -116,6 +120,7 @@ class MenuItem extends MenuItemAbstract
     }
 
     /**
+     * Returns set text
      *
      * @return the $text
      */
@@ -128,17 +133,21 @@ class MenuItem extends MenuItemAbstract
      * Sets text to be used as linktxt
      *
      * @param string $text
-     * @return MenuItem
+     *            Text of item
+     *
+     * @return \Core\Lib\Page\Body\Menu\MenuItem
      */
     public function setText($text)
     {
         $this->text = $text;
+
         return $this;
     }
 
     /**
+     * Returns set alt text
      *
-     * @return the $alt
+     * @return string
      */
     public function getAlt()
     {
@@ -234,8 +243,10 @@ class MenuItem extends MenuItemAbstract
     /**
      * Sets one or more options.
      *
-     * @param string|array $option Name of option or assoc array of options.
-     * @param mixed $value Optional value when setting only one option.
+     * @param string|array $option
+     *            Name of option or assoc array of options.
+     * @param mixed $value
+     *            Optional value when setting only one option.
      *
      * @return MenuItem
      */

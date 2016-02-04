@@ -1,11 +1,11 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Head;
 
 /**
  * OpenGraph.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class OpenGraph
@@ -21,23 +21,27 @@ class OpenGraph
     /**
      * Adds a generic tag.
      *
-     * @param array $properties
+     * @param array $property
+     *            Name of property. Name will be prepended by 'og:'
+     * @param string $content
+     *            Content of property
      *
-     * @return \Core\Lib\Content\OpenGraph
+     * @return \Core\Lib\Page\Head\OpenGraph
      */
     public function setGenericTag($property, $content)
     {
-        $this->tags[$property] = $content;
+        $this->tags['og:' . $property] = $content;
 
         return $this;
     }
 
     /**
-     * Sets title tag.
+     * Sets title tag
      *
-     * @param string $charset
+     * @param string $title
+     *            Content of og:title tag
      *
-     * @return \Core\Lib\Content\OpenGraph
+     * @return \Core\Lib\Page\Head\OpenGraph
      */
     public function setTitle($title = '')
     {
@@ -47,11 +51,12 @@ class OpenGraph
     }
 
     /**
-     * Sets type tag.
+     * Sets type tag
      *
      * @param string $type
+     *            Content of og:type tag
      *
-     * @return \Core\Lib\Content\OpenGraph
+     * @return \Core\Lib\Page\Head\OpenGraph
      */
     public function setType($type = '')
     {
@@ -61,11 +66,12 @@ class OpenGraph
     }
 
     /**
-     * Sets url tag.
+     * Sets url tag
      *
      * @param string $url
+     *            Content of og:url tag
      *
-     * @return \Core\Lib\Content\OpenGraph
+     * @return \Core\Lib\Page\Head\OpenGraph
      */
     public function setUrl($url = '')
     {
@@ -75,11 +81,12 @@ class OpenGraph
     }
 
     /**
-     * Sets image tag.
+     * Sets image tag
      *
      * @param string $image
+     *            Content of og:image tag
      *
-     * @return \Core\Lib\Content\OpenGraph
+     * @return \Core\Lib\Page\Head\OpenGraph
      */
     public function setImage($image = '')
     {
@@ -89,7 +96,7 @@ class OpenGraph
     }
 
     /**
-     * Returns all set tags.
+     * Returns all set tags
      */
     public function getTags()
     {

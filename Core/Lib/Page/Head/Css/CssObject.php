@@ -1,13 +1,12 @@
 <?php
-namespace Core\Lib\Content;
+namespace Core\Lib\Page\Head\Css;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-
+use Core\Lib\Page\PageException;
 /**
  * CssObject.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class CssObject
@@ -45,7 +44,7 @@ final class CssObject
         ];
 
         if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('Css type must be "inline" or "file".');
+            Throw new PageException('Css type must be "inline" or "file".');
         }
 
         $this->type = $type;
