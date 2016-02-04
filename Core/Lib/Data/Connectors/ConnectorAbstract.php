@@ -3,13 +3,13 @@ namespace Core\Lib\Data\Connectors;
 
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\CallbackInterface;
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 
 /**
  * AdapterAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class ConnectorAbstract implements CallbackInterface
