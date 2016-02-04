@@ -5,7 +5,7 @@ namespace Core\Lib\Errors;
  * Error.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 
@@ -17,8 +17,6 @@ ini_set('display_errors', 0);
  */
 function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_context)
 {
-    global $di;
-
     // error was suppressed with the @-operator
     if (error_reporting() === 0 || empty($di)) {
         return false;
@@ -74,17 +72,12 @@ function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_
 
     $exception = '\Core\Lib\Errors\Exceptions\\' . $exception;
 
-    $di->get('core.error')->handleException(new $exception($err_msg, 0, $err_severity, $err_file, $err_line));
+    echo \Core\Lib\DI::getInstance()->get('core.error')->handleException(new $exception($err_msg, 0, $err_severity, $err_file, $err_line));
 }
 
 function ExceptionHandler($e)
 {
-    global $di;
-
-    if (! empty($di)) {
-        echo $di->get('core.error')->handleException($e);
-        return;
-    }
+    echo \Core\Lib\DI::getInstance()->get('core.error')->handleException($e);
 }
 
 function shutDownFunction()
