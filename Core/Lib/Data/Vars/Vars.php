@@ -1,22 +1,16 @@
 <?php
 namespace Core\Lib\Data;
 
-use Core\Lib\Traits\SerializeTrait;
-use Core\Lib\Traits\DebugTrait;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-
+use Core\Lib\Data\Vars\VarsException;
 /**
  * Vars.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Vars implements \IteratorAggregate, \ArrayAccess
 {
-
-    use SerializeTrait;
-    use DebugTrait;
 
     /**
      * Vars storage
@@ -26,9 +20,10 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     private $vars = [];
 
     /**
-     * Access on var.
+     * Access on var
      *
-     * @param string $name Name of var
+     * @param string $name
+     *            Name of var
      *
      * @return mixed
      */
@@ -64,7 +59,7 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Isset on vars.
+     * Isset on vars
      *
      * @param string $name
      */
@@ -84,7 +79,7 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Returns all stored vars.
+     * Returns all stored vars
      *
      * @return array
      */
@@ -94,7 +89,7 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Returns array with names of vars in container.
+     * Returns array with the names of all stored vars
      *
      * @return array
      */
@@ -104,13 +99,28 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     * Returns areference to a var.
+     * Returns a reference to a var
      *
-     * @param string var name
+     * @param string $var
+     *            Name of var
      *
      * @return mixed
      */
-    public function &getVar($var)
+    public function &getVarByRef($var)
+    {
+        return $this->vars[$var];
+    }
+
+    /**
+     * Returns value of a var byVal
+     *
+     * @param string $var
+     *            Name of var
+     *
+     * @return mixed
+     *
+     */
+    public function getVarByVal($var)
     {
         return $this->vars[$var];
     }
@@ -125,7 +135,7 @@ class Vars implements \IteratorAggregate, \ArrayAccess
     public function offsetSet($offset, $value)
     {
         if (empty($offset)) {
-            Throw new InvalidArgumentException('You can not add an anonymous var.');
+            Throw new VarsException('You can not add an anonymous var.');
         }
 
         $this->vars[$offset] = $value;
