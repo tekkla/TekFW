@@ -169,7 +169,6 @@ class DI implements \ArrayAccess
         $this->mapService('core.sec.security', '\Core\Lib\Security\Security', [
             'db.default',
             'core.cfg',
-            'core.http.session',
             'core.http.cookie',
             'core.sec.user.current',
             'core.sec.group',
@@ -212,10 +211,7 @@ class DI implements \ArrayAccess
         $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
 
         // == LOGGING========================================================
-        $this->mapService('core.log', '\Core\Lib\Logging\Logging', [
-            'db.default',
-            'core.http.session'
-        ]);
+        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
 
         // == MAILER =======================================================
         $this->mapService('core.mailer', '\Core\Lib\Mailer\Mailer', [

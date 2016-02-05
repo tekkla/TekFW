@@ -3,7 +3,6 @@ namespace Core\Lib\Logging;
 
 use Core\Lib\Data\Container\Container;
 use Core\Lib\Data\Connectors\Db\Db;
-use Core\Lib\Http\Session;
 
 /**
  * Logging.php
@@ -22,23 +21,14 @@ class Logging
     private $db;
 
     /**
-     *
-     * @var Session
-     */
-    private $session;
-
-    /**
      * Constructor
      *
      * @param Db $db
      *            Db dependency
-     * @param Session $session
-     *            Session dependency
      */
-    public function __construct(Db $db, Session $session)
+    public function __construct(Db $db)
     {
         $this->db = $db;
-        $this->session = $session;
     }
 
     /**
@@ -50,15 +40,15 @@ class Logging
      *            Optional logtype
      * @param number $code
      *            Optional logcode
-     *            
+     *
      * @return integer
      */
     public function log($text, $type = 'general', $code = 0)
     {
         $time = time();
-        
+
         $message = new Container();
-        
+
         $message['text'] = $text;
         $message['type'] = $type;
         $message['logdate'] = date('Y-m-d H:i:s', $time);
@@ -66,14 +56,14 @@ class Logging
         $message['client'] = $_SERVER['HTTP_USER_AGENT'];
         $message['ip'] = $_SERVER['REMOTE_ADDR'];
         $message['url'] = $_SERVER['REQUEST_URI'];
-        $message['id_user'] = $this->session->get('id_user');
+        $message['id_user'] = $_SESSION['id_user'];
         $message['code'] = $code;
-        
+
         $this->db->qb([
             'table' => 'logs',
             'data' => $message
         ], true);
-        
+
         return $this->db->lastInsertId();
     }
 
@@ -84,7 +74,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function general($text, $code = 0)
@@ -99,7 +89,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function core($text, $code = 0)
@@ -114,7 +104,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function app($text, $app, $code = 0)
@@ -129,7 +119,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function security($text, $code = 0)
@@ -144,7 +134,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function suspicious($text, $code = 0)
@@ -159,7 +149,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function ban($text, $code = 0)
@@ -174,7 +164,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function error($text, $code = 0)
@@ -189,7 +179,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function user($text, $code = 0)
@@ -204,7 +194,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function language($text, $code = 0)
@@ -219,7 +209,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function database($text, $code = 0)
@@ -234,7 +224,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function info($text, $code = 0)
@@ -249,7 +239,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function warning($text, $code = 0)
@@ -264,7 +254,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function danger($text, $code = 0)
@@ -279,7 +269,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function success($text, $code = 0)
@@ -294,7 +284,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function login($text, $code = 0)
@@ -309,7 +299,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function logout($text, $code = 0)
@@ -324,7 +314,7 @@ class Logging
      *            Text to log
      * @param number $code
      *            Flexible code flag
-     *            
+     *
      * @return integer
      */
     public function file($text, $code = 0)
@@ -337,7 +327,7 @@ class Logging
      *
      * @param string $ip
      *            IP address to check
-     *            
+     *
      * @return number
      */
     public function countBanLogEntries($ip, $duration)
@@ -352,7 +342,7 @@ class Logging
                 ':expires' => time()
             ]
         ]);
-        
+
         return $this->db->value();
     }
 
@@ -361,7 +351,7 @@ class Logging
      *
      * @param string $ip
      *            IP address to check
-     *            
+     *
      * @return number
      */
     public function getBanActiveTimestamp($ip)
@@ -376,9 +366,9 @@ class Logging
             'order' => 'logstamp DESC',
             'limit' => 1
         ]);
-        
+
         $data = $this->db->value();
-        
+
         return $data ? $data : 0;
     }
 }
