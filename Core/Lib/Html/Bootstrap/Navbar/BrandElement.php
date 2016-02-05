@@ -108,7 +108,7 @@ class BrandElement extends AbstractNavbarElement
     public function build()
     {
         // Create brand
-        $html = $this->content instanceof Img ? $this->content->build() : $this->content;
+        $html = $this->content instanceof Img ? $this->page->build() : $this->content;
 
         // Brand wrapped by a link
         if ($this->link instanceof A) {
