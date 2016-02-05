@@ -2,7 +2,7 @@
 namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 
 /**
  * SecurityModel.php
@@ -11,16 +11,16 @@ use Core\Lib\Data\Container;
  * @copyright 2015
  * @license MIT
  */
-class SecurityModel extends Model
+class LoginModel extends Model
 {
 
     public function getEmptyLogin()
     {
         $data = $this->getContainer('Core', 'Security');
-
+        
         // Autologin on or off by default?
-        $data['remember'] = $this->cfg('autologin');
-
+        $data['remember'] = $this->cfg('security.autologin');
+        
         return $data;
     }
 
@@ -30,16 +30,14 @@ class SecurityModel extends Model
         if (! $data->validate()) {
             return false;
         }
-
+        
         /* @var $security \Core\Lib\Security\Security */
         $security = $this->di->get('core.sec.security');
         $security->login($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
-
+        
         if ($security->loggedIn() === true) {
             return true;
-        }
-        else {
-            $data->addError('@', $this->txt('login_failed'));
+        } else {
             return false;
         }
     }

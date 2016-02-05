@@ -1,7 +1,7 @@
 <?php
 namespace Core\AppsSec\Core\Container;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 
 /**
  * SecurityContainer.php
@@ -10,7 +10,7 @@ use Core\Lib\Data\Container;
  * @copyright 2015
  * @license MIT
  */
-class SecurityContainer extends Container
+class LoginContainer extends Container
 {
 
     protected $available = [

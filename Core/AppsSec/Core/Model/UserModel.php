@@ -7,37 +7,34 @@ use Core\Lib\Amvc\Model;
  * UserModel.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class UserModel extends Model
 {
 
-    private $table = 'users';
-
-    public function getAll()
+    public function getList($field = 'display_name', $needle = '%', $limit = 100, array $callbacks = [])
     {
-        $adapter = $this->getDbAdapter();
-        $adapter->qb([
+        $qb = [
             'table' => $this->table,
-        ]);
-
-        return $adapter->all();
-    }
-
-    public function getEdit($id_user)
-    {
-        $adapter = $this->getDbAdapter();
-        $adapter->qb([
-            'table' => $this->table,
-            'filter' => 'id_user = :id_user',
+            'filter' => $field . ' LIKE :' . $field,
             'params' => [
-                'id_user' => $id_user
+                ':' . $field => $needle
             ]
-        ]);
-
-        return $adapter->single();
+        ];
+        
+        if ($limit) {
+            $qb['limit'] = 100;
+        }
+        
+        $db = $this->getDbConnector();
+        
+        if ($callbacks) {
+            $db->addCallbacks($callbacks);
+        }
+        
+        $db->qb($qb);
+        
+        return $db->all();
     }
-
 }
-

@@ -18,22 +18,22 @@ class AdminView extends View
         echo '
         <h1>TekFW Framework Config</h1>
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-3" id="core-admin-apps">
                 <div class="panel panel-default">
-                    <div class="panel-body">
-                        <a class="btn btn-default" href="', $this->config, '">Framework Config</a>
-                        <h2><strong>Applications:</strong></h2>
-                        <ul class="list-group">';
-
-                    foreach ($this->loaded_apps as $app_name => $link) {
-                        echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
-                    }
-
-                        echo '
-                        </ul>
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Applications:</h3>
                     </div>
+                    <ul class="list-group">';
+        
+        foreach ($this->loaded_apps as $app_name => $link) {
+            echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a data-ajax href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
+        }
+        
+        echo '
+                    </ul>
                 </div>
             </div>
+            <div id="core-admin-config" class="col-sm-9"></div>
         </div>';
     }
 }

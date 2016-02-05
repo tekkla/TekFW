@@ -1,7 +1,7 @@
 <?php
 namespace Core\AppsSec\Core\Container;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 
 /**
  * UserContainer.php
@@ -10,7 +10,7 @@ use Core\Lib\Data\Container;
  * @copyright 2015
  * @license MIT
  */
-class UserContainer extends Container
+class RegisterContainer extends Container
 {
 
     protected $available = [
@@ -22,53 +22,18 @@ class UserContainer extends Container
             'type' => 'string',
             'size' => 255,
             'validate' => [
+                'email',
                 'empty',
-                [
-                    'min',
-                    [
-                        5,
-                        true
-                    ]
-                ],
-                [
-                    'max',
-                    [
-                        255,
-                        true
-                    ]
-                ]
             ]
         ],
         'password' => [
             'type' => 'string',
-            'size' => 255,
             'validate' => [
                 'empty',
                 [
                     'min',
                     [
                         8,
-                        true
-                    ]
-                ],
-                [
-                    'max',
-                    [
-                        255,
-                        true
-                    ]
-                ]
-            ]
-        ],
-        'display_name' => [
-            'type' => 'string',
-            'size' => 255,
-            'validate' => [
-                'empty',
-                [
-                    'min',
-                    [
-                        5,
                         true
                     ]
                 ],
@@ -95,15 +60,4 @@ class UserContainer extends Container
             ]
         ]
     ];
-
-    public function Index()
-    {
-        $this->use = [
-            'id_user',
-            'username',
-            'password',
-            'display_name',
-            'state'
-        ];
-    }
 }

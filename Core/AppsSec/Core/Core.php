@@ -7,7 +7,7 @@ use Core\Lib\Amvc\App;
  * Core.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class Core extends App
@@ -21,264 +21,389 @@ final class Core extends App
     // Apps default config
     protected $config = [
 
-        // Config
-        'config_display_style' => [
-            'group' => 'config',
-            'control' => 'select',
-            'data' => [
-                'array',
+        'site' => [
+            'general' => [
                 [
-                    0 => 'top down',
-                    1 => 'horizontal'
+                    'name' => 'name'
                 ],
-                0
-            ],
-            'default' => 0
-        ],
-
-        // Security
-        'min_username_length' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 8
-        ],
-        'username_regexp' => [
-            'group' => 'security',
-            'control' => 'input'
-        ],
-        'min_password_length' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 8
-        ],
-        'max_password_length' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 4096,
-            'validate' => [
-                'required',
                 [
-                    'max',
+                    'name' => 'url',
+                    'control' => 'url'
+                ],
+                [
+                    'name' => 'webmaster_email',
+                    'control' => 'mail'
+                ]
+            ],
+            'language' => [
+                [
+                    'name' => 'default',
+                    'control' => 'select',
+                    'data' => [
+                        'array',
+                        [
+                            'en',
+                            'de'
+                        ],
+                        0
+                    ],
+                    'default' => 'en'
+                ]
+            ]
+        ],
+        'security' => [
+            'user' => [
+                'username' => [
                     [
-                        8,
-                        4096
+                        'name' => 'min_length',
+                        'control' => 'number',
+                        'default' => 8,
+                        'validate' => [
+                            'empty'
+                        ]
+                    ],
+                    [
+                        'name' => 'regexp'
+                    ]
+                ],
+                'password' => [
+                    [
+                        'name' => 'min_length',
+                        'control' => 'number',
+                        'default' => 8
+                    ],
+                    [
+                        'name' => 'max_length',
+                        'control' => 'number',
+                        'default' => 4096,
+                        'validate' => [
+                            'empty',
+                            [
+                                'max',
+                                [
+                                    8,
+                                    4096
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        'name' => 'regexp'
+                    ]
+                ]
+            ],
+            'register' => [
+                [
+                    'name' => 'use_compare_password',
+                    'control' => 'switch',
+                    'default' => 1
+                ]
+            ],
+            'activation' => [
+                [
+                    'name' => 'use',
+                    'control' => 'switch',
+                    'default' => 1
+                ],
+                [
+                    'name' => 'ttl',
+                    'control' => 'number',
+                    'default' => 3600
+                ],
+                [
+                    'name' => 'mta',
+                    'default' => 'default'
+                ],
+                [
+                    'name' => 'from'
+                ],
+                [
+                    'name' => 'name'
+                ]
+            ],
+            'login' => [
+                [
+                    'name' => 'autologin',
+                    'control' => 'switch',
+                    'default' => 1
+                ]
+            ],
+            'ban' => [
+                [
+                    'name' => 'tries',
+                    'control' => 'number',
+                    'default' => 5
+                ],
+                'ttl' => [
+                    [
+                        'name' => 'log',
+                        'control' => 'number',
+                        'default' => 300
+                    ],
+                    [
+                        'name' => 'ban',
+                        'control' => 'number',
+                        'default' => 600
                     ]
                 ]
             ]
         ],
-        'password_regexp' => [
-            'group' => 'security',
-            'control' => 'input'
-        ],
-        'autologin' => [
-            'group' => 'security',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'tries_before_ban' => [
-            'group' => 'security',
-            'control' => 'number',
-            'default' => 5
-        ],
 
         // Group: Execute
+        'execute' => [
 
-        'default_app' => [
-            'group' => 'execute',
-            'control' => 'input'
-        ],
-        'default_controller' => [
-            'group' => 'execute',
-            'control' => 'input'
-        ],
-        'default_action' => [
-            'group' => 'execute',
-            'control' => 'input'
-        ],
+            'default' => [
 
+                [
+                    'name' => 'app',
+                    'default' => 'Core'
+                ],
+                [
+                    'name' => 'controller',
+                    'default' => 'Index'
+                ],
+                [
+                    'name' => 'action',
+                    'default' => 'Index'
+                ]
+            ],
+            'content' => [
+
+                [
+                    'name' => 'handler'
+                ]
+            ]
+        ],
         // Group: JS
-        'js_default_position' => [
-            'group' => 'js',
-            'control' => 'select',
-            'data' => [
-                'array',
+        'js' => [
+            'general' => [
                 [
-                    't' => 'Top',
-                    'b' => 'Bottom'
-                ],
-                0
-            ],
-            'default' => 'top',
-            'translate' => 'false'
-        ],
-        'jquery_version' => [
-            'group' => 'js',
-            'control' => 'input',
-            'default' => '1.11.1',
-            'translate' => false,
-            'validate' => [
-                'required'
-            ]
-        ],
-        'jquery_use_local' => [
-            'group' => 'js',
-            'control' => 'switch',
-            'default' => 0
-        ],
-        'js_fadeout_time' => [
-            'group' => 'js',
-            'control' => [
-                'number',
-                [
-                    'min' => 100
+                    'name' => 'position',
+                    'control' => 'select',
+                    'data' => [
+                        'array',
+                        [
+                            't' => 'Top',
+                            'b' => 'Bottom'
+                        ],
+                        0
+                    ],
+                    'default' => 't'
                 ]
             ],
-            'default' => 5000,
-            'validate' => [
-                'required',
+
+            'jquery' => [
                 [
-                    'min',
-                    100
+                    'name' => 'version',
+                    'default' => '2.2.0'
+                ],
+                [
+                    'name' => 'local',
+                    'control' => 'switch',
+                    'default' => 1
+                ]
+            ],
+            'style' => [
+
+                [
+                    'name' => 'fadeout_time',
+                    'control' => [
+                        'number',
+                        [
+                            'min' => 100
+                        ]
+                    ],
+                    'default' => 5000,
+                    'validate' => [
+                        'empty',
+                        [
+                            'min',
+                            100
+                        ]
+                    ]
                 ]
             ]
         ],
-
-        // Bootstrap
-        'bootstrap_version' => [
-            'group' => 'style',
-            'control' => 'input',
-            'default' => '3.3.5',
-            'translate' => false,
-            'validate' => [
-                'required'
-            ]
-        ],
-        'bootstrap_use_local' => [
-            'group' => 'style',
-            'control' => 'switch',
-            'default' => 0,
-            'type' => 'int'
-        ],
-        'fontawesome_version' => [
-            'group' => 'style',
-            'control' => 'input',
-            'default' => '4.0.3',
-            'translate' => false,
-            'validate' => [
-                'required'
-            ]
-        ],
-        'fontawesome_use_local' => [
-            'group' => 'style',
-            'control' => 'switch',
-            'default' => 0,
-            'type' => 'int'
-        ],
-        'theme' => [
-            'group' => 'style',
-            'control' => 'text',
-            'default' => 'Core',
-            'validate' => [
-                'required'
-            ]
-        ],
-
-        // Error logger
-        'error_logger' => [
-            'group' => 'error',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'error_to_db' => [
-            'group' => 'error',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'error_to_mail' => [
-            'group' => 'error',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'error_to_mail_address' => [
-            'group' => 'error',
-            'control' => 'input'
-        ],
-        'error_to_log' => [
-            'group' => 'error',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'skip_security_check' => [
-            'group' => 'error',
-            'control' => 'switch',
-            'default' => 0
-        ],
-
-        // Logging
-        'log' => [
-            'group' => 'logging',
-            'control' => 'switch',
-            'default' => 0
-        ],
-        'show_log_output' => [
-            'group' => 'logging',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'log_db' => [
-            'group' => 'logging',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'log_app' => [
-            'group' => 'logging',
-            'control' => 'switch',
-            'default' => 1
-        ],
-        'log_handler' => [
-            'group' => 'logging',
-            'control' => 'select',
-            'data' => [
-                'array',
+        'style' => [
+            // Bootstrap
+            'bootstrap' => [
                 [
-                    'page' => 'Page',
-                    'fire' => 'FirePHP'
+                    'name' => 'version',
+                    'control' => 'input',
+                    'default' => '3.3.6',
+                    'validate' => [
+                        'empty'
+                    ]
                 ],
-                0
+                [
+                    'name' => 'local',
+                    'control' => 'switch',
+                    'default' => 1
+                ]
             ],
-            'default' => 'page',
-            'translate' => false
+            'fontawesome' => [
+
+                [
+                    'name' => 'version',
+                    'default' => '4.5.0',
+                    'validate' => [
+                        'empty'
+                    ]
+                ],
+                [
+                    'name' => 'local',
+                    'control' => 'switch',
+                    'default' => 1
+                ]
+            ],
+            'theme' => [
+
+                [
+                    'name' => 'name',
+                    'control' => 'text',
+                    'default' => 'Core',
+                    'validate' => [
+                        'empty'
+                    ]
+                ]
+            ]
+        ],
+        // Error handling
+        'error' => [
+            'display' => [
+                [
+                    'name' => 'skip_security_check',
+                    'control' => 'switch'
+                ]
+            ],
+            'mail' => [
+                [
+                    'name' => 'use',
+                    'control' => 'switch',
+                    'default' => 1
+                ],
+                [
+                    'name' => 'address'
+                ],
+                [
+                    'name' => 'mta',
+                    'default' => 'default'
+                ]
+            ],
+            'log' => [
+
+                [
+                    'name' => 'use',
+                    'control' => 'switch',
+                    'default' => 1
+                ],
+                'modes' => [
+                    [
+                        'name' => 'db',
+                        'control' => 'switch',
+                        'default' => 1
+                    ],
+                    [
+                        'name' => 'php',
+                        'control' => 'switch',
+                        'default' => 1
+                    ]
+                ]
+            ]
         ],
 
         // Caching
-        'cache_ttl' => [
-            'group' => 'cache',
-            'control' => 'text',
-            'default' => '3600'
+        'cache' => [
+            'file' => [
+                [
+                    'name' => 'ttl',
+                    'control' => 'number',
+                    'default' => '3600'
+                ],
+                [
+                    'name' => 'ttl_js',
+                    'control' => 'number',
+                    'default' => '3600'
+                ],
+                [
+                    'name' => 'ttl_css',
+                    'control' => 'number',
+                    'default' => '3600'
+                ]
+            ],
+            'memcache' => [
+                [
+                    'name' => 'use',
+                    'control' => 'switch'
+                ],
+                [
+                    'name' => 'server'
+                ],
+                [
+                    'name' => 'port'
+                ]
+            ]
         ],
-        'cache_ttl_js' => [
-            'group' => 'cache',
-            'control' => 'text',
-            'default' => '3600'
-        ],
-        'cache_ttl_css' => [
-            'group' => 'cache',
-            'control' => 'text',
-            'default' => '3600'
-        ],
-        'cache_memcache_use' => [
-            'group' => 'cache',
-            'control' => 'switch',
-            'default' => 0,
-        ],
-        'cache_memcache_server' => [
-            'group' => 'cache',
-            'control' => 'text',
-        ],
-        'cache_memcache_port' => [
-            'group' => 'cache',
-            'control' => 'text',
-        ],
+
+        // Mailsystem
+        'mail' => [
+            'general' => [
+                [
+                    'name' => 'smtpdebug',
+                    'control' => 'switch'
+                ]
+            ],
+            'mta' => [
+                'default' => [
+                    [
+                        'name' => 'system',
+                        'control' => 'select',
+                        'data' => [
+                            'array',
+                            [
+                                0 => 'phpmail',
+                                1 => 'SMTP'
+                            ],
+                            0
+                        ],
+                        'default' => 1
+                    ],
+                    [
+                        'name' => 'host',
+                        'control' => 'mail'
+                    ],
+                    [
+                        'name' => 'port',
+                        'control' => 'number',
+                        'default' => 587
+                    ],
+                    [
+                        'name' => 'username'
+                    ],
+                    [
+                        'name' => 'password',
+                        'control' => 'password'
+                    ],
+                    [
+                        'name' => 'accept_selfsigned',
+                        'control' => 'switch'
+                    ],
+                    [
+                        'name' => 'protocol',
+                        'control' => 'select',
+                        'data' => [
+                            'array',
+                            [
+                                'ssl',
+                                'tls'
+                            ],
+                            1
+                        ],
+                        'default' => 'tls'
+                    ]
+                ]
+            ]
+        ]
     ];
 
     // Apps routes
@@ -292,57 +417,138 @@ final class Core extends App
         [
             'name' => 'login',
             'method' => 'GET|POST',
-            'route' => '../login',
-            'controller' => 'Security',
-            'action' => 'Login'
+            'route' => '/login',
+            'controller' => 'login',
+            'action' => 'login'
         ],
         [
             'name' => 'logout',
             'method' => 'GET',
-            'route' => '../logout',
-            'controller' => 'Security',
-            'action' => 'Logout'
+            'route' => '/logout',
+            'controller' => 'login',
+            'action' => 'logout'
+        ],
+        [
+            'name' => 'register',
+            'method' => 'POST|GET',
+            'route' => '/register',
+            'controller' => 'register',
+            'action' => 'register'
+        ],
+        [
+            'name' => 'register.activation',
+            'method' => 'GET',
+            'route' => '/register/activate/[:key]',
+            'controller' => 'register',
+            'action' => 'activate'
+        ],
+        [
+            'name' => 'register.deny',
+            'method' => 'GET',
+            'route' => '/register/deny/[:key]',
+            'controller' => 'register',
+            'action' => 'deny'
+        ],
+        [
+            'name' => 'register.done',
+            'method' => 'GET',
+            'route' => '/register/done/[i:state]',
+            'controller' => 'register',
+            'action' => 'done'
         ],
         [
             'name' => 'admin',
-            'route' => '../admin',
+            'route' => '/admin',
             'controller' => 'admin',
             'action' => 'index'
         ],
         [
             'name' => 'install',
-            'route' => '../admin/[a:app_name]/install',
+            'route' => '/admin/[a:app_name]/install',
             'controller' => 'config',
             'action' => 'install'
         ],
         [
             'name' => 'remove',
-            'route' => '../admin/[a:app_name]/remove',
+            'route' => '/admin/[a:app_name]/remove',
             'controller' => 'config',
             'action' => 'remove'
         ],
         [
             'name' => 'config',
-            'method' => 'GET|POST',
-            'route' => '../admin/[a:app_name]/config',
+            'method' => 'GET',
+            'route' => '/admin/[a:app_name]/config',
             'controller' => 'config',
             'action' => 'config'
         ],
         [
-            'name' => 'reconfig',
-            'route' => '../admin/[a:app_name]/reconfig',
-            'controller' => 'config',
-            'action' => 'reconfigure'
+            'name' => 'config_group',
+            'method' => 'GET|POST',
+            'route' => '/admin/[a:app_name]/config/[a:group_name]',
+            'controller' => 'Config',
+            'action' => 'ConfigGroup'
+        ],
+
+        // Default generic routes
+        [
+            'name' => 'main',
+            'route' => '/',
+            'ctrl' => 'Index'
+        ],
+
+        // Generic
+
+        [
+            'name' => 'app',
+            'route' => '/[a:controller]'
+        ],
+        [
+            'name' => 'action',
+            'route' => '/[a:controller]/[a:action]'
+        ],
+        [
+            'name' => 'byid',
+            'method' => 'GET|POST',
+            'route' => '/[a:controller]/[i:id]/[a:action]'
+        ],
+        [
+            'name' => 'edit',
+            'method' => 'POST|GET',
+            'route' => '/[a:controller]/[i:id]?/edit',
+            'action' => 'Edit'
+        ],
+        [
+            'name' => 'edit_child',
+            'method' => 'POST|GET',
+            'route' => '/[a:controller]/[i:id]?/edit/of/[i:id_parent]',
+            'action' => 'Edit'
+        ],
+        [
+            'name' => 'delete',
+            'route' => '/[a:controller]/[i:id]/delete',
+            'action' => 'Delete'
+        ],
+        [
+            'name' => 'delete_child',
+            'route' => '/[a:controller]/[i:id]?/delete/of/[i:id_parent]',
+            'action' => 'Delete'
+        ],
+        [
+            'name' => 'list_by_letter',
+            'route' => '/[a:controller]/[a:letter]/list',
+            'action' => 'ListByLetter'
         ]
     ];
 
     public function Start()
     {
-$this->debugFbLog($this->security->checkAccess('core_admin'));
+        if ($this->security->checkBan()) {
+            return;
+        }
 
         if ($this->security->checkAccess('core_admin')) {
 
-            $root = $this->content->menu->createItem('admin', $this->txt('admin'));
+            $root = $this->page->menu->createItem('admin', $this->text('menu.admin'));
 
             $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
 
@@ -353,8 +559,13 @@ $this->debugFbLog($this->security->checkAccess('core_admin'));
             }
         }
 
-        $key = $this->security->loggedIn() ? 'logout' : 'login';
+        if ($this->security->loggedIn()) {
+            $this->page->menu->createItem('login', $this->text('menu.logout'), $this->url('logout'));
+        }
+        else {
 
-        $this->content->menu->createItem('login', $this->txt($key), $this->url($key));
+            $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
+            $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login'));
+        }
     }
 }
