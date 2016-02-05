@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Data\Container;
+use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Security\Security;
 use Core\Lib\Router\Router;
@@ -10,7 +10,7 @@ use Core\Lib\Router\Router;
  * Post.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Post
@@ -65,7 +65,8 @@ class Post
      *
      * @param string $app
      * @param string $key
-     * @param string $return_type Optional: Type of data to return. Default: Container
+     * @param string $return_type
+     *            Optional: Type of data to return. Default: Container
      *
      * @return array|Container|boolean
      */
@@ -166,8 +167,7 @@ class Post
         }
 
         // Trim data
-        array_walk_recursive($_POST[$app_small][$key_small], function (&$data)
-        {
+        array_walk_recursive($_POST[$app_small][$key_small], function (&$data) {
             $data = trim($data);
         });
 
