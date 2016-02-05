@@ -5,8 +5,6 @@ use Core\Lib\Data\Container\Container;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Html\Form\Form;
 use Core\Lib\Html\Form\Checkbox;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Html\Form\Select;
 use Core\Lib\Html\Form\Button;
 use Core\Lib\Router\UrlTrait;
@@ -161,7 +159,7 @@ final class FormDesigner extends Form
      * @param string $size
      *            Bootstrap Grid size type aka "xs", "sm", "md" or "lg"
      *
-     * @throws InvalidArgumentException
+     * @throws FormDesignerException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
@@ -175,7 +173,7 @@ final class FormDesigner extends Form
         ];
 
         if (! in_array($grid_size, $sizes)) {
-            Throw new InvalidArgumentException(sprintf('FormDesigner allowed grid sizes are %s. The size "%s" is not supported.', implode(', ', $sizes), $grid_size));
+            Throw new FormDesignerException(sprintf('FormDesigner allowed grid sizes are %s. The size "%s" is not supported.', implode(', ', $sizes), $grid_size));
         }
 
         $this->grid_size = $grid_size;
@@ -189,14 +187,14 @@ final class FormDesigner extends Form
      * @param int $label_width
      *            Value between 1 and 12 as label width
      *
-     * @throws InvalidArgumentException
+     * @throws FormDesignerException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
     public function setLabelWidth($label_width)
     {
         if ($label_width < 1 || $label_width > 12) {
-            Throw new InvalidArgumentException('FormDesigner label width needs to be a value between 1 and 12');
+            Throw new FormDesignerException('FormDesigner label width needs to be a value between 1 and 12');
         }
 
         $this->label_width = $label_width;
@@ -239,7 +237,7 @@ final class FormDesigner extends Form
      * @param string $send_mode
      *            Send mode which can be 'ajax' or 'submit'
      *
-     * @throws InvalidArgumentException
+     * @throws FormDesignerException
      *
      * @return \Core\Lib\Html\FormDesigner\FormDesigner
      */
@@ -251,7 +249,7 @@ final class FormDesigner extends Form
         ];
 
         if (! in_array($send_mode, $modes)) {
-            Throw new InvalidArgumentException(sprintf('"%s" is not an allowed form sendmode.', $send_mode), 1000);
+            Throw new FormDesignerException(sprintf('"%s" is not an allowed form sendmode.', $send_mode), 1000);
         }
 
         $this->send_mode = $send_mode;
@@ -426,17 +424,17 @@ final class FormDesigner extends Form
     /**
      * Creates prefixes for controlnames/-ids used within the form which is created by FormDesigner.
      *
-     * @throws UnexpectedValueException
+     * @throws FormDesignerException
      */
     private function createNames()
     {
         // manual forms need a set app and model name
         if (! isset($this->app_name)) {
-            Throw new UnexpectedValueException('The FormDesigner needs a name of a related app.', 10000);
+            Throw new FormDesignerException('The FormDesigner needs a name of a related app.', 10000);
         }
 
         if (! isset($this->controller_name)) {
-            Throw new UnexpectedValueException('The FormDesigner needs a name for the controls,', 10000);
+            Throw new FormDesignerException('The FormDesigner needs a name for the controls,', 10000);
         }
 
         $this->lower_app_name = $this->stringUncamelize($this->app_name);
@@ -514,12 +512,12 @@ final class FormDesigner extends Form
      *
      * @see \Core\Lib\Html\HtmlAbstract::build()
      *
-     * @throws UnexpectedValueException
+     * @throws FormDesignerException
      */
     public function build()
     {
         if (empty($this->groups)) {
-            Throw new UnexpectedValueException('Your form has no groups to show. Add groups and try again.');
+            Throw new FormDesignerException('Your form has no groups to show. Add groups and try again.');
         }
 
         // Create needed IDs and control names
@@ -535,7 +533,7 @@ final class FormDesigner extends Form
         $html = '';
 
         // Create hidden field with unique session token
-        $html .= '<input type="hidden" name="token" value="' . $this->di->get('core.http.session')->get('token') . '">';
+        $html .= '<input type="hidden" name="token" value="' . $_SESSION['token'] . '">';
 
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group);
