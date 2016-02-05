@@ -413,7 +413,6 @@ class App
             'core.sec.security',
             'core.page',
             'core.html.factory',
-            'core.http.session',
             'core.http.cookie',
             'core.cache',
             'core.ajax'

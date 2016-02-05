@@ -4,7 +4,6 @@ namespace Core\Lib\Amvc;
 // Http Libs
 use Core\Lib\Router\Router;
 use Core\Lib\Http\Post;
-use Core\Lib\Http\Session;
 use Core\Lib\Http\Cookie;
 
 // Security Libs
@@ -137,12 +136,6 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var Session
-     */
-    protected $session;
-
-    /**
-     *
      * @var Cache
      */
     protected $cache;
@@ -184,8 +177,6 @@ class Controller extends MvcAbstract
      *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
-     * @param Session $session
-     *            Session dependency
      * @param Cookie $cookie
      *            Cookie dependency
      * @param Cache $cache
@@ -193,7 +184,7 @@ class Controller extends MvcAbstract
      * @param Ajax $ajax
      *            Ajax dependency
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Page $page, HtmlFactory $html, Session $session, Cookie $cookie, Cache $cache, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Page $page, HtmlFactory $html, Cookie $cookie, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -203,7 +194,6 @@ class Controller extends MvcAbstract
         $this->security = $security;
         $this->page = $page;
         $this->html = $html;
-        $this->session = $session;
         $this->cookie = $cookie;
         $this->cache = $cache;
         $this->ajax = $ajax;
