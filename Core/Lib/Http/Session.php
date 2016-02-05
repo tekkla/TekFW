@@ -1,7 +1,6 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Data\Connectors\Db\Db;
 
 /**
@@ -29,14 +28,14 @@ final class Session
     public function __construct(Db $db)
     {
         $this->db = $db;
-        
+
         // Set sssion garbage collector lifetime to one hour
         ini_set('session.gc_maxlifetime', 3600);
-        
+
         // Run garbage collector with a chance of 1%
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
-        
+
         // Set handler to overide SESSION
         session_set_save_handler([
             $this,
@@ -60,106 +59,18 @@ final class Session
     }
 
     /**
-     * Access on data stored in session.
-     *
-     * @param string $key            
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return mixed
-     */
-    public function get($key = '')
-    {
-        if (empty($key)) {
-            return $_SESSION;
-        }
-        
-        if (isset($_SESSION[$key])) {
-            return $_SESSION[$key];
-        } else {
-            Throw new InvalidArgumentException('Session key "' . $key . '" not found.');
-        }
-    }
-
-    /**
-     * Stores data in session under the set key
-     *
-     * @param string $key            
-     * @param mixed $val            
-     *
-     * @return Session
-     */
-    public function set($key, $val)
-    {
-        $_SESSION[$key] = $val;
-        
-        return $this;
-    }
-
-    /**
-     * Adds data to existing data in session.
-     * Tries to find data by using the set key. Converts non array data
-     * into an array. Adds set $val at end of data array.
-     *
-     * @param string $key            
-     * @param mixed $val            
-     *
-     * @return \Core\Lib\Http\Session
-     */
-    public function add($key, $val)
-    {
-        if (! isset($_SESSION[$key])) {
-            $_SESSION[$key] = [];
-        } else {
-            if (! is_array($_SESSION[$key])) {
-                $_SESSION[$key] = (array) $_SESSION[$key];
-            }
-        }
-        
-        $_SESSION[$key][] = $val;
-        
-        return $this;
-    }
-
-    /**
-     * Checks for existing data by it's key.
-     *
-     * @param boolean $key            
-     */
-    public function exists($key)
-    {
-        return isset($_SESSION[$key]);
-    }
-
-    /**
-     * Removes data from session by it's key.
-     *
-     * @param string $key            
-     *
-     * @return \Core\Lib\Http\Session
-     */
-    public function remove($key)
-    {
-        if (isset($_SESSION[$key])) {
-            unset($_SESSION[$key]);
-        }
-        
-        return $this;
-    }
-
-    /**
      * Init session
      */
     public function init()
     {
         // Start the session
         session_start();
-        
+
         if (! isset($_SESSION['id_user'])) {
             $_SESSION['id_user'] = 0;
             $_SESSION['logged_in'] = false;
         }
-        
+
         // Create session id constant
         define('SID', session_id());
     }
@@ -196,9 +107,9 @@ final class Session
                 ':id_session' => $id_session
             ]
         ]);
-        
+
         $data = $this->db->single();
-        
+
         return $data ? $data['data'] : '';
     }
 
@@ -222,7 +133,7 @@ final class Session
                 ':data' => $data
             ]
         ]);
-        
+
         // Attempt Execution - If successful return true
         return $this->db->execute() ? true : false;
     }
@@ -241,7 +152,7 @@ final class Session
                 'id_session' => $id_session
             ]
         ]);
-        
+
         // Attempt execution - If successful return True
         return $this->db->execute() ? true : false;
     }
@@ -253,7 +164,7 @@ final class Session
     {
         // Calculate what is to be deemed old
         $old = time() - $max;
-        
+
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
@@ -263,7 +174,7 @@ final class Session
                 ':old' => $old
             ]
         ]);
-        
+
         // Attempt execution
         return $this->db->execute() ? true : false;
     }
