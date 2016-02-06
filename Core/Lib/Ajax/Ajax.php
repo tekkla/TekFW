@@ -145,7 +145,7 @@ class Ajax
             }
         }
 
-        // Output is json encoded
+        // Return JSON encoded ajax command stackk
         return json_encode($this->ajax);
     }
 
