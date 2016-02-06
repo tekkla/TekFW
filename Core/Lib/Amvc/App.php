@@ -11,8 +11,8 @@ use Core\Lib\Cfg\Cfg;
 use Core\Lib\Security\Security;
 use Core\Lib\Security\Permission;
 
-// Content Libs
-use Core\Lib\Content\Content;
+// Page
+use Core\Lib\Page\Page;
 
 // Router Libs
 use Core\Lib\Router\Router;
@@ -25,7 +25,6 @@ use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Cfg\CfgTrait;
-use Core\Lib\Page\Page;
 
 /**
  * App.php
@@ -409,11 +408,10 @@ class App
 
         $args = [
             'core.router',
-            'core.http.post',
+            'core.http',
             'core.sec.security',
             'core.page',
             'core.html.factory',
-            'core.http.cookie',
             'core.cache',
             'core.ajax'
         ];

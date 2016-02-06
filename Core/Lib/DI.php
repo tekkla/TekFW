@@ -151,7 +151,11 @@ class DI implements \ArrayAccess
 
         // == HTTP =========================================================
         $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
-        $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie');
+        $this->mapService('core.http', '\Core\Lib\Http\Http', [
+            'core.http.cookie',
+            'core.http.post'
+        ]);
+        $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie\Cookies');
         $this->mapService('core.http.post', '\Core\Lib\Http\Post', [
             'core.router',
             'core.sec.security'

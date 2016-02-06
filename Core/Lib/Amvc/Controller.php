@@ -32,6 +32,8 @@ use Core\Lib\Router\UrlTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Cfg\CfgTrait;
 use Core\Lib\Language\TextTrait;
+use Core\Lib\Http\Cookie\Cookies;
+use Core\Lib\Http\Http;
 
 /**
  * Controller.php
@@ -112,9 +114,9 @@ class Controller extends MvcAbstract
 
     /**
      *
-     * @var Post
+     * @var Http
      */
-    protected $post;
+    protected $http;
 
     /**
      *
@@ -169,32 +171,29 @@ class Controller extends MvcAbstract
      *            App dependency
      * @param Router $router
      *            Router dependency
-     * @param Post $post
-     *            Post dependency
+     * @param Http $http
+     *            Http dependency
      * @param Security $security
      *            Security dependency
      * @param Page $page
      *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
-     * @param Cookie $cookie
-     *            Cookie dependency
      * @param Cache $cache
      *            Cache dependency
      * @param Ajax $ajax
      *            Ajax dependency
      */
-    final public function __construct($name, App $app, Router $router, Post $post, Security $security, Page $page, HtmlFactory $html, Cookie $cookie, Cache $cache, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Cache $cache, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
         $this->app = $app;
         $this->router = $router;
-        $this->post = $post;
+        $this->http = $http;
         $this->security = $security;
         $this->page = $page;
         $this->html = $html;
-        $this->cookie = $cookie;
         $this->cache = $cache;
         $this->ajax = $ajax;
 
@@ -319,10 +318,10 @@ class Controller extends MvcAbstract
     }
 
     /**
-     * Ajax method to send the result of an action as ajax html command.
-     * This works similiar to the run() method and
-     * even uses it. The difference is that the renderesult is wrapped by an ajax command object. This ajax command can
-     * be controlled by setting the wanted parameters via $this->ajax->...
+     * Ajax method to send the result of an action as ajax html command
+     *
+     * This works similiar to the run() method and even uses it. The difference is that the renderesult is wrapped by an
+     * ajax command object. This ajax command can be controlled by setting the wanted parameters via $this->ajax->...
      *
      * @param string $action
      *            Name of the action to call
