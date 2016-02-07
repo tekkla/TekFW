@@ -110,10 +110,11 @@ class Page
     private $html;
 
     /**
+     * Message Sservice
      *
      * @var Message
      */
-    public $msg;
+    public $message;
 
     private $debug = [];
 
@@ -130,12 +131,6 @@ class Page
     private $action;
 
     /**
-     *
-     * @var array
-     */
-    private $headers = [];
-
-    /**
      * Constructor
      *
      * @param Router $router
@@ -145,9 +140,9 @@ class Page
      * @param Menu $menu
      * @param Css $css
      * @param Javascript $js
-     * @param Message $msg
+     * @param Message $message
      */
-    public function __construct(Router $router, Cfg $cfg, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, Message $msg)
+    public function __construct(Router $router, Cfg $cfg, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, Message $message)
     {
         $this->router = $router;
         $this->cfg = $cfg;
@@ -156,7 +151,7 @@ class Page
         $this->menu = $menu;
         $this->js = $js;
         $this->css = $css;
-        $this->msg = $msg;
+        $this->message = $message;
 
         $this->meta = new Meta();
         $this->og = new OpenGraph();
@@ -177,177 +172,9 @@ class Page
         }
 
         $this->router->setBasePath($this->cfg->get('Core', 'router.base_path'));
-    }
 
-    public function create()
-    {
-        // Match request against stored routes
-        $this->router->match();
-
-        $app_name = $this->router->getApp();
-
-        // Handle default settings when we have a default
-        if (empty($app_name) && $this->cfg->exists('Core', 'execute.default.app')) {
-            $app_name = $this->cfg->get('Core', 'execute.default.app');
-        }
-
-        /* @var $app \Core\Lib\Amvc\App */
-        $app = $this->app_creator->getAppInstance($app_name);
-
-        if (method_exists($app, 'Access')) {
-
-            // Call app wide access method. This is important for using forceLogin() security method.
-            $app->Access();
-
-            $app_check = $this->router->getApp();
-
-            // Check for redirect from Access() method!!!
-            if ($app_name != $app_check) {
-
-                /* @var $app \Core\Lib\Amvc\App */
-                $app = $this->app_creator->getAppInstance($app_check);
-            }
-        }
-
-        /**
-         * Each app can have it's own start procedure.
-         * This procedure is used to init apps with more than the app creator does.
-         * To use this feature the app needs a run() method in it's main file.
-         */
-        if (method_exists($app, 'Run')) {
-            $app->Run();
-        }
-
-        $controller_name = $this->router->getController();
-
-        if (empty($controller_name) && $this->cfg->exists('Core', 'execute.default.controller')) {
-            $controller_name = $this->cfg->get('Core', 'execute.default.controller');
-        }
-
-        // Load controller object
-        $this->controller = $app->getController($controller_name);
-
-        $action_name = $this->router->getAction();
-
-        if (empty($action_name) && $this->cfg->exists('Core', 'execute.default.action')) {
-            $action_name = $this->cfg->get('Core', 'execute.default.action');
-        }
-
-        // Which controller action has to be run?
-        $this->action = $action_name;
-
-        // Run controller and process result.
-        ob_start();
-
-        if ($this->router->isAjax()) {
-            $this->createAjax();
-        }
-        else {
-            $this->createFull();
-        }
-
-        // Run mailer send process
-        $this->di->get('core.mailer')->send();
-
-        echo ob_get_clean();
-    }
-
-    private function createAjax()
-    {
-        // Send cache preventing headers and set content type
-        header('Cache-Control: no-cache, must-revalidate');
-        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-
-        try {
-            // Result will be processed as ajax command list
-            $this->controller->ajax($this->action, $this->router->getParam());
-        } catch (\Exception $e) {
-            $this->di->get('core.error')->handleException($e, false, true);
-        }
-
-        // send JSON header
-        header('Content-type: application/json; charset=utf-8");');
-
-        // Run ajax processor
-        echo $this->di->get('core.ajax')->process();
-
-        return false;
-    }
-
-    private function createFull()
-    {
-        Try {
-
-            // Run controller and store result
-            $result = $this->controller->run($this->action, $this->router->getParam());
-        } catch (\Exception $e) {
-
-            $result = $this->di->get('core.error')->handleException($e);
-        }
-
-        switch ($this->router->getFormat()) {
-
-            case 'json':
-                $this->headers[] = 'Content-type: application/json; charset=utf-8';
-                $this->sendHeader();
-                echo json_encode($result);
-                return false;
-
-            case 'xml':
-                $this->headers[] = 'Content-Type: application/xml; charset=utf-8';
-                $this->sendHeader();
-                echo $result;
-                return false;
-
-            case 'file':
-                $this->sendHeader();
-                readfile($result);
-                return false;
-
-            case 'html':
-            default:
-
-                $this->css->init();
-                $this->js->init();
-
-                // Always use UTF-8
-                $this->headers[] = 'Content-Type: text/html; charset=utf-8';
-
-                // Add missing title
-                if (empty($this->title)) {
-                    $this->title = $this->cfg->get('Core', 'site.general.name');
-                }
-
-                $this->setContent($result);
-
-                // Call content builder
-
-                $this->sendHeader();
-
-                echo $this->render();
-
-                return true;
-        }
-    }
-
-    /**
-     * Sends all stored header data.
-     *
-     * @throws HttpException
-     *
-     * @return Content
-     */
-    private function sendHeader()
-    {
-        if (headers_sent()) {
-            Throw new PageException('Cannot sent headers. Headers are already sent somewhere. You have to use setHeader() method in controller.');
-        }
-
-        foreach ($this->headers as $header) {
-            header($header);
-        }
-
-        return $this;
+        $this->css->init();
+        $this->js->init();
     }
 
     /**
@@ -442,7 +269,7 @@ class Page
     }
 
     /**
-     * Renders and echoes template
+     * Renders template
      *
      * @param string $template
      *            Name of template
@@ -451,6 +278,11 @@ class Page
      */
     public function render($template = 'Index', $theme = 'Core')
     {
+        // Add missing title
+        if (empty($this->title)) {
+            $this->title = $this->cfg->get('Core', 'site.general.name');
+        }
+
         if ($theme == 'Core' && $this->cfg->exists('Core', 'style.theme')) {
             $theme = $this->cfg->get('Core', 'style.theme');
         }
