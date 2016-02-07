@@ -147,13 +147,6 @@ class App
     protected $page;
 
     /**
-     * Permission service
-     *
-     * @var Permission
-     */
-    private $permission;
-
-    /**
      *
      * @var Security
      */
@@ -163,7 +156,7 @@ class App
      *
      * @var DI
      */
-    protected $di;
+    public $di;
 
     /**
      * Constructor
@@ -176,21 +169,18 @@ class App
      *            Router dependency
      * @param Page $page
      *            Page dependency
-     * @param Permission $permission
-     *            Permission dependency
      * @param Security $security
      *            Security dependence
      * @param DI $di
      *            Visible DI dependency
      */
-    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Permission $permission, Security $security, DI $di)
+    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, DI $di)
     {
         // Setting properties
         $this->name = $app_name;
         $this->cfg = $cfg;
         $this->router = $router;
         $this->page = $page;
-        $this->permission = $permission;
         $this->security = $security;
         $this->di = $di;
 
@@ -243,16 +233,16 @@ class App
         $app_name = $this->stringUncamelize($this->name);
 
         // Add admin permission by default
-        $this->permission->addPermission($app_name, 'admin');
+        $this->security->permission->addPermission($app_name, 'admin');
 
         // Having a config means we have to add an admin permission
         if ($this->config) {
-            $this->permission->addPermission($app_name, 'config');
+            $this->security->permission->addPermission($app_name, 'config');
         }
 
         // Add permissions to permission service
         if ($this->permissions) {
-            $this->permission->addPermission($app_name, $this->permissions);
+            $this->security->permission->addPermission($app_name, $this->permissions);
         }
 
         // Set flat that permission init is done
@@ -409,7 +399,7 @@ class App
         $args = [
             'core.router',
             'core.http',
-            'core.sec.security',
+            'core.security',
             'core.page',
             'core.html.factory',
             'core.cache',

@@ -107,24 +107,28 @@ class Controller extends MvcAbstract
     private $view;
 
     /**
+     * Security Service
      *
      * @var Security
      */
     protected $security;
 
     /**
+     * Http Service Wrapper
      *
      * @var Http
      */
     protected $http;
 
     /**
+     * Router Service
      *
      * @var Router
      */
     protected $router;
 
     /**
+     * Page Service
      *
      * @var Page
      */
@@ -461,7 +465,7 @@ class Controller extends MvcAbstract
      */
     final protected function checkUserrights($perm)
     {
-        return $this->security->checkAccess($perm);
+        return $this->security->user->checkAccess($perm);
     }
 
     /**
@@ -509,7 +513,7 @@ class Controller extends MvcAbstract
 
             // No perms until here means we can finish here and allow access by returning true
             if ($perm) {
-                return $this->security->checkAccess($perm, $force);
+                return $this->security->user->checkAccess($perm, $force);
             }
         }
 
@@ -763,7 +767,7 @@ class Controller extends MvcAbstract
     }
 
     /**
-     * Redirect function to make sure the browser doesn't come back and repost the form data.
+     * Redirect function to make sure the browser doesn't come back and repost the form data
      *
      * @param string $location
      *            Location we redirtect to
@@ -784,13 +788,7 @@ class Controller extends MvcAbstract
         // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL
         // . '?' . SID . ';', $location);
 
-        // Send mails before redirecting!!!
-        $this->di->get('core.mailer')->send();
-
-        // Send redirect header
-        header('Location: ' . str_replace(' ', '%20', $location), true, $permanent ? 301 : 302);
-
-        exit();
+        $this->http->header->location($location, $permanent);
     }
 
     /**

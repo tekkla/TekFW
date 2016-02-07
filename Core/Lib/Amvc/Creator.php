@@ -93,8 +93,7 @@ class Creator
             'core.cfg',
             'core.router',
             'core.page',
-            'core.sec.permission',
-            'core.sec.security',
+            'core.security',
             'core.di'
         ];
 
