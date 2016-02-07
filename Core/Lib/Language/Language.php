@@ -43,11 +43,10 @@ class Language
 
                 if (array_key_exists($app_name, $this->data)) {
                     $this->data[$app_name] = array_merge($this->data[$app_name], $lang_array);
-                } else {
+                }
+                else {
                     $this->data[$app_name] = $lang_array;
                 }
-
-                \FB::log($this->data[$app_name]);
             }
         }
     }
