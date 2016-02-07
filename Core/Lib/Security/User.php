@@ -218,38 +218,59 @@ class User
     }
 
     /**
-     * Creates a new user
+     * Checks user access by permissions
      *
-     * Uses given username and password and returns it's user id.
-     * Optional state flag to activate user on creation.
+     * @param array $perms
+     * @param boolean $force
      *
-     * Given password will be hashed by password_hash($password, PASSWORD_DEFAULT) by default.
-     *
-     * @param string $username Username
-     * @param string $password Password
-     * @param boolean $state Optional: Stateflag. 0=inactive | 1=active (default: 0)
-     * @param boolean $password_hash Optional: Flag to activate password hashing by using password_hash (Default: true)
-     *
-     * @return integer
+     * @return boolean
      */
-    public function create($username, $password, $state=0, $password_hash=true)
+    public function checkAccess($perms = [], $force = false)
     {
-        $data = $this->db->adapter->getContainer(true);
-
-        $data['username'] = $username;
-
-        if ($password_hash == true) {
-            $password = password_hash($password, PASSWORD_DEFAULT);
+        // Guests are not allowed by default
+        if ($this->isGuest()) {
+            return false;
         }
 
-        $data['password'] = $password;
-        $data['state'] = (int) $state;
+        // Allow access to all users when perms argument is empty
+        if (empty($perms)) {
+            return true;
+        }
 
-        $this->db->qb([
-            'table' => 'users',
-            'data' => $data
-        ], true);
+        // Administrators are supermen :P
+        if ($this->isAdmin()) {
+            return true;
+        }
 
-        return $this->db->lastInsertId();
+        // Explicit array conversion of perms arg
+        if (! is_array($perms)) {
+            $perms = (array) $perms;
+        }
+
+        // User has the right to do this?
+        if (count(array_intersect($perms, $this->getPermissions())) > 0) {
+            return true;
+        }
+
+        // You aren't allowed, by default.
+        return false;
+    }
+
+    /**
+     * Security method to log suspisious actions and start banning process.
+     *
+     * @param string $msg
+     *            Message to log
+     * @param boolean|int $ban
+     *            Set this to the number of tries the user is allowed to do other suspicious things until he gets
+     *            banned.
+     *
+     * @return Security
+     */
+    public function logSuspicious($msg, $ban = false)
+    {
+        $this->logging->suspicious($msg);
+
+        return $this;
     }
 }

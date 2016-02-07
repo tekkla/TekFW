@@ -31,10 +31,12 @@ class Permission
     }
 
     /**
-     * Adds one or more permissions to permissions list.
+     * Adds one or more permissions to permissions list
      *
-     * @param string $app_name Name of permission related app
-     * @param array $permissions One or more permissions to add
+     * @param string $app_name
+     *            Name of permission related app
+     * @param array $permissions
+     *            One or more permissions to add
      */
     public function addPermission($app_name, $permissions = [])
     {
@@ -63,12 +65,8 @@ class Permission
     }
 
     /**
-     * Loads all permissions from DB which are mathing the groups argument.
-     * Returns an empty array when groups argument is not set.
      *
-     * @param unknown $group_id
-     *
-     * @return array
+     * @param array $groups
      */
     public function loadPermission($groups = [])
     {
@@ -89,7 +87,7 @@ class Permission
         $query = [
             'table' => 'permissions',
             'method' => 'SELECT DISTINCT',
-            'filter' => 'id_group IN (' . $prepared['sql'] .')',
+            'filter' => 'id_group IN (' . $prepared['sql'] . ')',
             'params' => $prepared['values']
         ];
 

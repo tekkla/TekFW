@@ -2,14 +2,12 @@
 namespace Core\Lib\Security;
 
 use Core\Lib\Data\Connectors\Db\Db;
-use Core\Lib\Errors\Exceptions\DatabaseException;
-use Core\Lib\Errors\Exceptions\SecurityException;
 
 /**
  * Group.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Group
@@ -21,7 +19,7 @@ class Group
      * @var array
      */
     private $default_groups = [
-        - 1 => 'guest',
+        0 => 'guest',
         1 => 'admin',
         2 => 'user'
     ];
@@ -87,7 +85,7 @@ class Group
             // Delete current groups
             $this->db->qb([
                 'table' => 'groups',
-                'method' => 'DELETE',
+                'method' => 'DELETE'
             ]);
             $this->db->execute();
 
@@ -97,8 +95,8 @@ class Group
                 'method' => 'INSERT',
                 'fields' => [
                     'id_group',
-                    'title',
-                 ]
+                    'title'
+                ]
             ]);
 
             // Insert the groups each by each into the groups table
@@ -113,7 +111,7 @@ class Group
         }
         catch (\PDOException $e) {
             $this->db->cancelTransaction();
-            Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
+            Throw new SecurityException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
 
@@ -143,6 +141,7 @@ class Group
      * Removes a group from DB and groups list
      *
      * @param integer $id_group
+     *
      *
      * @throws DatabaseException
      */
@@ -182,7 +181,7 @@ class Group
         catch (\PDOException $e) {
             $this->db->cancelTransaction();
 
-            Throw new DatabaseException($e->getMessage(), $e->getCode(), $e->getPrevious());
+            Throw new SecurityException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
     }
 
