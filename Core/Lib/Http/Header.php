@@ -25,6 +25,8 @@ class Header
         foreach ($this->header as $header) {
             header($header[0], $header[1], $header[2]);
         }
+
+        $this->header = [];
     }
 
     /**
