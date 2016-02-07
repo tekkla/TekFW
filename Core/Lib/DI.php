@@ -1,7 +1,6 @@
 <?php
 namespace Core\Lib;
 
-use Core\Lib\Amvc\App;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Errors\Exceptions\RuntimeException;
 
@@ -9,7 +8,7 @@ use Core\Lib\Errors\Exceptions\RuntimeException;
  * DI.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class DI implements \ArrayAccess
@@ -38,15 +37,6 @@ class DI implements \ArrayAccess
     private static $instance = false;
 
     /**
-     * Constructor
-     */
-    private function __construct(array $settings)
-    {
-        $this->settings = $settings;
-        $this->mapDefaults();
-    }
-
-    /**
      * Creates and returns singleton instance of DI service
      *
      * @param array $settings
@@ -61,217 +51,6 @@ class DI implements \ArrayAccess
         }
 
         return self::$instance;
-    }
-
-    /**
-     * Maps default services, factories and values
-     */
-    private function mapDefaults()
-    {
-        $to_map = [
-            [
-                'value',
-                'core.di',
-                $this
-            ]
-        ];
-
-        foreach ($to_map as $map) {
-
-            switch ($map[0]) {
-
-                case 'value':
-                    $this->mapValue($map[1], $map[2]);
-                    break;
-
-                case 'factory':
-                    $this->mapFactory($map[1], $map[2], isset($map[3]) ? $map[3] : null);
-                    break;
-
-                case 'service':
-                    $this->mapService($map[1], $map[2], isset($map[3]) ? $map[3] : null);
-                    break;
-
-                default:
-                    Throw new InvalidArgumentException(sprintf('Mappingtype "%s" is not supported by DI container', $map[0]));
-            }
-        }
-
-        // == DB ===========================================================
-        $check = [
-            'db.driver',
-            'db.host',
-            'db.port',
-            'db.name',
-            'db.user',
-            'db.pass',
-            'db.persistent',
-            'db.errmode',
-            'db.init_command',
-            'db.prefix'
-        ];
-
-        if (! in_array($check, $this->settings)) {
-            die('Missing db config. Check settings file.');
-        }
-
-        // == DB ===========================================================
-        $this->mapValue('db.default.driver', $this->settings['db.driver']);
-        $this->mapValue('db.default.host', $this->settings['db.host']);
-        $this->mapValue('db.default.port', $this->settings['db.port']);
-        $this->mapValue('db.default.name', $this->settings['db.name']);
-        $this->mapValue('db.default.user', $this->settings['db.user']);
-        $this->mapValue('db.default.pass', $this->settings['db.pass']);
-        $this->mapValue('db.default.options', [
-            \PDO::ATTR_PERSISTENT => $this->settings['db.persistent'],
-            \PDO::ATTR_ERRMODE => $this->settings['db.errmode'],
-            \PDO::MYSQL_ATTR_INIT_COMMAND => $this->settings['db.init_command'],
-            \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1
-        ]);
-        $this->mapValue('db.default.prefix', $this->settings['db.prefix']);
-        $this->mapService('db.default.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
-            'db.default.name',
-            'db.default.driver',
-            'db.default.host',
-            'db.default.port',
-            'db.default.user',
-            'db.default.pass',
-            'db.default.options'
-        ]);
-        $this->mapFactory('db.default', '\Core\Lib\Data\Connectors\Db\Db', [
-            'db.default.conn',
-            'db.default.prefix'
-        ]);
-
-        // == CONFIG =======================================================
-        $this->mapService('core.cfg', '\Core\Lib\Cfg\Cfg', 'db.default');
-
-        // == ROUTER =======================================================
-        $this->mapService('core.router', '\Core\Lib\Router\Router');
-
-        // == HTTP =========================================================
-        $this->mapService('core.http.session', '\Core\Lib\Http\Session', 'db.default');
-        $this->mapService('core.http', '\Core\Lib\Http\Http', [
-            'core.http.cookie',
-            'core.http.post'
-        ]);
-        $this->mapFactory('core.http.cookie', '\Core\Lib\Http\Cookie\Cookies');
-        $this->mapService('core.http.post', '\Core\Lib\Http\Post', [
-            'core.router',
-            'core.sec.security'
-        ]);
-
-        // == UTILITIES ====================================================
-        $this->mapFactory('core.util.timer', '\Core\Lib\Utilities\Timer');
-        $this->mapFactory('core.util.time', '\Core\Lib\Utilities\Time');
-        $this->mapFactory('core.util.shorturl', '\Core\Lib\Utilities\ShortenURL');
-        $this->mapFactory('core.util.date', '\Core\Lib\Utilities\Date');
-        $this->mapFactory('core.util.debug', '\Core\Lib\Utilities\Debug');
-        $this->mapService('core.util.fire', '\FB');
-
-        // == SECURITY =====================================================
-        $this->mapService('core.sec.security', '\Core\Lib\Security\Security', [
-            'db.default',
-            'core.cfg',
-            'core.http.cookie',
-            'core.sec.user.current',
-            'core.sec.group',
-            'core.sec.permission',
-            'core.log'
-        ]);
-        $this->mapFactory('core.sec.users', '\Core\Lib\Security\Users', [
-            'db.default',
-            'core.sec.security',
-            'core.cfg',
-            'core.log'
-        ]);
-        $this->mapFactory('core.sec.user', '\Core\Lib\Security\User', [
-            'db.default',
-            'core.sec.permission'
-        ]);
-        $this->mapService('core.sec.user.current', '\Core\Lib\Security\User', [
-            'db.default',
-            'core.sec.permission'
-        ]);
-        $this->mapFactory('core.sec.inputfilter', '\Core\Lib\Security\Inputfilter');
-        $this->mapService('core.sec.permission', '\Core\Lib\Security\Permission', 'db.default');
-        $this->mapService('core.sec.group', '\Core\Lib\Security\Group', 'db.default');
-
-        // == AMVC =========================================================
-        $this->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
-        $this->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
-
-        // == CACHE ========================================================
-        $this->mapService('core.cache', '\Core\Lib\Cache\Cache', [
-            'core.cfg'
-        ]);
-        $this->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
-
-        // == IO ===========================================================
-        $this->mapService('core.io.files', '\Core\Lib\IO\Files', [
-            'core.log',
-            'core.cfg'
-        ]);
-        $this->mapFactory('core.io.http', '\Core\Lib\IO\Http');
-
-        // == LOGGING========================================================
-        $this->mapService('core.log', '\Core\Lib\Logging\Logging', 'db.default');
-
-        // == MAILER =======================================================
-        $this->mapService('core.mailer', '\Core\Lib\Mailer\Mailer', [
-            'core.cfg',
-            'core.log'
-        ]);
-
-        // == DATA ==========================================================
-        $this->mapService('core.data.validator', '\Core\Lib\Data\Validator\Validator');
-
-        // == LANGUAGE ======================================================
-        $this->mapService('core.language', '\Core\Lib\Language\Language');
-
-        // == CONTENT =======================================================
-        $this->mapService('core.page', '\Core\Lib\Page\Page', [
-            'core.router',
-            'core.cfg',
-            'core.amvc.creator',
-            'core.html.factory',
-            'core.page.body.nav',
-            'core.page.head.css',
-            'core.page.head.js',
-            'core.page.body.message'
-        ]);
-        $this->mapFactory('core.page.head.css', '\Core\Lib\Page\Head\Css\Css', [
-            'core.cfg',
-            'core.cache'
-        ]);
-        $this->mapFactory('core.page.head.js', '\Core\Lib\Page\Head\Javascript\Javascript', [
-            'core.cfg',
-            'core.router',
-            'core.cache'
-        ]);
-        $this->mapService('core.page.body.message', '\Core\Lib\Page\Body\Message\Message');
-        $this->mapService('core.page.body.nav', '\Core\Lib\Page\Body\Menu\Menu');
-        $this->mapFactory('core.page.body.menu', '\Core\Lib\Page\Body\Menu\Menu');
-
-        // == HTML ==========================================================
-        $this->mapService('core.html.factory', '\Core\Lib\Html\HtmlFactory');
-
-        // == AJAX ==========================================================
-        $this->mapService('core.ajax', '\Core\Lib\Ajax\Ajax', [
-            'core.page.body.message',
-            'core.io.files',
-            'core.cfg'
-        ]);
-
-        // == ERROR =========================================================
-        $this->mapService('core.error', '\Core\Lib\Errors\ExceptionHandler', [
-            'core.router',
-            'core.sec.user.current',
-            'core.ajax',
-            'core.page.body.message',
-            'db.default',
-            'core.cfg'
-        ]);
     }
 
     /**
@@ -327,7 +106,7 @@ class DI implements \ArrayAccess
                 }
 
                 // Skip strings without di container typical dot
-                if (($arg instanceof App) || strpos($arg, '.') === false) {
+                if (($arg instanceof \Core\Lib\Amvc\App) || strpos($arg, '.') === false) {
                     continue;
                 }
 
@@ -337,9 +116,9 @@ class DI implements \ArrayAccess
             $obj = $reflection->newInstanceArgs($arguments);
         }
 
-        if (! property_exists($obj, 'di')) {
+        #if (! property_exists($obj, 'di')) {
             $obj->di = $this;
-        }
+        #}
 
         // Inject and return the created instance
         return $obj;
@@ -362,7 +141,7 @@ class DI implements \ArrayAccess
     }
 
     /**
-     * Maps a named service.
+     * Maps a named service
      *
      * Requesting this service will result in returning always the same object.
      *
@@ -383,7 +162,7 @@ class DI implements \ArrayAccess
     }
 
     /**
-     * Maps a class by name.
+     * Maps a class by name
      *
      * Requestingthis class will result in new object.
      *
@@ -458,7 +237,7 @@ class DI implements \ArrayAccess
     }
 
     /**
-     * Returns the requested SFV (Service/Factory/Value).
+     * Returns the requested SFV (Service/Factory/Value)
      *
      * @param string $name
      *            Name of the Service, Factory or Value to return
@@ -493,7 +272,7 @@ class DI implements \ArrayAccess
     }
 
     /**
-     * Checks for a registred SFV.
+     * Checks for a registred SFV
      *
      * @param string $name
      *            Name of service, factory or value to check
@@ -514,11 +293,6 @@ class DI implements \ArrayAccess
     public function get($name)
     {
         return $this->getSFV($name);
-    }
-
-    public function log($var)
-    {
-        $this->get('core.util.fire')->log($var);
     }
 
     /**
