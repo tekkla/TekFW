@@ -147,8 +147,10 @@ class Download
         ];
 
         foreach ($headers as $header) {
-            $this->http->header->generic($header);
+            $this->header->generic($header);
         }
+
+        $this->header->send();
 
         if ($download_rate > 0) {
 
