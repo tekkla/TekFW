@@ -26,11 +26,19 @@ final class Http
      *
      * @var \Core\Lib\Http\Cookie\Cookies
      */
-    public $cookie;
+    public $cookies;
 
-    public function __construct(Cookies $cookies, Post $post)
+    /**
+     * Header Service
+     *
+     * @var Header
+     */
+    public $header;
+
+    public function __construct(Cookies $cookies, Post $post, Header $header)
     {
         $this->cookies = $cookies;
         $this->post = $post;
+        $this->header = $header;
     }
 }
