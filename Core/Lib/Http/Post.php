@@ -3,8 +3,8 @@ namespace Core\Lib\Http;
 
 use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\StringTrait;
-use Core\Lib\Security\Security;
 use Core\Lib\Router\Router;
+use Core\Lib\Security\Token;
 
 /**
  * Post.php
@@ -32,9 +32,9 @@ class Post
 
     /**
      *
-     * @var Security
+     * @var Token
      */
-    private $security;
+    private $token;
 
     /**
      *
@@ -53,10 +53,10 @@ class Post
      *
      * @param Router $router
      */
-    public function __construct(Router $router, Security $security)
+    public function __construct(Router $router, Token $token)
     {
         $this->router = $router;
-        $this->security = $security;
+        $this->token = $token;
     }
 
     /**
@@ -144,11 +144,7 @@ class Post
         }
 
         // Validate posted data with session token
-        if (! $this->security->validatePostToken()) {
-
-            // Log attempt and start ban process with max 3 tries.
-            $this->security->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
-
+        if (! $this->token->validatePostToken()) {
             return false;
         }
 
