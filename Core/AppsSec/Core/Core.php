@@ -542,11 +542,11 @@ final class Core extends App
 
     public function Start()
     {
-        if ($this->security->checkBan()) {
+        if ($this->security->users->checkBan()) {
             return;
         }
 
-        if ($this->security->checkAccess('core_admin')) {
+        if ($this->security->user->checkAccess('core_admin')) {
 
             $root = $this->page->menu->createItem('admin', $this->text('menu.admin'));
 
@@ -559,7 +559,7 @@ final class Core extends App
             }
         }
 
-        if ($this->security->loggedIn()) {
+        if ($this->security->login->loggedIn()) {
             $this->page->menu->createItem('login', $this->text('menu.logout'), $this->url('logout'));
         }
         else {

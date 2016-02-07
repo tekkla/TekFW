@@ -4,7 +4,7 @@ namespace Core\AppsSec\Core\Container;
 use Core\Lib\Data\Container\Container;
 
 /**
- * SecurityContainer.php
+ * LoginContainer.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015

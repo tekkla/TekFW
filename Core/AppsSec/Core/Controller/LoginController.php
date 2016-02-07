@@ -14,11 +14,7 @@ use Core\Lib\Amvc\Controller;
 class LoginController extends Controller
 {
 
-    /**
-     *
-     * @var SecurityModel
-     */
-    public $model;
+    protected $has_no_model = true;
 
     /**
      *
@@ -26,34 +22,41 @@ class LoginController extends Controller
      */
     public function Login()
     {
-        if ($this->security->loggedIn()) {
+        if ($this->security->login->loggedIn()) {
             $this->redirect('AlreadyLoggedIn');
             return;
         }
 
-        if ($this->security->checkBan()) {
+        if ($this->security->users->checkBan()) {
             $this->redirectExit($this->url('index'));
         }
 
-        $data = $this->post->get();
+        $data = $this->http->post->get();
 
         if ($data) {
 
-            // Do login procedure
-            $logged_in = $this->model->doLogin($data);
+            if ($data->validate()) {
 
-            //
-            if ($logged_in == true) {
-                $url = $this->url('index');
-                $this->redirectExit($url);
-            }
-            else {
-                $_SESSION['login_failed'] =  true;
-                $this->message->danger($this->text('login.failed'));
+                // Do login procedure
+                $logged_in = $this->security->login->doLogin($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
+
+                if ($logged_in == true) {
+                    $url = $this->url('index');
+                    $this->redirectExit($url);
+                }
+                else {
+                    $_SESSION['login_failed'] = true;
+                    $this->page->message->danger($this->text('login.failed'));
+                }
             }
         }
         else {
-            $data = $this->model->getEmptyLogin();
+
+            // Get container
+            $data = $this->app->getContainer('Login');
+
+            // Autologin on or off by default?
+            $data['remember'] = $this->cfg('security.autologin');
         }
 
         $form = $this->getFormDesigner($data);
@@ -133,7 +136,8 @@ class LoginController extends Controller
 
     public function Logout()
     {
-        $this->security->logout();
+        $this->security->login->doLogout();
+
         $this->redirectExit($this->router->url('core_index'));
     }
 

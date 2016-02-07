@@ -79,7 +79,7 @@ class RegisterModel extends Model
             return;
         }
         
-        return $this->di->get('core.sec.users')->createUser($data['username'], $data['password'], $activate);
+        return $this->di->get('core.security.users')->createUser($data['username'], $data['password'], $activate);
     }
 
     public function getActivationData($id_user)
@@ -119,7 +119,7 @@ class RegisterModel extends Model
         }
         
         /* @var $security \Core\Lib\Security\Security */
-        $security = $this->di->get('core.sec.security');
+        $security = $this->di->get('core.security');
         $security->login($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
         
         if ($security->loggedIn() === true) {

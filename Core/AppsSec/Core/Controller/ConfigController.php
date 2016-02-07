@@ -79,7 +79,7 @@ class ConfigController extends Controller
             Throw new SecurityException('No accessrights');
         }
 
-        $data = $this->post->getArray();
+        $data = $this->http->post->getArray();
 
         // save process
         if ($data) {

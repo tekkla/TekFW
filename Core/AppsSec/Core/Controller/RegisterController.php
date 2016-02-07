@@ -18,7 +18,7 @@ class RegisterController extends Controller
 
     public function Register()
     {
-        $data = $this->post->get();
+        $data = $this->http->post->get();
         
         if ($data) {
             
@@ -165,7 +165,7 @@ class RegisterController extends Controller
     public function Activate($key)
     {
         // $key = $this->router->getParam('key');
-        $id_user = $this->di->get('core.sec.users')->activateUser($key);
+        $id_user = $this->di->get('core.security.users')->activateUser($key);
         
         // Redirect to RegisterDone on successfull activation
         if ($id_user) {

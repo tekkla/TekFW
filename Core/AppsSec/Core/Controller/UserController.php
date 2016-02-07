@@ -37,7 +37,7 @@ class UserController extends Controller
 
     public function Edit($id)
     {
-        $data = $this->post->get();
+        $data = $this->http->post->get();
         
         if ($data) {
             
