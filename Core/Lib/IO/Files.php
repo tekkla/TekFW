@@ -1,14 +1,14 @@
 <?php
 namespace Core\Lib\IO;
 
-use Core\Lib\Logging\Logging;
+use Core\Lib\Log\Log;
 use Core\Lib\Traits\StringTrait;
 
 /**
  * File.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Files
@@ -17,16 +17,16 @@ class Files
 
     /**
      *
-     * @var Logging
+     * @var Log
      */
     private $log;
 
     /**
      * Constructor
      *
-     * @param Logging $log
+     * @param Log $log
      */
-    public function __construct(Logging $log)
+    public function __construct(Log $log)
     {
         $this->log = $log;
     }
@@ -37,7 +37,8 @@ class Files
      * value will be the given path. If not, the path is created and the return
      * value boolean false/true
      *
-     * @param string $path Path and name of dir
+     * @param string $path
+     *            Path and name of dir
      *
      * @return string bool
      */
@@ -50,7 +51,8 @@ class Files
     /**
      * Deletes recursive a given dir inclusive all files and folders within it.
      *
-     * @param $dirname Path to the dir
+     * @param $dirname Path
+     *            to the dir
      *
      * @throws IOException
      * @throws IOException
@@ -92,8 +94,10 @@ class Files
      * Both parameter have to be a full paths.On success the return value will be the destination path.
      * Otherwise it will be boolean false.
      *
-     * @param string $source Path to source file
-     * @param string $destination Path to destination file
+     * @param string $source
+     *            Path to source file
+     * @param string $destination
+     *            Path to destination file
      *
      * @return string boolean
      */
@@ -133,7 +137,8 @@ class Files
     /**
      * Wrapper method for file_exists() which throws an error.
      *
-     * @param string $full_path Complete path to file
+     * @param string $full_path
+     *            Complete path to file
      * @param string $log_missing
      *
      * @return boolean
@@ -142,7 +147,7 @@ class Files
      */
     public function exists($full_path, $log_missing = false)
     {
-        $exists = file_exists($full_path);
+        $exists = file_exists($full_path) && is_file($full_path);
 
         if (! $exists && $log_missing == true) {
             $this->log->file(sprintf('File "%s" not found.', $full_path), - 1);
@@ -187,7 +192,8 @@ class Files
     /**
      * Cleans up a filename string from all characters which can make trouble on filesystems.
      *
-     * @param string $name The string to cleanup
+     * @param string $name
+     *            The string to cleanup
      * @param string $delimiter
      *
      * @return string
@@ -212,7 +218,8 @@ class Files
     /**
      * Returns an array of files inside the given directory path.
      *
-     * @param string $path Directory path to get filelist from
+     * @param string $path
+     *            Directory path to get filelist from
      *
      * @throws IOException
      *
@@ -313,5 +320,40 @@ class Files
     public function checkClassFileExists($class)
     {
         return file_exists(BASEDIR . '/' . str_replace('\\', '/', $class) . '.php');
+    }
+
+    /**
+     * Returns the mime type of a file by analyzing it's extension
+     *
+     * !!! DISCLAIMER !!!
+     * This will just match the file extension to the following array.
+     * It does not guarantee that the file is TRULY that of the extension that this function returns.
+     *
+     * @param string $file
+     *            Filepath
+     *
+     *            Thanks to Erutan409
+     * @see https://gist.github.com/Erutan409/8e774dfb2b343fe78b14
+     *
+     * @throws Exception
+     */
+    public function getMimeType($file)
+    {
+
+        // there's a bug that doesn't properly detect
+        // the mime type of css files
+        // https://bugs.php.net/bug.php?id=53035
+        // so the following is used, instead
+        // src: http://www.freeformatter.com/mime-types-list.html#mime-types-list
+        $mime_type = include ('mime_types.php');
+
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+        if (isset($mime_type[$extension])) {
+            return $mime_type[$extension];
+        }
+        else {
+            Throw new IOException("Unknown file type");
+        }
     }
 }
