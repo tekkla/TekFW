@@ -12,36 +12,42 @@ class Security
 {
 
     /**
+     * Access to current user
      *
      * @var User
      */
     public $user;
 
     /**
+     * Access to Users service
      *
      * @var Users
      */
     public $users;
 
     /**
+     * Access to Group service
      *
      * @var Group
      */
     public $group;
 
     /**
+     * Access to Permission service
      *
      * @var Permission
      */
     public $permission;
 
     /**
+     * Access to Token service
      *
      * @var Token
      */
     public $token;
 
     /**
+     * Access to Login service
      *
      * @var Login
      */
