@@ -9,6 +9,8 @@ use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Router\UrlTrait;
 use Core\Lib\Cfg\CfgTrait;
+use Core\Lib\Language\TextTrait;
+use Core\Lib\Security\Security;
 
 /**
  * Model.php
@@ -19,9 +21,11 @@ use Core\Lib\Cfg\CfgTrait;
  */
 class Model extends MvcAbstract
 {
-    use ArrayTrait;
+
     use UrlTrait;
+    use TextTrait;
     use CfgTrait;
+    use ArrayTrait;
 
     /**
      * MVC component type
@@ -31,17 +35,25 @@ class Model extends MvcAbstract
     protected $type = 'Model';
 
     /**
+     * Access om Security service
+     *
+     * @var Security
+     */
+    protected $security;
+
+    /**
      * Constructor
      *
-     * @param unknown $name
+     * @param string $name
      * @param App $app
-     * @param Vars $vars
+     * @param Security $security
      */
-    final public function __construct($name, App $app)
+    final public function __construct($name, App $app, Security $security)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
+        $this->security = $security;
     }
 
     /**
