@@ -6,20 +6,16 @@ use Core\Lib\Errors\Exceptions\RuntimeException;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
+ * HtmlFactory.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- *
+ * @copyright 2016
+ * @license MIT
  */
 class HtmlFactory
 {
 
     use ArrayTrait;
-
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {}
 
     /**
      * Creates an html control / element / form element by using DI container instance method.
