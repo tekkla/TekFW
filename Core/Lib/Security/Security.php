@@ -33,13 +33,6 @@ class Security
     public $group;
 
     /**
-     * Access to Permission service
-     *
-     * @var Permission
-     */
-    public $permission;
-
-    /**
      * Access to Token service
      *
      * @var Token
@@ -57,18 +50,21 @@ class Security
      * Constructor
      *
      * @param User $user
+     *            Access to current User service
      * @param Users $users
+     *            Access to Users service
      * @param Group $group
-     * @param Permission $permission
+     *            Access to Group service
      * @param Token $token
+     *            Access to token service
      * @param Login $login
+     *            Access to Login service
      */
-    public function __construct(User $user, Users $users, Group $group, Permission $permission, Token $token, Login $login)
+    public function __construct(User $user, Users $users, Group $group, Token $token, Login $login)
     {
         $this->user = $user;
         $this->users = $users;
         $this->group = $group;
-        $this->permission = $permission;
         $this->token = $token;
         $this->login = $login;
     }

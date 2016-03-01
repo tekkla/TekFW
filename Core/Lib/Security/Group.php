@@ -19,7 +19,7 @@ class Group
      * @var array
      */
     private $default_groups = [
-        0 => 'guest',
+        - 1 => 'guest',
         1 => 'admin',
         2 => 'user'
     ];
@@ -29,7 +29,22 @@ class Group
      *
      * @var array
      */
-    private $groups = [];
+    private $groups = [
+        'Core' => []
+    ];
+
+    /**
+     *
+     * @var array
+     */
+    private $byid = [];
+
+    /**
+     * Used group ids and title
+     *
+     * @var array
+     */
+    private $used = [];
 
     /**
      * DB Connector
@@ -54,8 +69,11 @@ class Group
         $this->db->qb([
             'table' => 'groups',
             'fields' => [
+                'app',
                 'id_group',
-                'title'
+                'title',
+                'display_name',
+                'description'
             ],
             'order' => 'id_group'
         ]);
@@ -64,7 +82,7 @@ class Group
         $groups = $this->db->fetchAll();
 
         foreach ($groups as $g) {
-            $this->addGroup($g['id_group'], $g['title']);
+            $this->addGroup($g['app'], $g['id_group'], $g['title'], $g['display_name'], $g['description']);
         }
     }
 
@@ -122,19 +140,29 @@ class Group
      *
      * @throws SecurityException
      */
-    public function addGroup($id_group, $title)
+    public function addGroup($app, $id_group, $title, $display_name, $description = '')
     {
         // Check for group id already in use
-        if (array_key_exists($id_group, $this->groups)) {
-            Throw new SecurityException('A usergroup with id "' . $id_group . '" already exists.');
+        if (array_key_exists($id_group, $this->used)) {
+            Throw new SecurityException(sprintf('A usergroup with id "%s" already exists.', $id_group));
         }
 
         // Check for group name already in use
-        if (array_search($title, $this->groups)) {
-            Throw new SecurityException('A usergroup with title "' . $title . '" already exists.');
+        if (in_array($app . '.' . $title, $this->used)) {
+            Throw new SecurityException(sprintf('A usergroup with title "%s" already exists for app "%s".', $title, $app));
         }
 
-        $this->groups[$id_group] = $title;
+        $group = [
+            'app' => $app,
+            'id_group' => $id_group,
+            'title' => $title,
+            'display_name' => $display_name,
+            'description' => $description
+        ];
+
+        $this->groups[$app][$id_group] = $group;
+        $this->byid[$id_group] = $group;
+        $this->used[$id_group] = $app . '.' . $title;
     }
 
     /**
@@ -179,6 +207,7 @@ class Group
             $this->db->endTransaction();
         }
         catch (\PDOException $e) {
+
             $this->db->cancelTransaction();
 
             Throw new SecurityException($e->getMessage(), $e->getCode(), $e->getPrevious());
@@ -190,8 +219,60 @@ class Group
      *
      * @return array
      */
-    public function getGroups()
+    public function getGroups($byid = false, $skip_guest = false)
     {
-        return $this->groups;
+        if ($byid) {
+
+            $data = $this->byid;
+
+            if ($skip_guest) {
+                unset($data[- 1]);
+            }
+        }
+        else {
+            $data = $this->groups;
+
+            if ($skip_guest) {
+                unset($data['Core'][- 1]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Returns a group by it's id
+     *
+     * @param int $id_group
+     *            Internal id of group
+     *
+     * @return mixed|boolean
+     */
+    public function getGroupById($id_group)
+    {
+        if (array_key_exists($id_group, $this->byid)) {
+            return $this->byid[$id_group];
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns a group by app and name
+     *
+     * @param string $app
+     *            Name of related app
+     * @param string $name
+     *            Name of group
+     *
+     * @return mixed|boolean
+     */
+    public function getGroupByAppAndName($app, $name)
+    {
+        if (array_key_exists($app, $this->groups) && array_key_exists($name, $this->groups[$app])) {
+            return $this->groups[$app][$name];
+        }
+
+        return false;
     }
 }

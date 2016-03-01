@@ -224,29 +224,32 @@ class App
     }
 
     /**
-     * Checks app settings for permissions to load, checks for existing permissions file
-     * and adds permissions to core permission service
+     * Inits apps permissions by addind default values for admin and for config if confix exists
      */
     final private function initPermissions()
     {
-        // We need lowercase app name
-        $app_name = $this->stringUncamelize($this->name);
-
-        // Add admin permission by default
-        $this->security->permission->addPermission($app_name, 'admin');
-
-        // Having a config means we have to add an admin permission
-        if ($this->config) {
-            $this->security->permission->addPermission($app_name, 'config');
+        // Init only once
+        if (self::$init_stages[$this->name]['perms']) {
+            return;
         }
 
-        // Add permissions to permission service
-        if ($this->permissions) {
-            $this->security->permission->addPermission($app_name, $this->permissions);
+        // Add admin permission by default
+        $default = [
+            'admin'
+        ];
+
+        // Having a config means we have to add an admin config permission
+        if ($this->config) {
+            $default[] = 'config';
+        }
+
+        // Put all default perms in front of all other perms
+        foreach ($default as $perm) {
+            array_unshift($this->permissions, $perm);
         }
 
         // Set flat that permission init is done
-        self::$init_stages[$this->name]['permissions'] = true;
+        self::$init_stages[$this->name]['perms'] = true;
     }
 
     /**
@@ -379,7 +382,11 @@ class App
             $name = $this->getComponentsName();
         }
 
-        return $this->MVCFactory($name, 'Model');
+        $args = [
+            'core.security'
+        ];
+
+        return $this->MVCFactory($name, 'Model', $args);
     }
 
     /**
@@ -540,10 +547,12 @@ class App
             if (is_array($value)) {
                 if (isset($value['name'])) {
                     $result[$prefix . $value['name']] = $value;
-                } else {
+                }
+                else {
                     $result = $result + $this->flattenConfig($value, $prefix . $key . $glue);
                 }
-            } else {
+            }
+            else {
                 $result[$prefix . $key] = $value;
             }
         }
@@ -805,6 +814,16 @@ class App
     final public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Returns the apps permissions
+     *
+     * @return array
+     */
+    final public function getPermissions()
+    {
+        return $this->permissions;
     }
 
     /**
