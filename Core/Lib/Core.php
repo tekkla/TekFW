@@ -60,6 +60,8 @@ class Core
         $this->loadSettings();
         $this->loadErrorhandler();
 
+        ob_start();
+
         $this->defineUrls();
         $this->registerClassloader();
         $this->initDI();
@@ -312,7 +314,6 @@ class Core
             'core.security.user.current',
             'core.security.users',
             'core.security.group',
-            'core.security.permission',
             'core.security.token',
             'core.security.login'
         ]);
@@ -324,13 +325,10 @@ class Core
         ]);
         $this->di->mapFactory('core.security.user', '\Core\Lib\Security\User', [
             'db.default',
-            'core.security.permission'
         ]);
         $this->di->mapService('core.security.user.current', '\Core\Lib\Security\User', [
             'db.default',
-            'core.security.permission'
         ]);
-        $this->di->mapService('core.security.permission', '\Core\Lib\Security\Permission', 'db.default');
         $this->di->mapService('core.security.group', '\Core\Lib\Security\Group', 'db.default');
         $this->di->mapService('core.security.token', '\Core\Lib\Security\Token', [
             'db.default',
@@ -506,6 +504,14 @@ class Core
 
         // Try to autologin
         $security->login->doAutoLogin();
+
+        // Load User
+        if ($security->login->loggedIn()) {
+            $security->user->load($_SESSION['id_user']);
+        }
+
+        // Create session token
+        $security->token->generateRandomSessionToken();
     }
 
     private function autodiscoverApps()
