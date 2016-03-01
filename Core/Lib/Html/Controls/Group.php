@@ -254,8 +254,6 @@ class Group extends Div
             $this->inner = str_replace('{footer}', $this->use_panel == true ? '<div class="panel-footer">' . $footer . '</div>' : $footer, $this->inner);
         }
 
-        $this->inner = $this->inner;
-
         return parent::build();
     }
 }
