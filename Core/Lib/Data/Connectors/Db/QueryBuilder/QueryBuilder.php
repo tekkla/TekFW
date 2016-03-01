@@ -5,7 +5,6 @@ use Core\Lib\Data\Container\Container;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Traits\ConvertTrait;
 
-
 /**
  * QueryBuilder.php
  *
@@ -56,7 +55,8 @@ class QueryBuilder
     /**
      * Constructor
      *
-     * @param array $definition Optional QueryDefinition
+     * @param array $definition
+     *            Optional QueryDefinition
      */
     public function __construct(Array $definition = [])
     {
@@ -68,7 +68,8 @@ class QueryBuilder
     /**
      * SELECT statement
      *
-     * @param array|string $fields Fieldlist as comma seperated string or value array.
+     * @param array|string $fields
+     *            Fieldlist as comma seperated string or value array.
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -84,7 +85,8 @@ class QueryBuilder
     /**
      * SELECT DISTINCT statement
      *
-     * @param array|string $fields Fieldlist as comma seperated string or value array.
+     * @param array|string $fields
+     *            Fieldlist as comma seperated string or value array.
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -112,7 +114,8 @@ class QueryBuilder
     /**
      * INTO statement
      *
-     * @param string $tbl Name of table
+     * @param string $tbl
+     *            Name of table
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -138,7 +141,8 @@ class QueryBuilder
     /**
      * Colums to use in query
      *
-     * @param array|string $fields Fieldlist as comma seperated string or value array.
+     * @param array|string $fields
+     *            Fieldlist as comma seperated string or value array.
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -160,8 +164,10 @@ class QueryBuilder
     /**
      * From statement
      *
-     * @param string $tbl Table name
-     * @param string $alias Optional: Table alias
+     * @param string $tbl
+     *            Table name
+     * @param string $alias
+     *            Optional: Table alias
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -179,8 +185,10 @@ class QueryBuilder
     /**
      * Filter statement
      *
-     * @param string $filter Filterstring
-     * @param array $params Optional: Paramenter list
+     * @param string $filter
+     *            Filterstring
+     * @param array $params
+     *            Optional: Paramenter list
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -195,7 +203,8 @@ class QueryBuilder
     /**
      * Order statement
      *
-     * @param string $order Orderstring
+     * @param string $order
+     *            Orderstring
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -209,10 +218,14 @@ class QueryBuilder
     /**
      * Join statement
      *
-     * @param string $tbl Table name of table to join
-     * @param string $as Alias of join table
-     * @param string $by How to join
-     * @param string $condition Join condition
+     * @param string $tbl
+     *            Table name of table to join
+     * @param string $as
+     *            Alias of join table
+     * @param string $by
+     *            How to join
+     * @param string $condition
+     *            Join condition
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -231,7 +244,8 @@ class QueryBuilder
     /**
      * GroupBy statement.
      *
-     * @param string|array field name or list of field names as array
+     * @param
+     *            string|array field name or list of field names as array
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -251,8 +265,10 @@ class QueryBuilder
     /**
      * Limit statement.
      *
-     * @param int $lower Lower limit
-     * @param int $upper Optional: Upper limit
+     * @param int $lower
+     *            Lower limit
+     * @param int $upper
+     *            Optional: Upper limit
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -434,8 +450,7 @@ class QueryBuilder
 
         // Return complete all fields
         return ($this->alias ? $this->alias : $this->tbl) . '.*';
-
-     }
+    }
 
     private function processQueryDefinition($def)
     {
@@ -574,10 +589,9 @@ class QueryBuilder
         }
     }
 
-
     private function processCounter()
     {
-        if (!empty($this->definition['counter'])) {
+        if (! empty($this->definition['counter'])) {
 
             // store counter definition
             $this->counter = $this->definition['counter'];
@@ -591,7 +605,7 @@ class QueryBuilder
             ];
 
             foreach ($defaults as $key => $val) {
-                if (!isset($this->counter[$key])) {
+                if (! isset($this->counter[$key])) {
                     $this->counter[$key] = $val;
                 }
             }
@@ -784,20 +798,27 @@ class QueryBuilder
     private function processLimitDefinition()
     {
         if (isset($this->definition['limit'])) {
-            // Single int value as limit?
-            if (is_int($this->definition['limit'])) {
+
+            // Upper and lower limit?
+            if (is_array($this->definition['limit'])) {
+
+                switch (count($this->definition['limit'])) {
+
+                    case 1:
+                        $this->limit['lower'] = (int) $this->definition['limit'][0];
+                        break;
+
+                    case 2:
+                    default:
+                        $this->limit['lower'] = (int) $this->definition['limit'][0];
+                        $this->limit['upper'] = (int) $this->definition['limit'][1];
+                        break;
+                }
+            }
+
+            // Or single value?
+            else {
                 $this->limit['lower'] = $this->definition['limit'];
-            }
-
-            // Array but only one value`?
-            elseif (is_array($this->definition['limit']) && count($this->definition['limit']) == 1) {
-                $this->limit['lower'] = (int) $this->definition['limit'][0];
-            }
-
-            // Array and two values?
-            elseif (is_array($this->definition['limit']) && count($this->definition['limit']) == 2) {
-                $this->limit['lower'] = (int) $this->definition['limit'][0];
-                $this->limit['upper'] = (int) $this->definition['limit'][1];
             }
         }
     }
