@@ -164,10 +164,17 @@ class Creator
     /**
      * Returns a list of loaded app names
      *
+     * @param boolean $only_names
+     *            Optional flag to switch the return value to be only an array of app names or instances (Default: true)
+     *
      * @return array
      */
-    public function getLoadedApps()
+    public function getLoadedApps($only_names = true)
     {
-        return array_keys($this->instances);
+        if ($only_names) {
+            return array_keys($this->instances);
+        }
+
+        return $this->instances;
     }
 }
