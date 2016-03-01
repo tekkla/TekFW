@@ -19,7 +19,7 @@ abstract class MenuItemAbstract
     private $items = [];
 
     /**
-     * Method to add a menu item as child.
+     * Method to add a menu item as child
      *
      * @param MenuItem $menu_item
      *
@@ -33,22 +33,25 @@ abstract class MenuItemAbstract
     }
 
     /**
-     * Creates new menuitem and adds it to items list.
+     * Creates new menuitem and adds it to items list
      *
-     * @param string $name Internal name of item
-     * @param string $text Text to show
-     * @param string $url Optional url for linking
+     * @param string $name
+     *            Internal name of item
+     * @param string $text
+     *            Text to show
+     * @param string $url
+     *            Optional url for linking
      *
      * @return MenuItem Reference to the created child item.
      */
-    public function &createItem($name, $text, $url = null)
+    public function &createItem($name, $text, $url = '')
     {
         $menu_item = new MenuItem();
 
         $menu_item->setName($name);
         $menu_item->setText($text);
 
-        if ($url !== null) {
+        if ($url) {
             $menu_item->setUrl($url);
         }
 
@@ -68,7 +71,7 @@ abstract class MenuItemAbstract
     }
 
     /**
-     * Returns all child items
+     * Returns one or all child items
      *
      * @return array
      */
