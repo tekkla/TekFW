@@ -24,8 +24,6 @@ class GroupModel extends Model
             $group['users'] = $this->loadUsers($id);
             $group['permissions'] = $this->loadPermissions($id);
 
-            var_dump($group);
-
             $container->fill($group);
         }
 
@@ -112,8 +110,6 @@ class GroupModel extends Model
         foreach ($perms as $perm) {
             $out[$perm['app']][$perm['permission']] = $perm;
         }
-
-        var_dump($out);
 
         return $out;
     }
