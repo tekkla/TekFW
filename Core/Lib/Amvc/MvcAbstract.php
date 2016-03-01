@@ -16,7 +16,6 @@ use Core\Lib\Traits\StringTrait;
 abstract class MvcAbstract
 {
     use StringTrait;
-    use TextTrait;
     use AccessTrait;
 
     /**
