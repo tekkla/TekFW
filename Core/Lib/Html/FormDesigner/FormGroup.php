@@ -16,7 +16,7 @@ use Core\Lib\Html\Form\Button;
  */
 class FormGroup extends Div
 {
-    
+
     use StringTrait;
 
     /**
@@ -35,45 +35,45 @@ class FormGroup extends Div
      *            The type of control to create
      * @param string $name
      *            Name of the control. Ths name is used to bind the control to a model field.
-     *            
+     *
      * @return FormAbstract
      */
     public function &addControl($control, $name = '', $label = '', $value = '')
     {
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->stringCamelize($control) . 'Control');
-        
+
         // Inject html factory for controls which are creating html controls by themself
         $control->factory = $this->di->get('core.html.factory');
-        
+
         // set contols name
-        if (! empty($name)) {
-            $control->setName($name);
-        }
-        else {
+        if (empty($name) && method_exists($control, 'setUnbound')) {
             $control->setUnbound();
         }
-        
+        else {
+            $control->setName($name);
+        }
+
         // And optionally bind this control to a field with the same name
         if (! empty($name) && method_exists($control, 'setField')) {
             $control->setField($name);
         }
-        
+
         // Label set?
         if (! empty($label) && method_exists($control, 'setLabel')) {
             $control->setLabel($label);
         }
-        
+
         if (! empty($value) && method_exists($control, 'setValue')) {
             $control->setValue($value);
         }
-        
+
         if ($control instanceof Button) {
             $control->noLabel();
         }
-        
+
         // Create element
         $this->elementFactory('control', $control);
-        
+
         return $control;
     }
 
@@ -95,15 +95,15 @@ class FormGroup extends Div
      *            Name/Path of element to create
      * @param array $args
      *            Optional arguments to be passed on element creation call.
-     *            
+     *
      * @return HtmlAbstract
      */
     public function &addElement($element, $args = [])
     {
         $element = $this->di->get('core.html.factory')->create($element, $args);
-        
+
         $this->elementFactory('factory', $element);
-        
+
         return $element;
     }
 
@@ -112,15 +112,15 @@ class FormGroup extends Div
      *
      * @param bool $unshift
      *            Optional flag to add group at beginning of controls array.
-     *            
+     *
      * @return FormGroup
      */
     public function &addGroup($unshift = false)
     {
         $group = $this->di->instance(__NAMESPACE__ . '\FormGroup');
-        
+
         $this->elementFactory('group', $group, $unshift);
-        
+
         return $group;
     }
 
@@ -138,14 +138,14 @@ class FormGroup extends Div
     {
         $element = $this->di->instance(__NAMESPACE__ . '\FormElement');
         $element->setContent($content);
-        
+
         if ($unshift == true) {
             array_unshift($this->elements, $element);
         }
         else {
             $this->elements[] = $element;
         }
-        
+
         return $element;
     }
 
