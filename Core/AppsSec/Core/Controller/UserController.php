@@ -14,35 +14,53 @@ class UserController extends Controller
 
     public function Index()
     {
-        $this->redirect('ListByLetter');
+        $this->redirect('Userlist');
     }
 
-    public function ListByLetter($letter = 'A')
+    public function Userlist()
     {
         $this->setVar([
-            'userlist' => $this->model->getList(),
+            'userlist' => $this->model->getList('display_name', '%', 100, [
+                [
+                    function ($data) {
+                        $data['link'] = $this->url('edit', [
+                            'controller' => 'User',
+                            'id' => $data['id_user']
+                        ]);
+                        return $data;
+                    }
+                ]
+            ]),
             'links' => [
                 'new' => [
-                    'text' => $this->txt('user_new'),
+                    'text' => $this->text('user.action.new.text'),
                     'url' => $this->url('edit', [
                         'controller' => 'user'
                     ])
                 ]
             ],
-            'headline' => $this->txt('userlist')
+            'text' => [
+                'headline' => $this->text('user.list'),
+                'username' => $this->text('user.field.username'),
+                'display_name' => $this->text('user.field.display_name')
+            ]
         ]);
-        
-        $this->setAjaxTarget('#content');
+
+        $this->setAjaxTarget('#core-admin');
     }
 
-    public function Edit($id)
+    public function Edit($id = null)
     {
+        if (! $id) {
+            $id = $this->security->user->getId();
+        }
+
         $data = $this->http->post->get();
-        
+
         if ($data) {
-            
+
             $this->model->save($data);
-            
+
             if (! $data->hasErrors()) {
                 $this->redirect('Detail', [
                     'id' => $id
@@ -50,50 +68,88 @@ class UserController extends Controller
                 return;
             }
         }
-        
+
         if (! $data) {
-            $data = $this->model->getEdit($id);
+            $data = $this->model->getEdit($this->security->user, $id);
         }
-        
+
         // Get FormDesigner object
         $form = $this->getFormDesigner($data);
-        
+
         // Flag form to be ajax
         $form->isAjax();
-        
+
         // Start new group for controls
         $group = $form->addGroup();
-        
+
         // Add hidden field for invoice id
         $group->addControl('hidden', 'id_user');
-        
+
         // Username
         $control = $group->addControl('text', 'username');
-        
-        // Password
-        $control = $group->addControl('password', 'password');
-        
+
+        // Displayname
+        $control = $group->addControl('text', 'display_name');
+
         // Usergroups
-        $control = $group->addControl('Optiongroup', 'groups');
-        
+        $heading = $group->addElement('Elements\Heading');
+        $heading->setSize(3);
+        $heading->setInner($this->text('user.field.groups'));
+
+        $groups = $this->security->group->getGroups();
+
+        /* @var $control \Core\Lib\Html\Controls\Optiongroup */
+        $control = $group->addControl('Optiongroup');
+        $control->addCss('well well-sm');
+
+        foreach ($groups as $app => $app_groups) {
+
+            $control->createHeading($app);
+
+            foreach ($app_groups as $id_group => $group) {
+
+                // Skip guest and user group because guest is everyone unregisterted and user
+                // everyone registered
+                if ($id_group == - 1 || $id_group == 2) {
+                    continue;
+                }
+
+                $option = $control->createOption();
+                $option->setValue($id_group);
+                $option->setInner($group['display_name']);
+
+                if (array_key_exists($id_group, $data['groups'])) {
+                    $option->isSelected();
+                }
+            }
+        }
+
+        // Remove core groups
+        unset($groups['Core']);
+
+        // Display all
+        foreach ($groups as $app => $group) {}
+
         /* @var $editbox \Core\Lib\Html\Controls\Editbox */
         $editbox = $this->getHtmlObject('Controls\Editbox');
         $editbox->setForm($form);
-        
+
         // Editbox caption
-        $editbox->setCaption($this->txt('invoice_edit'));
-        
+        $editbox->setCaption($this->text('user.action.edit.text'));
+
         // Cancel action only when requested
-        $editbox->setCancelAction($this->url('detail', [
+        $editbox->setCancelAction($this->url('byid', [
             'controller' => 'User',
+            'action' => 'Detail',
             'id' => $id
         ]));
-        
+
         // Publish to view
         $this->setVar([
             'form' => $editbox
         ]);
+
+        $this->setAjaxTarget('#core-admin');
     }
 }
 
-?>

@@ -492,6 +492,74 @@ The team of %s'
 
     /**
      * **************************************************************************
+     * USER
+     * **************************************************************************
+     */
+    'user' => [
+        'singular' => 'Benutzer',
+        'plural' => 'Benutzer',
+        'icon' => 'user',
+        'action' => [
+            'edit' => [
+                'text' => 'Benutzer bearbeiten'
+            ],
+            'new' => [
+                'text' => 'Neuer Benutzer'
+            ]
+        ],
+        'list' => 'Benutzerliste',
+        'field' => [
+            'username' => 'Benutzername',
+            'display_name' => 'Anzeigename',
+            'password' => 'Passwort',
+            'groups' => 'Benutzergruppen'
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * GROUP
+     * **************************************************************************
+     */
+    'group' => [
+        'singular' => 'Gruppe',
+        'plural' => 'Gruppen',
+        'members' => 'Mitglieder',
+        'icon' => 'users',
+        'action' => [
+            'edit' => [
+                'text' => 'Gruppe bearbeiten'
+            ],
+            'new' => [
+                'text' => 'Neue Gruppe'
+            ]
+        ],
+        'list' => 'Gruppenliste',
+        'field' => [
+            'id_group' => 'Gruppen ID',
+            'title' => 'Name',
+            'display_name' => 'Anzeigename',
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * Permissions
+     * **************************************************************************
+     */
+    'perm' => [
+        'admin' => [
+            'text' => 'Administrator',
+            'desc' => '',
+        ],
+        'config' => [
+            'text' => 'Konfiguration',
+            'desc' => '',
+        ],
+    ],
+
+    /**
+     * **************************************************************************
      * VALIDATORS
      * ****************************************************************************
      */

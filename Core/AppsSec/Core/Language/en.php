@@ -492,6 +492,74 @@ The team of %s'
 
     /**
      * **************************************************************************
+     * USER
+     * **************************************************************************
+     */
+    'user' => [
+        'singular' => 'User',
+        'plural' => 'Users',
+        'icon' => 'user',
+        'action' => [
+            'edit' => [
+                'text' => 'Edit user'
+            ],
+            'new' => [
+                'text' => 'Add user'
+            ]
+        ],
+        'list' => 'Userlist',
+        'field' => [
+            'username' => 'Username',
+            'display_name' => 'Displayname',
+            'password' => 'Password',
+            'groups' => 'Usergroups'
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * GROUP
+     * **************************************************************************
+     */
+    'group' => [
+        'singular' => 'Usergroup',
+        'plural' => 'Usergroups',
+        'members' => 'Members',
+        'icon' => 'users',
+        'action' => [
+            'edit' => [
+                'text' => 'Edit usergroup'
+            ],
+            'new' => [
+                'text' => 'Add usergroup'
+            ]
+        ],
+        'list' => 'Grouplist',
+        'field' => [
+            'id_group' => 'Group ID',
+            'title' => 'Name',
+            'display_name' => 'Display name',
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * Permissions
+     * **************************************************************************
+     */
+    'perm' => [
+        'admin' => [
+            'text' => 'Administrator',
+            'desc' => '',
+        ],
+        'config' => [
+            'text' => 'Configuration',
+            'desc' => '',
+        ],
+    ],
+
+    /**
+     * **************************************************************************
      * VALIDATORS
      * ****************************************************************************
      */

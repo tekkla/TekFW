@@ -1,7 +1,6 @@
 <?php
 namespace Core\AppsSec\Core\Controller;
 
-use Core\AppsSec\Core\Model\SecurityModel;
 use Core\Lib\Amvc\Controller;
 
 /**

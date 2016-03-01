@@ -18,6 +18,15 @@ final class Core extends App
     // Uses language system
     protected $language = true;
 
+    protected $permissions = [
+        'test',
+        'myperm',
+        'lmaa',
+        'loremipsum',
+        'uswusf',
+        'fck'
+    ];
+
     // Apps default config
     protected $config = [
 
@@ -345,6 +354,17 @@ final class Core extends App
             ]
         ],
 
+        // Loggingsystem
+        'log' => [
+            'display' => [
+                [
+                    'name' => 'entries',
+                    'control' => 'number',
+                    'default' => 20
+                ]
+            ]
+        ],
+
         // Mailsystem
         'mail' => [
             'general' => [
@@ -463,18 +483,6 @@ final class Core extends App
             'action' => 'index'
         ],
         [
-            'name' => 'install',
-            'route' => '/admin/[a:app_name]/install',
-            'controller' => 'config',
-            'action' => 'install'
-        ],
-        [
-            'name' => 'remove',
-            'route' => '/admin/[a:app_name]/remove',
-            'controller' => 'config',
-            'action' => 'remove'
-        ],
-        [
             'name' => 'config',
             'method' => 'GET',
             'route' => '/admin/[a:app_name]/config',
@@ -482,7 +490,7 @@ final class Core extends App
             'action' => 'config'
         ],
         [
-            'name' => 'config_group',
+            'name' => 'config.group',
             'method' => 'GET|POST',
             'route' => '/admin/[a:app_name]/config/[a:group_name]',
             'controller' => 'Config',
@@ -542,26 +550,20 @@ final class Core extends App
 
     public function Start()
     {
-        if ($this->security->users->checkBan()) {
-            return;
-        }
-
-        if ($this->security->user->checkAccess('core_admin')) {
-
-            $root = $this->page->menu->createItem('admin', $this->text('menu.admin'));
-
-            $apps = $this->di->get('core.amvc.creator')->getLoadedApps();
-
-            foreach ($apps as $app) {
-                $root->createItem('admin_app_' . $app, $app, $this->url('config', [
-                    'app_name' => $app
-                ]));
-            }
-        }
-
+        // Add logoff button for logged in users
         if ($this->security->login->loggedIn()) {
-            $this->page->menu->createItem('login', $this->text('menu.logout'), $this->url('logout'));
+
+            $usermenu = $this->page->menu->createItem('login', $this->security->user->getDisplayname());
+
+            // Show admin menu?
+            if ($this->security->user->isAdmin()) {
+                $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
+            }
+
+            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('logout'));
         }
+
+        // or add login and register buttons
         else {
 
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));

@@ -16,25 +16,45 @@ class AdminView extends View
     public function Index()
     {
         echo '
-        <h1>TekFW Framework Config</h1>
-        <div class="row">
-            <div class="col-sm-3" id="core-admin-apps">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Applications:</h3>
-                    </div>
-                    <ul class="list-group">';
-        
+        <h1>Admincenter</h1>
+        <ul class="nav nav-pills ">
+            <li role="presentation"><a href="#">Admin</a></li>
+            <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Applications <span class="caret"></span> </a>
+                <ul class="dropdown-menu">';
+
         foreach ($this->loaded_apps as $app_name => $link) {
-            echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a data-ajax href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
+
+            if (! $link) {
+                continue;
+            }
+
+            echo '<li><a data-ajax href="', $link, '">', $app_name, '</a></li>';
         }
-        
+
         echo '
-                    </ul>
-                </div>
-            </div>
-            <div id="core-admin-config" class="col-sm-9"></div>
+                </ul>
+            </li>
+            <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">', $this->text['user'], '<span class="caret"></span> </a>
+                <ul class="dropdown-menu">
+                    <li><a data-ajax href="', $this->links['users']['url'], '">', $this->links['users']['text'], '</a></li>
+                    <li><a data-ajax href="', $this->links['groups']['url'], '">', $this->links['groups']['text'], '</a></li>
+                </ul>
+            </li>
+            <li role="presentation"><a href="#">Log</a></li>
+        </ul>
+        <div id="core-admin">';
+
+        $this->Admincenter();
+
+        echo '
         </div>';
+    }
+
+    public function Admincenter()
+    {
+        echo $this->logs;
     }
 }
 

@@ -66,7 +66,7 @@ class ConfigController extends Controller
         $this->page->breadcrumbs->createItem('Admin', $this->url('admin'));
         $this->page->breadcrumbs->createActiveItem($this->text('name', $app_name));
 
-        $this->setAjaxTarget('#core-admin-config');
+        $this->setAjaxTarget('#core-admin');
     }
 
     public function ConfigGroup($app_name, $group_name)
@@ -75,7 +75,7 @@ class ConfigController extends Controller
         $app_name = $this->stringCamelize($app_name);
 
         // check permission
-        if (! $this->checkAccess($app_name . '_config')) {
+        if (! $this->checkAccess('config', false, $app_name)) {
             Throw new SecurityException('No accessrights');
         }
 
@@ -107,7 +107,7 @@ class ConfigController extends Controller
         $form->setName('core-config-' . strtolower($app_name) . '-' . $group_name);
 
         // Set forms action route
-        $form->setActionRoute('config_group', array(
+        $form->setActionRoute('config.group', array(
             'app_name' => $app_name,
             'group_name' => $group_name
         ));
@@ -220,8 +220,6 @@ class ConfigController extends Controller
         switch ($control_type) {
             case 'textarea':
             case 'text':
-
-                \FB::log($settings);
 
                 if ($settings['translate']) {
                     $value = $this->text($value, $app_name);
