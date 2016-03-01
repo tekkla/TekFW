@@ -1,39 +1,21 @@
 <?php
 namespace Core\Lib\Amvc;
 
-// Http Libs
 use Core\Lib\Router\Router;
-use Core\Lib\Http\Post;
-use Core\Lib\Http\Cookie;
-
-// Security Libs
+use Core\Lib\Http\Http;
 use Core\Lib\Security\Security;
-
-// Page Libs
 use Core\Lib\Page\Page;
-
-// HTML Libs
 use Core\Lib\Html\HtmlAbstract;
 use Core\Lib\Html\HtmlFactory;
 use Core\Lib\Html\FormDesigner\FormDesigner;
-
-// Data Libs
 use Core\Lib\Data\Container\Container;
-
-// Cache Lib
 use Core\Lib\Cache\Cache;
-
-// AjaxLibs
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Ajax\AjaxCommandAbstract;
-
-// Traits
 use Core\Lib\Router\UrlTrait;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Cfg\CfgTrait;
 use Core\Lib\Language\TextTrait;
-use Core\Lib\Http\Cookie\Cookies;
-use Core\Lib\Http\Http;
 
 /**
  * Controller.php
@@ -237,8 +219,10 @@ class Controller extends MvcAbstract
     {
         // If accesscheck failed => stop here and return false!
         if ($this->checkControllerAccess() == false) {
-            $this->message->warning($this->txt('missing_userrights', 'Core'));
-            $this->security->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
+            $this->page->message->warning($this->text('access.missing_userrights'));
+
+            // @TODO implement logging
+            #$this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
             return false;
         }
 
@@ -489,6 +473,7 @@ class Controller extends MvcAbstract
 
         // ACL set?
         if (isset($this->access)) {
+
             $perm = [];
 
             // Global access for all actions?
@@ -511,9 +496,9 @@ class Controller extends MvcAbstract
                 }
             }
 
-            // No perms until here means we can finish here and allow access by returning true
+            // Check the permissions against the current user
             if ($perm) {
-                return $this->security->user->checkAccess($perm, $force);
+                return $this->checkAccess($perm, $force);
             }
         }
 
@@ -607,7 +592,7 @@ class Controller extends MvcAbstract
     final protected function getFormDesigner(Container $container = null)
     {
         /* @var $form \Core\Lib\Html\FormDesigner\FormDesigner */
-        $form = $this->di->get('core.html.factory')->create('FormDesigner\FormDesigner');
+        $form = $this->html->create('FormDesigner\FormDesigner');
 
         $form->setAppName($this->app->getName());
         $form->setControllerName($this->name);
