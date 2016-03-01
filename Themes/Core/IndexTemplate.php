@@ -89,43 +89,45 @@ class IndexTemplate extends Template
             echo '<ul class="nav navbar-nav">';
 
             foreach ($service->getItems() as $item) {
-                echo '<li><a data-ajax href="', $item->geTurl(), '">', $item->getText(), '</a></li>';
+                echo '<li><a data-ajax href="', $item->getUrl(), '">', $item->getText(), '</a></li>';
             }
 
             echo '</ul>';
         }
 
         // Add admin menu and login button
-        $admin = $this->getMenu('admin');
         $register = $this->getMenu('register');
         $login = $this->getMenu('login');
 
-        if ($admin || $register || $login) {
+        if ($register || $login) {
 
             echo '
                 <ul class="nav navbar-nav navbar-right">';
-
-            if ($admin) {
-                echo '
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">', $admin->getText(), ' <span class="caret"></span></a>
-                            <ul class="dropdown-menu">';
-
-                foreach ($admin->getItems() as $item) {
-                    echo '<li><a href="', $item->getUrl(), '">', $item->getText(), '</a></li>';
-                }
-
-                echo '
-                            </ul>
-                        </li>';
-            }
 
             if ($register) {
                 echo '<li><a href="', $register->getUrl(), '">', $register->getText(), '</a></li>';
             }
 
             if ($login) {
-                echo '<li><a href="', $login->getUrl(), '">', $login->getText(), '</a></li>';
+
+                if ($login->isParent()) {
+                        echo '
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">', $login->getText(), ' <span class="caret"></span></a>
+                            <ul class="dropdown-menu">';
+
+                        foreach ($login->getItems() as $item) {
+                            echo '<li><a href="', $item->getUrl(), '">', $item->getText(), '</a></li>';
+                        }
+
+                        echo '
+                            </ul>
+                        </li>';
+
+                }
+                else {
+                    echo '<li><a href="', $login->getUrl(), '">', $login->getText(), '</a></li>';
+                }
             }
 
             echo '
