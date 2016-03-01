@@ -72,5 +72,3 @@ trait CfgTrait {
         Throw new InvalidArgumentException('Values without keys cannot be used to access config service.');
     }
 }
-
-?>
