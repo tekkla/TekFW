@@ -45,7 +45,7 @@ abstract class ConnectorAbstract implements CallbackInterface
      * (non-PHPdoc)
      * @see \Core\Lib\Data\CallbackInterface::addCallback()
      */
-    public function addCallback($call, array $args = array(), $clear_callbacks_stack = true)
+    public function addCallback($call, array $args = [], $clear_callbacks_stack = true)
     {
         $this->adapter->addCallback($call, $args, $clear_callbacks_stack);
     }
@@ -54,7 +54,7 @@ abstract class ConnectorAbstract implements CallbackInterface
      * (non-PHPdoc)
      * @see \Core\Lib\Data\CallbackInterface::addCallbacks()
      */
-    public function addCallbacks(array $callbacks = array(), $clear_callbacks_stack = true)
+    public function addCallbacks(array $callbacks = [], $clear_callbacks_stack = true)
     {
         $this->adapter->addCallbacks($callbacks, $clear_callbacks_stack);
     }
