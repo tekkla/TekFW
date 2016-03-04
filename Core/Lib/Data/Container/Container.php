@@ -393,7 +393,8 @@ class Container implements \IteratorAggregate, \ArrayAccess
             foreach ($error as $msg) {
                 $this->errors[$field][] = $msg;
             }
-        } else {
+        }
+        else {
             $this->errors[$field][] = $error;
         }
 
@@ -635,6 +636,26 @@ class Container implements \IteratorAggregate, \ArrayAccess
         $this->field[$name]->setPrimary(true);
 
         return $this;
+    }
+
+    /**
+     * Returns camelized containers app name
+     *
+     * @return string
+     */
+    public function getAppName()
+    {
+        return explode('\'', __NAMESPACE__)[2];
+    }
+
+    /**
+     * Returns camelized name of the container
+     *
+     * @return string
+     */
+    public function getContainerName()
+    {
+        return str_replace('Container', '', get_class($this));
     }
 
     private function checkFieldExists($name)
