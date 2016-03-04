@@ -130,7 +130,8 @@ class DataAdapter implements \IteratorAggregate
         // Container object and fill the container with our data
         if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
             $this->data = $data;
-        } else {
+        }
+        else {
             $this->data = $this->fillContainer($data);
         }
 
@@ -148,6 +149,7 @@ class DataAdapter implements \IteratorAggregate
      */
     public function setDataset(array $dataset)
     {
+        // Init adapters data array
         $this->data = [];
 
         foreach ($dataset as $data) {
@@ -181,12 +183,32 @@ class DataAdapter implements \IteratorAggregate
                 continue;
             }
 
+            // Flag to control index search
+            static $use_primary_as_index = null;
+
+            // Should data be stored in an container object?
+            if ($this->container instanceof Container && $use_primary_as_index === null) {
+
+                // Seems so. Get name of possible primary key field
+                $primary = $this->container->getPrimary();
+
+                // When such exists as string and inside the current data use this key
+                $use_primary_as_index = $primary && array_key_exists($primary, $data) ? true :false;
+            }
+
             // When data is an assoc array we check here for an existing
             // Container object and fill the container with our data
-            if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
+            if ($this->arrayIsAssoc($data) || ! is_array($this->container)) {
+                $data = $this->fillContainer($data);
+            }
+
+            // Use the existing primary field name
+            if ($use_primary_as_index) {
+                // as key to get and use data as index
+                $this->data[$data[$primary]] = $data;
+            }
+            else {
                 $this->data[] = $data;
-            } else {
-                $this->data[] = $this->fillContainer($data);
             }
         }
 
@@ -262,7 +284,8 @@ class DataAdapter implements \IteratorAggregate
                     $cb[1] = (array) $cb[1];
                 }
                 $args = $cb[1];
-            } else {
+            }
+            else {
                 $args = [];
             }
 
@@ -300,7 +323,7 @@ class DataAdapter implements \IteratorAggregate
 
         $this->callbacks[] = [
             $call,
-            !is_array($args) ? (array) $args : $args
+            ! is_array($args) ? (array) $args : $args
         ];
 
         return $this;
