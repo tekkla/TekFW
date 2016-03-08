@@ -3,7 +3,6 @@ namespace Core\Lib\Html\FormDesigner;
 
 use Core\Lib\Html\FormAbstract;
 use Core\Lib\Html\HtmlAbstract;
-use Core\Lib\Html\FormDesigner\Controls\FormDesignerControlInterface;
 use Core\Lib\Html\FormDesigner\Controls\ControlsCollectionInterface;
 
 /**

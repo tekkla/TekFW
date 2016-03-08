@@ -4,14 +4,12 @@ namespace Core\Lib\Html;
 use Core\Lib\Html\HtmlAbstract;
 use Core\Lib\Html\Form\Label;
 use Core\Lib\Traits\StringTrait;
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * FormAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class FormAbstract extends HtmlAbstract
@@ -255,7 +253,7 @@ class FormAbstract extends HtmlAbstract
         }
 
         if (! in_array($element_width, $allowed_widths)) {
-            throw new InvalidArgumentException('Element with is no valid', 1000);
+            Throw new HtmlException(sprintf('Element width "%s" is not valid. Select from: %s', $element_width, implode(', ', $sizes)));
         }
 
         $this->element_width = 'col-' . $element_width;
