@@ -98,24 +98,21 @@ class Token
     public function validatePostToken()
     {
         // Show warning in error log when using a form without a token
-        if (! isset($_POST['token'])) {
+        if (empty($_POST['token'])) {
             return false;
         }
 
         // Token sent so let's check it
-        if (isset($_POST['token'])) {
+        if (! $this->validateRandomSessionToken($_POST['token'])) {
 
-            if (! $this->validateRandomSessionToken($_POST['token'])) {
+            // Log attempt and start ban process with max 3 tries.
+            $this->log->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
 
-                // Log attempt and start ban process with max 3 tries.
-                $this->log->logSuspicious('Form data without proper token received. All data will be dropped.', 3);
-
-                return false;
-            }
-
-            unset($_POST['token']);
-
-            return true;
+            return false;
         }
+
+        unset($_POST['token']);
+
+        return true;
     }
 }

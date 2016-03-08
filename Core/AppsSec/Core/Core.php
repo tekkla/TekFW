@@ -19,12 +19,9 @@ final class Core extends App
     protected $language = true;
 
     protected $permissions = [
-        'test',
-        'myperm',
-        'lmaa',
-        'loremipsum',
-        'uswusf',
-        'fck'
+        'admin.groups',
+        'admin.user',
+        'admin.log',
     ];
 
     // Apps default config
@@ -33,11 +30,14 @@ final class Core extends App
         'site' => [
             'general' => [
                 [
-                    'name' => 'name'
+                    'name' => 'name',
                 ],
                 [
                     'name' => 'url',
-                    'control' => 'url'
+                    'control' => 'url',
+                    'validate' => [
+                        'url'
+                    ]
                 ],
                 [
                     'name' => 'webmaster_email',
@@ -54,7 +54,7 @@ final class Core extends App
                             'en',
                             'de'
                         ],
-                        0
+                        1
                     ],
                     'default' => 'en'
                 ]
@@ -65,6 +65,7 @@ final class Core extends App
                 'username' => [
                     [
                         'name' => 'min_length',
+                        'type' => 'int',
                         'control' => 'number',
                         'default' => 8,
                         'validate' => [

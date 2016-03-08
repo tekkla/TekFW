@@ -159,7 +159,7 @@ class ExceptionHandler
 
                     $this->db->qb([
                         'method' => 'INSERT',
-                        'tbl' => 'error_log',
+                        'table' => 'error_log',
                         'fields' => [
                             'stamp',
                             'msg',

@@ -53,13 +53,16 @@ final class Cfg
     public function get($app, $key = null)
     {
         // Calls only with app name indicates, that the complete app config is requested
-        if (! isset($key) && isset($this->data[$app])) {
+        if (empty($key) && isset($this->data[$app])) {
             return $this->data[$app];
         }
 
         // Calls with app and key are normal cfg requests
-        if (isset($key)) {
-            if (! isset($this->data[$app][$key])) {
+        if (!empty($key)) {
+            if (!array_key_exists($key, $this->data[$app])) {
+
+                \FB::log($this->data[$app]);
+
                 Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist."', $key, $app));
             }
 

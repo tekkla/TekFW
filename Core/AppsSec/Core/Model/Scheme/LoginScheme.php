@@ -1,19 +1,6 @@
 <?php
-namespace Core\AppsSec\Core\Container;
-
-use Core\Lib\Data\Container\Container;
-
-/**
- * LoginContainer.php
- *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
- * @license MIT
- */
-class LoginContainer extends Container
-{
-
-    protected $available = [
+return [
+    'fields' => [
         'login' => [
             'type' => 'string',
             'validate' => [
@@ -32,5 +19,5 @@ class LoginContainer extends Container
         'logged_in' => [
             'type' => 'int'
         ]
-    ];
-}
+    ]
+];

@@ -36,10 +36,10 @@ class AdminView extends View
                 </ul>
             </li>
             <li role="presentation" class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">', $this->text['user'], '<span class="caret"></span> </a>
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">', $this->menu['users']['title'], '<span class="caret"></span> </a>
                 <ul class="dropdown-menu">
-                    <li><a data-ajax href="', $this->links['users']['url'], '">', $this->links['users']['text'], '</a></li>
-                    <li><a data-ajax href="', $this->links['groups']['url'], '">', $this->links['groups']['text'], '</a></li>
+                    <li><a data-ajax href="', $this->menu['users']['links']['users']['url'], '">', $this->menu['users']['links']['users']['text'], '</a></li>
+                    <li><a data-ajax href="', $this->menu['users']['links']['groups']['url'], '">', $this->menu['users']['links']['groups']['text'], '</a></li>
                 </ul>
             </li>
             <li role="presentation"><a href="#">Log</a></li>

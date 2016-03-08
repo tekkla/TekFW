@@ -5,7 +5,6 @@ use Core\Lib\Router\Router;
 use Core\Lib\Http\Http;
 use Core\Lib\Security\Security;
 use Core\Lib\Page\Page;
-use Core\Lib\Html\HtmlAbstract;
 use Core\Lib\Html\HtmlFactory;
 use Core\Lib\Html\FormDesigner\FormDesigner;
 use Core\Lib\Data\Container\Container;
@@ -80,7 +79,7 @@ class Controller extends MvcAbstract
      *
      * @var Model
      */
-    public $model;
+    public $model = false;
 
     /**
      *
@@ -222,7 +221,7 @@ class Controller extends MvcAbstract
             $this->page->message->warning($this->text('access.missing_userrights'));
 
             // @TODO implement logging
-            #$this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
+            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
             return false;
         }
 
@@ -589,35 +588,36 @@ class Controller extends MvcAbstract
      *
      * @return FormDesigner
      */
-    final protected function getFormDesigner(Container $container = null)
+    final protected function getFormDesigner($id = '')
     {
-        /* @var $form \Core\Lib\Html\FormDesigner\FormDesigner */
-        $form = $this->html->create('FormDesigner\FormDesigner');
+        /* @var $fd \Core\Lib\Html\FormDesigner\FormDesigner */
+        $fd = $this->html->create('FormDesigner\FormDesigner');
 
-        $form->setAppName($this->app->getName());
-        $form->setControllerName($this->name);
-        $form->setLabelPrefix($this->stringUncamelize($this->getName()) . '_');
-        $form->setName('core.' . $this->app->getName() . '.' . $this->name);
+        // Generate form id when id is not provided
+        if (! $id) {
 
-        if ($container !== null) {
-            $form->attachContainer($container);
+            // get calling method name
+            $dbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+
+            $pieces = [
+                $this->stringUncamelize($this->app->getName()),
+                $this->stringUncamelize($this->name),
+                isset($dbt[1]['function']) ? $this->stringUncamelize($dbt[1]['function']) : null
+            ];
+
+            $id = implode('-', $pieces);
         }
 
-        $form->setAction($this->router->url($this->router->getCurrentRoute(), $this->params));
+        if ($id) {
+            $fd->setId($id);
+        }
 
-        return $form;
-    }
+        // Create forms eaction url
+        $action = $this->url($this->router->getCurrentRoute(), $this->router->getParam());
 
-    /**
-     * Creates and returns the requested html object
-     *
-     * @param string $object_name
-     *
-     * @return HtmlAbstract
-     */
-    final protected function getHtmlObject($object_name)
-    {
-        return $this->di->get('core.html.factory')->create($object_name);
+        $fd->html->setAction($action);
+
+        return $fd;
     }
 
     /**
@@ -678,10 +678,9 @@ class Controller extends MvcAbstract
      *
      * @return \Core\Lib\Data\Container\Container
      */
-    final public function getGenericContainer($fields = [])
+    final public function getGenericContainer()
     {
         $container = $this->di->get('core.data.container');
-        $container->parseFields($fields);
 
         return $container;
     }

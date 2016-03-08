@@ -100,7 +100,7 @@ final class Session
     {
         // Set query
         $this->db->qb([
-            'tbl' => 'sessions',
+            'table' => 'sessions',
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
             'params' => [
@@ -121,7 +121,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'REPLACE',
-            'tbl' => 'sessions',
+            'table' => 'sessions',
             'fields' => [
                 'id_session',
                 'access',
@@ -146,7 +146,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'tbl' => 'sessions',
+            'table' => 'sessions',
             'filter' => 'id_session=:id_session',
             'params' => [
                 'id_session' => $id_session
@@ -168,7 +168,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'tbl' => 'sessions',
+            'table' => 'sessions',
             'filter' => 'access<:old',
             'params' => [
                 ':old' => $old

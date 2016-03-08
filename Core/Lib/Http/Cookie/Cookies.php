@@ -20,9 +20,7 @@ class Cookies
      */
     public function send()
     {
-        \FB::log($this->cookies);
-
-        /* @var $cookie \Core\Lib\Http\Cookie */
+         /* @var $cookie \Core\Lib\Http\Cookie */
         foreach ($this->cookies as $cookie) {
             setcookie($cookie->getName(), $cookie->getValue(), $cookie->getExpire(), $cookie->getPath(), $cookie->getDomain(), $cookie->getSecure(), $cookie->getHttponly());
         }

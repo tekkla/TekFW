@@ -66,4 +66,34 @@ class UserModel extends Model
 
         return $db->all();
     }
+
+    public function loadUsersByGroupId($id_group)
+    {
+        $db = $this->getDbConnector();
+
+        $db->qb([
+            'table' => $this->table,
+            'alias' => 'u',
+            'fields' => [
+                'u.id_user',
+                'u.username',
+                'IFNULL(u.display_name, u.username) as display_name'
+            ],
+            'join' => [
+                [
+                    'users_groups',
+                    'ug',
+                    'INNER',
+                    'u.id_user=ug.id_user'
+                ]
+            ],
+            'filter' => 'ug.id_group = :id_group',
+            'params' => [
+                ':id_group' => $id_group
+            ],
+            'order' => 'display_name'
+        ]);
+
+        return $db->all();
+    }
 }

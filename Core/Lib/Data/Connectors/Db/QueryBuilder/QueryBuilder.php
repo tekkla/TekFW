@@ -22,6 +22,8 @@ class QueryBuilder
 
     private $definition;
 
+    private $scheme = [];
+
     private $tbl;
 
     private $alias = '';
@@ -173,7 +175,7 @@ class QueryBuilder
      */
     public function From($tbl, $alias = '')
     {
-        $this->tbl = $tbl;
+        $this->table = $tbl;
 
         if ($alias) {
             $this->alias = $alias;
@@ -232,7 +234,7 @@ class QueryBuilder
     public function Join($tbl, $as, $by, $condition)
     {
         $this->join[] = [
-            'tbl' => $tbl,
+            'table' => $tbl,
             'as' => $as,
             'by' => $by,
             'cond' => $condition
@@ -296,14 +298,14 @@ class QueryBuilder
         $limit = '';
 
         // Create the fieldprefix. If given as alias use this, otherwise we use the tablename
-        $field_prefifx = $this->alias ? $this->alias : '{db_prefix}' . $this->tbl;
+        $field_prefifx = $this->alias ? $this->alias : '{db_prefix}' . $this->table;
 
         // Biuld joins
         if ($this->join) {
             $tmp = [];
 
             foreach ($this->join as $def) {
-                $tmp[] = ' ' . $def['by'] . ' JOIN ' . '{db_prefix}' . (isset($def['as']) ? $def['tbl'] . ' AS ' . $def['as'] : $def['join']) . ' ON (' . $def['cond'] . ')';
+                $tmp[] = ' ' . $def['by'] . ' JOIN ' . '{db_prefix}' . (isset($def['as']) ? $def['table'] . ' AS ' . $def['as'] : $def['join']) . ' ON (' . $def['cond'] . ')';
             }
         }
 
@@ -355,7 +357,7 @@ class QueryBuilder
         }
 
         // We need a string for the table. if there is an alias, we have to set it
-        $tbl = $this->alias ? $this->tbl . ' AS ' . $this->alias : $this->tbl;
+        $tbl = $this->alias ? $this->table . ' AS ' . $this->alias : $this->table;
 
         switch ($this->method) {
 
@@ -449,13 +451,17 @@ class QueryBuilder
         }
 
         // Return complete all fields
-        return ($this->alias ? $this->alias : $this->tbl) . '.*';
+        return ($this->alias ? $this->alias : $this->table) . '.*';
     }
 
     private function processQueryDefinition($def)
     {
         // Store defintion
         $this->definition = $def;
+
+        if (! empty($this->definition['scheme'])) {
+            $this->scheme = $this->definition['scheme'];
+        }
 
         // Use set query type or use 'row' as default
         if (isset($this->definition['method'])) {
@@ -467,7 +473,7 @@ class QueryBuilder
         }
 
         // All methods need the table defintion
-        $this->processTblDefinition();
+        $this->processTableDefinition();
 
         // Process data definition?
         if (isset($this->definition['data'])) {
@@ -499,7 +505,7 @@ class QueryBuilder
 
     private function processSelect()
     {
-        $this->processTblDefinition();
+        $this->processTableDefinition();
 
         $this->processCounter();
 
@@ -575,45 +581,60 @@ class QueryBuilder
      *
      * @throws QueryBuilderException
      */
-    private function processTblDefinition()
+    private function processTableDefinition()
     {
-        if (! isset($this->definition['tbl']) && ! isset($this->definition['table'])) {
-            Throw new QueryBuilderException('QueryBuilder needs a table name. Provide tablename by setting "tbl" or "table" element in your query definition');
-        }
-        else {
-            $this->tbl = isset($this->definition['tbl']) ? $this->definition['tbl'] : $this->definition['table'];
+        if (! empty($this->scheme['table'])) {
+            $this->table = $this->scheme['table'];
         }
 
-        if (isset($this->definition['alias'])) {
+        if (! empty($this->scheme['alias'])) {
+            $this->alias = $this->scheme['alias'];
+        }
+
+        // Look for table name when there was none set by a scheme
+        if (empty($this->table)) {
+
+            // Throw exception when there is no tablename set in definition!
+            if (empty($this->definition['table'])) {
+                Throw new QueryBuilderException('QueryBuilder needs a table name. Provide tablename by setting "table" element in your query definition or provide a Scheme with a set table element.');
+            }
+
+            $this->table = $this->definition['table'];
+        }
+
+        // No alias until here but set in definition?
+        if (empty($this->alias) && ! empty($this->definition['alias'])) {
             $this->alias = $this->definition['alias'];
         }
     }
 
     private function processCounter()
     {
-        if (! empty($this->definition['counter'])) {
+        if (empty($this->definition['counter'])) {
+            return;
+        }
 
-            // store counter definition
-            $this->counter = $this->definition['counter'];
+        // store counter definition
+        $this->counter = $this->definition['counter'];
 
-            // Check for values of counter and add needed values by setting default vlaues
-            $defaults = [
-                'name' => 'counter',
-                'as' => 'counter',
-                'start' => 1,
-                'step' => 1
-            ];
+        // Check for values of counter and add needed values by setting default vlaues
+        $defaults = [
+            'name' => 'counter',
+            'as' => 'counter',
+            'start' => 1,
+            'step' => 1
+        ];
 
-            foreach ($defaults as $key => $val) {
-                if (! isset($this->counter[$key])) {
-                    $this->counter[$key] = $val;
-                }
+        foreach ($defaults as $key => $val) {
+            if (empty($this->counter[$key])) {
+                $this->counter[$key] = $val;
             }
         }
     }
 
     /**
-     * Processes field definition.
+     * Processes field definition
+     *
      * Uses '*' as field when no definition is set.
      */
     private function processFieldDefinition()
@@ -639,19 +660,25 @@ class QueryBuilder
      */
     private function processDataDefinition()
     {
-        // Data definition only as \Core\Lib\Data\Container\Container ever<thing else causes an exception
-        if (! $this->definition['data'] instanceof Container) {
-            Throw new QueryBuilderException('QueryBuilder can only process data attributes of type \Core\Lib\Data\Container\Container.');
-        }
-
-        // Autodetection of method when none is set e.g. SELECT is set.
+        // Autodetection of method when none is set e.g. SELECT is set
         if ($this->method == 'SELECT') {
 
-            // Get name of primary field. Is false when no primary field exists.
-            $primary = $this->definition['data']->getPrimary();
+            \FB::log($this->scheme);
 
-            // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record.
+            // Try to get name of primary field from provided scheme. A scheme always is preferred to qb definitions
+            $primary = ! empty($this->scheme) && ! empty($this->scheme['primary']) ? $this->scheme['primary'] : false;
+
+            // No primary from scheme? Check for a primary set in definition.
+            if ($primary == false && ! empty($this->definition['primary'])) {
+                $primary = $this->definition['primary'];
+            }
+
+            \FB::log($primary);
+
+            // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record
             $this->method = ($primary !== false && ! empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
+
+            \FB::log($this->method);
         }
 
         // Check for allowed querymethods
@@ -665,19 +692,15 @@ class QueryBuilder
             Throw new QueryBuilderException('QueryBuilder can only process querymethods of type "update", "insert" or "replace".');
         }
 
-        /* @var $field \Core\Lib\Data\Container\Field */
-        foreach ($this->definition['data'] as $field_name => $field) {
-
-            // Value handling
-            $value = $field->getValue();
+        foreach ($this->definition['data'] as $field_name => $value) {
 
             // Field is flagged as serialized?
-            if ($field->getSerialize()) {
+            if (! empty($this->scheme['serialize'][$field_name])) {
                 $value = serialize($value);
             }
 
             // Handle fields flagged as primary
-            if ($field->getPrimary()) {
+            if ($field_name == $primary) {
 
                 // Different modes need different handlings
                 switch ($this->method) {
@@ -722,7 +745,7 @@ class QueryBuilder
 
                 if ($this->arrayIsAssoc($join)) {
                     $this->join[] = [
-                        'tbl' => $join['tbl'],
+                        'table' => $join['table'],
                         'as' => $join['as'],
                         'by' => $join['by'],
                         'cond' => $join['condition']
@@ -730,7 +753,7 @@ class QueryBuilder
                 }
                 else {
                     $this->join[] = [
-                        'tbl' => $join[0],
+                        'table' => $join[0],
                         'as' => $join[1],
                         'by' => $join[2],
                         'cond' => $join[3]

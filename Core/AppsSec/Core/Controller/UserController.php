@@ -74,13 +74,15 @@ class UserController extends Controller
         }
 
         // Get FormDesigner object
-        $form = $this->getFormDesigner($data);
+        $fd = $this->getFormDesigner('core-user-edit');
+
+        $fd->addData($data);
 
         // Flag form to be ajax
-        $form->isAjax();
+        $fd->isAjax();
 
         // Start new group for controls
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
 
         // Add hidden field for invoice id
         $group->addControl('hidden', 'id_user');
@@ -119,7 +121,7 @@ class UserController extends Controller
                 $option->setInner($group['display_name']);
 
                 if (array_key_exists($id_group, $data['groups'])) {
-                    $option->isSelected();
+                    $option->isChecked();
                 }
             }
         }
@@ -131,8 +133,8 @@ class UserController extends Controller
         foreach ($groups as $app => $group) {}
 
         /* @var $editbox \Core\Lib\Html\Controls\Editbox */
-        $editbox = $this->getHtmlObject('Controls\Editbox');
-        $editbox->setForm($form);
+        $editbox = $this->html->create('Controls\Editbox');
+        $editbox->setForm($fd);
 
         // Editbox caption
         $editbox->setCaption($this->text('user.action.edit.text'));

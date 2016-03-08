@@ -3,6 +3,8 @@ namespace Core\Lib\Html\FormDesigner;
 
 use Core\Lib\Html\FormAbstract;
 use Core\Lib\Html\HtmlAbstract;
+use Core\Lib\Html\FormDesigner\Controls\FormDesignerControlInterface;
+use Core\Lib\Html\FormDesigner\Controls\ControlsCollectionInterface;
 
 /**
  * FormElement.php
@@ -28,6 +30,42 @@ class FormElement
      */
     private $content = '';
 
+    private $app_name = '';
+
+    private $container_name = '';
+
+    public function setAppName($app_name)
+    {
+        $this->app_name = $app_name;
+
+        return $this;
+    }
+
+    public function getAppName()
+    {
+        if (! $this->app_name) {
+            Throw new FormDesignerException('No app name set.');
+        }
+
+        return $this->app_name;
+    }
+
+    public function setContainerName($container_name)
+    {
+        $this->container_name = $container_name;
+
+        return $this;
+    }
+
+    public function getContainerName()
+    {
+        if (! $this->container_name) {
+            Throw new FormDesignerException('No container name set.');
+        }
+
+        return $this->container_name;
+    }
+
     /**
      * Sets the element.
      *
@@ -38,17 +76,26 @@ class FormElement
     public function &setContent($content)
     {
         // Set element type by analyzing the element
-        if ($content instanceof FormGroup) {
-            $this->type = 'group';
-        }
-        elseif ($content instanceof FormAbstract) {
-            $this->type = 'control';
-        }
-        elseif ($content instanceof HtmlAbstract) {
-            $this->type = 'factory';
-        }
-        else {
-            $this->type = 'html';
+        switch (true) {
+
+            case ($content instanceof FormGroup):
+                $this->type = 'group';
+                break;
+
+            case ($content instanceof ControlsCollectionInterface):
+                $this->type = 'collection';
+                break;
+
+            case ($content instanceof FormAbstract):
+                $this->type = 'control';
+                break;
+
+            case ($content instanceof HtmlAbstract):
+                $this->type = 'factory';
+                break;
+
+            default:
+                $this->type = 'html';
         }
 
         $this->content = $content;

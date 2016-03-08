@@ -34,11 +34,11 @@ class Select extends FormAbstract
      *
      * @return \Core\Lib\Html\Form\Option
      */
-    public function &createOption()
+    public function &createOption($optgroup = '')
     {
         $option = $this->factory->create('Form\Option');
 
-        return $this->addOption($option);
+        return $this->addOption($option, $optgroup);
     }
 
     /**
@@ -49,12 +49,13 @@ class Select extends FormAbstract
      * content of option and has no value attribute.
      *
      * @param string|int $value
-     * @param string|int Optional $inner
+     * @param
+     *            string|int Optional $inner
      * @param boolean $selected
      *
      * @return \Core\Lib\Html\Form\Select
      */
-    public function &newOption($value = null, $inner = null, $selected = false)
+    public function &newOption($value = null, $inner = null, $selected = false, $optgroup = '')
     {
         /* @var $option \Core\Lib\Html\Form\Option */
         $option = $this->factory->create('Form\Option');
@@ -71,7 +72,7 @@ class Select extends FormAbstract
             $option->isSelected();
         }
 
-        return $this->addOption($option);
+        return $this->addOption($option, $optgroup);
     }
 
     /**
@@ -81,24 +82,44 @@ class Select extends FormAbstract
      *
      * @return \Core\Lib\Html\Form\Select
      */
-    public function &addOption(Option $option)
+    public function &addOption(Option $option, $optgroup = '')
     {
-        $uniqeid = uniqid($this->getName() . '_option_');
-        $this->options[$uniqeid] = $option;
+        if (empty($optgroup)) {
+            $this->options[] = $option;
+        }
+        else {
+            $this->options[$optgroup][] = $option;
+        }
 
-        return $this->options[$uniqeid];
+        return $option;
+    }
+
+    private function buildOption(Option $option) {
+
+        // Select unselected options when the options value is in selects value array
+        if (! $option->getSelected() && in_array($option->getValue(), $this->value)) {
+            $option->isSelected();
+        }
+
+        return $option->build();
     }
 
     public function build()
     {
-        foreach ($this->options as $option) {
+        foreach ($this->options as $key => $option) {
 
-            // Select unselected options when the options value is in selects value array
-            if (! $option->getSelected() && in_array($option->getValue(), $this->value)) {
-                $option->isSelected();
+            if (is_array($option)) {
+                $this->inner .= '<optgroup label="' . $key . '">';
+
+                foreach ($option as $opt) {
+                    $this->inner .= $this->buildOption($opt);
+                }
+
+                $this->inner .= '</optgroup>';
             }
-
-            $this->inner .= $option->build();
+            else {
+                $this->inner .= $this->buildOption($option);
+            }
         }
 
         if ($this->getMultiple()) {

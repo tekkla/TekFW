@@ -4,6 +4,7 @@ namespace Core\Lib\Data\Validator;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Validator\Rules\RuleAbstract;
+use Core\Lib\Traits\ArrayTrait;
 
 /**
  * Validator.php
@@ -16,12 +17,13 @@ final class Validator
 {
     use TextTrait;
     use StringTrait;
+    use ArrayTrait;
 
     /**
      *
      * @var array
      */
-    private $msg = [];
+    private $result = [];
 
     /**
      *
@@ -30,103 +32,95 @@ final class Validator
     private $rules = [];
 
     /**
-     * Constructor
-     */
-    public function __construct()
-    {}
-
-    /**
-     * Validates a value against the wanted rules.
+     * Validates a value against the wanted rules
+     *
+     * Returns an empty array when all rules where checked succesfully.
      *
      * @param mixed $value
      *            The value to validate
      * @param string|array $rules
      *            One or more rules
      *
-     * @return multitype:
+     * @return array
      */
-    public function validate($value, $rules)
+    public function validate(array $data, array $rules)
     {
-        // Our current value (trimmed)
-        $value = trim($value);
+        $this->result = [];
 
-        if (! is_array($rules)) {
-            $rules = (array) $rules;
-        }
+        foreach ($data as $key => $value) {
 
-        // Reset present messages
-        $this->msg = [];
+            // Our current value (trimmed)
+            $value = trim($value);
 
-        // Validate each rule against the
-        foreach ($rules as $rule) {
+            // Validate each rule against the
+            foreach ($rules[$key] as $rule) {
 
-            // Reset the last result
-            $result = false;
 
-            // Array type rules are for checks where the func needs one or more parameter
-            // So $rule[0] is the func name and $rule[1] the parameter.
-            // Parameters can be of type array where the elements are used as function parameters in the .. they are
-            // set.
-            if (is_array($rule)) {
+                \FB::log($value);
+                \FB::log($rule);
 
-                // Get the functionname
-                $rule_name = $this->stringCamelize($rule[0]);
+                // Array type rules are for checks where the func needs one or more parameter
+                // So $rule[0] is the func name and $rule[1] the parameter.
+                // Parameters can be of type array where the elements are used as function parameters in the .. they are
+                // set.
+                if (is_array($rule)) {
 
-                // Parameters set?
-                if (isset($rule[1])) {
-                    $args = ! is_array($rule[1]) ? [
-                        $rule[1]
-                    ] : $rule[1];
-                } else {
+                    // Get the functionname
+                    $rule_name = $this->stringCamelize($rule[0]);
+
+                    // Parameters set?
+                    if (isset($rule[1])) {
+                        $args = ! is_array($rule[1]) ? [
+                            $rule[1]
+                        ] : $rule[1];
+                    }
+                    else {
+                        $args = [];
+                    }
+
+                    // Custom error message
+                    if (isset($rule[2])) {
+                        $custom_message = $rule[2];
+                    }
+                }
+                else {
+                    $rule_name = $this->stringCamelize($rule);
                     $args = [];
+                    unset($custom_message);
                 }
 
-                // Custom error message
-                if (isset($rule[2])) {
-                    $custom_message = $rule[2];
-                }
-            } else {
-                $rule_name = $this->stringCamelize($rule);
-                $args = [];
-                unset($custom_message);
-            }
+                // Call rule creation process to make sure rule exists before starting further actions.
+                /* @var $rule \Core\Lib\Data\Validator\Rules\RuleAbstract */
+                $rule = $this->createRule($rule_name);
 
-            // Call rule creation process to make sure rule exists before starting further actions.
-            /* @var $rule \Core\Lib\Data\Validator\Rules\RuleAbstract */
-            $rule = $this->createRule($rule_name);
-
-            // Execute rule on empty values only when rule is explicitly flagged to do so.
-            if (empty($value) && $rule->getExecuteOnEmpty() == false) {
-                continue;
-            }
-
-            $rule->setValue($value);
-
-            // Calling the validation function
-            call_user_func_array(array(
-                $rule,
-                'execute'
-            ), $args);
-
-            // Get result from rule
-            $result = $rule->isValid();
-
-            // Is the validation result negative eg false?
-            if ($result === false) {
-
-                // Get msg from rule
-                $msg = $rule->getMsg();
-
-                // If no error message is set, use the default validator error
-                if (empty($msg)) {
-                    $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
+                // Execute rule on empty values only when rule is explicitly flagged to do so.
+                if (empty($value) && $rule->getExecuteOnEmpty() == false) {
+                    continue;
                 }
 
-                $this->msg[] = htmlspecialchars($msg, ENT_COMPAT, 'UTF-8');
+                $rule->setValue($value);
+
+                // Calling the validation function
+                call_user_func_array(array(
+                    $rule,
+                    'execute'
+                ), $args);
+
+                // Is the validation result negative eg false?
+                if ($rule->isValid() === false) {
+
+                    // Get msg from rule
+                    $msg = $rule->getMsg();
+
+                    // If no error message is set, use the default validator error
+                    if (empty($msg)) {
+                        $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
+                    }
+
+                    $this->result[$key][] = $msg;
+                }
             }
         }
-
-        return $this->msg;
     }
 
     /**
@@ -136,7 +130,7 @@ final class Validator
      */
     public function isValid()
     {
-        return empty($this->msg);
+        return empty($this->result);
     }
 
     /**
@@ -144,27 +138,27 @@ final class Validator
      *
      * @return array
      */
-    public function getMsg()
+    public function getResult()
     {
-        return $this->msg;
+        return $this->result;
     }
 
     /**
-     * Creates and returns a rule object
+     * Creates and returns a singleton rule object
      *
      * @param string $rule_name
      *            Name of the rule
      *
      * @return RuleAbstract
      */
-    public function &createRule($rule_name)
+    private function &createRule($rule_name)
     {
         // Rules have to be singletons
-        if (! array_key_exists($rule_name, $this->rules)) {
+        if (empty($this->rules[$rule_name])) {
 
             // Without a leading \ in the rulename it is assumened that we use a Core FW builtin rule
             // otherwise the $rule_name points to a class somewhere outsite of the frasmworks default rules.
-            $rule_class = strpos($rule_name, '\\') == 0 ? '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule' : $rule_name;
+            $rule_class = strpos($rule_name, '\\') == 0 ? __NAMESPACE__ . '\Rules\\' . $rule_name . 'Rule' : $rule_name;
 
             // Create the rule obejct instance
             $rule_object = new $rule_class($this);
@@ -175,8 +169,9 @@ final class Validator
             }
 
             // Add rule to the rules stack
-            $this->rules[$rule_name] = new $rule_class($this);
-        } else {
+            $this->rules[$rule_name] = $rule_object;
+        }
+        else {
 
             // Reset existing rules
             $this->rules[$rule_name]->reset();

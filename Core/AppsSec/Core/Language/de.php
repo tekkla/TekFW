@@ -82,8 +82,8 @@ return [
     'menu' => [
         'login' => 'Login',
         'logout' => 'Logout',
-        'register' => 'Register',
-        'reset' => 'Reset password',
+        'register' => 'Registrieren',
+        'reset' => 'Passwort zurücksetzen',
         'admin' => 'Administration'
     ],
 
@@ -92,45 +92,61 @@ return [
         'form' => [
             'username' => 'E-Mail',
             'password' => 'Password',
-            'already_loggedin' => 'You are already logged in.',
-            'remember_me' => 'Stay logged in',
-            'failed' => 'Login failed! Please check your username and password.',
-            'success' => 'Login was successful.'
+            'already_loggedin' => 'Sie sind bereits angemeldet',
+            'remember_me' => 'Angemeldet bleiben',
+            'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
+            'success' => 'Login war erfolgreich.'
         ]
     ],
 
     'register' => [
         'form' => [
-            'headline' => 'Create Account',
+            'headline' => 'Registrierung',
             'username' => 'user.login.username',
             'password' => 'user.login.password',
-            'compare' => 'Password again',
-            'button' => 'Create'
+            'compare' => 'Passwort erneut',
+            'button' => 'Registrieren'
         ],
         'error' => [
-            'name_in_use' => 'This username is not available.'
+            'name_in_use' => 'Dieser Benutzname steht nicht zu Verfügung.'
         ],
         'mail' => [
-            'subject' => 'Account activation on %s',
-            'body' => 'Hello and welcome to %s!
+            'subject' => 'Benutzerkontoaktivierung bei %s',
+            'body' => 'Hallo und willkommen bei %s!
 
-To complete the registration process you need to activate your account by klicking the following link
+Bevor das Benutzerkonto verwendet werden kann, bedarf es einer Aktivierung. Klicken Sie hierzu bitte auf den nachfolgenden Link.
 
 %s
 
-Thank you and good bye
-The team of %s'
+Vielen Dank und auf Wiedersehen
+Das Team von %s
+
+Hinweis: Wenn Sie diese Mail ohne ihr zutun bekommen haben, dann hat sich jemand unter angabe ihrer Mailadresse bei uns auf der Seite registriert.
+
+Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der Eintrag spätestens nach einigen Tagen ohne Aktivierung autmonatisch gelöscht werden. Falls Sie dies sofort veranlassen möchten, so steht Ihnen dies über den nachfolgenden Link zur Verfügung
+            %s'
         ],
         'activation' => [
-            'notice' => 'This account needs to be activated. Please klick the link we send to you.',
+            'notice' => 'Dieses Benutzerkonnte muss noch aktiviert werden. Bitte klicken Sie den Aktivierungslink in der an ihre Mailadresse versendeten Aktivierungsmail.',
             0 => [
-                'headline' => 'Only one small step left...',
-                'text' => 'We\'ve send an activation mail to the address you provided. Please check your inbox and open the link in this mail to complete your registration.'
+                'headline' => 'Es fehlt noch ein kleiner Schritt...',
+                'text' => 'Wir haben eine Aktivierungsmail an die von Ihnen angegebene E-Mailadresse versendet. Bitte überprüfen Sie den Posteingang Ihres E-Mailpostfaches und klicken zum Abschluss der Benutzerregistrierung auf den in der Aktivierungsmail enthaltenen Link.'
             ],
             1 => [
-                'headline' => 'Your account is now active!',
-                'text' => 'Thank you for your registration and welcome as new user. You are now able to %s.'
+                'headline' => 'Ihr Benutzerkonto ist nun aktiv!',
+                'text' => 'Vielen Dank für ihrer Registierung. Wir heissen Sie als neuen Benutzer willkommen. Sie können sich nun %s.'
             ]
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * Admin
+     * **************************************************************************
+     */
+    'admin' => [
+        'menu' => [
+            'users' => 'Benutzer & Rechte'
         ]
     ],
 
@@ -140,27 +156,33 @@ The team of %s'
      * **************************************************************************
      */
     'config' => [
-        'headline' => 'Core Framework Settings',
+        'headline' => 'Core Framework Einstellungen',
         'desc' => '',
 
         'site' => [
-            'head' => 'Site',
+            'head' => 'Seite',
             'desc' => '',
-            'name' => [
-                'label' => 'Name (Brand)',
-                'desc' => 'The sites name which is also used as brand inside various methods inside framework.'
-            ],
-            'url' => [
-                'label' => 'Baseurl',
-                'desc' => 'The FQFN basurl of the site including leading http(s):// and without trailing slash (Example: http://mydomain.tld)'
-            ],
-            'webmaster_email' => [
-                'label' => 'Webmaster (Admin) emailaddress',
-                'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
+            'general' => [
+                'name' => [
+                    'label' => 'Name (Brand)',
+                    'desc' => 'Der Name der Seite, welche als genereller Titel und als Brand an diversen Stellen innerhalb des Frameworks genutzt wird.'
+                ],
+                'url' => [
+                    'label' => 'Basisurl',
+                    'desc' => 'Die FQDN Url der Seite. Dieseer MUSS das Protkoll (http(s)://) enthalten und darf keinen abschließenden / enthalten (Beispiel: http://meinedomain.tld).'
+                ],
+                'webmaster_email' => [
+                    'label' => 'Webmaster (Admin) emailaddress',
+                    'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
+                ]
             ],
             'language' => [
-                'label' => 'Default language',
-                'desc' => 'Default language of this website.'
+                'head' => 'Sprache',
+                'desc' => '',
+                'default' => [
+                    'label' => 'Standardsprache',
+                    'desc' => 'Legt die zu verwendende Standardsprache fest.'
+                ]
             ]
         ],
 
@@ -538,7 +560,27 @@ The team of %s'
         'field' => [
             'id_group' => 'Gruppen ID',
             'title' => 'Name',
-            'display_name' => 'Anzeigename',
+            'display_name' => 'Anzeigename'
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * Group Permissions
+     * **************************************************************************
+     */
+    'group_permission' => [
+        'action' => [
+            'edit' => [
+                'text' => 'Gruppenberechtigung bearbeiten'
+            ],
+            'new' => [
+                'text' => 'Neue Gruppenberechtigung'
+            ]
+        ],
+        'field' => [
+            'permission' => 'permission.singular',
+            'notes' => 'Notizen'
         ]
     ],
 
@@ -547,15 +589,17 @@ The team of %s'
      * Permissions
      * **************************************************************************
      */
-    'perm' => [
+    'permission' => [
+        'singular' => 'Zugriffsrecht',
+        'plural' => 'Zugriffsrechte',
         'admin' => [
             'text' => 'Administrator',
-            'desc' => '',
+            'desc' => 'Gewährt administrativen Zugriff auf alle (!) Bereiche der Seite. Das Betrifft auch alle Apps.'
         ],
         'config' => [
             'text' => 'Konfiguration',
-            'desc' => '',
-        ],
+            'desc' => 'Gewährt Zugriff auf alle (!) Konfigurationsbereiche der Seite. Das Betrifft auch alle Apps.'
+        ]
     ],
 
     /**

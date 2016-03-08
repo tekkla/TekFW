@@ -10,6 +10,16 @@ use Core\Lib\Html\Controls\OptionGroup;
  * @copyright 2015
  * @license MIT
  */
-class OptiongroupControl extends OptionGroup
+class OptiongroupControl extends OptionGroup implements ControlsCollectionInterface
 {
+
+    public function getControls()
+    {
+        return $this->controls;
+    }
+
+    public function clearControls()
+    {
+        $this->controls = [];
+    }
 }

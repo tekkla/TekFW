@@ -3,7 +3,6 @@ namespace Core\Lib\Amvc;
 
 // DataLibs
 use Core\Lib\Data\Connectors\Db\Db;
-use Core\Lib\Data\Container\Container;
 
 // Traits
 use Core\Lib\Traits\ArrayTrait;
@@ -11,6 +10,7 @@ use Core\Lib\Router\UrlTrait;
 use Core\Lib\Cfg\CfgTrait;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Security\Security;
+use Core\Lib\Data\Validator\Validator;
 
 /**
  * Model.php
@@ -35,11 +35,24 @@ class Model extends MvcAbstract
     protected $type = 'Model';
 
     /**
+     *
+     * @var array
+     */
+    protected $scheme = [];
+
+    /**
      * Access om Security service
      *
      * @var Security
      */
     protected $security;
+
+    /**
+     * Storage for model errors
+     *
+     * @var array
+     */
+    protected $errors = [];
 
     /**
      * Constructor
@@ -54,6 +67,25 @@ class Model extends MvcAbstract
         $this->name = $name;
         $this->app = $app;
         $this->security = $security;
+
+        $this->loadScheme();
+    }
+
+    /**
+     * Loads scheme when exists
+     */
+    private function loadScheme()
+    {
+        $ref = new \ReflectionClass(get_called_class());
+
+        $name = str_replace('Model', 'Scheme', $ref->getShortName());
+        $ns = $ref->getNamespaceName() . '\\Scheme';
+
+        $filename = BASEDIR . '/' . str_replace('\\', '/', $ns) . '/' . $name . '.php';
+
+        if (file_exists($filename)) {
+            $this->scheme = include ($filename);
+        }
     }
 
     /**
@@ -77,55 +109,16 @@ class Model extends MvcAbstract
     }
 
     /**
-     * Creates an app related container
-     *
-     * @param string $container_name
-     *            Optional: Name of the container to load. When no name is given the name of the current model will be
-     *            used.
-     * @param bool $auto_init
-     *            Optional: Autoinit uses the requested action to fill the container with according fields by calling
-     *            the same called method of container.
-     *
-     * @return \Core\Lib\Data\Container\Container
-     */
-    final public function getContainer($container_name = '')
-    {
-        if (empty($container_name)) {
-            $container_name = $this->getName();
-        }
-
-        return $this->app->getContainer($container_name);
-    }
-
-    /**
-     * Creates an generic container object.
-     *
-     * @return \Core\Lib\Data\Container\Container
-     */
-    final public function getGenericContainer($fields = [])
-    {
-        $container = new Container();
-
-        if (! empty($fields)) {
-            $container->parseFields($fields);
-        }
-
-        return $container;
-    }
-
-    /**
      * Creates a database connector
      *
      * @param string $resource_name
      *            Name of the registered db factory
      * @param string $prefix
      *            Optional table prefix.
-     * @param array $fields
-     *            Optional field definition list to be used as containerscheme
      *
      * @return Db
      */
-    final protected function getDbConnector($resource_name = 'db.default', $prefix = '', $fields = [])
+    final protected function getDbConnector($resource_name = 'db.default', $prefix = '')
     {
         if (! $this->di->exists($resource_name)) {
             Throw new ModelException(sprintf('A database service with name "%s" ist not registered', $resource_name));
@@ -138,15 +131,132 @@ class Model extends MvcAbstract
             $db->setPrefix($prefix);
         }
 
-        if ($fields !== false) {
+        return $db;
+    }
 
-            // Try to get a container object
-            $container = empty($fields) ? $this->getContainer() : $this->getGenericContainer($fields);
-
-            // Pass it to the DataAdapter
-            $db->setContainer($container);
+    /**
+     * Filters the fields value by using the set filter statements
+     *
+     * It is possible to filter the field with multiple filters.
+     * This method uses filter_var_array() to filter the value.
+     *
+     * @return \Core\Lib\Data\Container\Field
+     */
+    final protected function filter(array $data, array $scheme = [])
+    {
+        if (empty($scheme)) {
+            $scheme = $this->scheme;
         }
 
-        return $db;
+        // No filter in scheme? End here!
+        if (empty($scheme['filter'])) {
+            return $data;
+        }
+
+        $filter = [];
+
+        // Get all filter
+        foreach ($scheme['filter'] as $f => $r) {
+            $filter[$f] = $r;
+        }
+
+        // No filter to use? End here!
+        if (empty($filter)) {
+            return $data;
+        }
+
+        // Run filter agains data
+        $result = filter_var_array($data, $filter);
+
+        // No result? End here!
+        if (empty($result)) {
+            return $data;
+        }
+
+        // Copy filtered results into data
+        foreach ($result as $key => $value) {
+            $data[$key] = $value;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Validates data against the set validation rules
+     *
+     * Returns boolean true when successful validate without errors.
+     *
+     * @param array $skip
+     *            Optional array of fieldnames to skip on validation
+     *
+     * @return boolean
+     */
+    public function validate(array $data, array $scheme = [], array $skip = [])
+    {
+
+        if (empty($scheme)) {
+            $scheme = $this->scheme;
+        }
+
+        if (empty($scheme)) {
+            return;
+        }
+
+        // Init rules
+        $rules = [];
+
+        foreach ($data as $key => $val) {
+
+            // Skip field or no validation rules in scheme?
+            if (in_array($key, $skip) || empty($scheme['fields'][$key]['validate'])) {
+                continue;
+            }
+
+            $rules[$key] = $scheme['fields'][$key]['validate'];
+        }
+
+        // no rules, no validation
+        if (empty($rules)) {
+            \FB::log('Nothing to validate');
+            return;
+        }
+
+        $validator = new Validator();
+        $validator->validate($data, $rules);
+
+        // Errors on validation?
+        if (!$validator->isValid()) {
+            $this->errors = $validator->getResult();
+        }
+    }
+
+    /**
+     * Checks for existing model errors and returns boolean true or false
+     *
+     * @return boolean
+     */
+    final public function hasErrors()
+    {
+        return ! empty($this->errors);
+    }
+
+    /**
+     * Returns the models error array (can be empty)
+     *
+     * @return array
+     */
+    final public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Resets models error array
+     */
+    final public function resetErrors()
+    {
+        $this->errors = [];
+
+        return $this;
     }
 }

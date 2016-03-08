@@ -192,7 +192,7 @@ class User
         $this->id_user = $id_user;
 
         $this->db->qb([
-            'tbl' => 'users',
+            'table' => 'users',
             'field' => [
                 'username',
                 'display_name'
@@ -214,7 +214,7 @@ class User
 
             // Load the groups the user is in
             $this->db->qb([
-                'tbl' => 'users_groups',
+                'table' => 'users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
                 'params' => [

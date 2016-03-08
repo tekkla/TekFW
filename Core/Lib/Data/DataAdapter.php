@@ -39,12 +39,6 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var Container
-     */
-    private $container = [];
-
-    /**
-     *
      * @var array
      */
     private $callbacks = [];
@@ -74,47 +68,13 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Sets container to store dataresult in.
-     *
-     * @param array|object $container
-     *
-     * @return \Core\Lib\Data\DataAdapter
-     */
-    public function setContainer($container = [])
-    {
-        $this->container = $container;
-
-        return $this;
-    }
-
-    /**
-     * Returns a clone of the registered data container.
-     *
-     * @throws UnexpectedValueException
-     *
-     * @return Container
-     */
-    public function getContainer($generic = true)
-    {
-        if ($generic == true) {
-            return new Container();
-        }
-
-        if (! $this->container) {
-            Throw new UnexpectedValueException('There is no data container in this DataAdapter.');
-        }
-
-        return unserialize(serialize($this->container));
-    }
-
-    /**
      * Sets data property as container.
      *
      * @param mixed $data
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setData($data)
+    public function setData($data, array $scheme = [])
     {
         // We have callbacks to use
         foreach ($this->callbacks as $cb) {
@@ -126,14 +86,9 @@ class DataAdapter implements \IteratorAggregate
             $data = call_user_func_array($cb[0], $cb[1]);
         }
 
-        // When data is an assoc array we check here for an existing
-        // Container object and fill the container with our data
-        if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
-            $this->data = $data;
-        }
-        else {
-            $this->data = $this->fillContainer($data);
-        }
+        $this->checkType($data, $scheme);
+
+        $this->data = $data;
 
         return $this;
     }
@@ -143,11 +98,15 @@ class DataAdapter implements \IteratorAggregate
      *
      * Use this if you want to add a bunch of records to the adapter.
      *
-     * @var array $dataset
+     * @var array $dataset The data to store
+     * @param string $key
+     *            Optional key name to be used as index
+     * @param array $scheme
+     *            Optional data scheme array
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setDataset(array $dataset)
+    public function setDataset(array $dataset, $key = '', array $scheme = [])
     {
         // Init adapters data array
         $this->data = [];
@@ -183,29 +142,12 @@ class DataAdapter implements \IteratorAggregate
                 continue;
             }
 
-            // Flag to control index search
-            static $use_primary_as_index = null;
-
-            // Should data be stored in an container object?
-            if ($this->container instanceof Container && $use_primary_as_index === null) {
-
-                // Seems so. Get name of possible primary key field
-                $primary = $this->container->getPrimary();
-
-                // When such exists as string and inside the current data use this key
-                $use_primary_as_index = $primary && array_key_exists($primary, $data) ? true :false;
-            }
-
-            // When data is an assoc array we check here for an existing
-            // Container object and fill the container with our data
-            if ($this->arrayIsAssoc($data) || ! is_array($this->container)) {
-                $data = $this->fillContainer($data);
-            }
+            $this->checkType($data, $scheme);
 
             // Use the existing primary field name
-            if ($use_primary_as_index) {
+            if ($key) {
                 // as key to get and use data as index
-                $this->data[$data[$primary]] = $data;
+                $this->data[$data[$key]] = $data;
             }
             else {
                 $this->data[] = $data;
@@ -215,22 +157,27 @@ class DataAdapter implements \IteratorAggregate
         return $this;
     }
 
-    /**
-     * Creates a data container from provided data by using a copy of set container.
-     *
-     * @param array $data
-     *
-     * @return array|object
-     */
-    public function fillContainer(array $data)
+    private function checkType(&$data, array $scheme)
     {
-        $container = unserialize(serialize($this->container));
-
-        foreach ($data as $field => $value) {
-            $container[$field] = $value;
+        if (empty($scheme) || empty($scheme['fields'])) {
+            return;
         }
 
-        return $container;
+        // Let's set some types
+        foreach ($scheme['fields'] as $name => $field) {
+
+            // Is this field serialized?
+            if (!empty($field['serialize'])) {
+                $data[$name] = unserialize($data[$name]);
+            }
+
+            // No type no conversion
+            if (empty($field['type'])) {
+                continue;
+            }
+
+            settype($data[$name], $field['type']);
+        }
     }
 
     /**

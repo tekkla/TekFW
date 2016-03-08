@@ -39,19 +39,41 @@ class GroupController extends Controller
         $this->setAjaxTarget('#core-admin');
     }
 
+    public function Detail($id)
+    {
+        $this->setVar([
+            'title' => $this->text('group.field.title'),
+            'display_name' => $this->text('group.field.display_name'),
+            'description' => $this->text('group.field.description'),
+            'group' => $this->model->getGroup($id),
+            'url' => $this->url('edit', [
+                'controller' => 'Group',
+                'id' => $id
+            ]),
+            'permissions' => $this->getController('GroupPermission')
+                ->run('Index', [
+                'id' => $id
+            ])
+        ]);
+    }
+
     public function Edit($id = null)
     {
         $data = $this->http->post->get();
 
-        if ($data) {}
+        if ($data) {
+
+            $this->model->save($data);
+            // $this->redirectExit($this->url($this->router->getCurrentRoute(), ['id' => $id]));
+        }
         else {
             $data = $this->model->getGroup($id);
         }
 
-        $form = $this->getFormDesigner($data);
-        $form->isAjax();
+        $fd = $this->getFormDesigner();
 
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
+        $group->mapData($data);
 
         // Add hidden field with project id on edits
         if (! empty($id)) {
@@ -61,7 +83,7 @@ class GroupController extends Controller
         $controls = [
             'title' => 'text',
             'display_name' => 'text',
-            'permissions' => 'optiongroup'
+            'description' => 'textarea'
         ];
 
         foreach ($controls as $name => $type) {
@@ -77,46 +99,11 @@ class GroupController extends Controller
                     $control->setPlaceholder($text);
                 }
             }
-
-            switch ($name) {
-
-                // Perissions optiongroup
-                case 'permissions':
-
-                    // Get all loaded apps instances
-                    $apps = $this->di->get('core.amvc.creator')->getLoadedApps(false);
-
-                    /* @var $app \Core\Lib\Amvc\App */
-                    foreach ($apps as $app) {
-
-                        $perms = $app->getPermissions();
-
-                        if (! $perms) {
-                            continue;
-                        }
-
-                        $app_name = $app->getName();
-
-                        /* @var $control \Core\Lib\Html\Controls\Optiongroup */
-                        $control->createHeading($app_name);
-
-                        foreach ($perms as $perm) {
-
-                            $option = $control->createOption($this->text('perm.' . $perm . '.text'), $perm);
-                            $option->setDescription($this->text('perm.' . $perm . '.desc'));
-
-                            if (array_key_exists($perm, $data['permissions'][$app_name])) {
-                                $option->isSelected();
-                            }
-                        }
-                    }
-                    break;
-            }
         }
 
         /* @var $editbox \Core\Lib\Html\Controls\Editbox */
-        $editbox = $this->getHtmlObject('Controls\Editbox');
-        $editbox->setForm($form);
+        $editbox = $this->html->create('Controls\Editbox');
+        $editbox->setForm($fd);
 
         // Editbox caption and texts
         $editbox->setCaption($this->text('group.action.edit.text'));

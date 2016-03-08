@@ -22,15 +22,7 @@ class ControlBuilder
     use StringTrait;
     use TextTrait;
 
-    private $app_name;
-
     private $control;
-
-    private $name_prefix = '';
-
-    private $id_prefix = '';
-
-    private $label_prefix = '';
 
     private $errors = [];
 
@@ -39,20 +31,6 @@ class ControlBuilder
     private $label_width = 3;
 
     private $grid_size = 'sm';
-
-    /**
-     * Sets name of app to be used
-     *
-     * @param string $app_name
-     *
-     * @return \Core\Lib\Html\FormDesigner\ControlBuilder
-     */
-    public function setAppName($app_name)
-    {
-        $this->app_name = $app_name;
-
-        return $this;
-    }
 
     /**
      * Bind control
@@ -64,27 +42,6 @@ class ControlBuilder
     public function setControl(FormAbstract $control)
     {
         $this->control = $control;
-
-        return $this;
-    }
-
-    public function setNamePrefix($name_prefix)
-    {
-        $this->name_prefix = $name_prefix;
-
-        return $this;
-    }
-
-    public function setIdPrefix($id_prefix)
-    {
-        $this->id_prefix = $id_prefix;
-
-        return $this;
-    }
-
-    public function setLabelPrefix($label_prefix)
-    {
-        $this->label_prefix = $label_prefix;
 
         return $this;
     }
@@ -146,28 +103,22 @@ class ControlBuilder
         // What type of control do we have to handle?
         $type = $this->control->getData('control');
 
-        // Create the control name
-        $field_name = $this->control->isBound() ? $this->control->getField() : $this->control->getName();
+        //( Get control name
+        $name = $this->control->getName();
 
         // Create control name app[app][model][existing name]
-        if (method_exists($this->control, 'setName')) {
+        if ($this->control->isArray() && method_exists($this->control, 'setName')) {
+            $this->control->setName($name . '[]');
+        }
 
-            // Remove button name?
-            if (! empty($field_name) || ! $this->control instanceof Button) {
-
-                $field_name = $this->stringUncamelize($field_name);
-
-                $name = ($type == 'input' && $this->control->getType() == 'file') ? 'files' : $this->name_prefix . '[' . $field_name . ']';
-                $this->control->setName($name);
-            }
-            else {
-                $this->control->removeName();
-            }
+        // Remove button name?
+        if ($this->control instanceof Button) {
+            $this->control->removeName();
         }
 
         // create control id {app}_{model}_{existing id}
         if (! $this->control->getId()) {
-            $this->control->setId(str_replace('_', '-', $this->id_prefix . '-' . ($this->control->isBound() ? $field_name : uniqid())));
+            $this->control->setId($name);
         }
 
         // Set BS group class
@@ -206,7 +157,7 @@ class ControlBuilder
 
             // Try to find a suitable text as label in our languagefiles
             if (! $this->control->getLabel()) {
-                $this->control->setLabel($this->text($this->label_prefix . $field_name, $this->app_name));
+                $this->control->setLabel('No label text set');
             }
 
             // Attach to control id
@@ -222,13 +173,15 @@ class ControlBuilder
 
             $label = $this->control->label->build();
         }
-        elseif ($this->control instanceof Checkbox) {
+
+        // Checkboxes are different
+        if ($this->control instanceof Checkbox) {
 
             $label = $this->control->getLabel();
 
             // Checkboxes are wrapped by label tags, so we need only the text
             if (empty($label)) {
-                $label = $this->text($this->label_prefix . $field_name, $this->app_name);
+                $label = 'No label text set.';
             }
         }
 
@@ -256,7 +209,7 @@ class ControlBuilder
         // Add hidden field to compare posted value with previous value.
         if ($this->control->hasCompare()) {
 
-            $compare_name = str_replace($field_name, $field_name . '_compare', $this->control->getName());
+            $compare_name = str_replace($name, $name . '_compare', $this->control->getName());
 
             $compare_control = $this->factory->create('Form\Input');
             $compare_control->setName($compare_name);
@@ -273,8 +226,6 @@ class ControlBuilder
         }
 
         // Build control
-        $html = '';
-
         if ($this->display_mode == 'h') {
             $control = '<div class="' . (! $this->control->hasLabel() ? 'col-' . $this->grid_size . '-offset-3 ' : '') . 'col-' . $this->grid_size . '-' . (12 - $this->label_width) . '">' . $this->control->build() . '{help}{error}</div>';
         }

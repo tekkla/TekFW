@@ -22,7 +22,7 @@ final class ConfigModel extends Model
         $cfg = $this->di->get('core.amvc.creator')
             ->getAppInstance($app_name)
             ->getConfig()['raw'];
-        
+
         return array_keys($cfg);
     }
 
@@ -33,7 +33,7 @@ final class ConfigModel extends Model
      *            Name of app to get config from
      * @param string $exclude_group
      *            Exclude this group from config
-     *            
+     *
      * @return array
      */
     public function loadByApp($app_name, array $values = [])
@@ -42,129 +42,99 @@ final class ConfigModel extends Model
         $cfg = $this->di->get('core.amvc.creator')
             ->getAppInstance($app_name)
             ->getConfig()['flat'];
-        
-        $data = $this->getGenericContainer();
-        
-        foreach ($cfg as $key => $def) {
-            
-            // Do we have predefiend values to respect?
-            switch (true) {
-                
-                // By full key name group.name
-                case array_key_exists($key, $values):
-                    $val = $values[$key];
-                    break;
-                
-                // No value found => use the value from config
-                default:
-                    $val = $this->di->get('core.cfg')->get($app_name, $key);
-                    break;
+
+        $data = [];
+
+        foreach ($cfg as $key => &$def) {
+
+            // Value provided by parameter?
+            if (array_key_exists($key, $values)) {
+                $def['value'] = $values[$key];
             }
-            
-            switch ($def['control']) {
-                case 'Number':
-                case 'Switch':
-                    $type = 'int';
-                    break;
-                
-                case 'Optiongroup':
-                case 'Multiselect':
-                    $type = 'array';
-                    break;
-                
-                default:
-                    $type = 'string';
-                    break;
+            // Value existin in config?
+            elseif ($this->di->get('core.cfg')->exists($app_name, $key)) {
+                $def['value'] = $this->di->get('core.cfg')->get($app_name, $key);
             }
-            
-            // Generate container field
-            $field = $data->createField($key, $type, null, false, $def['serialize'], $def['validate'], $def['control'], $val, $def['filter']);
-            
-            // Config definition can have more properties. Here we look for and add to field
-            $additional_data = [
-                'data',
-                'translate'
-            ];
-            
-            foreach ($additional_data as $field_name) {
-                $field[$field_name] = $def[$field_name];
+            // Default value from definition?
+            elseif (isset($def['default'])) {
+                $def['value'] = $def['default'];
             }
         }
-        
-        return $data;
+
+        return $cfg;
     }
 
     public function saveConfig(&$data)
     {
         // Store the appname this config is for
-        $app_name = $data['app_name'];
-        
-        // Store the current groups name
-        $group_name = $data['group_name'];
-        
+        $app_name = $data['app.name'];
+
         $unused = [
             'app_name',
-            'group_name',
             'btn_submit'
         ];
-        
-        // Get config definition from app
-        $data = $this->loadByApp($app_name, $data);
-        
-        // Filter
-        $data->filter();
-        
-        // Was walidation a success or did we get some errors?
-        if (! $data->validate()) {
-            return $data;
+
+        // Get config definition from app and set values
+        $fulldata = $this->loadByApp($app_name, $data);
+
+        // Create a data scheme on the fly
+        $pseudo_scheme = [
+            'table' => 'config',
+            'fields' => $fulldata
+        ];
+
+        #$data = $this->filter($data, $pseudo_scheme);
+
+        // Validate
+        $this->validate($data, $pseudo_scheme);
+
+        if ($this->hasErrors()) {
+
+            \FB::log($this->getErrors());
+
+            $data = $fulldata;
         }
-        
-        // Data validated successfully. Go on and store config
+
+       // Data validated successfully. Go on and store config
         $db = $this->getDbConnector();
-        
+
         // Start transaction
         $db->beginTransaction();
-        
+
         // Delete current config
         $db->delete($this->table, 'app=:app', [
             ':app' => $app_name
         ]);
-        
+
         // Prepare insert query
-        $db->qb([
-            'table' => $this->table,
-            'method' => 'INSERT',
-            'fields' => [
-                'app',
-                'cfg',
-                'val'
+        $qb = [
+            'scheme' => $pseudo_scheme,
+            'data' => [
+                'app' => $app_name
             ],
-            'params' => [
-                ':app' => $app_name
-            ]
-        ]);
-        
-        // $db->bindValue(':app_name', $app_name);
-        
-        // Create config entries
-        foreach ($data as $key => $val) {
-            
-            if (in_array($key, $unused)) {
-                continue;
-            }
-            
-            $db->bindValue(':cfg', $key);
-            
-            if ($data->getField($key)->getSerialize()) {
+        ];
+
+        // Create config entries one by one
+        foreach ($fulldata as $def) {
+
+            \FB::log($def);
+
+            $qb['data']['cfg'] = $def['name'];
+
+            $val = $def['value'];
+
+            if (!empty($def['serialize'])) {
                 $val = serialize($val);
             }
-            
-            $db->bindValue(':val', $val);
-            $db->execute();
+
+            $qb['data']['val'] = $val;
+
+            $db->qb($qb, true);
+
         }
-        
+
         $db->endTransaction();
-        
-        return $data;
+
+        $data = $fulldata;
     }
 }

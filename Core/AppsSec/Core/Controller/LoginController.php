@@ -32,6 +32,8 @@ class LoginController extends Controller
 
         $data = $this->http->post->get();
 
+        var_dump($this->http->post->raw());
+
         if ($data) {
 
             if ($data->validate()) {
@@ -58,45 +60,45 @@ class LoginController extends Controller
             $data['remember'] = $this->cfg('security.autologin');
         }
 
-        $form = $this->getFormDesigner($data);
-        $form->setName('core-login');
+        $fd = $this->getFormDesigner('core-login');
+        $fd->setName('core-login');
 
         if (isset($_SESSION['display_activation_notice'])) {
-            $group = $form->addGroup();
+            $group = $fd->addGroup();
             $group->addCss('alert alert-info');
             $group->setRole('alert');
             $group->setInner($this->text('register.activation.notice'));
         }
 
         // Create element group
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
 
         /* @var $control \Core\Lib\Html\FormDesigner\Controls\TextControl */
         $control = $group->addControl('Text', 'login');
 
-        $text = $this->text('login.username');
+        $text = $this->text('login.form.username');
         $control->setPlaceholder($text);
         $control->noLabel();
 
         /* @var $control \Core\Lib\Html\FormDesigner\Controls\TextControl */
         $control = $group->addControl('Password', 'password');
 
-        $text = $this->text('login.password');
+        $text = $this->text('login.form.password');
         $control->setPlaceholder($text);
         $control->noLabel();
 
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
 
         /* @var $control \Core\Lib\Html\Form\Checkbox */
         $control = $group->addControl('Checkbox', 'remember');
         $control->setValue(1);
-        $control->setLabel($this->text('login.remember_me'));
+        $control->setLabel($this->text('login.form.remember_me'));
 
         if ($this->cfg('security.login.autologin')) {
             $control->isChecked();
         }
 
-        $btn_group = $form->addGroup();
+        $btn_group = $fd->addGroup();
         $btn_group->setId('btn-group');
         $btn_group->addCss([
             'btn-group',
@@ -112,7 +114,7 @@ class LoginController extends Controller
 
         $control = $btn_group_button->addControl('Submit');
 
-        $icon = $this->getHtmlObject('Elements\Icon');
+        $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
         $control->setInner($icon->build() . ' ' . $this->text('user.action.login'));

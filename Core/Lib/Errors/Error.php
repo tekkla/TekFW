@@ -1,6 +1,7 @@
 <?php
 namespace Core\Lib\Errors;
 
+use function Monolog\Handler\error_log;
 /**
  * Error.php
  *
@@ -70,14 +71,29 @@ function ErrorHandler($err_severity, $err_msg, $err_file, $err_line, array $err_
             break;
     }
 
-    $exception = '\Core\Lib\Errors\Exceptions\\' . $exception;
+    $e = '\Core\Lib\Errors\Exceptions\\' . $exception;
+    $e = new $e($err_msg, 0, $err_severity, $err_file, $err_line);
 
-    echo \Core\Lib\DI::getInstance()->get('core.error')->handleException(new $exception($err_msg, 0, $err_severity, $err_file, $err_line));
+    $di = \Core\Lib\DI::getInstance();
+
+    if ($di->exists('core.error')) {
+        echo $di->get('core.error')->handleException($e);
+    }
+    else {
+        error_log($e->getMessage() . ' (' . $e->getFile() . ':' . $e->getLine() .')');
+    }
 }
 
 function ExceptionHandler($e)
 {
-    echo \Core\Lib\DI::getInstance()->get('core.error')->handleException($e);
+    $di = \Core\Lib\DI::getInstance();
+
+    if ($di->exists('core.error')) {
+        echo $di->get('core.error')->handleException($e);
+    }
+    else {
+        error_log($e->getMessage() . ' (' . $e->getFile() . ':' . $e->getLine() .')');
+    }
 }
 
 function shutDownFunction()

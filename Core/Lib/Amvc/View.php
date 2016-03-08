@@ -30,6 +30,7 @@ class View extends MvcAbstract
     {
         $this->name = $name;
         $this->app = $app;
+
     }
 
     /**
@@ -72,11 +73,6 @@ class View extends MvcAbstract
                 // Handle buildable objects
                 case method_exists($val, 'build'):
                     $val = $val->build();
-                    break;
-
-                // Handle data container
-                case method_exists($val, 'getArray'):
-                    $val = $val->getArray();
                     break;
 
                 // Handle all other objects

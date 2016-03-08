@@ -67,6 +67,20 @@ class Textarea extends FormAbstract
         return $this;
     }
 
+    /**
+     * Sets a value as inner value of the textarea
+     *
+     * @param string $value
+     *
+     * @return \Core\Lib\Html\Form\Textarea
+     */
+    public function setValue($value)
+    {
+        $this->inner = $value;
+
+        return $this;
+    }
+
     public function build()
     {
         return parent::build();

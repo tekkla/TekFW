@@ -306,7 +306,8 @@ abstract class HtmlAbstract
 
             // Is css to check already in objects css array?
             $check = array_intersect($check, $this->css) ? true : false;
-        } else {
+        }
+        else {
             // Without set css param we only check if css is used
             $check = $this->css ? true : false;
         }
@@ -435,7 +436,8 @@ abstract class HtmlAbstract
     {
         if (! isset($this->attribute[$attribute])) {
             Throw new InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
-        } else {
+        }
+        else {
             return $this->attribute[$attribute];
         }
     }
@@ -585,20 +587,23 @@ abstract class HtmlAbstract
             // This is when you set attributes without values like selected, disabled etc.
             if (! is_array($args[0])) {
                 $this->{$func}[$args[0]] = false;
-            } else {
+            }
+            else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
                 if ($this->arrayIsAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }
-                } else {
+                }
+                else {
                     foreach ($args[0] as $val) {
                         $this->{$func}[] = $val;
                     }
                 }
             }
-        } else {
+        }
+        else {
             $this->{$func}[$args[0]] = $args[1];
         }
     }

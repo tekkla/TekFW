@@ -281,14 +281,14 @@ class Db extends ConnectorAbstract
      *
      * @return array
      */
-    public function all($fetch_mode = \PDO::FETCH_ASSOC)
+    public function all($key='', $scheme=[], $fetch_mode = \PDO::FETCH_ASSOC)
     {
         $this->stmt->execute();
 
         $data = $this->stmt->fetchAll($fetch_mode);
 
         if ($data) {
-            $data = $this->adapter->setDataset($data)->getData();
+            $data = $this->adapter->setDataset($data, $key, $scheme)->getData();
         }
 
         return $data;
@@ -317,14 +317,14 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function single($fetch_mode = \PDO::FETCH_ASSOC)
+    public function single(array $scheme = [], $fetch_mode = \PDO::FETCH_ASSOC)
     {
         $this->stmt->execute();
 
         $data = $this->stmt->fetch($fetch_mode);
 
         if ($data) {
-            $data = $this->adapter->setData($data)->getData();
+            $data = $this->adapter->setData($data, $scheme)->getData();
         }
 
         return $data;
@@ -547,44 +547,7 @@ class Db extends ConnectorAbstract
         return true;
     }
 
-    /**
-     * Insert method
-     *
-     * @param string $method
-     *            "Insert" or "Replace"
-     * @param string $tbl
-     *            Full name of the table to insert data. Do not forget {db_prefix}!
-     * @param array $fields
-     *            Array of the coloums we have data for
-     * @param array $values
-     *            The value to insert
-     * @param array $keys
-     *            Array of table keys
-     *
-     * @return integer The id of the last inserted record
-     */
-    public function insert($method, $tbl, $fields, $values, $keys)
-    {
-        // Generate field and parameter list
-        $field_list = array_keys($fields);
-        $param_list = [];
-
-        foreach ($field_list as $field_name) {
-            $param_list[] = ':' . $field_name;
-        }
-
-        $stmt = $this->dbh->prepare('INSERT INTO ' . $tbl . ' (' . implode(', ', $field_list) . ') VALUES (' . implode(', ', $param_list) . ')');
-
-        foreach ($fields as $param => &$var) {
-            $stmt->bindValue(':' . $param, $var);
-        }
-
-        $stmt->execute();
-
-        return $this->dbh->lastInsertId($keys[0]);
-    }
-
-    /**
+   /**
      * Creates a string of named parameters and an array of named parameters => values.
      *
      * Use this for sql statements like mySQLs IN().

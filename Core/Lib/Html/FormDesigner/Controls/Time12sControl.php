@@ -23,6 +23,6 @@ class Time12sControl extends DateTimePicker
         'maxlenght' => 8,
         'size' => 8
     ];
-    
+
     // @todo 'showMeridian' => true
 }

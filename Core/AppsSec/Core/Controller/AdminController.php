@@ -17,26 +17,31 @@ final class AdminController extends Controller
     {
         $this->setVar([
             'loaded_apps' => $this->model->getApplist(),
-            'logs' => $this->getController('Log')->run('Index'),
+            'logs' => $this->getController('Log')
+                ->run('Index'),
 
             // Links to users and permissions
-            'links' => [
+            'menu' => [
                 'users' => [
-                    'url' => $this->url('action', [
-                        'controller' => 'User',
-                        'action' => 'Index'
-                    ]),
-                    'text' => $this->text('user.plural')
-                ],
-                'groups' => [
-                    'url' => $this->url('action', [
-                        'controller' => 'Group',
-                        'action' => 'Index'
-                    ]),
-                    'text' => $this->text('group.plural')
+                    'title' => $this->text('admin.menu.users'),
+                    'links' => [
+                        'users' => [
+                            'url' => $this->url('action', [
+                                'controller' => 'User',
+                                'action' => 'Index'
+                            ]),
+                            'text' => $this->text('user.plural')
+                        ],
+                        'groups' => [
+                            'url' => $this->url('action', [
+                                'controller' => 'Group',
+                                'action' => 'Index'
+                            ]),
+                            'text' => $this->text('group.plural')
+                        ]
+                    ]
                 ]
             ]
         ]);
-
     }
 }

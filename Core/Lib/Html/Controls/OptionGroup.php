@@ -1,8 +1,8 @@
 <?php
 namespace Core\Lib\Html\Controls;
 
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Html\Elements\Div;
+use Core\Lib\Html\HtmlException;
 
 /**
  * OptionGroup.php
@@ -19,16 +19,16 @@ class OptionGroup extends Div
      *
      * @var array
      */
-    private $options = [];
+    protected $controls = [];
 
     /**
      * Add an option to the optionslist and returns a reference to it.
      *
-     * @return \Core\Lib\Html\Form\Option
+     * @return \Core\Lib\Html\Form\Checkbox
      */
     public function &createOption($text = '', $value = '')
     {
-        $option = $this->factory->create('Form\Option');
+        $option = $this->factory->create('Form\Checkbox');
 
         if ($text) {
             $option->setInner($text);
@@ -38,7 +38,7 @@ class OptionGroup extends Div
             $option->setValue($value);
         }
 
-        $this->options[] = $option;
+        $this->controls[] = $option;
 
         return $option;
     }
@@ -49,7 +49,7 @@ class OptionGroup extends Div
         $heading->setSize($size);
         $heading->setInner($text);
 
-        $this->options[] = $heading;
+        $this->controls[] = $heading;
 
         return $heading;
     }
@@ -65,12 +65,12 @@ class OptionGroup extends Div
      */
     public function build()
     {
-        if (empty($this->options)) {
-            Throw new UnexpectedValueException('OptionGroup Control: No Options set.');
+        if (empty($this->controls) && empty($this->inner)) {
+            Throw new HtmlException('OptionGroup Control: No Options set.');
         }
 
         /* @var $option \Core\Lib\Html\Form\Option */
-        foreach ($this->options as $option) {
+        foreach ($this->controls as $option) {
 
             if ($option instanceof \Core\Lib\Html\Elements\Heading) {
                 $this->inner .= $option->build();

@@ -248,6 +248,9 @@ class App
             array_unshift($this->permissions, $perm);
         }
 
+        // Send permissions to Permission service
+        $this->security->permission->setPermissions($this->name, $this->permissions);
+
         // Set flat that permission init is done
         self::$init_stages[$this->name]['perms'] = true;
     }
@@ -260,15 +263,15 @@ class App
     final private function initLanguage()
     {
         // Init only once
-        if (self::$init_stages[$this->name]['lang']) {
+        if (!empty(self::$init_stages[$this->name]['lang'])) {
             return;
         }
 
         // Do we have permissions do add?
-        if ($this->language) {
+        if (!empty($this->language)) {
 
             // Check
-            if (! isset($this->cfg->data[$this->name]['dir.language'])) {
+            if (empty($this->cfg->data[$this->name]['dir.language'])) {
                 Throw new AppException(sprintf('Languagefile of app "%s" has to be loaded but no Language folder was found.', $this->name));
             }
 
@@ -433,57 +436,16 @@ class App
     }
 
     /**
-     * Creates an app related container object.
-     *
-     * @param string $name
-     *            The controllers name
-     *
-     * @return Controller
-     */
-    final public function getContainer($name = '')
-    {
-        // Autodiscover componentsname on demand
-        if (empty($name)) {
-            $name = $this->getComponentsName();
-        }
-
-        // Init args array
-        $args = [];
-
-        /* @var $container \Core\Lib\Data\Container\Container */
-        $container = $this->MVCFactory($name, 'Container', $args);
-
-        if (! $container) {
-            Throw new AppException(sprintf('Container "%s" does not exist.', $name));
-        }
-
-        // We need our action so we can call a possible existing function that gives us only
-        // those fields needed for this action
-        $action = $this->router->getAction();
-
-        // Do we have such method?
-        if (! method_exists($container, $action)) {
-
-            // ... and try to find and run Index method when no matching action is found
-            $action = method_exists($container, 'Index') ? 'Index' : 'useAllFields';
-        }
-
-        // ... and call matching container action when method exists
-        $container->$action();
-
-        // finally try to parse field defintion
-        $container->parseFields();
-
-        return $container;
-    }
-
-    /**
      * Returns apps default config
      *
      * @return array
      */
-    final public function getConfig()
+    final public function getConfig($refresh=false)
     {
+        if ($refresh) {
+            $this->initCfg();
+        }
+
         return $this->config;
     }
 
@@ -514,7 +476,9 @@ class App
 
         // Check the loaded config against the keys of the default config
         // and set the default value if no cfg value is found
-        foreach ($this->config['flat'] as $key => &$cfg_def) {
+        foreach ($this->config['flat'] as $key => &$def) {
+
+            $def['name'] = $key;
 
             $check_default = [
                 'serialize' => false,
@@ -523,22 +487,41 @@ class App
                 'validate' => [],
                 'filter' => [],
                 'default' => '',
-                'control' => 'text'
+                'control' => 'text',
+                'value' => '',
             ];
 
             foreach ($check_default as $property => $default) {
-                if (! isset($cfg_def[$property])) {
-                    $cfg_def[$property] = $default;
+                if (!isset($def[$property])) {
+                    $def[$property] = $default;
                 }
             }
 
             // When there is no config set but a default value defined for the app,
             // the default value will be used then
-            if (! isset($this->cfg->data[$this->name][$key])) {
-                $this->cfg->data[$this->name][$key] = $cfg_def['default'];
+            if (isset($this->cfg->data[$this->name][$key])) {
+                $def['value'] = $this->cfg->data[$this->name][$key];
             }
+
+            switch ($def['control']) {
+                case 'Number':
+                case 'Switch':
+                    $def['type'] = 'int';
+                    break;
+
+                case 'Optiongroup':
+                case 'Multiselect':
+                    $def['type'] = 'array';
+                    break;
+
+                default:
+                    $def['type'] = 'string';
+                    break;
+            }
+
         }
     }
+
 
     private function flattenConfig(array $array, $prefix = '', $glue = '.')
     {

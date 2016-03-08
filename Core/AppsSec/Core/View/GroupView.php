@@ -68,5 +68,38 @@ class GroupView extends View
 
         return implode(' ', $pieces);
     }
+
+    public function Detail() {
+
+        echo '<h2>', $this->headline, '</h2>';
+
+        echo '
+        <div class="row">
+            <div class="col-sm-4" data-ajax data-url="', $this->url, '">';
+
+            $fields = [
+                'title',
+                'display_name',
+                'description',
+                'deny',
+            ];
+
+            foreach ($fields as $field)  {
+
+                echo '
+                <div class="bottom-buffer">
+                    <small>', $this->$field, '</small>
+                    <br>
+                    <strong>', $this->html($this->group[$field]), '</strong>
+                </div>';
+
+            }
+
+            echo '
+            </div>
+            <div class="col-sm-8">', $this->permissions, '</div>
+        </div>';
+
+    }
 }
 

@@ -1,22 +1,22 @@
 <?php
-namespace Core\AppsSec\Core\Container;
-
-use Core\Lib\Data\Container\Container;
+namespace Core\AppsSec\Core\Model\Scheme;
 
 /**
- * GroupContainer.php
+ * GroupScheme.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
  */
-class GroupContainer extends Container
-{
-
-    protected $available = [
+return [
+    'primary' => 'id_group',
+    'table' => 'groups',
+    'fields' => [
         'id_group' => [
             'type' => 'int',
-            'primary' => true
+            'validate' => [
+                'required'
+            ]
         ],
         'title' => [
             'type' => 'string',
@@ -33,10 +33,8 @@ class GroupContainer extends Container
             ]
         ],
         'description' => [
-            'type' => 'string',
-        ],
-        'permissions' => [
-            'type' => 'array',
+            'type' => 'string'
         ]
-    ];
-}
+    ]
+];
+

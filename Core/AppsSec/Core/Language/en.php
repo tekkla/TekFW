@@ -16,19 +16,19 @@ return [
      * ****************************************************************************
      */
     'states' => [
-        'on' => 'an',
-        'off' => 'aus',
-        'yes' => 'ja',
-        'no' => 'nein'
+        'on' => 'on',
+        'off' => 'off',
+        'yes' => 'yes',
+        'no' => 'no'
     ],
 
 	/* ERRORS */
 	'error' => [
-        'headline' => 'Fehler',
-        'general' => 'Ein allgemeiner Fehler ist aufgetreten.',
-        '404' => 'Die angeforderte Seite xistiert nicht.',
-        '403' => 'Sie haben keine Rechte auf diese Seite zuzugreifen.',
-        '500' => 'Ein interner Fehler ist  aufgetreten.'
+        'headline' => 'Error',
+        'general' => 'A general error occured.',
+        '404' => 'The requested page does not exist.',
+        '403' => 'Access denied',
+        '500' => 'A server error occured.'
     ],
 
     // Basics
@@ -36,45 +36,45 @@ return [
 
     'action' => [
         'next' => [
-            'text' => 'Weiter',
+            'text' => 'Next',
             'icon' => 'angle-double-right'
         ],
         'prev' => [
-            'text' => 'Zurück',
+            'text' => 'Back',
             'icon' => 'angle-double-left'
         ],
         'refresh' => [
-            'text' => 'Neu laden',
+            'text' => 'Refresh',
             'icon' => 'refresh'
         ],
         'save' => [
-            'text' => 'Speichern',
-            'cofirm' => 'Wirklich speichern?',
+            'text' => 'Save',
+            'cofirm' => 'Save data?',
             'icon' => 'floppy-o'
         ],
         'cancel' => [
-            'text' => 'Abbrechen',
-            'cofirm' => 'Wirklich abbrechen?',
+            'text' => 'cancel',
+            'cofirm' => 'Cancel action?',
             'icon' => 'ban'
         ],
         'update' => [
-            'text' => 'Aktualisieren',
-            'cofirm' => 'Wirklich aktualisieren?',
+            'text' => 'Update',
+            'cofirm' => 'Update data?',
             'icon' => 'floppy-o'
         ],
         'delete' => [
-            'text' => 'Löschen',
-            'cofirm' => 'Wirklich löschen?',
+            'text' => 'delete',
+            'cofirm' => 'Delete data?',
             'icon' => 'trash-o'
         ],
         'add' => [
-            'text' => 'Hinzufühgen',
-            'confirm' => 'Wirklich hinzufügen?',
+            'text' => 'Add',
+            'confirm' => 'Add data?',
             'icon' => 'plus-square-o'
         ],
         'edit' => [
-            'text' => 'Bearbeiten',
-            'confirm' => 'Bearbeitung starten?',
+            'text' => 'Edit',
+            'confirm' => 'Edit data?',
             'icon' => 'pencil-square-o'
         ]
     ],
@@ -144,23 +144,28 @@ The team of %s'
         'desc' => '',
 
         'site' => [
-            'head' => 'Site',
-            'desc' => '',
-            'name' => [
-                'label' => 'Name (Brand)',
-                'desc' => 'The sites name which is also used as brand inside various methods inside framework.'
+            'general' => [
+                'head' => 'Seite',
+                'desc' => '',
+                'name' => [
+                    'label' => 'Name (Brand)',
+                    'desc' => 'The sites name which is also used as brand inside various methods inside framework.'
+                ],
+                'url' => [
+                    'label' => 'Baseurl',
+                    'desc' => 'The FQFN basurl of the site including leading http(s):// and without trailing slash (Example: http://mydomain.tld)'
+                ],
+                'webmaster_email' => [
+                    'label' => 'Webmaster (Admin) emailaddress',
+                    'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
+                ]
             ],
-            'url' => [
-                'label' => 'Baseurl',
-                'desc' => 'The FQFN basurl of the site including leading http(s):// and without trailing slash (Example: http://mydomain.tld)'
-            ],
-            'webmaster_email' => [
-                'label' => 'Webmaster (Admin) emailaddress',
-                'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
-            ],
+
             'language' => [
-                'label' => 'Default language',
-                'desc' => 'Default language of this website.'
+                'default' => [
+                    'label' => 'Default language',
+                    'desc' => 'Default language of this website.'
+                ]
             ]
         ],
 
@@ -538,7 +543,27 @@ The team of %s'
         'field' => [
             'id_group' => 'Group ID',
             'title' => 'Name',
-            'display_name' => 'Display name',
+            'display_name' => 'Display name'
+        ]
+    ],
+
+    /**
+     * **************************************************************************
+     * Group Permissions
+     * **************************************************************************
+     */
+    'group_permission' => [
+        'action' => [
+            'edit' => [
+                'text' => 'Edit group permission'
+            ],
+            'new' => [
+                'text' => 'New  group permission'
+            ]
+        ],
+        'field' => [
+            'permission' => 'permission.singular',
+            'notes' => 'Notes'
         ]
     ],
 
@@ -547,15 +572,17 @@ The team of %s'
      * Permissions
      * **************************************************************************
      */
-    'perm' => [
+    'permission' => [
+        'singular' => 'Accessright',
+        'plural' => 'Accessrights',
         'admin' => [
             'text' => 'Administrator',
-            'desc' => '',
+            'desc' => 'Grants administrative access for all (!) areas of the site (including all apps).'
         ],
         'config' => [
             'text' => 'Configuration',
-            'desc' => '',
-        ],
+            'desc' => 'Grants access for all (!) configareas of the site (including all apps).'
+        ]
     ],
 
     /**
@@ -582,7 +609,10 @@ The team of %s'
         'numberrange' => 'The value has to be between %d and %d.',
         // Email
         'email' => 'This is not a valid mailadress.',
-        'email_dnscheck' => 'The email host "%s" is unknown eg does not exist.'
+        'email_dnscheck' => 'The email host "%s" is unknown eg does not exist.',
+
+        // Url
+        'url' => 'This is no valid url.',
     ],
 
     /**

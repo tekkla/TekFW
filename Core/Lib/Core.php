@@ -1,4 +1,8 @@
 <?php
+// Include StringTrait file
+require_once (BASEDIR . '/Core/Lib/Traits/StringTrait.php');
+
+use Core\Lib\Traits\StringTrait;
 
 /**
  * Core.php
@@ -9,6 +13,8 @@
  */
 class Core
 {
+
+    use StringTrait;
 
     /**
      *
@@ -33,6 +39,12 @@ class Core
      * @var \Core\Lib\Router\Router
      */
     private $router;
+
+    /**
+     *
+     * @var \Core\Lib\Security\Security
+     */
+    private $security;
 
     /**
      *
@@ -295,10 +307,7 @@ class Core
             'core.http.header'
         ]);
         $this->di->mapService('core.http.cookie', '\Core\Lib\Http\Cookie\Cookies');
-        $this->di->mapService('core.http.post', '\Core\Lib\Http\Post', [
-            'core.router',
-            'core.security.token'
-        ]);
+        $this->di->mapService('core.http.post', '\Core\Lib\Http\Post');
         $this->di->mapService('core.http.header', '\Core\Lib\Http\Header');
 
         // == UTILITIES ====================================================
@@ -315,7 +324,8 @@ class Core
             'core.security.users',
             'core.security.group',
             'core.security.token',
-            'core.security.login'
+            'core.security.login',
+            'core.security.permission'
         ]);
         $this->di->mapFactory('core.security.users', '\Core\Lib\Security\Users', [
             'db.default',
@@ -324,10 +334,10 @@ class Core
             'core.log'
         ]);
         $this->di->mapFactory('core.security.user', '\Core\Lib\Security\User', [
-            'db.default',
+            'db.default'
         ]);
         $this->di->mapService('core.security.user.current', '\Core\Lib\Security\User', [
-            'db.default',
+            'db.default'
         ]);
         $this->di->mapService('core.security.group', '\Core\Lib\Security\Group', 'db.default');
         $this->di->mapService('core.security.token', '\Core\Lib\Security\Token', [
@@ -341,6 +351,7 @@ class Core
             'core.security.token',
             'core.log'
         ]);
+        $this->di->mapService('core.security.permission', '\Core\Lib\Security\Permission');
 
         // == AMVC =========================================================
         $this->di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
@@ -497,21 +508,21 @@ class Core
     private function initSecurity()
     {
         /* @var $security \Core\Lib\Security\Security */
-        $security = $this->di->get('core.security');
+        $this->security = $this->di->get('core.security');
 
         // Check ban!
-        $security->users->checkBan();
+        $this->security->users->checkBan();
 
         // Try to autologin
-        $security->login->doAutoLogin();
+        $this->security->login->doAutoLogin();
 
         // Load User
-        if ($security->login->loggedIn()) {
-            $security->user->load($_SESSION['id_user']);
+        if ($this->security->login->loggedIn()) {
+            $this->security->user->load($_SESSION['id_user']);
         }
 
         // Create session token
-        $security->token->generateRandomSessionToken();
+        $this->security->token->generateRandomSessionToken();
     }
 
     private function autodiscoverApps()
@@ -526,6 +537,9 @@ class Core
     {
         // Match request against stored routes
         $this->router->match();
+
+        // Handle possible posted data
+        $this->managePost();
 
         $app_name = $this->router->getApp();
 
@@ -568,16 +582,14 @@ class Core
         }
 
         // Load controller object
-        $this->controller = $app->getController($controller_name);
-
-        $action_name = $this->router->getAction();
-
-        if (empty($action_name) && $this->cfg->exists('Core', 'execute.default.action')) {
-            $action_name = $this->cfg->data['Core']['execute.default.action'];
-        }
+        $controller = $app->getController($controller_name);
 
         // Which controller action has to be run?
-        $this->action = $action_name;
+        $action = $this->router->getAction();
+
+        if (empty($action) && $this->cfg->exists('Core', 'execute.default.action')) {
+            $action = $this->cfg->data['Core']['execute.default.action'];
+        }
 
         if ($this->router->isAjax()) {
 
@@ -590,15 +602,33 @@ class Core
             $this->http->header->noCache();
 
             // Result will be processed as ajax command list
-            $this->controller->ajax($this->action, $this->router->getParam());
+            $controller->ajax($action, $this->router->getParam());
 
             // Run ajax processor
             $result = $this->di->get('core.ajax')->process();
         }
         else {
-            $result = $this->controller->run($this->action, $this->router->getParam());
+            $result = $controller->run($action, $this->router->getParam());
         }
 
         return $result;
+    }
+
+    private function managePost()
+    {
+        // Do only react on POST requests
+        if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
+            return;
+        }
+
+        // Validate posted token with session token
+        if (! $this->security->token->validatePostToken()) {
+            return;
+        }
+
+        // Trim data
+        array_walk_recursive($_POST, function (&$data) {
+            $data = trim($data);
+        });
     }
 }
