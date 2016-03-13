@@ -86,9 +86,9 @@ class Users
             Throw new SecurityException('Cannot create user without password.');
         }
 
-        $data = $this->db->adapter->getContainer(true);
-
-        $data['username'] = $username;
+        $data = [
+            'username' => $username
+        ];
 
         // enhance password with our pepper
         $password .= $this->cfg->data['Core']['security.pepper'];
@@ -139,7 +139,7 @@ class Users
         ]);
 
         // Activation process has it's own table. We need a seperate container for it.
-        $data = $this->db->adapter->getContainer();
+        $data = [];
 
         // Generate random selector and token
         $selector = bin2hex($this->token->generateRandomToken(6));
@@ -153,7 +153,7 @@ class Users
         $data['expires'] = time() + $this->cfg->data['Core']['security.activation.ttl'];
 
         $this->db->qb([
-            'table' => 'activation_tokens',
+            'table' => 'core_activation_tokens',
             'data' => $data
         ], true);
 
@@ -180,7 +180,7 @@ class Users
 
         // Lets try to find the user id in our activation token table
         $this->db->qb([
-            'table' => 'activation_tokens',
+            'table' => 'core_activation_tokens',
             'fields' => [
                 'id_user',
                 'token',
@@ -208,7 +208,7 @@ class Users
 
             // Reaching this point means we have a valid activation. Flag user as active.
             $this->db->qb([
-                'table' => 'users',
+                'table' => 'core_users',
                 'method' => 'UPDATE',
                 'fields' => 'state',
                 'filter' => 'id_user=:id_user',
@@ -248,7 +248,7 @@ class Users
 
         // Check the old password
         $this->db->qb([
-            'table' => 'users',
+            'table' => 'core_users',
             'method' => 'UPDATE',
             'fields' => 'password',
             'filter' => 'id_user=:id_user',
@@ -313,6 +313,5 @@ class Users
 
         return true;
     }
-
 }
 

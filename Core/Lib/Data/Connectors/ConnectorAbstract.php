@@ -3,7 +3,6 @@ namespace Core\Lib\Data\Connectors;
 
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\CallbackInterface;
-use Core\Lib\Data\Container\Container;
 
 /**
  * AdapterAbstract.php
@@ -20,16 +19,6 @@ abstract class ConnectorAbstract implements CallbackInterface
      * @var DataAdapter
      */
     public $adapter;
-
-    /**
-     * Sets container to store dataresult in.
-     *
-     * @param array|object $container
-     */
-    public function setContainer(Container $container)
-    {
-        $this->adapter->setContainer($container);
-    }
 
     /**
      * Injects DataAdapter into adapter class

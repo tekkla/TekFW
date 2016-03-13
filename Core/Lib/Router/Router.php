@@ -76,24 +76,27 @@ final class Router extends \AltoRouter
      */
     private $name = '';
 
-    private $raw = false;
+    /**
+     *
+     * @var array
+     */
+    private $raw = [];
 
+    /**
+     *
+     * @var string
+     */
     private $request_url = '';
 
     /**
-     * Reversed routing
-     * Generate the URL for a named route.
-     * Replace regexes with supplied parameters
+     * Reversed routing for generating the URL for a named route
      *
      * @param string $route_name
      *            The name of the route.
-     * @param
-     *            array @params
+     * @param array $params
      *            Associative array of parameters to replace placeholders with.
      *
      * @return string The URL of the route with named parameters in place.
-     *
-     * @todo Add access check
      */
     public function url($route_name, $params = [])
     {
@@ -161,7 +164,6 @@ final class Router extends \AltoRouter
             }
 
             // Is this an ajax request?
-            // @TODO Still needed?
             if (isset($match['params']['ajax'])) {
                 $this->is_ajax = true;
             }
@@ -307,6 +309,8 @@ final class Router extends \AltoRouter
 
     /**
      * Checks if the function name is set
+     *
+     * @return boolean
      */
     public function checkAction()
     {
@@ -316,7 +320,7 @@ final class Router extends \AltoRouter
     /**
      * Returns either the requested or 'Index' (default) as action name
      *
-     * @todo Routerhandler should not set a default action!
+     * @return string
      */
     public function getAction()
     {
@@ -327,6 +331,8 @@ final class Router extends \AltoRouter
      * Set the requested func manually
      *
      * @param string $action
+     *
+     * @return \Core\Lib\Router\Router
      */
     public function setAction($action)
     {
@@ -352,8 +358,9 @@ final class Router extends \AltoRouter
     /**
      * Boolean check if parameter exists
      *
-     * @param
-     *            string parametername
+     * @param mixed $key
+     *            The key to look for in router params
+     *
      * @return boolean
      */
     public function checkParam($key)
@@ -413,7 +420,7 @@ final class Router extends \AltoRouter
      *
      * @throws InvalidArgumentException
      *
-     * @return \Core\Lib\Router
+     * @return \Core\Lib\Router\Router
      */
     public function setParam($param, $value = null)
     {
@@ -463,10 +470,5 @@ final class Router extends \AltoRouter
             'format' => $this->getFormat(),
             'raw' => $this->raw
         ];
-    }
-
-    public function clearPost()
-    {
-        $_POST = [];
     }
 }

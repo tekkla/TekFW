@@ -663,8 +663,6 @@ class QueryBuilder
         // Autodetection of method when none is set e.g. SELECT is set
         if ($this->method == 'SELECT') {
 
-            \FB::log($this->scheme);
-
             // Try to get name of primary field from provided scheme. A scheme always is preferred to qb definitions
             $primary = ! empty($this->scheme) && ! empty($this->scheme['primary']) ? $this->scheme['primary'] : false;
 
@@ -672,8 +670,6 @@ class QueryBuilder
             if ($primary == false && ! empty($this->definition['primary'])) {
                 $primary = $this->definition['primary'];
             }
-
-            \FB::log($primary);
 
             // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record
             $this->method = ($primary !== false && ! empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';

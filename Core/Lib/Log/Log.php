@@ -1,7 +1,6 @@
 <?php
 namespace Core\Lib\Log;
 
-use Core\Lib\Data\Container\Container;
 use Core\Lib\Data\Connectors\Db\Db;
 use Core\Lib\Cfg\Cfg;
 
@@ -55,22 +54,21 @@ class Log
     {
         $time = time();
 
-        $message = new Container();
-
-        $message['text'] = $text;
-        $message['type'] = $type;
-        $message['logdate'] = date('Y-m-d H:i:s', $time);
-        $message['logstamp'] = $time;
-        $message['client'] = $_SERVER['HTTP_USER_AGENT'];
-        $message['ip'] = $_SERVER['REMOTE_ADDR'];
-        $message['url'] = $_SERVER['REQUEST_URI'];
-        $message['id_user'] = $_SESSION['id_user'];
-        $message['code'] = $code;
-
         $this->db->qb([
-            'table' => 'logs',
-            'data' => $message
-        ], true);
+            'table' => 'core_logs',
+            'data' => [
+                'text' => $text,
+                'type' => $type,
+                'logdate' => date('Y-m-d H:i:s', $time),
+                'logstamp' => $time,
+                'client' => $_SERVER['HTTP_USER_AGENT'],
+                'ip' => $_SERVER['REMOTE_ADDR'],
+                'url' => $_SERVER['REQUEST_URI'],
+                'id_user' => $_SESSION['id_user'],
+                'code' => $code
+            ]
+        ]
+        , true);
 
         return $this->db->lastInsertId();
     }
@@ -341,7 +339,7 @@ class Log
     public function countBanLogEntries($ip, $duration)
     {
         $this->db->qb([
-            'table' => 'logs',
+            'table' => 'core_logs',
             'fields' => 'COUNT(ip)',
             'filter' => 'ip=:ip AND type="ban" AND logstamp+:duration > :expires',
             'params' => [
@@ -365,7 +363,7 @@ class Log
     public function getBanActiveTimestamp($ip)
     {
         $this->db->qb([
-            'table' => 'logs',
+            'table' => 'core_logs',
             'fields' => 'logstamp',
             'filter' => 'ip=:ip AND type="ban" AND code=2',
             'params' => [
@@ -379,5 +377,4 @@ class Log
 
         return $data ? $data : 0;
     }
-
- }
+}

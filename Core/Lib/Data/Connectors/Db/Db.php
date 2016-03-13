@@ -281,14 +281,14 @@ class Db extends ConnectorAbstract
      *
      * @return array
      */
-    public function all($key='', $scheme=[], $fetch_mode = \PDO::FETCH_ASSOC)
+    public function all(array $scheme=[])
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetchAll($fetch_mode);
+        $data = $this->stmt->fetchAll();
 
         if ($data) {
-            $data = $this->adapter->setDataset($data, $key, $scheme)->getData();
+            $data = $this->adapter->setDataset($data, $scheme)->getData();
         }
 
         return $data;
@@ -317,11 +317,11 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function single(array $scheme = [], $fetch_mode = \PDO::FETCH_ASSOC)
+    public function single(array $scheme = [])
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetch($fetch_mode);
+        $data = $this->stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($data) {
             $data = $this->adapter->setData($data, $scheme)->getData();
@@ -414,10 +414,8 @@ class Db extends ConnectorAbstract
      *            Name of the field to filter
      * @param mixed $value
      *            Filter value
-     * @param unknown $fetch_mode
-     *            Optional PDO fetch mode (Default: \PDO::FETCH_ASSOC)
      */
-    public function find($table, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    public function find($table, $key_field, $value)
     {
         $this->qb([
             'table' => $table,
@@ -427,7 +425,7 @@ class Db extends ConnectorAbstract
             ]
         ]);
 
-        return $this->single($fetch_mode);
+        return $this->single();
     }
 
     /**
@@ -553,19 +551,19 @@ class Db extends ConnectorAbstract
      * Use this for sql statements like mySQLs IN().
      *
      * @param string $param
-     *            Params prefix (Default: 'param')
+     *            Params prefix (Default: 'prm')
      * @param array $values
      *            Values array
      *
      * @return array
      */
-    public function prepareArrayQuery($params = 'param', $values = [])
+    public function prepareArrayQuery($param_prefix = 'prm', $values = [])
     {
         $params_names = [];
         $params_val = [];
 
         foreach ($values as $key => $val) {
-            $name = ':' . $params . $key;
+            $name = ':' . $param_prefix . $key;
             $params_name[] = $name;
             $params_val[$name] = $val;
         }

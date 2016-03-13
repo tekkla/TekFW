@@ -19,14 +19,25 @@ final class Cfg
     use StringTrait;
 
     /**
+     * Storage array for config values grouped by app names
      *
      * @var array
      */
     public $data = [];
 
     /**
+     * Storage array for config definitions grouped by app names
      *
-     * @var Database
+     * @var array
+     */
+    public $definitions = [
+        'flat' => [],
+        'raw' => []
+    ];
+
+    /**
+     *
+     * @var Db
      */
     private $db;
 
@@ -34,6 +45,7 @@ final class Cfg
      * Constructor
      *
      * @param Db $db
+     *            DB servie
      */
     public function __construct(Db $db)
     {
@@ -50,39 +62,36 @@ final class Cfg
      *
      * @return mixed
      */
-    public function get($app, $key = null)
+    public function get($app_name, $key = null)
     {
         // Calls only with app name indicates, that the complete app config is requested
-        if (empty($key) && isset($this->data[$app])) {
-            return $this->data[$app];
+        if (empty($key) && !empty($this->data[$app_name])) {
+            return $this->data[$app_name];
         }
 
         // Calls with app and key are normal cfg requests
-        if (!empty($key)) {
-            if (!array_key_exists($key, $this->data[$app])) {
-
-                \FB::log($this->data[$app]);
-
-                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist."', $key, $app));
+        if (! empty($key)) {
+            if (! array_key_exists($key, $this->data[$app_name])) {
+                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist."', $key, $app_name));
             }
 
-            return $this->data[$app][$key];
+            return $this->data[$app_name][$key];
         }
 
         // All other will result in an error exception
-        Throw new CfgException(sprintf('Config "%s" of app "%s" not found.', $key, $app));
+        Throw new CfgException(sprintf('Config "%s" of app "%s" not found.', $key, $app_name));
     }
 
     /**
      * Set a cfg value.
      *
-     * @param string $app
+     * @param string $app_name
      * @param string $key
      * @param mixed $val
      */
-    public function set($app, $key, $val)
+    public function set($app_name, $key, $val)
     {
-        $this->data[$app][$key] = $val;
+        $this->data[$app_name][$key] = $val;
     }
 
     /**
@@ -90,13 +99,13 @@ final class Cfg
      *
      * Returns true for set and false for not set.
      *
-     * @param string $app
+     * @param string $app_name
      * @param string $key
      */
-    public function exists($app, $key = null)
+    public function exists($app_name, $key = null)
     {
         // No app found = false
-        if (! isset($this->data[$app])) {
+        if (! isset($this->data[$app_name])) {
             return false;
         }
 
@@ -106,7 +115,7 @@ final class Cfg
         }
 
         // key requested and found? true
-        return isset($this->data[$app][$key]) && ! empty($this->data[$app][$key]);
+        return isset($this->data[$app_name][$key]) && ! empty($this->data[$app_name][$key]);
     }
 
     /**
@@ -136,7 +145,7 @@ final class Cfg
     public function load()
     {
         $this->db->qb([
-            'table' => 'config',
+            'table' => 'core_configs',
             'fields' => [
                 'app',
                 'cfg',
@@ -160,38 +169,89 @@ final class Cfg
     /**
      * Adds app related file paths to the config.
      *
-     * @param string $app
+     * @param string $app_name
      * @param array $dirs
+     *
+     * @return \Core\Lib\Cfg\Cfg
      */
-    public function addPaths($app = 'Core', array $dirs = [])
+    public function addPaths($app_name = 'Core', array $dirs = [])
     {
         // Write dirs to config storage
         foreach ($dirs as $key => $val) {
-            $this->data[$app]['dir.' . $key] = BASEDIR . $val;
+            $this->data[$app_name]['dir.' . $key] = BASEDIR . $val;
         }
+
+        return $this;
     }
 
     /**
      * Adds app related urls to the config.
      *
-     * @param string $app
+     * @param string $app_name
      * @param array $urls
+     *
+     * @return \Core\Lib\Cfg\Cfg
      */
-    public function addUrls($app = 'Core', array $urls = [])
+    public function addUrls($app_name = 'Core', array $urls = [])
     {
         // Write urls to config storage
         foreach ($urls as $key => $val) {
-            $this->data[$app]['url.' . $key] = BASEURL . $val;
+            $this->data[$app_name]['url.' . $key] = BASEURL . $val;
         }
+
+        return $this;
     }
 
     /**
-     * Returns complete config array.
+     * Adds an array of config definitions of an app
      *
-     * @return array
+     * @param string $app_name
+     *            The name of app
+     * @param array $definition
+     *            Array of definitions
+     *
+     * @return \Core\Lib\Cfg\Cfg
      */
-    public function getConfig()
+    public function addDefinition($app_name, array $definition)
     {
-        return $this->data;
+        // Store flattened config. The flattening process also takes care of missing definition data
+        $this->definitions[$app_name] = $definition;
+
+        return $this;
+    }
+
+    /**
+     * Cleans config table by deleting all config entries that do not exist in config definition anymore
+     */
+    public function cleanConfig()
+    {
+
+        // Get name of all apps that have values in config table
+        $app_names = array_keys($this->data);
+
+        // Cleanup each apps config values in db
+
+        foreach ($app_names as $app_name) {
+
+            // Get all obsolete config keys
+            $obsolete = array_diff(array_keys($this->data[$app_name]), array_keys($this->definitions[$app_name]));
+
+            // Create prepared IN statemen and
+            $prepared = $this->db->prepareArrayQuery('c', $obsolete);
+
+            $qb = [
+                'table' => 'core_configs',
+                'method' => 'DELETE',
+                'filter' => 'app=:app and cfg IN (' . $prepared['sql'] . ')',
+                'params' => [
+                    ':app' => $app_name
+                ]
+            ];
+
+            // Prepared params to qb params
+            $qb['params'] += $prepared['params'];
+
+            $this->db->qb($qb, true);
+        }
     }
 }

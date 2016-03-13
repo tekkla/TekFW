@@ -94,6 +94,7 @@ class Creator
             'core.router',
             'core.page',
             'core.security',
+            'core.amvc.creator',
             'core.di'
         ];
 

@@ -1,13 +1,7 @@
 <?php
 namespace Core\Lib\Router;
 
-// AMVC Libs
 use Core\Lib\Amvc\App;
-
-// Common Traits
-use Core\Lib\Traits\StringTrait;
-
-// Exceptions
 use Core\Lib\Errors\Exceptions\RuntimeException;
 
 /**
@@ -19,8 +13,6 @@ use Core\Lib\Errors\Exceptions\RuntimeException;
  */
 trait UrlTrait
 {
-
-    use StringTrait;
 
     /**
      * Generates url by using routename and optional prameters
@@ -44,24 +36,29 @@ trait UrlTrait
 
                 if ($this instanceof App) {
                     $app = $this->name;
-                } elseif (property_exists($this, 'app')) {
+                }
+                elseif (property_exists($this, 'app')) {
                     $app = $this->app->getName();
-                } else {
+                }
+                else {
                     $app = 'core';
                 }
-            } else {
+            }
+            else {
                 $app = $this->app_name;
             }
         }
 
-        $app = $this->stringUncamelize($app);
+        if (method_exists($this, 'stringUncamelize')) {
+            $app = $this->stringUncamelize($app);
+        }
 
         if (strpos($route, $app) === false) {
             $route = $app . '_' . $route;
         }
 
         if (! $router instanceof Router) {
-            $router = \Core\Lib\Di::getInstance()->get('core.router');
+            $router = $this->di->get('core.router');
         }
 
         $url = $router->url($route, $params);

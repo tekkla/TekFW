@@ -19,6 +19,8 @@ final class Session
      */
     private $db;
 
+    private $table = 'core_sessions';
+
     /**
      * Constructor
      *
@@ -100,7 +102,7 @@ final class Session
     {
         // Set query
         $this->db->qb([
-            'table' => 'sessions',
+            'table' => $this->table,
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
             'params' => [
@@ -121,7 +123,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'REPLACE',
-            'table' => 'sessions',
+            'table' => $this->table,
             'fields' => [
                 'id_session',
                 'access',
@@ -146,7 +148,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'table' => 'sessions',
+            'table' => $this->table,
             'filter' => 'id_session=:id_session',
             'params' => [
                 'id_session' => $id_session
@@ -168,7 +170,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'table' => 'sessions',
+            'table' => $this->table,
             'filter' => 'access<:old',
             'params' => [
                 ':old' => $old

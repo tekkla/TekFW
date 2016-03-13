@@ -3,15 +3,13 @@ namespace Core\Lib\Data;
 
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Data\Connectors\ConnectorAbstract;
-use Core\Lib\Data\Container\Container;
 
 /**
  * DataAdapter.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class DataAdapter implements \IteratorAggregate
@@ -94,19 +92,17 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Set an array of data as list of containers to data property.
+     * Set an array of data to data property.
      *
      * Use this if you want to add a bunch of records to the adapter.
      *
      * @var array $dataset The data to store
-     * @param string $key
-     *            Optional key name to be used as index
      * @param array $scheme
      *            Optional data scheme array
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setDataset(array $dataset, $key = '', array $scheme = [])
+    public function setDataset(array $dataset, array $scheme = [])
     {
         // Init adapters data array
         $this->data = [];
@@ -144,10 +140,10 @@ class DataAdapter implements \IteratorAggregate
 
             $this->checkType($data, $scheme);
 
-            // Use the existing primary field name
-            if ($key) {
+            // Use the existing primary field name from scheme
+            if (!empty($scheme['primary'])) {
                 // as key to get and use data as index
-                $this->data[$data[$key]] = $data;
+                $this->data[$data[$scheme['primary']]] = $data;
             }
             else {
                 $this->data[] = $data;
@@ -175,6 +171,12 @@ class DataAdapter implements \IteratorAggregate
             if (empty($field['type'])) {
                 continue;
             }
+
+            // Empty data value and default value in scheme set?
+            if (empty($data[$name]) && !empty($field['default'])) {
+                $data[$name] = $data['default'];
+            }
+
 
             settype($data[$name], $field['type']);
         }

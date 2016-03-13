@@ -3,7 +3,6 @@ namespace Core\Lib\Amvc;
 
 // Traits
 use Core\Lib\Security\AccessTrait;
-use Core\Lib\Language\TextTrait;
 use Core\Lib\Traits\StringTrait;
 
 /**

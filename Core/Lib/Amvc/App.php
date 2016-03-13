@@ -1,27 +1,13 @@
 <?php
 namespace Core\Lib\Amvc;
 
-// DI Service
 use Core\Lib\DI;
-
-// Cfg Service
 use Core\Lib\Cfg\Cfg;
-
-// Security Libs
 use Core\Lib\Security\Security;
 use Core\Lib\Security\Permission;
-
-// Page
 use Core\Lib\Page\Page;
-
-// Router Libs
 use Core\Lib\Router\Router;
 use Core\Lib\Router\UrlTrait;
-
-// Data Libs
-use Core\Lib\Data\Container\Container;
-
-// Common Traits
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Language\TextTrait;
 use Core\Lib\Cfg\CfgTrait;
@@ -33,7 +19,7 @@ use Core\Lib\Cfg\CfgTrait;
  * @copyright 2016
  * @license MIT
  *
- * @todo Switch to options porperty to set app specfic flags.
+ * TODO Switch to options porperty to set app specfic flags.
  */
 class App
 {
@@ -41,13 +27,7 @@ class App
     use TextTrait;
     use CfgTrait;
     use UrlTrait;
-    use StringTrait {
-        StringTrait::stringShorten insteadof UrlTrait;
-        StringTrait::stringCamelize insteadof UrlTrait;
-        StringTrait::stringUncamelize insteadof UrlTrait;
-        StringTrait::stringNormalize insteadof UrlTrait;
-        StringTrait::stringIsSerialized insteadof UrlTrait;
-    }
+    use StringTrait;
 
     /**
      * List of appnames which are already initialized
@@ -159,6 +139,12 @@ class App
     public $di;
 
     /**
+     *
+     * @var Creator
+     */
+    public $creator;
+
+    /**
      * Constructor
      *
      * @param string $app_name
@@ -174,7 +160,7 @@ class App
      * @param DI $di
      *            Visible DI dependency
      */
-    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, DI $di)
+    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, Creator $creator, DI $di)
     {
         // Setting properties
         $this->name = $app_name;
@@ -182,6 +168,7 @@ class App
         $this->router = $router;
         $this->page = $page;
         $this->security = $security;
+        $this->creator = $creator;
         $this->di = $di;
 
         // Set path property which is used on including additional app files like settings, routes, config etc
@@ -263,12 +250,12 @@ class App
     final private function initLanguage()
     {
         // Init only once
-        if (!empty(self::$init_stages[$this->name]['lang'])) {
+        if (! empty(self::$init_stages[$this->name]['lang'])) {
             return;
         }
 
         // Do we have permissions do add?
-        if (!empty($this->language)) {
+        if (! empty($this->language)) {
 
             // Check
             if (empty($this->cfg->data[$this->name]['dir.language'])) {
@@ -303,7 +290,7 @@ class App
      * @param string $type
      *            Components type
      *
-     * @return Model|View|Controller|Container
+     * @return Model|View|Controller
      */
     final private function MVCFactory($name, $type, $arguments = null)
     {
@@ -323,18 +310,6 @@ class App
         // Create classname of component to create
         $class = $this->getNamespace() . '\\' . $type . '\\' . $name . $type;
 
-        // Check existance of container objects because they are optional
-        if ($type == 'Container') {
-
-            $container_class_path = BASEDIR . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, explode('\\', $class)) . '.php';
-
-            if (! file_exists($container_class_path)) {
-                return false;
-            }
-
-            return new $class();
-        }
-
         // By default each MVC component constructor needs at least a name and this app object as argument
         $args = [
             $name,
@@ -352,8 +327,6 @@ class App
             }
         }
 
-        // Create component be using di instance factory to get sure the
-        // di services the container itself is injected properly
         return $this->di->instance($class, $args);
     }
 
@@ -374,8 +347,6 @@ class App
      *
      * @param string $name
      *            The models name
-     * @param string $db_container
-     *            Name of the db container to use with this model
      *
      * @return Model
      */
@@ -440,7 +411,7 @@ class App
      *
      * @return array
      */
-    final public function getConfig($refresh=false)
+    final public function getConfig($refresh = false)
     {
         if ($refresh) {
             $this->initCfg();
@@ -466,80 +437,7 @@ class App
     final private function initCfg()
     {
         // Add general app id an name
-        $this->cfg->data[$this->name]['app.name'] = $this->name;
-
-        // Flatten apps config array
-        $this->config = [
-            'raw' => $this->config,
-            'flat' => $this->flattenConfig($this->config)
-        ];
-
-        // Check the loaded config against the keys of the default config
-        // and set the default value if no cfg value is found
-        foreach ($this->config['flat'] as $key => &$def) {
-
-            $def['name'] = $key;
-
-            $check_default = [
-                'serialize' => false,
-                'translate' => false,
-                'data' => false,
-                'validate' => [],
-                'filter' => [],
-                'default' => '',
-                'control' => 'text',
-                'value' => '',
-            ];
-
-            foreach ($check_default as $property => $default) {
-                if (!isset($def[$property])) {
-                    $def[$property] = $default;
-                }
-            }
-
-            // When there is no config set but a default value defined for the app,
-            // the default value will be used then
-            if (isset($this->cfg->data[$this->name][$key])) {
-                $def['value'] = $this->cfg->data[$this->name][$key];
-            }
-
-            switch ($def['control']) {
-                case 'Number':
-                case 'Switch':
-                    $def['type'] = 'int';
-                    break;
-
-                case 'Optiongroup':
-                case 'Multiselect':
-                    $def['type'] = 'array';
-                    break;
-
-                default:
-                    $def['type'] = 'string';
-                    break;
-            }
-
-        }
-    }
-
-
-    private function flattenConfig(array $array, $prefix = '', $glue = '.')
-    {
-        $result = array();
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                if (isset($value['name'])) {
-                    $result[$prefix . $value['name']] = $value;
-                }
-                else {
-                    $result = $result + $this->flattenConfig($value, $prefix . $key . $glue);
-                }
-            }
-            else {
-                $result[$prefix . $key] = $value;
-            }
-        }
-        return $result;
+        $this->cfg->addDefinition($this->name, $this->config);
     }
 
     /**

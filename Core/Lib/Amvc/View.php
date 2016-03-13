@@ -56,14 +56,14 @@ class View extends MvcAbstract
      * If $val is an obect, it will be checked for a build() and a getArray() method.
      * Does is exist, it will be called and the return value stored as value for the views var.
      *
-     * @param string $name
+     * @param string $key
      *            The name of the var
      * @param mixed $val
      *            The vars value
      *
      * @return \Core\Lib\Amvc\View
      */
-    public final function setVar($name, $val)
+    public final function setVar($key, $val)
     {
         // Handle objects
         if (is_object($val)) {
@@ -83,7 +83,7 @@ class View extends MvcAbstract
         }
 
         // Another lazy thing. It's for accessing vars in the view by ->var_name
-        $this->__magic_vars[$name] = $val;
+        $this->__magic_vars[$key] = $val;
 
         return $this;
     }
@@ -94,64 +94,64 @@ class View extends MvcAbstract
      * Nearly the same as magic method __get() but in this method will throw an
      * ViewException when var does not exist.
      *
-     * @param string $name
+     * @param string $key
      *
      * @throws ViewException
      *
      * @return mixed
      */
-    final public function getVar($name)
+    final public function getVar($key)
     {
-        if (! array_key_exists($name, $this->__magic_vars)) {
-            Throw new ViewException(sprintf('The requested var "%s" does not exist in current view.', $name));
+        if (! array_key_exists($key, $this->__magic_vars)) {
+            Throw new ViewException(sprintf('The requested var "%s" does not exist in current view.', $key));
         }
 
-        return $this->__magic_vars[$name];
+        return $this->__magic_vars[$key];
     }
 
     /**
-     * Checks if the $name exists in the view
+     * Checks if the $key exists in the view
      *
-     * @param string $name
+     * @param string $key
      *            The vars name
      *
      * @return boolean
      */
-    public final function isVar($name)
+    public final function isVar($key)
     {
-        return isset($this->__magic_vars[$name]);
+        return array_key_exists($key, $this->__magic_vars);
     }
 
     /**
      * Magic method for setting the view vars
      *
-     * @param string $name
+     * @param string $key
      *            The name of the var
      * @param mixed $val
      *            The value to set
      */
-    public final function __set($name, $val)
+    public final function __set($key, $val)
     {
         // prevent DI from getting put into the views vars array
-        if ($name == 'di') {
+        if ($key == 'di') {
             $this->di = $val;
             return;
         }
 
-        $this->setVar($name, $val);
+        $this->setVar($key, $val);
     }
 
     /**
      * Magic method for accessing the view vars
      *
-     * @param string $name
+     * @param string $key
      *            The name of the var
      *
      * @return Ambigous <boolean, multitype
      */
-    public final function __get($name)
+    public final function __get($key)
     {
-        return isset($this->__magic_vars[$name]) ? $this->__magic_vars[$name] : 'var:' . $name;
+        return array_key_exists($key, $this->__magic_vars) ? $this->__magic_vars[$key] : 'var:' . $key;
     }
 
     /**
@@ -161,7 +161,7 @@ class View extends MvcAbstract
      */
     public final function __isset($key)
     {
-        return isset($this->__magic_vars[$key]);
+        return array_key_exists($key, $this->__magic_vars);
     }
 
     /**
@@ -200,7 +200,7 @@ class View extends MvcAbstract
     }
 
     /**
-     * Wrapper method for encoding a value by htmlspecialchars($name, ENT_COMPAT, 'UTF-8')
+     * Wrapper method for encoding a value by htmlspecialchars($key, ENT_COMPAT, 'UTF-8')
      *
      * @param string|number $val
      *            The value to encode

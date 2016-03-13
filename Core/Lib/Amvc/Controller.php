@@ -7,7 +7,6 @@ use Core\Lib\Security\Security;
 use Core\Lib\Page\Page;
 use Core\Lib\Html\HtmlFactory;
 use Core\Lib\Html\FormDesigner\FormDesigner;
-use Core\Lib\Data\Container\Container;
 use Core\Lib\Cache\Cache;
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Ajax\AjaxCommandAbstract;
@@ -356,7 +355,7 @@ class Controller extends MvcAbstract
     {
         // Clean data
         if ($clear_post) {
-            $this->router->clearPost();
+            $this->http->post->clean();
         }
 
         // Run redirect method
@@ -375,7 +374,7 @@ class Controller extends MvcAbstract
     {
         // Reset post data
         if ($post) {
-            $this->router->clearPost();
+            $this->http->post->clean();
         }
     }
 
@@ -650,39 +649,6 @@ class Controller extends MvcAbstract
         }
 
         return $this->app->getModel($model_name);
-    }
-
-    /**
-     * Creates an app related container
-     *
-     * @param string $container_name
-     *            Optional: Name of the container to load. When no name is given the name of the current model will be
-     *            used.
-     * @param bool $auto_init
-     *            Optional: Autoinit uses the requested action to fill the container with according fields by calling
-     *            the same called method of container.
-     *
-     * @return \Core\Lib\Data\Container\Container
-     */
-    final public function getContainer($container_name = null, $init = true)
-    {
-        if (empty($container_name)) {
-            $container_name = $this->getName();
-        }
-
-        return $this->app->getContainer($container_name, $init);
-    }
-
-    /**
-     * Creates an generic container object.
-     *
-     * @return \Core\Lib\Data\Container\Container
-     */
-    final public function getGenericContainer()
-    {
-        $container = $this->di->get('core.data.container');
-
-        return $container;
     }
 
     /**

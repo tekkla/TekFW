@@ -40,85 +40,76 @@ final class Validator
      *            The value to validate
      * @param string|array $rules
      *            One or more rules
-     *
-     * @return array
      */
-    public function validate(array $data, array $rules)
+    public function validate($value, array $rules)
     {
         $this->result = [];
 
-        foreach ($data as $key => $value) {
+        // Our current value (trimmed)
+        $value = trim($value);
 
-            // Our current value (trimmed)
-            $value = trim($value);
+        // Validate each rule against the
+        foreach ($rules as $rule) {
 
-            // Validate each rule against the
-            foreach ($rules[$key] as $rule) {
+            // Array type rules are for checks where the func needs one or more parameter
+            // So $rule[0] is the func name and $rule[1] the parameter.
+            // Parameters can be of type array where the elements are used as function parameters in the .. they are
+            // set.
+            if (is_array($rule)) {
 
+                // Get the functionname
+                $rule_name = $this->stringCamelize($rule[0]);
 
-                \FB::log($value);
-                \FB::log($rule);
-
-                // Array type rules are for checks where the func needs one or more parameter
-                // So $rule[0] is the func name and $rule[1] the parameter.
-                // Parameters can be of type array where the elements are used as function parameters in the .. they are
-                // set.
-                if (is_array($rule)) {
-
-                    // Get the functionname
-                    $rule_name = $this->stringCamelize($rule[0]);
-
-                    // Parameters set?
-                    if (isset($rule[1])) {
-                        $args = ! is_array($rule[1]) ? [
-                            $rule[1]
-                        ] : $rule[1];
-                    }
-                    else {
-                        $args = [];
-                    }
-
-                    // Custom error message
-                    if (isset($rule[2])) {
-                        $custom_message = $rule[2];
-                    }
+                // Parameters set?
+                if (isset($rule[1])) {
+                    $args = ! is_array($rule[1]) ? [
+                        $rule[1]
+                    ] : $rule[1];
                 }
                 else {
-                    $rule_name = $this->stringCamelize($rule);
                     $args = [];
-                    unset($custom_message);
                 }
 
-                // Call rule creation process to make sure rule exists before starting further actions.
-                /* @var $rule \Core\Lib\Data\Validator\Rules\RuleAbstract */
-                $rule = $this->createRule($rule_name);
+                // Custom error message
+                if (isset($rule[2])) {
+                    $custom_message = $rule[2];
+                }
+            }
+            else {
+                $rule_name = $this->stringCamelize($rule);
+                $args = [];
+                unset($custom_message);
+            }
 
-                // Execute rule on empty values only when rule is explicitly flagged to do so.
-                if (empty($value) && $rule->getExecuteOnEmpty() == false) {
-                    continue;
+            // Call rule creation process to make sure rule exists before starting further actions.
+            /* @var $rule \Core\Lib\Data\Validator\Rules\RuleAbstract */
+            $rule = $this->createRule($rule_name);
+
+            // Execute rule on empty values only when rule is explicitly flagged to do so.
+            if (empty($value) && $rule->getExecuteOnEmpty() == false) {
+                continue;
+            }
+
+            $rule->setValue($value);
+
+            // Calling the validation function
+            call_user_func_array(array(
+                $rule,
+                'execute'
+            ), $args);
+
+            // Is the validation result negative eg false?
+            if ($rule->isValid() === false) {
+
+                // Get msg from rule
+                $msg = $rule->getMsg();
+
+                // If no error message is set, use the default validator error
+                if (empty($msg)) {
+                    $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
                 }
 
-                $rule->setValue($value);
-
-                // Calling the validation function
-                call_user_func_array(array(
-                    $rule,
-                    'execute'
-                ), $args);
-
-                // Is the validation result negative eg false?
-                if ($rule->isValid() === false) {
-
-                    // Get msg from rule
-                    $msg = $rule->getMsg();
-
-                    // If no error message is set, use the default validator error
-                    if (empty($msg)) {
-                        $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
-                    }
-
-                    $this->result[$key][] = $msg;
-                }
+                $this->result[] = $msg;
             }
         }
     }

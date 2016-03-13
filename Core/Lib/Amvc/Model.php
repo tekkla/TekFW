@@ -140,9 +140,9 @@ class Model extends MvcAbstract
      * It is possible to filter the field with multiple filters.
      * This method uses filter_var_array() to filter the value.
      *
-     * @return \Core\Lib\Data\Container\Field
+     * @return array
      */
-    final protected function filter(array $data, array $scheme = [])
+    final protected function filter(array &$data, array $scheme = [])
     {
         if (empty($scheme)) {
             $scheme = $this->scheme;
@@ -191,43 +191,79 @@ class Model extends MvcAbstract
      *
      * @return boolean
      */
-    public function validate(array $data, array $scheme = [], array $skip = [])
+    protected function validate(array &$data, array $fields = [], $filter_before_validate = true, array $skip = [])
     {
+        static $validator;
 
-        if (empty($scheme)) {
-            $scheme = $this->scheme;
+        // No fields provided?
+        if (empty($fields)) {
+
+            // When there is no scheme with fields in this model we have to end here
+            if (empty($this->scheme['fields'])) {
+                return;
+            }
+
+            // Otherwise use the fields list from models scheme
+            $fields = $this->scheme['fields'];
         }
 
-        if (empty($scheme)) {
+        // No fields, no validation
+        if (empty($fields)) {
             return;
         }
 
-        // Init rules
-        $rules = [];
-
+        // Let's validate the data!
         foreach ($data as $key => $val) {
 
-            // Skip field or no validation rules in scheme?
-            if (in_array($key, $skip) || empty($scheme['fields'][$key]['validate'])) {
+            // Skip field? Next please!
+            if (in_array($key, $skip)) {
                 continue;
             }
 
-            $rules[$key] = $scheme['fields'][$key]['validate'];
+            // Run some filters prior to field validation?
+            if ($filter_before_validate && ! empty($fields[$key]['filter'])) {
+
+                if (! is_array($fields[$key]['filter'])) {
+                    $fields[$key]['filter'] = (array) $fields[$key]['filter'];
+                }
+
+                foreach ($fields[$key]['filter'] as $filter) {
+
+                    $options = [];
+
+                    if (is_array($filter)) {
+                        $options = $filter[1];
+                        $filter = $filter[0];
+                    }
+
+                    $data[$key] = filter_var($val, $filter, $options);
+                }
+            }
+
+            // No validation rules to call? Next please!
+            if (empty($fields[$key]['validate'])) {
+                continue;
+            }
+
+            // Only instantiate validator once
+            if (empty($validator)) {
+                $validator = new Validator();
+            }
+
+            if (! is_array($fields[$key]['validate'])) {
+                $fields[$key]['validate'] = (array) $fields[$key]['validate'];
+            }
+
+            // Validate the value against the rules
+            $validator->validate($val, $fields[$key]['validate']);
+
+            // Errors on validation?
+            if (! $validator->isValid()) {
+                $this->errors[$key] = $validator->getResult();
+            }
         }
 
-        // no rules, no validation
-        if (empty($rules)) {
-            \FB::log('Nothing to validate');
-            return;
-        }
-
-        $validator = new Validator();
-        $validator->validate($data, $rules);
-
-        // Errors on validation?
-        if (!$validator->isValid()) {
-            $this->errors = $validator->getResult();
-        }
+        return $data;
     }
 
     /**
@@ -258,5 +294,28 @@ class Model extends MvcAbstract
         $this->errors = [];
 
         return $this;
+    }
+
+    final public function addError($key, $error)
+    {
+        $this->errors[$key][] = $error;
+
+        return $this;
+    }
+
+    final protected function getDataFromScheme() {
+
+        if (empty($this->scheme)) {
+            Throw new ModelException('There is no scheme/fields in scheme in this model');
+        }
+
+        $data = [];
+
+        foreach ($this->scheme['fields'] as $key => $field) {
+            $data[$key] = !empty($field['default']) ? $field['default'] : '';
+        }
+
+        return $data;
+
     }
 }

@@ -10,20 +10,26 @@ namespace Core\Lib\Http;
  */
 class Post
 {
+
     /**
      * Returns the value of $_POST
      *
      * @return array
      */
-    public function get()
+    public function get($prefer_core = true)
     {
-        // Do only react on POST requests
+        // Do only react on POST requests and when there is $_POST data
         if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
             return false;
         }
 
-        return $_POST;
+        // Prefer data grouped in 'core' array from FormDesigner forms?
+        if ($prefer_core == true && ! empty($_POST['core'])) {
+            return $_POST['core'];
+        }
 
+        // Return complete $_POST data
+        return $_POST;
     }
 
     /**

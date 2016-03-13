@@ -67,7 +67,7 @@ class Group
         // Copy default groups to
         // $this->groups = $this->default_groups;
         $this->db->qb([
-            'table' => 'groups',
+            'table' => 'core_groups',
             'fields' => [
                 'app',
                 'id_group',
@@ -102,14 +102,14 @@ class Group
 
             // Delete current groups
             $this->db->qb([
-                'table' => 'groups',
+                'table' => 'core_groups',
                 'method' => 'DELETE'
             ]);
             $this->db->execute();
 
             // Prepare statement for group insert
             $this->db->qb([
-                'table' => 'groups',
+                'table' => 'core_groups',
                 'method' => 'INSERT',
                 'fields' => [
                     'id_group',
@@ -181,7 +181,7 @@ class Group
 
             // Delete usergroup
             $this->db->qb([
-                'table' => 'groups',
+                'table' => 'core_groups',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',
                 'params' => [
@@ -192,7 +192,7 @@ class Group
 
             // Delete permissions related to this group
             $this->db->qb([
-                'table' => 'permissions',
+                'table' => 'core_permissions',
                 'method' => 'DELETE',
                 'filter' => 'id_group = :id_group',
                 'params' => [

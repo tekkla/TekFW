@@ -143,10 +143,104 @@ trait ArrayTrait
 
                 // Flatten the array
                 $result = $result + $this->arrayFlatten($value, $prefix . $key . $glue, $glue, $preserve_flagged_arrays);
-            } else {
+            }
+            else {
                 $result[$prefix . $key] = $value;
             }
         }
         return $result;
+    }
+
+    function arrayFlatten2($array, $glue = '.')
+    {
+        $ritit = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
+
+        $result = [];
+
+        foreach ($ritit as $leaf_value) {
+
+            var_dump($leaf_value);
+
+            $keys = [];
+
+            foreach (range(0, $ritit->getDepth()) as $depth) {
+                $keys[] = $ritit->getSubIterator($depth)->key();
+            }
+            $result[join($glue, $keys)] = $leaf_value;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Searches an $array recursively for the $key and returns all matching values as array
+     *
+     * @param array $array
+     *            Array to search in
+     * @param string $key
+     *            The key compare
+     * @param string $search
+     *            The value to search for in key
+     *
+     * @return array
+     */
+    function arraySearchValuesByKey(array $array, $key, $search)
+    {
+        $it = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
+
+        $out = [];
+
+        foreach ($it as $sub) {
+
+            $sub_array = $it->getSubIterator();
+
+            if ($sub_array[$key] === $search) {
+                $out[] = iterator_to_array($sub_array);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Creates an multidimensional array out of an array with keynames
+     *
+     * @param array $arr
+     *            Reference to the array to fill
+     * @param array $keys
+     *            The array holding the keys to use as values
+     * @param mixed $value
+     *            The value to assign to the last key
+     */
+    function arrayAssignByKeys(array &$arr, array $keys, $value)
+    {
+        foreach ($keys as $key) {
+            $arr = &$arr[$key];
+        }
+
+        $arr = $value;
+    }
+
+    /**
+     * Creates an multidimensional array out of an string notation and adds a value to the last element.
+     *
+     * @param array $arr
+     *            Reference to the array to fill
+     * @param string $path
+     *            Path to create array from
+     * @param mixed $value
+     *            The value to assign to the last key
+     * @param string $separator
+     *            Optional seperator to be used while splittint the path into key values (Default: '.')
+     */
+    function arrayAssignByPath(&$arr, $path, $value, $separator = '.')
+    {
+        $keys = explode($separator, $path);
+
+        foreach ($keys as $key) {
+            $arr = &$arr[$key];
+        }
+
+        $arr = $value;
     }
 }

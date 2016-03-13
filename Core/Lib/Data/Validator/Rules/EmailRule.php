@@ -42,7 +42,7 @@ class EmailRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = sprintf($this->txt($txt), $domain);
+            $this->msg = sprintf($this->text($txt), $domain);
         }
     }
 }

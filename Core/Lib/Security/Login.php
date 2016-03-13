@@ -82,7 +82,6 @@ class Login
         $this->cookie_name = $this->cfg->data['Core']['cookie.name'] . 'Token';
         $this->pepper = $this->cfg->data['Core']['security.pepper'];
         $this->days = $this->cfg->data['Core']['security.autologin_expire_days'];
-
     }
 
     /**
@@ -116,7 +115,7 @@ class Login
 
         // Try to load user from db
         $this->db->qb([
-            'table' => 'users',
+            'table' => 'core_users',
             'fields' => [
                 'id_user',
                 'password',
@@ -148,15 +147,13 @@ class Login
         // Append pepper to password
         $password .= $this->pepper;
 
-        \FB::log($password);
-
         // Password ok?
         if (password_verify($password, $login['password'])) {
 
             // Needs hash to be updated?
             if (password_needs_rehash($login['password'], PASSWORD_DEFAULT)) {
                 $this->db->qb([
-                    'table' => 'users',
+                    'table' => 'core_users',
                     'method' => 'UPDATE',
                     'fields' => [
                         'password'
@@ -248,7 +245,7 @@ class Login
         list ($selector, $token) = explode(':', $this->cookies->get($this->cookie_name));
 
         $this->db->qb([
-            'table' => 'auth_tokens',
+            'table' => 'core_auth_tokens',
             'fields' => [
                 'id_auth_token',
                 'id_user',
@@ -313,8 +310,6 @@ class Login
      * @param int $id_user
      *
      * @throws Error
-     *
-     * @todo Take care of cookie parameters
      */
     private function setAutoLoginCookies($id_user)
     {
@@ -330,7 +325,7 @@ class Login
 
         // Store selector and hash in DB
         $this->db->qb([
-            'table' => 'auth_tokens',
+            'table' => 'core_auth_tokens',
             'method' => 'INSERT',
             'fields' => [
                 'selector',

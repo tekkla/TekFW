@@ -192,7 +192,7 @@ class User
         $this->id_user = $id_user;
 
         $this->db->qb([
-            'table' => 'users',
+            'table' => 'core_users',
             'field' => [
                 'username',
                 'display_name'
@@ -214,7 +214,7 @@ class User
 
             // Load the groups the user is in
             $this->db->qb([
-                'table' => 'users_groups',
+                'table' => 'core_users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
                 'params' => [
@@ -311,7 +311,7 @@ class User
 
         // Get and return the permissions
         $qb = [
-            'table' => 'groups_permissions',
+            'table' => 'core_groups_permissions',
             'fields' => [
                 'app',
                 'permission'
