@@ -28,7 +28,7 @@ class FormAbstract extends HtmlAbstract
      *
      * @var bool
      */
-    private $bound = false;
+    private $bound = true;
 
     /**
      * Width for the element
@@ -268,7 +268,7 @@ class FormAbstract extends HtmlAbstract
      */
     public function getElementWidth()
     {
-        return isset($this->element_width) ? $this->element_width : false;
+        return $this->element_width;
     }
 
     /**
@@ -276,7 +276,7 @@ class FormAbstract extends HtmlAbstract
      */
     public function hasElementWidth()
     {
-        return isset($this->element_width);
+        return !empty($this->element_width);
     }
 
     /**

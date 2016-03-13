@@ -106,21 +106,6 @@ class ControlBuilder
         //( Get control name
         $name = $this->control->getName();
 
-        // Create control name app[app][model][existing name]
-        if ($this->control->isArray() && method_exists($this->control, 'setName')) {
-            $this->control->setName($name . '[]');
-        }
-
-        // Remove button name?
-        if ($this->control instanceof Button) {
-            $this->control->removeName();
-        }
-
-        // create control id {app}_{model}_{existing id}
-        if (! $this->control->getId()) {
-            $this->control->setId($name);
-        }
-
         // Set BS group class
         switch ($type) {
             case 'radio':
@@ -227,7 +212,7 @@ class ControlBuilder
 
         // Build control
         if ($this->display_mode == 'h') {
-            $control = '<div class="' . (! $this->control->hasLabel() ? 'col-' . $this->grid_size . '-offset-3 ' : '') . 'col-' . $this->grid_size . '-' . (12 - $this->label_width) . '">' . $this->control->build() . '{help}{error}</div>';
+            $control = '<div class="' . (! $this->control->hasLabel() ? 'col-' . $this->grid_size . '-offset-' . $this->label_width . ' ' : '') . 'col-' . $this->grid_size . '-' . (12 - $this->label_width) . '">' . $this->control->build() . '{help}{error}</div>';
         }
         else {
             $control = $this->control->build();

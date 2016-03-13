@@ -14,6 +14,4 @@ class ResetControl extends Button
 {
 
     protected $type = 'reset';
-
-    protected $inner = 'txt-btn_reset';
 }

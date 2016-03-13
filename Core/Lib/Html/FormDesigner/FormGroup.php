@@ -110,7 +110,7 @@ class FormGroup
      *
      * @return \Core\Lib\Html\FormAbstract
      */
-    public function &addControl($control, $name, $label = '', $value = '', $description = '', $unbound = false)
+    public function &addControl($control, $name='', $label = '', $value = '', $description = '', $unbound = false)
     {
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->stringCamelize($control) . 'Control');
 

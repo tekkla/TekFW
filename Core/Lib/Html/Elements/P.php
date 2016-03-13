@@ -10,7 +10,7 @@ use Core\Lib\Html\HtmlAbstract;
  * @copyright 2015
  * @license MIT
  */
-class Paragraph extends HtmlAbstract
+class P extends HtmlAbstract
 {
 
     protected $element = 'p';

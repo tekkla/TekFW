@@ -67,31 +67,15 @@ final class FormDesigner
     private $grid_size = 'sm';
 
     /**
-     * Buttons to use with this form.
-     * Every form has a submit button.
-     *
-     * @var array
-     */
-    private $buttons = [
-        'submit' => 'save'
-    ];
-
-    /**
-     * Icons for buttons
-     *
-     * @var array
-     */
-    private $icons = [
-        'submit' => 'save',
-        'reset' => 'eraser'
-    ];
-
-    /**
      *
      * @var array
      */
     private $data = [];
 
+    /**
+     *
+     * @var unknown
+     */
     private $errors = [];
 
     /**
@@ -100,6 +84,10 @@ final class FormDesigner
      */
     public $html;
 
+
+    /**
+     *
+     */
     public function __construct()
     {
         $this->html = new Form();
@@ -360,30 +348,24 @@ final class FormDesigner
      */
     private function handleGlobalContainerErrors()
     {
-        $form_id = $this->html->getId();
-
         // No data of form with our id in session stored?
-        if (! isset($_SESSION['formdesigner'][$form_id])) {
+        if (empty($this->errors['@'])) {
             return;
         }
 
-        // Are there global and not control related errors in attached container?
-        if (isset($_SESSION['formdesigner'][$form_id]['errors']['@'])) {
+        // Add a group on top of exiting groups
+        $group = $this->addGroup(true);
 
-            // Add a group on top of exiting groups
-            $group = $this->addGroup(true);
+        $div = $group->addElement('Elements\Div');
+        $div->addCss('alert alert-danger alert-dismissable');
 
-            $div = $group->addElement('Elements\Div');
-            $div->addCss('alert alert-danger alert-dismissable');
-
-            if ($this->di->get('core.cfg')->get('Core', 'js.style.fadeout_time') > 0) {
-                $div->addCss('fadeout');
-            }
-
-            $html = '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . implode('<br>', $_SESSION['formdesigner'][$form_id]['errors']['@']);
-
-            $div->setInner($html);
+        if ($this->di->get('core.cfg')->get('Core', 'js.style.fadeout_time') > 0) {
+            $div->addCss('fadeout');
         }
+
+        $html = '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' . implode('<br>', $this->errors['@']);
+
+        $div->setInner($html);
     }
 
     /**
@@ -433,7 +415,7 @@ final class FormDesigner
         $html .= '<input type="hidden" name="token" value="' . $_SESSION['token'] . '">';
 
         foreach ($this->groups as $group) {
-            $html .= $this->buildGroup($group);
+            $html .= $this->buildGroup($group, [], $this->data, $this->errors);
         }
 
         $this->html->addInner($html);
@@ -448,19 +430,26 @@ final class FormDesigner
      *
      * @return string
      */
-    private function buildGroup(FormGroup $group, array $names = [])
+    private function buildGroup(FormGroup $group, array $names = [], array $data = [], array $errors = [])
     {
         $html = '';
-
-        $elements = $group->getElements();
 
         // Get groupname
         $group_name = $group->getName();
 
         // If group has a name, add it to the names array
-        if (!empty($group_name)) {
+        if (! empty($group_name)) {
             $names[] = $group_name;
         }
+
+        // Get grouperrors
+        $group_errors = !empty($group_name) && !empty($errors[$group_name]) ? $errors[$group_name] : $errors;
+
+        // Get group data
+        $group_data = !empty($group_name) && !empty($data[$group_name]) ? $data[$group_name] : $data;
+
+        // Build elements
+        $elements = $group->getElements();
 
         /* @var $element \Core\Lib\Html\FormDesigner\FormElement */
         foreach ($elements as $element) {
@@ -474,24 +463,35 @@ final class FormDesigner
                     /* @var $builder \Core\Lib\Html\FormDesigner\ControlBuilder */
                     $builder = $this->di->instance(__NAMESPACE__ . '\ControlBuilder');
 
-                    // Control field name
-                    $name = $content->getName();
+                    // Create control name for bound controls...
+                    if ($content->isBound()) {
 
-                    // Create name parts based on current group names
-                    $pieces = array_map(function($name) {
-                        return '[' . $name . ']';
-                    }, $names);
+                        $name = $content->getName();
 
-                    $pieces[] = '[' . $name . ']';
+                        // Create name parts based on current group names
+                        $pieces = array_map(function ($name) {
+                            return '[' . $name . ']';
+                        }, $names);
 
-                    $content->setName('core' . implode('', $pieces));
+                        $pieces[] = '[' . $name . ']';
 
-                    // Any errors in container
-                    if (isset($this->data[$name])) {
+                        $content->setName('core' . implode('', $pieces));
+                    }
+                    else {
+
+                        // ...and remove name from the unbound ones!
+                        $content->removeName();
+                    }
+
+                    // Any errors?
+                    if (! empty($group_errors[$name])) {
+                        $builder->setErrors($group_errors[$name]);
+                    }
+
+                    if (isset($group_data[$name])) {
 
                         // Get value
-                        $value = $this->data[$name];
-
+                        $value = $group_data[$name];
 
                         // Log notice when field does not exist in container
                         if ($value === false && $content->isBound()) {
@@ -510,7 +510,7 @@ final class FormDesigner
                                     $content->setValue($value);
                                 }
                                 break;
-;
+                                ;
                         }
                     }
 
@@ -569,7 +569,7 @@ final class FormDesigner
                     break;
 
                 case 'group':
-                    $html .= $this->buildGroup($content, $names);
+                    $html .= $this->buildGroup($content, $names, $group_data, $group_errors);
                     break;
             }
         }
