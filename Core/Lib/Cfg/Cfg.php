@@ -6,6 +6,7 @@ use Core\Lib\Data\Connectors\Db\Db;
 
 // Traits
 use Core\Lib\Traits\StringTrait;
+use Core\Lib\Traits\ArrayTrait;
 
 /**
  * Cfg.php
@@ -17,6 +18,7 @@ use Core\Lib\Traits\StringTrait;
 final class Cfg
 {
     use StringTrait;
+    use ArrayTrait;
 
     /**
      * Storage array for config values grouped by app names
@@ -65,14 +67,14 @@ final class Cfg
     public function get($app_name, $key = null)
     {
         // Calls only with app name indicates, that the complete app config is requested
-        if (empty($key) && !empty($this->data[$app_name])) {
+        if (empty($key) && ! empty($this->data[$app_name])) {
             return $this->data[$app_name];
         }
 
         // Calls with app and key are normal cfg requests
         if (! empty($key)) {
             if (! array_key_exists($key, $this->data[$app_name])) {
-                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist."', $key, $app_name));
+                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist.<br><br>Current config:<pre>%s</pre>"', $key, $app_name, print_r($this->data[$app_name], true)));
             }
 
             return $this->data[$app_name][$key];
@@ -217,7 +219,47 @@ final class Cfg
         // Store flattened config. The flattening process also takes care of missing definition data
         $this->definitions[$app_name] = $definition;
 
+        // Check existing config for missing entries and set default values on empty config values
+        $this->checkDefaults($app_name, $definition);
+
         return $this;
+    }
+
+    /**
+     * Flattens a multidimensional array
+     *
+     * @param array $array
+     *            The array to flatten
+     * @param string $glue
+     *            Optional glue to get flattened array with this glue as return value
+     * @param boolean $preserve_flagged_arrays
+     *            With this optional flag and a set __preserve key in the array the array will be still flattended but
+     *            also be stored as array with an ending .array key. Those arrays will not be flattened further more.
+     *            This means any nesting array will stay arrays in this array.
+     *
+     * @return string|array
+     */
+    private function checkDefaults($app_name, array $array, $prefix = '', $glue = '.')
+    {
+        $result = [];
+
+        foreach ($array as $key => $value) {
+
+            if (array_key_exists('name', $value) && is_string($value['name'])) {
+
+                $cfg = $prefix . $key;
+
+                if (empty($this->data[$app_name][$cfg]) && ! empty($value['default'])) {
+                    $this->data[$app_name][$cfg] = $value['default'];
+                }
+            }
+            else {
+                // Subarrray handling needed?
+                $result = $result + $this->checkDefaults($app_name, $value, $prefix . $key . $glue, $glue);
+            }
+        }
+
+        return $result;
     }
 
     /**
