@@ -158,23 +158,20 @@ class Page
         $this->link = new Link();
 
         $this->breadcrumbs = $this->html->create('Bootstrap\Breadcrumb\Breadcrumb');
+    }
 
-        // Try to init possible content handler
-        if ($this->cfg->exists('Core', 'execute.content_handler') && ! $this->router->isAjax()) {
+    public function init()
+    {
+        static $done = false;
 
-            // Get instance of content handler app
-            $app = $this->app_creator->getAppInstance($this->cfg->get('Core', 'execute.content_handler'));
-
-            // Init method to call exists?
-            if (method_exists($app, 'InitContentHandler')) {
-                $app->InitContentHandler();
-            }
+        if ($done) {
+            return;
         }
-
-        $this->router->setBasePath($this->cfg->get('Core', 'router.base_path'));
 
         $this->css->init();
         $this->js->init();
+
+        $done = true;
     }
 
     /**
@@ -255,7 +252,8 @@ class Page
                 // Everything is all right. Run content handler by giving the current content to it.
                 $this->content = $app->ContentHandler($this->content);
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
 
             // Get error info
             $error = $this->di->get('core.error')->handleException($e);

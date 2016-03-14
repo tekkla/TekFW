@@ -19,7 +19,7 @@ use Core\Lib\Cfg\CfgTrait;
  * @copyright 2016
  * @license MIT
  *
- * TODO Switch to options porperty to set app specfic flags.
+ * TODO Switch to options property to set app specfic flags?
  */
 class App
 {
@@ -203,6 +203,9 @@ class App
         $this->initRoutes();
         $this->initPermissions();
         $this->initLanguage();
+
+        // Init page
+        $this->page->init();
 
         // Finally call a possible app specific Init() method
         if (method_exists($this, 'Init')) {
