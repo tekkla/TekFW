@@ -13,8 +13,6 @@ use Core\Lib\Amvc\Controller;
 class LoginController extends Controller
 {
 
-    protected $has_no_model = true;
-
     /**
      *
      * @throws \Core\Lib\Errors\Exceptions\InvalidArgumentException
@@ -32,36 +30,52 @@ class LoginController extends Controller
 
         $data = $this->http->post->get();
 
-        var_dump($this->http->post->raw());
-
         if ($data) {
 
-            if ($data->validate()) {
+            // Validate the send login data
+            $this->model->checkLoginData($data);
 
-                // Do login procedure
-                $logged_in = $this->security->login->doLogin($data['login'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
+            // Errors on login data check meands that login failed
+            if ($this->model->hasErrors()) {
+                $logged_in = false;
+            }
 
+            // Data ok. Let's run login process.
+            else {
+
+                $logged_in = $this->security->login->doLogin($data['username'], $data['password'], isset($data['remember']) ? (bool) $data['remember'] : false);
+
+                // Login successful? Redirect to index page
                 if ($logged_in == true) {
-                    $url = $this->url('index');
-                    $this->redirectExit($url);
+                    $this->redirectExit($this->url('index'));
                 }
-                else {
-                    $_SESSION['login_failed'] = true;
-                    $this->page->message->danger($this->text('login.failed'));
-                }
+            }
+
+            // Login failed?
+            if (! $logged_in) {
+
+                // Store failed attempt as flag in session
+                $_SESSION['login_failed'] = true;
+
+                $this->model->addError('@', $this->text('login.failed'));
+
+                // Create error message
+                #$this->page->message->danger($this->text('login.failed'));
             }
         }
         else {
 
             // Get container
-            $data = $this->app->getContainer('Login');
-
-            // Autologin on or off by default?
-            $data['remember'] = $this->cfg('security.autologin');
+            $data = [];
         }
+
+        // Autologin on or off by default?
+        $data['remember'] = $this->cfg('security.login.autologin');
 
         $fd = $this->getFormDesigner('core-login');
         $fd->setName('core-login');
+        $fd->mapData($data);
+        $fd->mapErrors($this->model->getErrors());
 
         if (isset($_SESSION['display_activation_notice'])) {
             $group = $fd->addGroup();
@@ -73,63 +87,68 @@ class LoginController extends Controller
         // Create element group
         $group = $fd->addGroup();
 
-        /* @var $control \Core\Lib\Html\FormDesigner\Controls\TextControl */
-        $control = $group->addControl('Text', 'login');
-
-        $text = $this->text('login.form.username');
-        $control->setPlaceholder($text);
-        $control->noLabel();
-
-        /* @var $control \Core\Lib\Html\FormDesigner\Controls\TextControl */
-        $control = $group->addControl('Password', 'password');
-
-        $text = $this->text('login.form.password');
-        $control->setPlaceholder($text);
-        $control->noLabel();
-
-        $group = $fd->addGroup();
-
-        /* @var $control \Core\Lib\Html\Form\Checkbox */
-        $control = $group->addControl('Checkbox', 'remember');
-        $control->setValue(1);
-        $control->setLabel($this->text('login.form.remember_me'));
+        $controls = [
+            'username' => 'text',
+            'password' => 'password'
+        ];
 
         if ($this->cfg('security.login.autologin')) {
-            $control->isChecked();
+            $controls['remember'] = 'checkbox';
         }
 
-        $btn_group = $fd->addGroup();
-        $btn_group->setId('btn-group');
-        $btn_group->addCss([
-            'btn-group',
-            'btn-group-sm',
-            'btn-group-justified'
-        ]);
+        foreach ($controls as $name => $type) {
 
-        $btn_group_button = $btn_group->addGroup();
-        $btn_group->setId('btn-group-button');
-        $btn_group_button->addCss([
-            'btn-group'
-        ]);
+            // Create control object
+            $control = $group->addControl($type, $name);
 
-        $control = $btn_group_button->addControl('Submit');
+            // Label and placeholder
+            $text = $this->text('login.form.' . $name);
+
+            $methods = [
+                'setPlaceholder'
+            ];
+
+            foreach ($methods as $method_name) {
+                if (method_exists($control, $method_name)) {
+                    $control->$method_name($text);
+                }
+            }
+
+            switch ($name) {
+                case 'username':
+                case 'password':
+                    $control->noLabel();
+                    break;
+
+                case 'remember':
+                    $control->setLabel($this->text('login.form.remember'));
+                    break;
+            }
+        }
+
+        // login button
+        $control = $group->addControl('Submit');
+        $control->setUnbound();
+        $control->addCss('btn-block');
 
         $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
-        $control->setInner($icon->build() . ' ' . $this->text('user.action.login'));
+        $control->setInner($icon->build() . ' ' . $this->text('login.form.login'));
 
-        $btn_group_button = $btn_group->addGroup();
-        $btn_group_button->addCss([
-            'btn-group'
-        ]);
+        // Create links for 'Forgot Password?' and 'New user?'
 
-        $control = $btn_group_button->addControl('Submit');
-        $control->setInner($this->text('user.action.reset'));
+        if ($this->cfg('security.login.reset_password')) {
+
+        }
+
+        if ($this->cfg('security.login.register')) {
+
+        }
 
         $this->setVar([
-            'headline' => $this->text('user.action.login'),
-            'form' => $form
+            'headline' => $this->text('login.text'),
+            'form' => $fd
         ]);
 
         $this->page->breadcrumbs->createActiveItem($this->text('user.action.login'));

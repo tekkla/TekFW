@@ -48,13 +48,13 @@ class GroupPermissionController extends Controller
 
     public function Edit($id_parent, $id = null)
     {
-        $data = $this->http->post->get();
+        $data = $this->http->post->get()['core'];
 
         if ($data) {
 
-            $result = $this->model->save($data);
+            $this->model->save($data);
 
-            if ($result === true) {
+            if (!$this->model->hasErrors()) {
                 $this->redirect('Detail', [
                     'id' => $data['id_group_permission']
                 ]);
@@ -69,10 +69,7 @@ class GroupPermissionController extends Controller
         $fd = $this->getFormDesigner();
         $fd->isAjax();
         $fd->mapData($data);
-
-        if (! empty($result)) {
-            $fd->mapErrors($result);
-        }
+        $fd->mapErrors($this->model->getErrors());
 
         $group = $fd->addGroup();
 

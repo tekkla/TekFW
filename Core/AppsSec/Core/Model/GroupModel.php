@@ -14,6 +14,33 @@ use Core\Lib\Security\Group;
 class GroupModel extends Model
 {
 
+    protected $scheme = [
+        'table' => 'core_groups',
+        'primary' => 'id_group',
+        'fields' => [
+            'id_group' => [
+                'type' => 'int',
+            ],
+            'title' => [
+                'type' => 'string',
+                'size' => 200,
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'display_name' => [
+                'type' => 'string',
+                'size' => 200,
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'description' => [
+                'type' => 'string'
+            ]
+        ]
+    ];
+
     public function getGroup($id_group = null)
     {
         $group = [

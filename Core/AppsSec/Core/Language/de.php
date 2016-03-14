@@ -89,6 +89,7 @@ return [
 
     // USER
     'login' => [
+
         'form' => [
             'username' => 'E-Mail',
             'password' => 'Password',
@@ -642,6 +643,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
      * ****************************************************************************
      */
     'time' => [
+        'text' => [
+            'ago' => 'vor %s %s',
+        ],
         'strings' => [
             '__preserve' => true,
             'year' => 'year',

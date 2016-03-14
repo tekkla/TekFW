@@ -9,7 +9,7 @@ class LogModel extends Model
     public function getLogs($entries=20)
     {
         $qb = [
-            'table' => 'logs',
+            'table' => 'core_logs',
             'order' => 'logdate DESC',
             'limit' => $entries
         ];

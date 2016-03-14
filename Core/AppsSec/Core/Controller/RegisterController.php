@@ -149,7 +149,7 @@ class RegisterController extends Controller
 
         $this->setVar([
             'headline' => $this->text('register.form.headline'),
-            'form' => $form,
+            'form' => $fd,
             'state' => 0
         ]);
     }

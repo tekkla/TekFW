@@ -3,6 +3,7 @@ namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
 use Core\Lib\Data\Container\Container;
+use Core\Lib\Data\Validator\Validator;
 
 /**
  * ConfigModel.php
@@ -14,127 +15,200 @@ use Core\Lib\Data\Container\Container;
 final class ConfigModel extends Model
 {
 
-    private $table = 'config';
+    protected $scheme = [
+        'table' => 'core_configs',
+        'alias' => 'cfg',
+        'primary' => 'id_config',
+        'fields' => [
+            'id_config' => [
+                'type' => 'int'
+            ],
+            'app' => [
+                'type' => 'string'
+            ],
+            'cfg' => [
+                'type' => 'string',
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'val' => [
+                'type' => 'string',
+                'serialize' => true,
+                'validate' => [
+                    'empty'
+                ]
+            ]
+        ]
+    ];
 
     public function getConfigGroups($app_name)
     {
-        // Try to get a config defintion from the app
-        $cfg = $this->di->get('core.amvc.creator')
-            ->getAppInstance($app_name)
-            ->getConfig()['raw'];
+        return array_keys($this->di->get('core.cfg')->definitions[$app_name]);
+    }
 
-        return array_keys($cfg);
+    public function getDefinition($name)
+    {
+        return $this->di->get('core.cfg')['definitions'];
     }
 
     /**
-     * Returns app config container groups
+     * Checks a config definition for missing settings and adds them on demand
      *
-     * @param string $app_name
-     *            Name of app to get config from
-     * @param string $exclude_group
-     *            Exclude this group from config
-     *
-     * @return array
+     * @param array $def
+     *            Definition array to check for missing settings
      */
-    public function loadByApp($app_name, array $values = [])
+    public function checkDefinitionFields(&$def)
     {
-        // Try to get a config defintion from the app
-        $cfg = $this->di->get('core.amvc.creator')
-            ->getAppInstance($app_name)
-            ->getConfig()['flat'];
+        $check_default = [
+            'serialize' => false,
+            'translate' => false,
+            'data' => false,
+            'validate' => [],
+            'filter' => [],
+            'default' => '',
+            'control' => 'text'
+        ];
 
-        $data = [];
-
-        foreach ($cfg as $key => &$def) {
-
-            // Value provided by parameter?
-            if (array_key_exists($key, $values)) {
-                $def['value'] = $values[$key];
-            }
-            // Value existin in config?
-            elseif ($this->di->get('core.cfg')->exists($app_name, $key)) {
-                $def['value'] = $this->di->get('core.cfg')->get($app_name, $key);
-            }
-            // Default value from definition?
-            elseif (isset($def['default'])) {
-                $def['value'] = $def['default'];
+        foreach ($check_default as $property => $default) {
+            if (! isset($def[$property])) {
+                $def[$property] = $default;
             }
         }
 
-        return $cfg;
+        // Set default value as value
+        $def['value'] = $def['default'];
+
+        // Define field type by control type
+        switch ($def['control']) {
+            case 'Number':
+            case 'Switch':
+                $def['type'] = 'int';
+                break;
+
+            case 'Optiongroup':
+            case 'Multiselect':
+                $def['type'] = 'array';
+                break;
+
+            default:
+                $def['type'] = 'string';
+                break;
+        }
     }
 
     public function saveConfig(&$data)
     {
+
         // Store the appname this config is for
-        $app_name = $data['app.name'];
+        $app_name = $data['app'];
+        unset($data['app']);
 
-        $unused = [
-            'app_name',
-            'btn_submit'
-        ];
-
-        // Get config definition from app and set values
-        $fulldata = $this->loadByApp($app_name, $data);
-
-        // Create a data scheme on the fly
-        $pseudo_scheme = [
-            'table' => 'config',
-            'fields' => $fulldata
-        ];
-
-        #$data = $this->filter($data, $pseudo_scheme);
-
-        // Validate
-        $this->validate($data, $pseudo_scheme);
+        $this->validateConfig($data, $this->di->get('core.cfg')->definitions[$app_name]);
 
         if ($this->hasErrors()) {
-
-            \FB::log($this->getErrors());
-
-            $data = $fulldata;
+            return $data;
         }
 
-       // Data validated successfully. Go on and store config
+        for ($i=0; $i<10000; $i++) {
+            $flat = $this->arrayFlatten($data);
+        }
+
+        // Data validated successfully. Go on and store config
         $db = $this->getDbConnector();
 
         // Start transaction
         $db->beginTransaction();
 
-        // Delete current config
-        $db->delete($this->table, 'app=:app', [
-            ':app' => $app_name
-        ]);
-
         // Prepare insert query
         $qb = [
-            'scheme' => $pseudo_scheme,
+            'scheme' => $this->scheme,
             'data' => [
                 'app' => $app_name
-            ],
+            ]
         ];
 
         // Create config entries one by one
-        foreach ($fulldata as $def) {
+        foreach ($flat as $cfg => $val) {
 
-            \FB::log($def);
+            // Delete current config value
+            $db->delete($this->scheme['table'], 'app=:app AND cfg=:cfg', [
+                ':app' => $app_name,
+                ':cfg' => $cfg
+            ]);
 
-            $qb['data']['cfg'] = $def['name'];
+            // Add config value
+            $qb['data']['cfg'] = $cfg;
 
-            $val = $def['value'];
-
-            if (!empty($def['serialize'])) {
+            if (is_array($val) || $val instanceof \Serializable) {
                 $val = serialize($val);
             }
 
             $qb['data']['val'] = $val;
 
             $db->qb($qb, true);
-
         }
 
         $db->endTransaction();
 
-        $data = $fulldata;
+        return $data;
+    }
+
+    private function validateConfig($data, $structure, $keys = [])
+    {
+        static $validator;
+
+        foreach ($data as $key => $val) {
+
+            // Any validation rules in structur on this level?
+            if (! empty($structure[$key]['validate'])) {
+
+                if (empty($validator)) {
+                    $validator = new Validator();
+                }
+
+                $validator->validate($val, $structure[$key]['validate']);
+
+                // Any errors?
+                if (! $validator->isValid()) {
+
+                    // Yes! Add current key to a copy of $keys
+                    $final_keys = $keys;
+                    $final_keys[] = $key;
+
+                    // and create error informations
+                    $this->arrayAssignByKeys($this->errors, $final_keys, $validator->getResult());
+                }
+
+                // next please!
+                continue;
+            }
+
+            if (is_array($val)) {
+
+                $next_level_keys = $keys;
+                $next_level_keys[] = $key;
+
+                $this->validateConfig($val, $structure[$key], $next_level_keys);
+            }
+        }
+    }
+
+    public function getData($app_name, $group_name) {
+
+        $data = [];
+
+        $configs = $this->di->get('core.cfg')->data[$app_name];
+
+        foreach ($configs as $path => $value) {
+            $this->arrayAssignByPath($data, $path, $value);
+        }
+
+        if (!empty($data[$group_name])) {
+            $data = $data[$group_name];
+        }
+
+        return $data;
+
     }
 }

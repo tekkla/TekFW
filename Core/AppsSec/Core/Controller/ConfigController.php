@@ -78,56 +78,52 @@ class ConfigController extends Controller
             Throw new SecurityException('No accessrights');
         }
 
-        $data = $this->http->post->get()['core'];
+        $data = $this->http->post->get();
 
         // save process
         if ($data) {
 
             $this->model->saveConfig($data);
 
-            if (!$this->model->hasErrors()) {
+            if (! $this->model->hasErrors()) {
                 // Reload config
                 $this->di->get('core.cfg')->load();
                 unset($data);
             }
         }
 
-        // Load the app's config data
         if (empty($data)) {
-            $data = $this->model->loadByApp($app_name);
+            $data = $this->model->getData($app_name, $group_name);
         }
 
         // Use form designer
         $fd = $this->getFormDesigner('core-admin-config-' . $app_name . '-' . $group_name);
         $fd->mapErrors($this->model->getErrors());
         $fd->mapData($data);
-
+        $fd->isHorizontal('sm', 4);
         $fd->isAjax();
-        $fd->isHorizontal('sm', 3);
 
         // Set forms action route
-        $url = $this->url('config.group', [
+        $fd->html->setAction($this->url('config.group', [
             'app_name' => $app_name,
             'group_name' => $group_name
-        ]);
-        $fd->html->setAction($url);
+        ]));
 
         $group = $fd->addGroup();
 
         // Add hidden app control
-        $group->addControl('hidden', 'app.name')->setValue($app_name);
+        $group->addControl('hidden', 'app')->setValue($app_name);
+
+        $group = $fd->addGroup();
+        $group->setName($group_name);
+
+        $this->createGroups($app_name, $this->di->get('core.cfg')->definitions[$app_name][$group_name], $group, 0, [
+            $group_name
+        ]);
 
         $group = $fd->addGroup();
 
-        $config = $this->di->get('core.amvc.creator')
-            ->getAppInstance($app_name)
-            ->getConfig();
-
-        $this->createControls($app_name, $config['raw'][$group_name], $group_name, $group, 1);
-
-        $group = $fd->addGroup();
-
-        $control = $group->addControl('Submit', '');
+        $control = $group->addControl('Submit');
         $control->setUnbound();
         $control->setInner('<i class="fa fa-' . $this->text('action.save.icon') . '"></i> ' . $this->text('action.save.text'));
         $control->addCss([
@@ -146,33 +142,37 @@ class ConfigController extends Controller
         $this->setAjaxTarget('#config-' . $group_name);
     }
 
-    private function createControls($app_name, $config, $prefix, FormGroup $group, $level = 0, $glue = '.')
+    private function createGroups($app_name, $config, FormGroup $group, $level = 0, $names = [])
     {
         $level ++;
 
         foreach ($config as $key => $value) {
 
-            if (is_int($key)) {
+            if (array_key_exists('name', $value) && is_string($value['name'])) {
 
-                $name = $prefix . $glue . $value['name'];
+                $value['groupnames'] = $names;
 
-                $settings = $this->di->get('core.amvc.creator')
-                    ->getAppInstance($app_name)
-                    ->getConfig()['flat'][$name];
+                \FB::log($value);
 
-                $this->createControl($group, $name, $app_name, $settings);
+                $this->createControl($app_name, $group, $value);
             }
             else {
 
                 $subgroup = $group->addGroup();
+                $subgroup->setName($key);
+
+                $subgroup_names = $names;
+                $subgroup_names[] = $key;
 
                 $subgroup->html->addCss('bottom-buffer');
 
-                $heading = $subgroup->addElement('Elements\Heading');
-                $heading->setSize($level + 1);
-                $heading->setInner($this->text('config' . $glue . $prefix . $glue . $key . '.head', $app_name));
+                if ($level == 1) {
 
-                if ($level == 2) {
+                    $heading = $subgroup->addElement('Elements\Heading');
+                    $heading->setSize($level + 3);
+
+                    $heading->setInner($this->text('config.' . implode('.', $subgroup_names) . '.head', $app_name));
+
                     $heading->addCss([
                         'no-top-margin',
                         'text-uppercase'
@@ -184,15 +184,27 @@ class ConfigController extends Controller
                     ]);
                 }
 
-                $this->createControls($app_name, $value, $prefix . $glue . $key, $subgroup, $level);
+                $this->createGroups($app_name, $value, $subgroup, $level, $subgroup_names);
             }
         }
     }
 
-    private function createControl(FormGroup $group, $name, $app_name, $settings)
+    private function createControl($app_name, FormGroup $group, array $settings)
     {
-        if ($name == 'app.name') {
+        if ($settings['name'] == 'app.name') {
             return;
+        }
+
+        // Check for missing settings and extend settings if needed
+        $this->model->checkDefinitionFields($settings);
+
+        // Get value for this control from stored config by using flattened key
+        $flat_name = implode('.', $settings['groupnames']) . '.' . $settings['name'];
+
+        $cfg = $this->di->get('core.cfg');
+
+        if (! empty($cfg->data[$app_name][$flat_name])) {
+            $settings['value'] = $cfg->data[$app_name][$flat_name];
         }
 
         // Is this a control with more settings or only the controltype
@@ -203,11 +215,8 @@ class ConfigController extends Controller
             $control_type = $control_type[0];
         }
 
-        // if there is no value to in formdesigner data, use the value provided by settings
-        $value = $settings['value'];
-
         // Create control object
-        $control = $group->addControl($control_type, $name);
+        $control = $group->addControl($control_type, $settings['name']);
 
         // Are there attributes to add?
         if (is_array($settings['control']) && isset($settings['control'][1]) && is_array($settings['control'][1])) {
@@ -220,16 +229,6 @@ class ConfigController extends Controller
 
         // Create controls
         switch ($control_type) {
-            case 'textarea':
-            case 'text':
-
-                if (! empty($settings['translate'])) {
-                    $value = $this->text($value, $app_name);
-                }
-
-                $control->setValue($value);
-
-                break;
 
             // Create datasource driven controls
             case 'optiongroup':
@@ -258,7 +257,7 @@ class ConfigController extends Controller
 
                     // Datasource has to be of type array or model. All other will result in an exception
                     default:
-                        Throw new RuntimeException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $name, $control_type));
+                        Throw new RuntimeException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
                 }
 
                 // if no bound column number is set, set default to column 0
@@ -275,8 +274,8 @@ class ConfigController extends Controller
                     $option->setInner($ds_val);
                     $option->setValue($option_value);
 
-                    if (is_array($value)) {
-                        foreach ($value as $k => $v) {
+                    if (is_array($settings['value'])) {
+                        foreach ($settings['value'] as $k => $v) {
                             if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($settings['data'][2] == 0 && $k == $option_value) || ($settings['data'][2] == 1 && $v == $option_value))) {
                                 $option->isSelected(1);
                                 continue;
@@ -286,7 +285,7 @@ class ConfigController extends Controller
                     else {
 
                         // this is for simple select control
-                        if (($settings['data'][2] == 0 && $ds_key === $value) || ($settings['data'][2] == 1 && $ds_val == $value)) {
+                        if (($settings['data'][2] == 0 && $ds_key === $settings['value']) || ($settings['data'][2] == 1 && $ds_val == $settings['value'])) {
                             $option->isSelected(1);
                         }
                     }
@@ -296,17 +295,18 @@ class ConfigController extends Controller
 
             case 'switch':
 
-                if ($value == 1) {
+                if ($settings['value'] == 1) {
                     $control->switchOn();
                 }
                 break;
 
             default:
-                if (! $control->checkAttribute('size')) {
-                    $control->setSize(55);
+
+                if (! empty($settings['translate'])) {
+                    $settings['value'] = $this->text($settings['value'], $app_name);
                 }
 
-                $control->setValue($value);
+                $control->setValue($settings['value']);
 
                 break;
         }
@@ -317,14 +317,9 @@ class ConfigController extends Controller
         $icon->addData([
             'toggle' => 'popover',
             'trigger' => 'click',
-            'content' => $this->text('config.' . $name . '.desc')
+            'content' => $this->text('config.' . $flat_name . '.desc')
         ]);
 
-        $control->setLabel($this->text('config.' . $name . '.label') . ' ' . $icon->build());
-    }
-
-    public function Reconfigure($app_name)
-    {
-        $this->model->rewriteConfig($app_name);
+        $control->setLabel($this->text('config.' . $flat_name . '.label') . ' ' . $icon->build());
     }
 }

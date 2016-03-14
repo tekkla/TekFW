@@ -21,7 +21,7 @@ final class Core extends App
     protected $permissions = [
         'admin.groups',
         'admin.user',
-        'admin.log',
+        'admin.log'
     ];
 
     // Apps default config
@@ -29,23 +29,31 @@ final class Core extends App
 
         'site' => [
             'general' => [
-                [
+                'name' => [
                     'name' => 'name',
+                    'validate' => [
+                        'empty'
+                    ]
                 ],
-                [
+                'url' => [
                     'name' => 'url',
                     'control' => 'url',
                     'validate' => [
+                        'empty',
                         'url'
                     ]
                 ],
-                [
+                'webmaster_email' => [
                     'name' => 'webmaster_email',
-                    'control' => 'mail'
+                    'control' => 'mail',
+                    'validate' => [
+                        'empty',
+                        'email'
+                    ]
                 ]
             ],
             'language' => [
-                [
+                'default' => [
                     'name' => 'default',
                     'control' => 'select',
                     'data' => [
@@ -63,7 +71,7 @@ final class Core extends App
         'security' => [
             'user' => [
                 'username' => [
-                    [
+                    'min_length' => [
                         'name' => 'min_length',
                         'type' => 'int',
                         'control' => 'number',
@@ -72,17 +80,18 @@ final class Core extends App
                             'empty'
                         ]
                     ],
-                    [
+                    'regexp' => [
                         'name' => 'regexp'
                     ]
                 ],
                 'password' => [
-                    [
+
+                    'min_length' => [
                         'name' => 'min_length',
                         'control' => 'number',
                         'default' => 8
                     ],
-                    [
+                    'max_length' => [
                         'name' => 'max_length',
                         'control' => 'number',
                         'default' => 4096,
@@ -97,89 +106,103 @@ final class Core extends App
                             ]
                         ]
                     ],
-                    [
+                    'regexp' => [
                         'name' => 'regexp'
                     ]
                 ]
             ],
             'register' => [
-                [
+                'use_compare_password' => [
                     'name' => 'use_compare_password',
                     'control' => 'switch',
                     'default' => 1
                 ]
             ],
             'activation' => [
-                [
+                'use' => [
                     'name' => 'use',
                     'control' => 'switch',
                     'default' => 1
                 ],
-                [
+                'ttl' => [
                     'name' => 'ttl',
                     'control' => 'number',
                     'default' => 3600
                 ],
-                [
+                'mta' => [
                     'name' => 'mta',
                     'default' => 'default'
                 ],
-                [
+                'from' => [
                     'name' => 'from'
                 ],
-                [
+                'sender' => [
                     'name' => 'name'
                 ]
             ],
             'login' => [
-                [
+                'autologin' => [
                     'name' => 'autologin',
+                    'control' => 'switch',
+                    'default' => 1
+                ],
+                'reset_password' => [
+                    'name' => 'reset_password',
+                    'control' => 'switch',
+                    'default' => 1
+                ],
+                'register' => [
+                    'name' => 'register',
                     'control' => 'switch',
                     'default' => 1
                 ]
             ],
             'ban' => [
-                [
+                'tries' => [
                     'name' => 'tries',
                     'control' => 'number',
                     'default' => 5
                 ],
                 'ttl' => [
-                    [
+                    'log' => [
                         'name' => 'log',
                         'control' => 'number',
                         'default' => 300
                     ],
-                    [
+                    'ban' => [
                         'name' => 'ban',
                         'control' => 'number',
                         'default' => 600
                     ]
+                ]
+            ],
+            'input' => [
+                'always_sanitize' => [
+                    'name' => 'always_sanitize',
+                    'control' => 'switch',
+                    'default' => 1
                 ]
             ]
         ],
 
         // Group: Execute
         'execute' => [
-
             'default' => [
-
-                [
+                'app' => [
                     'name' => 'app',
                     'default' => 'Core'
                 ],
-                [
+                'controller' => [
                     'name' => 'controller',
                     'default' => 'Index'
                 ],
-                [
+                'action' => [
                     'name' => 'action',
                     'default' => 'Index'
                 ]
             ],
             'content' => [
-
-                [
+                'handler' => [
                     'name' => 'handler'
                 ]
             ]
@@ -187,7 +210,7 @@ final class Core extends App
         // Group: JS
         'js' => [
             'general' => [
-                [
+                'position' => [
                     'name' => 'position',
                     'control' => 'select',
                     'data' => [
@@ -203,19 +226,18 @@ final class Core extends App
             ],
 
             'jquery' => [
-                [
+                'version' => [
                     'name' => 'version',
                     'default' => '2.2.0'
                 ],
-                [
+                'local' => [
                     'name' => 'local',
                     'control' => 'switch',
                     'default' => 1
                 ]
             ],
             'style' => [
-
-                [
+                'fadeout_time' => [
                     'name' => 'fadeout_time',
                     'control' => [
                         'number',
@@ -237,7 +259,7 @@ final class Core extends App
         'style' => [
             // Bootstrap
             'bootstrap' => [
-                [
+                'version' => [
                     'name' => 'version',
                     'control' => 'input',
                     'default' => '3.3.6',
@@ -245,30 +267,28 @@ final class Core extends App
                         'empty'
                     ]
                 ],
-                [
+                'local' => [
                     'name' => 'local',
                     'control' => 'switch',
                     'default' => 1
                 ]
             ],
             'fontawesome' => [
-
-                [
+                'version' => [
                     'name' => 'version',
                     'default' => '4.5.0',
                     'validate' => [
                         'empty'
                     ]
                 ],
-                [
+                'local' => [
                     'name' => 'local',
                     'control' => 'switch',
                     'default' => 1
                 ]
             ],
             'theme' => [
-
-                [
+                'name' => [
                     'name' => 'name',
                     'control' => 'text',
                     'default' => 'Core',
@@ -281,39 +301,38 @@ final class Core extends App
         // Error handling
         'error' => [
             'display' => [
-                [
+                'skip_security_check' => [
                     'name' => 'skip_security_check',
                     'control' => 'switch'
                 ]
             ],
             'mail' => [
-                [
+                'use' => [
                     'name' => 'use',
                     'control' => 'switch',
                     'default' => 1
                 ],
-                [
+                'address' => [
                     'name' => 'address'
                 ],
-                [
+                'mta' => [
                     'name' => 'mta',
                     'default' => 'default'
                 ]
             ],
             'log' => [
-
-                [
+                'use' => [
                     'name' => 'use',
                     'control' => 'switch',
                     'default' => 1
                 ],
                 'modes' => [
-                    [
+                    'db' => [
                         'name' => 'db',
                         'control' => 'switch',
                         'default' => 1
                     ],
-                    [
+                    'php' => [
                         'name' => 'php',
                         'control' => 'switch',
                         'default' => 1
@@ -325,31 +344,31 @@ final class Core extends App
         // Caching
         'cache' => [
             'file' => [
-                [
+                'ttl' => [
                     'name' => 'ttl',
                     'control' => 'number',
                     'default' => '3600'
                 ],
-                [
+                'ttl_js' => [
                     'name' => 'ttl_js',
                     'control' => 'number',
                     'default' => '3600'
                 ],
-                [
+                'ttl_css' => [
                     'name' => 'ttl_css',
                     'control' => 'number',
                     'default' => '3600'
                 ]
             ],
             'memcache' => [
-                [
+                'use' => [
                     'name' => 'use',
                     'control' => 'switch'
                 ],
-                [
+                'server' => [
                     'name' => 'server'
                 ],
-                [
+                'port' => [
                     'name' => 'port'
                 ]
             ]
@@ -358,7 +377,7 @@ final class Core extends App
         // Loggingsystem
         'log' => [
             'display' => [
-                [
+                'entries' => [
                     'name' => 'entries',
                     'control' => 'number',
                     'default' => 20
@@ -369,14 +388,14 @@ final class Core extends App
         // Mailsystem
         'mail' => [
             'general' => [
-                [
+                'smtpdebug' => [
                     'name' => 'smtpdebug',
                     'control' => 'switch'
                 ]
             ],
             'mta' => [
                 'default' => [
-                    [
+                    'system' => [
                         'name' => 'system',
                         'control' => 'select',
                         'data' => [
@@ -389,27 +408,27 @@ final class Core extends App
                         ],
                         'default' => 1
                     ],
-                    [
+                    'host' => [
                         'name' => 'host',
                         'control' => 'mail'
                     ],
-                    [
+                    'port' => [
                         'name' => 'port',
                         'control' => 'number',
                         'default' => 587
                     ],
-                    [
+                    'username' => [
                         'name' => 'username'
                     ],
-                    [
+                    'password' => [
                         'name' => 'password',
                         'control' => 'password'
                     ],
-                    [
+                    'accept_selfsigned' => [
                         'name' => 'accept_selfsigned',
                         'control' => 'switch'
                     ],
-                    [
+                    'protocol' => [
                         'name' => 'protocol',
                         'control' => 'select',
                         'data' => [
@@ -564,8 +583,8 @@ final class Core extends App
             $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('logout'));
         }
 
-        // or add login and register buttons
-        else {
+        // or add login and register buttons. But not when current user is currently on banlist
+        elseif (!$this->security->users->checkBan()) {
 
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
             $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login'));

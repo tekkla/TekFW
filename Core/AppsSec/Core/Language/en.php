@@ -89,11 +89,15 @@ return [
 
     // USER
     'login' => [
+        'text' => 'Login',
         'form' => [
             'username' => 'E-Mail',
             'password' => 'Password',
+            'remember' => 'Stay logged in',
+            'login' => 'login.text',
+        ],
+        'message' => [
             'already_loggedin' => 'You are already logged in.',
-            'remember_me' => 'Stay logged in',
             'failed' => 'Login failed! Please check your username and password.',
             'success' => 'Login was successful.'
         ]
@@ -628,6 +632,9 @@ The team of %s'
      * ****************************************************************************
      */
     'time' => [
+        'text' => [
+            'ago' => '%s %s ago',
+        ],
         'strings' => [
             '__preserve' => true,
             'year' => 'year',

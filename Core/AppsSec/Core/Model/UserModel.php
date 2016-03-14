@@ -14,6 +14,44 @@ use Core\Lib\Security\User;
 class UserModel extends Model
 {
 
+    protected $scheme = [
+        'table' => 'core_users',
+        'primary' => 'id_user',
+        'fields' => [
+            'id_user' => [
+                'type' => 'int'
+            ],
+            'username' => [
+                'type' => 'string',
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'display_name' => [
+                'type' => 'string'
+            ],
+            'password' => [
+                'type' => 'string',
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'state' => [
+                'type' => 'int',
+                'validate' => [
+                    'empty',
+                    [
+                        'range',
+                        [
+                            0,
+                            5
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ];
+
     private $table = 'users';
 
     public function getEdit(User $user, $id_user = null)
@@ -32,20 +70,18 @@ class UserModel extends Model
             $groups = [];
         }
 
-        $container = $this->getContainer();
-
-        $container['id_user'] = $id_user;
-        $container['username'] = $username;
-        $container['display_name'] = $display_name;
-        $container['groups'] = $groups;
-
-        return $container;
+        return [
+            'id_user' => $id_user,
+            'username' => $username,
+            'display_name' => $display_name,
+            'groups' => $groups
+        ];
     }
 
     public function getList($field = 'display_name', $needle = '%', $limit = 100, array $callbacks = [])
     {
         $qb = [
-            'table' => $this->table,
+            'table' => $this->scheme['table'],
             'filter' => $field . ' LIKE :' . $field,
             'params' => [
                 ':' . $field => $needle
@@ -72,7 +108,7 @@ class UserModel extends Model
         $db = $this->getDbConnector();
 
         $db->qb([
-            'table' => $this->table,
+            'table' => $this->scheme['table'],
             'alias' => 'u',
             'fields' => [
                 'u.id_user',

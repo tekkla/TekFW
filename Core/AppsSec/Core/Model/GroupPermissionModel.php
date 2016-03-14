@@ -14,7 +14,28 @@ use Core\Lib\Security\SecurityException;
 class GroupPermissionModel extends Model
 {
 
-    private $table = 'groups_permissions';
+    protected $scheme = [
+        'table' => 'core_groups_permissions',
+        'primary' => 'id_group_permission',
+        'fields' => [
+            'id_group_permission' => [
+                'type' => 'int'
+            ],
+            'permission' => [
+                'type' => 'string',
+                'validate' => [
+                    'empty'
+                ]
+            ],
+            'notes' => [
+                'type' => 'string',
+                'size' => 200,
+                'validate' => [
+                    'empty'
+                ]
+            ]
+        ]
+    ];
 
     /**
      * Loads permissions for a given list of group ids
@@ -43,7 +64,7 @@ class GroupPermissionModel extends Model
 
         // Get and return the permissions
         $db->qb($qb = [
-            'table' => $this->table,
+            'table' => $this->scheme['table'],
             'method' => 'SELECT DISTINCT',
             'filter' => 'id_group IN (' . $prepared['sql'] . ')',
             'params' => $prepared['values']
@@ -70,23 +91,23 @@ class GroupPermissionModel extends Model
             ]
         ]);
 
-        return $db->all('id_group_permission', $this->scheme);
+        return $db->all($this->scheme);
     }
 
-    public function getEdit($id=null) {
-
+    public function getEdit($id = null)
+    {
         if ($id) {
 
             $db = $this->getDbConnector();
             $db->qb([
-                'table' => $this->table,
+                'table' => $this->scheme['table'],
                 'fields' => [
                     'id_group_permission',
-                    'permission',
+                    'permission'
                 ],
                 'filter' => 'id_group_permission = :id',
                 'params' => [
-                    ':id' => $id,
+                    ':id' => $id
                 ]
             ]);
 
@@ -95,11 +116,10 @@ class GroupPermissionModel extends Model
 
         $data = [
             'title' => '',
-            'deny' => 0,
+            'deny' => 0
         ];
 
         return $data;
-
     }
 
     public function loadPermissionsGroupedByApps(array $groups = [])
@@ -124,19 +144,17 @@ class GroupPermissionModel extends Model
         return $out;
     }
 
-    public function save($data) {
-
-        // Run field filters!
-        $data = $this->filter($data);
+    public function save(&$data)
+    {
 
         // Validate data
-        $errors = $this->validate($data);
+        $this->validate($data, $this->scheme);
 
-        if ($errors !== true) {
-            return $errors;
+        if ($this->hasErrors()) {
+            return $data;
         }
 
-        list($app, $permission) = explode('.', $data['permission']);
+        list ($app, $permission) = explode('.', $data['permission']);
 
         if (empty($permission)) {
             Throw new SecurityException('Permission is missing');
@@ -151,7 +169,6 @@ class GroupPermissionModel extends Model
             'data' => $data
         ], true);
 
-        return true;
-
+        return $data;
     }
 }
