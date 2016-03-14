@@ -18,34 +18,94 @@ class QueryBuilder
     use ArrayTrait;
     use ConvertTrait;
 
-    private $method;
+    /**
+     *
+     * @var string
+     */
+    private $method = 'SELECT';
 
-    private $definition;
+    /**
+     *
+     * @var array
+     */
+    private $definition = [];
 
+    /**
+     *
+     * @var array
+     */
     private $scheme = [];
 
-    private $tbl;
+    /**
+     *
+     * @var string
+     */
+    private $table = '';
 
+    /**
+     *
+     * @var string
+     */
     private $alias = '';
 
+    /**
+     *
+     * @var array
+     */
     private $fields = [];
 
+    /**
+     *
+     * @var array
+     */
     private $values = [];
 
+    /**
+     *
+     * @var array
+     */
     private $join = [];
 
+    /**
+     *
+     * @var string
+     */
     private $filter = '';
 
+    /**
+     *
+     * @var array
+     */
     private $params = [];
 
+    /**
+     *
+     * @var string
+     */
     private $order = '';
 
+    /**
+     *
+     * @var string
+     */
     private $group_by = '';
 
+    /**
+     *
+     * @var string
+     */
     private $having = '';
 
+    /**
+     *
+     * @var string
+     */
     private $sql = '';
 
+    /**
+     *
+     * @var array
+     */
     private $counter = [];
 
     /**
@@ -166,16 +226,16 @@ class QueryBuilder
     /**
      * From statement
      *
-     * @param string $tbl
+     * @param string $table
      *            Table name
      * @param string $alias
      *            Optional: Table alias
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
-    public function From($tbl, $alias = '')
+    public function From($table, $alias = '')
     {
-        $this->table = $tbl;
+        $this->table = $table;
 
         if ($alias) {
             $this->alias = $alias;
@@ -220,7 +280,7 @@ class QueryBuilder
     /**
      * Join statement
      *
-     * @param string $tbl
+     * @param string $table
      *            Table name of table to join
      * @param string $as
      *            Alias of join table
@@ -231,10 +291,10 @@ class QueryBuilder
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
-    public function Join($tbl, $as, $by, $condition)
+    public function Join($table, $as, $by, $condition)
     {
         $this->join[] = [
-            'table' => $tbl,
+            'table' => $table,
             'as' => $as,
             'by' => $by,
             'cond' => $condition
@@ -297,9 +357,6 @@ class QueryBuilder
         $order = '';
         $limit = '';
 
-        // Create the fieldprefix. If given as alias use this, otherwise we use the tablename
-        $field_prefifx = $this->alias ? $this->alias : '{db_prefix}' . $this->table;
-
         // Biuld joins
         if ($this->join) {
             $tmp = [];
@@ -356,9 +413,6 @@ class QueryBuilder
             }
         }
 
-        // We need a string for the table. if there is an alias, we have to set it
-        $tbl = $this->alias ? $this->table . ' AS ' . $this->alias : $this->table;
-
         switch ($this->method) {
 
             case 'UPDATE':
@@ -372,13 +426,13 @@ class QueryBuilder
 
                 $fieldlist = implode(',', $fields);
 
-                $this->sql = $this->method . ' {db_prefix}' . $tbl . ' SET ' . $fieldlist . $filter;
+                $this->sql = $this->method . ' {db_prefix}' . $this->table . ' SET ' . $fieldlist . $filter;
 
                 break;
 
             case 'INSERT':
             case 'REPLACE':
-                $fieldlist = ! $fieldlist || $fieldlist == '*' ? '' : ' (' . $fieldlist . ')';
+                $fieldlist = empty($fieldlist) || $fieldlist == '*' ? '' : ' (' . $fieldlist . ')';
 
                 // Build values
                 $values = [];
@@ -389,11 +443,11 @@ class QueryBuilder
 
                 $values = implode(', ', $values);
 
-                $this->sql = $this->method . ' INTO {db_prefix}' . $tbl . $fieldlist . ' VALUES (' . $values . ')';
+                $this->sql = $this->method . ' INTO {db_prefix}' . $this->table . $fieldlist . ' VALUES (' . $values . ')';
                 break;
 
             case 'DELETE':
-                $this->sql = $this->method . ' FROM {db_prefix}' . $tbl . $filter . $order . $limit;
+                $this->sql = $this->method . ' FROM {db_prefix}' . $this->table . $filter . $order . $limit;
                 break;
 
             default:
@@ -404,7 +458,7 @@ class QueryBuilder
                     $this->sql .= 'SET @' . $this->counter['name'] . '=' . $this->counter['start'] . ';';
                 }
 
-                $this->sql .= $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $tbl . $join . $filter . $group_by . $having . $order . $limit;
+                $this->sql .= $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $this->table . $join . $filter . $group_by . $having . $order . $limit;
                 break;
         }
 
@@ -420,6 +474,10 @@ class QueryBuilder
             // Replace array parameter against sql valid part
             if (is_array($val)) {
                 $prepared = $this->prepareArrayQuery($key, $val);
+
+                array_push($this->params, $prepared['params']);
+
+                $this->sql = str_replace('prep:' . $key, $prepared['sql'], $this->sql);
             }
         }
 
@@ -467,9 +525,6 @@ class QueryBuilder
         if (isset($this->definition['method'])) {
             $this->method = strtoupper($this->definition['method']);
             unset($this->definition['method']);
-        }
-        else {
-            $this->method = 'SELECT';
         }
 
         // All methods need the table defintion
@@ -533,7 +588,7 @@ class QueryBuilder
      */
     private function processInsert()
     {
-        if (! isset($this->definition['fields']) && ! isset($this->definition['field'])) {
+        if (empty($this->definition['fields']) && empty($this->definition['field'])) {
             Throw new QueryBuilderException('QueryBuilder need a "field" or "fields" list element to process "INSERT" definition.');
         }
 
@@ -583,23 +638,24 @@ class QueryBuilder
      */
     private function processTableDefinition()
     {
+        // Table setting in scheme always (!) overrides manual set table definition
         if (! empty($this->scheme['table'])) {
             $this->table = $this->scheme['table'];
         }
 
+        // Alias setting in scheme always (!) overrides manual set alias definition
         if (! empty($this->scheme['alias'])) {
             $this->alias = $this->scheme['alias'];
         }
 
         // Look for table name when there was none set by a scheme
-        if (empty($this->table)) {
-
-            // Throw exception when there is no tablename set in definition!
-            if (empty($this->definition['table'])) {
-                Throw new QueryBuilderException('QueryBuilder needs a table name. Provide tablename by setting "table" element in your query definition or provide a Scheme with a set table element.');
-            }
-
+        if (empty($this->table) && ! empty($this->definition['table'])) {
             $this->table = $this->definition['table'];
+        }
+
+        // Still no table? Time to complain about it with an exception
+        if (empty($this->table)) {
+            Throw new QueryBuilderException('QueryBuilder needs a table name. Provide tablename by setting "table" element in your query definition or provide a Scheme with a set table element.<br><br><small>Send QueryBuilder definition:</small><pre>' . print_r($this->definition, true) . '</pre>');
         }
 
         // No alias until here but set in definition?
