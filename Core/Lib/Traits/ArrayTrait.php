@@ -25,7 +25,7 @@ trait ArrayTrait
      *            Key to search and insert after
      * @param number $position
      *            Position after the found key to insert into
-     *
+     *            
      * @throws InvalidArgumentException
      *
      * @return array
@@ -35,30 +35,30 @@ trait ArrayTrait
         if (! is_array($array)) {
             throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
-
+        
         $counter = 0;
         $keylist = array_keys($array);
-
+        
         foreach ($keylist as $key) {
             if ($key == $search) {
                 break;
             }
             $counter ++;
         }
-
+        
         $counter += $position;
-
+        
         $array = array_slice($array, 0, $counter, true) + $insert + array_slice($array, $counter, null, true);
-
+        
         return $array;
     }
 
     /**
      * Slices an array at the search point and returns both slices.
      *
-     * @param array $array
-     * @param string $search
-     * @param number $position
+     * @param array $array            
+     * @param string $search            
+     * @param number $position            
      *
      * @throws InvalidArgumentException
      *
@@ -69,20 +69,20 @@ trait ArrayTrait
         if (! is_array($array)) {
             throw new InvalidArgumentException('Wrong parameter type.', 1000);
         }
-
+        
         $counter = 0;
         $keylist = array_keys($array);
-
+        
         foreach ($keylist as $key) {
             if ($key == $search) {
                 break;
             }
-
+            
             $counter ++;
         }
-
+        
         $counter += $position;
-
+        
         return [
             array_slice($array, 0, $counter, true),
             array_slice($array, $counter, null, true)
@@ -94,7 +94,7 @@ trait ArrayTrait
      *
      * @param array $array
      *            The array to check
-     *
+     *            
      * @throws InvalidArgumentException
      *
      * @return boolean
@@ -104,11 +104,11 @@ trait ArrayTrait
         if (! is_array($array)) {
             Throw new InvalidArgumentException('ArrayTrait::arrayIsAssoc() : You can only check arrays to be associative.');
         }
-
+        
         if (empty($array)) {
             return false;
         }
-
+        
         return (bool) count(array_filter(array_keys($array), 'is_string'));
     }
 
@@ -123,24 +123,24 @@ trait ArrayTrait
      *            With this optional flag and a set __preserve key in the array the array will be still flattended but
      *            also be stored as array with an ending .array key. Those arrays will not be flattened further more.
      *            This means any nesting array will stay arrays in this array.
-     *
+     *            
      * @return string|array
      */
     function arrayFlatten(array $array, $prefix = '', $glue = '.', $preserve_flagged_arrays = false)
     {
         $result = [];
-
+        
         foreach ($array as $key => $value) {
-
+            
             // Subarrray handling needed?
             if (is_array($value)) {
-
+                
                 // __preserve key set tha signals us to store the array as it is?
                 if ($preserve_flagged_arrays && array_key_exists('__preserve', $value)) {
                     $result[$prefix . $key . $glue . 'array'] = $value;
                     unset($value['__preserve']);
                 }
-
+                
                 // Flatten the array
                 $result = $result + $this->arrayFlatten($value, $prefix . $key . $glue, $glue, $preserve_flagged_arrays);
             }
@@ -148,27 +148,6 @@ trait ArrayTrait
                 $result[$prefix . $key] = $value;
             }
         }
-        return $result;
-    }
-
-    function arrayFlatten2($array, $glue = '.')
-    {
-        $ritit = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
-
-        $result = [];
-
-        foreach ($ritit as $leaf_value) {
-
-            var_dump($leaf_value);
-
-            $keys = [];
-
-            foreach (range(0, $ritit->getDepth()) as $depth) {
-                $keys[] = $ritit->getSubIterator($depth)->key();
-            }
-            $result[join($glue, $keys)] = $leaf_value;
-        }
-
         return $result;
     }
 
@@ -181,24 +160,24 @@ trait ArrayTrait
      *            The key compare
      * @param string $search
      *            The value to search for in key
-     *
+     *            
      * @return array
      */
     function arraySearchValuesByKey(array $array, $key, $search)
     {
         $it = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
-
+        
         $out = [];
-
+        
         foreach ($it as $sub) {
-
+            
             $sub_array = $it->getSubIterator();
-
+            
             if ($sub_array[$key] === $search) {
                 $out[] = iterator_to_array($sub_array);
             }
         }
-
+        
         return $out;
     }
 
@@ -217,7 +196,7 @@ trait ArrayTrait
         foreach ($keys as $key) {
             $arr = &$arr[$key];
         }
-
+        
         $arr = $value;
     }
 
@@ -236,11 +215,11 @@ trait ArrayTrait
     function arrayAssignByPath(&$arr, $path, $value, $separator = '.')
     {
         $keys = explode($separator, $path);
-
+        
         foreach ($keys as $key) {
             $arr = &$arr[$key];
         }
-
+        
         $arr = $value;
     }
 }
