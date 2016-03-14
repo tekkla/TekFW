@@ -463,10 +463,20 @@ final class FormDesigner
                     /* @var $builder \Core\Lib\Html\FormDesigner\ControlBuilder */
                     $builder = $this->di->instance(__NAMESPACE__ . '\ControlBuilder');
 
+                    // Get control name
+                    $name = $content->getName();
+
+                    // Set control
+                    if (empty($content->getId())) {
+                        $content->setId('core-' . implode('-', $names) . '-' . (empty($name) ? uniqid('control-') : $name));
+                    }
+
                     // Create control name for bound controls...
                     if ($content->isBound()) {
 
-                        $name = $content->getName();
+                        if (empty($name)) {
+                            Throw new FormDesignerException('Bound controls without a name are not allowed.');
+                        }
 
                         // Create name parts based on current group names
                         $pieces = array_map(function ($name) {
