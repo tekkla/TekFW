@@ -142,7 +142,7 @@ final class Validator
      *
      * @return RuleAbstract
      */
-    private function &createRule($rule_name)
+    public function &createRule($rule_name)
     {
         // Rules have to be singletons
         if (empty($this->rules[$rule_name])) {
