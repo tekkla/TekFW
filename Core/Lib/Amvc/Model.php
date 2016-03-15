@@ -236,7 +236,14 @@ class Model extends MvcAbstract
                         $filter = $filter[0];
                     }
 
-                    $data[$key] = filter_var($val, $filter, $options);
+                    $result = filter_var($val, $filter, $options);
+
+                    if ($result === false) {
+                        $this->addError($key, sprintf($this->text('validator.filter'), $filter));
+                    }
+                    else {
+                        $data[$key] = $result;
+                    }
                 }
             }
 
