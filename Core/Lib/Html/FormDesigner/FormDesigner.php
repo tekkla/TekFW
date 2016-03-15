@@ -466,9 +466,19 @@ final class FormDesigner
                     // Get control name
                     $name = $content->getName();
 
-                    // Set control
+                    // Set control id
                     if (empty($content->getId())) {
-                        $content->setId('core-' . implode('-', $names) . '-' . (empty($name) ? uniqid('control-') : $name));
+
+                        // Create control id elements
+                        $id = 'core-';
+
+                        if (!empty($names)) {
+                            $id .= implode('-', $names);
+                        }
+
+                        $id .= '-' . empty($name) ? uniqid('control-') : $name;
+
+                        $content->setId($id);
                     }
 
                     // Create control name for bound controls...
