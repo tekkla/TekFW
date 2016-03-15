@@ -181,7 +181,7 @@ class Ajax
      *
      * @throws AjaxException
      *
-     * @return \Core\Lib\Ajax\Command
+     * @return \Core\Lib\Ajax\AjaxCommandAbstract
      */
     public function createCommand($command_name = 'Dom\Html')
     {
@@ -192,7 +192,7 @@ class Ajax
         $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
         if (! $this->files->checkClassFileExists($class)) {
-            Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
+            Throw new AjaxException(sprintf('Classfile for command "%s" does not exist.', $class));
         }
 
         return new $class($this);
