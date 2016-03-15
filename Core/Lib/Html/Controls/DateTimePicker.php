@@ -154,6 +154,8 @@ class DateTimePicker extends Input
      */
     protected static $translation_requested = false;
 
+    private $cfg;
+
     /**
      * Returns set default date.
      *
@@ -506,13 +508,22 @@ class DateTimePicker extends Input
             return;
         }
 
+        // Get config service refece from DI container
+        $cfg = $this->di->get('core.cfg');
+
+        // Set the controls locale option to the value set as sites default language
+        // TODO Change this when system works with user selected languages
+        $this->option_locale = $cfg->data['Core']['site.language.default'];
+
         // $this->option_language = $this->txt('lang_dictionary');
         $this->set_options['locale'] = 'locale';
 
         // Load non english languagefile
         if ($this->option_locale != 'en') {
-            $this->di->get('core.content.js')->file($this->di->get('core.cfg')
-                ->get('Core', 'url_js') . '/locale/moment/' . $this->option_locale . '.js');
+
+            // Say to Js service to load the needed locale file
+            $js = $this->di->get('core.page.head.js');
+            $js->file($cfg->data['Core']['url.js'] . '/locale/moment/' . $this->option_locale . '.js');
         }
 
         // Set flag for loaded translation
@@ -535,6 +546,8 @@ class DateTimePicker extends Input
 
         // Prepare options object
         $options = new \stdClass();
+
+        \FB::log($this->set_options);
 
         // Set options which are set active
         foreach ($this->set_options as $property => $option) {
