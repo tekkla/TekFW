@@ -155,11 +155,13 @@ class Javascript
         if ($this->router->isAjax()) {
 
             /* @var $ajax \Core\Lib\Ajax\Ajax */
-            $ajax = $this->di->data['core.ajax'];
+            $ajax = $this->di->get('core.ajax');
 
             switch ($js->getType()) {
                 case 'file':
-                    $ajax->fnLoadScript($js->getScript());
+                    $cmd = $ajax->createCommand('Act\LoadScript');
+                    $cmd->loadScript($js->getScript());
+                    $ajax->add($cmd);
                     break;
             }
 
