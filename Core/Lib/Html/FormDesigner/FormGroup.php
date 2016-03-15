@@ -114,6 +114,9 @@ class FormGroup
     {
         $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->stringCamelize($control) . 'Control');
 
+        // Inject DI container
+        $control->di = $this->di;
+
         // Inject html factory for controls which are creating html controls by themself
         $control->factory = $this->di->get('core.html.factory');
 
