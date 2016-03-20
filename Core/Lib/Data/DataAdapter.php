@@ -140,9 +140,8 @@ class DataAdapter implements \IteratorAggregate
 
             $this->checkType($data, $scheme);
 
-            // Use the existing primary field name from scheme
-            if (!empty($scheme['primary'])) {
-                // as key to get and use data as index
+            // Use the existing primary field name from scheme when it's available in data
+            if (! empty($scheme['primary']) && !empty($data[$scheme['primary']])) {
                 $this->data[$data[$scheme['primary']]] = $data;
             }
             else {
@@ -160,25 +159,53 @@ class DataAdapter implements \IteratorAggregate
         }
 
         // Let's set some types
-        foreach ($scheme['fields'] as $name => $field) {
+        foreach ($data as $name => $value) {
 
-            // Is this field serialized?
-            if (!empty($field['serialize'])) {
-                $data[$name] = unserialize($data[$name]);
-            }
-
-            // No type no conversion
-            if (empty($field['type'])) {
+            // Data does not exist as field in scheme? Skip it!
+            if (empty($scheme['fields'][$name])) {
                 continue;
             }
 
-            // Empty data value and default value in scheme set?
-            if (empty($data[$name]) && !empty($field['default'])) {
-                $data[$name] = $data['default'];
+            // copy field defintion for better reading
+            $field = $scheme['fields'][$name];
+
+            // Is this field flagged as serialized?
+            if (! empty($field['serialize'])) {
+                $data[$name] = unserialize($data[$name]);
             }
 
+            // Empty data value but non empty default value in scheme set? Use it!
+            if (empty($data[$name]) && ! empty($field['default'])) {
+                $data[$name] = $field['default'];
+            }
 
-            settype($data[$name], $field['type']);
+            // TODO Really neccessary? What are the advantages?
+            /*
+            // Ste type to 'string' when no type is set in scheme
+            if (empty($field['type'])) {
+                $field['type'] = 'string';
+            }
+
+            // Explicit type conversion
+            if (! empty($field['type'])) {
+
+                $types = [
+                    'boolean',
+                    'integer',
+                    'float',
+                    'string',
+                    'array',
+                    'object',
+                    'null'
+                ];
+
+                if (! in_array($field['type'], $types)) {
+                    Throw new DataException(sprintf('Type "%s" is not allowed as fieldtype. Allowed types are: %s', $field['type'], implode(', ', $types)));
+                }
+
+                settype($data[$name], $field['type']);
+
+            }*/
         }
     }
 
