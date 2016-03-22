@@ -7,6 +7,8 @@ use Core\Lib\Security\Security;
 use Core\Lib\Security\Permission;
 use Core\Lib\Page\Page;
 use Core\Lib\Router\Router;
+use Core\Lib\IO\IO;
+use Core\Lib\Language\Language;
 use Core\Lib\Router\UrlTrait;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Language\TextTrait;
@@ -18,8 +20,6 @@ use Core\Lib\Cfg\CfgTrait;
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
- *
- * TODO Switch to options property to set app specfic flags?
  */
 class App
 {
@@ -28,6 +28,14 @@ class App
     use CfgTrait;
     use UrlTrait;
     use StringTrait;
+
+    const LANGUAGE = 'language';
+
+    const SECURE = 'secure';
+
+    const CSS = 'css';
+
+    const JS = 'js';
 
     /**
      * List of appnames which are already initialized
@@ -51,32 +59,11 @@ class App
     protected $name;
 
     /**
-     * Secure app flag
+     * App option flags array
      *
-     * @var boolean
+     * @var array
      */
-    protected $secure = false;
-
-    /**
-     * Falg for using language system
-     *
-     * @var boolean
-     */
-    protected $language = false;
-
-    /**
-     * Flag for using seperate css file
-     *
-     * @var boolean
-     */
-    protected $css_file = false;
-
-    /**
-     * Flag for using seperate js file
-     *
-     * @var boolean
-     */
-    protected $js_file = false;
+    protected $flags = [];
 
     /**
      * Apps routes storage
@@ -134,6 +121,18 @@ class App
 
     /**
      *
+     * @var IO
+     */
+    protected $io;
+
+    /**
+     *
+     * @var Language
+     */
+    protected $language;
+
+    /**
+     *
      * @var DI
      */
     public $di;
@@ -144,23 +143,7 @@ class App
      */
     public $creator;
 
-    /**
-     * Constructor
-     *
-     * @param string $app_name
-     *            This apps name
-     * @param Cfg $cfg
-     *            Cfg dependency
-     * @param Router $router
-     *            Router dependency
-     * @param Page $page
-     *            Page dependency
-     * @param Security $security
-     *            Security dependence
-     * @param DI $di
-     *            Visible DI dependency
-     */
-    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, Creator $creator, DI $di)
+    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, IO $io, Language $language, Creator $creator, DI $di)
     {
         // Setting properties
         $this->name = $app_name;
@@ -168,6 +151,8 @@ class App
         $this->router = $router;
         $this->page = $page;
         $this->security = $security;
+        $this->io = $io;
+        $this->language = $language;
         $this->creator = $creator;
         $this->di = $di;
 
@@ -252,25 +237,23 @@ class App
      */
     final private function initLanguage()
     {
+
         // Init only once
         if (! empty(self::$init_stages[$this->name]['lang'])) {
             return;
         }
 
         // Do we have permissions do add?
-        if (! empty($this->language)) {
+        if (in_array(self::LANGUAGE, $this->flags)) {
 
             // Check
             if (empty($this->cfg->data[$this->name]['dir.language'])) {
                 Throw new AppException(sprintf('Languagefile of app "%s" has to be loaded but no Language folder was found.', $this->name));
             }
 
-            // Get reference to language service
-            $language_service = $this->di->get('core.language');
-
             // Always load english language files.
             $language_file = $this->cfg->data[$this->name]['dir.language'] . '/en.php';
-            $language_service->loadLanguageFile($this->name, $language_file);
+            $this->language->loadLanguageFile($this->name, $language_file);
 
             // After that load set languenage file which can override the loaded english string.
             $default_language = $this->cfg->data['Core']['site.language.default'];
@@ -278,11 +261,11 @@ class App
             if ($default_language != 'en') {
 
                 $language_file = $this->cfg->data[$this->name]['dir.language'] . '/' . $default_language . '.php';
-                $language_service->loadLanguageFile($this->name, $language_file);
+                $this->language->loadLanguageFile($this->name, $language_file);
             }
-
-            self::$init_stages[$this->name]['language'] = true;
         }
+
+        self::$init_stages[$this->name]['language'] = true;
     }
 
     /**
@@ -328,6 +311,10 @@ class App
             foreach ($arguments as $arg) {
                 $args[] = $arg;
             }
+        }
+
+        if (! $this->io->files->checkClassFileExists($class)) {
+            return false;
         }
 
         return $this->di->instance($class, $args);
@@ -543,7 +530,7 @@ class App
         }
 
         // Css flag set that indicates app has a css file?
-        if ($this->css_file) {
+        if (in_array(self::CSS, $this->flags)) {
 
             // Check for existance of apps css file
             if (! file_exists($this->cfg->data[$this->name]['dir.css'] . '/' . $this->name . '.css')) {
@@ -585,7 +572,7 @@ class App
         // You hve to set this property to "scripts" (included on the bottom of website) or "header" (included in header
         // section of website).
         // the apps js file is stored within the app folder structure in an directory named "js".
-        if ($this->js_file) {
+        if (in_array(self::JS, $this->flags)) {
 
             if (! file_exists($this->cfg->data[$this->name]['dir.js'] . '/' . $this->name . '.js')) {
                 Throw new AppException(sprintf('App "%s" js file does not exist. Either create the js file or remove the js flag in your app mainclass.', $this->name));
@@ -615,7 +602,7 @@ class App
             return;
         }
 
-        if (! $this->routes) {
+        if (empty($this->routes)) {
 
             // No routes set? Map at least index as default route
             $target = [
@@ -677,7 +664,7 @@ class App
      */
     final public function isSecure()
     {
-        return $this->secure === true ? true : false;
+        return in_array(self::SECURE, $this->flags);
     }
 
     /**
