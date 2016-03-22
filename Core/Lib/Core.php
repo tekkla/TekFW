@@ -66,78 +66,94 @@ class Core
 
     public function run()
     {
-        define('COREFW', 1);
-
-        $this->defineDirs();
-        $this->loadSettings();
-        $this->loadErrorhandler();
-
-        ob_start();
-
-        $this->defineUrls();
-        $this->registerClassloader();
-        $this->initDI();
-        $this->initConfig();
-        $this->initSession();
-        $this->initCoreApp();
-        $this->initMailer();
-        $this->initSecurity();
-
         try {
 
-            $this->autodiscoverApps();
+            define('COREFW', 1);
 
-            $this->router = $this->di->get('core.router');
-            $this->http = $this->di->get('core.http');
+            // Do not show errors!
+            ini_set('display_errors', 0);
 
-            // Get result
-            $result = $this->dispatch();
-        }
-        catch (\Exception $e) {
+            $this->defineDirs();
+            $this->loadSettings();
 
-            // Get result from exception handler
-            $result = $this->di->get('core.error')->handleException($e, true);
-        }
-        finally {
+            ob_start();
 
-            // Send mails
-            $this->mailer->send();
+            $this->defineUrls();
+            $this->registerClassloader();
+            $this->initDI();
+            $this->initConfig();
+            $this->initSession();
+            $this->initCoreApp();
+            $this->initMailer();
+            $this->initSecurity();
 
-            // Send cookies
-            $this->http->cookies->send();
+            try {
 
-            // Handle output format
-            $format = $this->router->getFormat();
+                $this->autodiscoverApps();
 
-            // Send headers so far
-            $this->http->header->send();
+                $this->router = $this->di->get('core.router');
+                $this->http = $this->di->get('core.http');
 
-            switch ($format) {
+                // Get result
+                $result = $this->dispatch();
+            }
+            catch (Throwable $t) {
 
-                case 'file':
+                // Get result from exception handler
+                $result = $this->di->get('core.error')->handleException($t, true);
+            }
+            finally {
+
+                // Send mails
+                $this->mailer->send();
+
+                // Send cookies
+                $this->http->cookies->send();
+
+                // Handle output format
+                $format = $this->router->getFormat();
+
+                // Send headers so far
+                $this->http->header->send();
+
+                switch ($format) {
+
+                    case 'file':
                     /* @var $download \Core\Lib\IO\Download */
                     $download = $this->di->get('core.io.download');
-                    $download->sendFile($result);
+                        $download->sendFile($result);
 
-                    break;
+                        break;
 
-                case 'html':
-                    $this->http->header->contentType('text/html', 'utf-8');
+                    case 'html':
+                        $this->http->header->contentType('text/html', 'utf-8');
 
-                    /* @var $page \Core\Lib\Page\Page */
-                    $page = $this->di->get('core.page');
-                    $page->setContent($result);
-                    $result = $page->render();
+                        /* @var $page \Core\Lib\Page\Page */
+                        $page = $this->di->get('core.page');
+                        $page->setContent($result);
+                        $result = $page->render();
 
-                    break;
+                        break;
+                }
+
+                // Send headers so far
+                $this->http->header->send();
+
+                if (! empty($result)) {
+                    echo $result;
+                }
+
+                ob_end_flush();
             }
+        }
+        catch (Throwable $t) {
 
-            // Send headers so far
-            $this->http->header->send();
+            echo '
+            <h1>Error</h1>
+            <p><strong>' . $t->getMessage() . '</strong></p>
+            <p>in ', $t->getFile() . ' (Line: ' , $t->getLine(),')</p>';
 
-            echo $result;
-
-            ob_end_flush();
+            error_log($t->getMessage() . ' >> ' . $t->getFile() . ':' . $t->getLine());
         }
     }
 
@@ -174,12 +190,6 @@ class Core
 
         // Load basic config from Settings.php
         $this->settings = include (BASEDIR . '/Settings.php');
-    }
-
-    private function loadErrorhandler()
-    {
-        // Include error handler
-        require_once (LIBDIR . '/Errors/Error.php');
     }
 
     private function defineUrls()
@@ -365,8 +375,8 @@ class Core
 
         // == IO ===========================================================
         $this->di->mapService('core.io', '\Core\Lib\IO\IO', [
-            'core.io.download',
-            'core.io.files'
+            'core.io.files',
+            'core.io.download'
         ]);
         $this->di->mapService('core.io.download', '\Core\Lib\IO\Download', [
             'core.http.header',
@@ -386,7 +396,8 @@ class Core
         // == MAILER =======================================================
         $this->di->mapService('core.mailer', '\Core\Lib\Mailer\Mailer', [
             'core.cfg',
-            'core.log'
+            'core.log',
+            'db.default'
         ]);
 
         // == DATA ==========================================================
@@ -535,6 +546,12 @@ class Core
 
     private function dispatch()
     {
+
+        // Add mvc name pattern to router
+        $this->router->addMatchTypes([
+            'mvc' => '[A-Za-z0-9_]++'
+        ]);
+
         // Match request against stored routes
         $this->router->match();
 
@@ -584,11 +601,19 @@ class Core
         // Load controller object
         $controller = $app->getController($controller_name);
 
+        if ($controller == false) {
+            return $this->send404();
+        }
+
         // Which controller action has to be run?
         $action = $this->router->getAction();
 
         if (empty($action) && $this->cfg->exists('Core', 'execute.default.action')) {
             $action = $this->cfg->data['Core']['execute.default.action'];
+        }
+
+        if (! method_exists($controller, $action)) {
+            return $this->send404();
         }
 
         if ($this->router->isAjax()) {
@@ -630,5 +655,12 @@ class Core
         array_walk_recursive($_POST, function (&$data) {
             $data = trim($data);
         });
+    }
+
+    private function send404()
+    {
+        $this->http->header->sendHttpError(404);
+
+        return 'Page not found';
     }
 }
