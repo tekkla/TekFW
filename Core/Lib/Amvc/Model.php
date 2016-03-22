@@ -1,16 +1,14 @@
 <?php
 namespace Core\Lib\Amvc;
 
-// DataLibs
 use Core\Lib\Data\Connectors\Db\Db;
-
-// Traits
+use Core\Lib\Security\Security;
+use Core\Lib\Data\Validator\Validator;
+use Core\Lib\Amvc\ModelException;
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Router\UrlTrait;
 use Core\Lib\Cfg\CfgTrait;
 use Core\Lib\Language\TextTrait;
-use Core\Lib\Security\Security;
-use Core\Lib\Data\Validator\Validator;
 
 /**
  * Model.php
@@ -67,25 +65,6 @@ class Model extends MvcAbstract
         $this->name = $name;
         $this->app = $app;
         $this->security = $security;
-
-        $this->loadScheme();
-    }
-
-    /**
-     * Loads scheme when exists
-     */
-    private function loadScheme()
-    {
-        $ref = new \ReflectionClass(get_called_class());
-
-        $name = str_replace('Model', 'Scheme', $ref->getShortName());
-        $ns = $ref->getNamespaceName() . '\\Scheme';
-
-        $filename = BASEDIR . '/' . str_replace('\\', '/', $ns) . '/' . $name . '.php';
-
-        if (file_exists($filename)) {
-            $this->scheme = include ($filename);
-        }
     }
 
     /**
@@ -303,6 +282,17 @@ class Model extends MvcAbstract
         return $this;
     }
 
+    /**
+     * Adds an error for a specific field (or global) to the models errorstack
+     *
+     * @param string $key
+     *            Fieldname the error belongs to. Use '@' to add a global and non field specific error. @-Errors will be
+     *            recognized by FormDesigner and shown on top of the form.
+     * @param string $error
+     *            The error text to add
+     *
+     * @return \Core\Lib\Amvc\Model
+     */
     final public function addError($key, $error)
     {
         $this->errors[$key][] = $error;
@@ -310,19 +300,25 @@ class Model extends MvcAbstract
         return $this;
     }
 
-    final protected function getDataFromScheme() {
-
-        if (empty($this->scheme)) {
+    /**
+     * Creates an associative array based on the fields and default values of the scheme
+     *
+     * Throws an exception when calling this method without a scheme or with a scheme but with missing fieldlist in it.
+     *
+     * @throws ModelException
+     *
+     * @return array
+     */
+    final protected function getDataFromScheme()
+    {
+        if (empty($this->scheme) || empty($this->scheme['fields'])) {
             Throw new ModelException('There is no scheme/fields in scheme in this model');
         }
 
-        $data = [];
-
         foreach ($this->scheme['fields'] as $key => $field) {
-            $data[$key] = !empty($field['default']) ? $field['default'] : '';
+            $data[$key] = ! empty($field['default']) ? $field['default'] : '';
         }
 
         return $data;
-
     }
 }
