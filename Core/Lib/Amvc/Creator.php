@@ -94,6 +94,8 @@ class Creator
             'core.router',
             'core.page',
             'core.security',
+            'core.io',
+            'core.language',
             'core.amvc.creator',
             'core.di'
         ];
@@ -107,7 +109,7 @@ class Creator
 
     private function send404($filename)
     {
-        error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null, 10), true));
+        error_log(sprintf('AMVC Creator Error: App class "%s" was not found.', $filename));
 
         header("HTTP/1.0 404 Page not found.");
         echo '<h1>404 - Not Found</h1><p>The requested page does not exists.</p><p><a href="/">Goto to Homepage?</a></p>';
