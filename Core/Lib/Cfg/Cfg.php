@@ -252,6 +252,31 @@ final class Cfg
                 if (empty($this->data[$app_name][$cfg]) && ! empty($value['default'])) {
                     $this->data[$app_name][$cfg] = $value['default'];
                 }
+
+                if (!empty($value['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
+                    $this->data[$app_name][$cfg] = unserialize($this->data[$app_name][$cfg]);
+                }
+
+                // Check posible set
+                if (!empty($value['type'])) {
+
+                    $types = [
+                        'boolean',
+                        'integer',
+                        'float',
+                        'string',
+                        'array',
+                        'object',
+                        'null'
+                    ];
+
+                    if (! in_array($value['type'], $types)) {
+                        Throw new CfgException(sprintf('Type "%s" is not allowed as fieldtype. Allowed types are: %s', $value['type'], implode(', ', $types)));
+                    }
+
+                    settype($this->data[$app_name][$cfg], $value['type']);
+
+                }
             }
             else {
                 // Subarrray handling needed?
