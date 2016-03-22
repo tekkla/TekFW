@@ -510,27 +510,18 @@ final class FormDesigner
 
                     if (isset($group_data[$name])) {
 
-                        // Get value
-                        $value = $group_data[$name];
-
-                        // Log notice when field does not exist in container
-                        if ($value === false && $content->isBound()) {
-                            Throw new FormDesignerException(sprintf('The control "%s" is unbound because no field with this name was found in container bount to FormDesigner. If you want to use a control without binding it to a container field, you have to use the "notBound()" method for this control.', $name));
-                        }
-
                         switch (true) {
                             case ($content instanceof Checkbox):
-                                if ($content->getValue() == $value) {
+                                if ($content->getValue() == $group_data[$name]) {
                                     $content->isChecked();
                                 }
                                 break;
 
                             default:
-                                if (empty($content->getValue()) && $value !== false && method_exists($content, 'setValue')) {
-                                    $content->setValue($value);
+                                if (empty($content->getValue()) && method_exists($content, 'setValue')) {
+                                    $content->setValue($group_data[$name]);
                                 }
                                 break;
-                                ;
                         }
                     }
 
