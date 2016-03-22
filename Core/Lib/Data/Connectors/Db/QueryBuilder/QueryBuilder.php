@@ -379,7 +379,7 @@ class QueryBuilder
         $fieldlist = $this->buildFieldlist();
 
         // Create filterstatement
-        $filter = $this->filter ? ' WHERE ' . $this->filter : '';
+        $filter = $this->filter ? 'WHERE ' . $this->filter : '';
 
         // Create group by statement
         $group_by = '';
@@ -390,14 +390,14 @@ class QueryBuilder
                 $this->group_by = implode(', ', $this->group_by);
             }
 
-            $group_by = ' GROUP BY ' . $this->group_by;
+            $group_by = 'GROUP BY ' . $this->group_by;
         }
 
         // Create having statement
-        $having = $this->having ? ' HAVING ' . $this->having : '';
+        $having = $this->having ? 'HAVING ' . $this->having : '';
 
         // Create order statement
-        $order = $this->order ? ' ORDER BY ' . $this->order : '';
+        $order = $this->order ? 'ORDER BY ' . $this->order : '';
 
         // Create limit statement
         if ($this->limit) {
@@ -413,6 +413,9 @@ class QueryBuilder
             }
         }
 
+        // Get complete tablename with alias while respecting called mathod
+        $table = $this->buildTableName();
+
         switch ($this->method) {
 
             case 'UPDATE':
@@ -424,15 +427,18 @@ class QueryBuilder
                     $fields[] = $field . '=:' . $field;
                 }
 
-                $fieldlist = implode(',', $fields);
-
-                $this->sql = $this->method . ' {db_prefix}' . $this->table . ' SET ' . $fieldlist . $filter;
+                $pieces = [
+                    $this->method,
+                    $table,
+                    'SET',
+                    implode(',', $fields),
+                    $filter
+                ];
 
                 break;
 
             case 'INSERT':
             case 'REPLACE':
-                $fieldlist = empty($fieldlist) || $fieldlist == '*' ? '' : ' (' . $fieldlist . ')';
 
                 // Build values
                 $values = [];
@@ -441,26 +447,50 @@ class QueryBuilder
                     $values[] = ':' . $field;
                 }
 
-                $values = implode(', ', $values);
+                if (empty($values)) {
+                    Throw new QueryBuilderException('No values for INSERT or REPLACE found.');
+                }
 
-                $this->sql = $this->method . ' INTO {db_prefix}' . $this->table . $fieldlist . ' VALUES (' . $values . ')';
+                $pieces = [
+                    $this->method . ' INTO',
+                    $table,
+                    empty($fieldlist) || $fieldlist == '*' ? '' : '(' . $fieldlist . ')',
+                    'VALUES (' . implode(', ', $values) . ')'
+                ];
+
                 break;
 
             case 'DELETE':
-                $this->sql = $this->method . ' FROM {db_prefix}' . $this->table . $filter . $order . $limit;
+
+                $pieces = [
+                    $this->method,
+                    'FROM ' . $table,
+                    $filter,
+                    $order,
+                    $limit
+                ];
+
                 break;
 
             default:
 
-                $this->sql = '';
+                $pieces = [
+                    $this->method,
+                    $fieldlist,
+                    'FROM ' . $table,
+                    $join,
+                    $filter,
+                    $group_by,
+                    $having,
+                    $order,
+                    $limit
+                ];
 
-                if ($this->counter) {
-                    $this->sql .= 'SET @' . $this->counter['name'] . '=' . $this->counter['start'] . ';';
-                }
-
-                $this->sql .= $this->method . ' ' . $fieldlist . ' FROM {db_prefix}' . $this->table . $join . $filter . $group_by . $having . $order . $limit;
                 break;
         }
+
+        // Build sql string from pieces
+        $this->sql = implode(' ', $pieces);
 
         // Finally cleanup parameters by removing parameter not needed in query and parse array parameter into sql string.
         foreach ($this->params as $key => $val) {
@@ -487,22 +517,14 @@ class QueryBuilder
     private function buildFieldlist()
     {
         // Create fieldlist
-        if ($this->fields) {
+        if (! empty($this->fields)) {
 
             if (! is_array($this->fields)) {
                 $this->fields = (array) $this->fields;
             }
 
-            // Add `` to some field names as reaction to those stupid developers who chose systemnames as fieldnames
             foreach ($this->fields as $key_field => $field) {
-
-                // Subquery?
-                if (is_array($field)) {
-                    $builder = new QueryBuilder($this->sql);
-                    $field = '(' . PHP_EOL . $builder->build() . PHP_EOL . ')';
-                }
-
-                $this->fields[$key_field] = $field;
+                $this->fields[$key_field] = $this->checkSubquery($field);
             }
 
             return implode(', ', $this->fields);
@@ -510,6 +532,31 @@ class QueryBuilder
 
         // Return complete all fields
         return ($this->alias ? $this->alias : $this->table) . '.*';
+    }
+
+    /**
+     * Builds table name with alias while taking care of the method of the sql create
+     *
+     * @return string
+     */
+    private function buildTableName()
+    {
+        $table = '{db_prefix}' . $this->table;
+
+        $no_alias_methods = [
+            'REPLACE',
+            'INSERT'
+        ];
+
+        if (in_array($this->method, $no_alias_methods)) {
+            return $table;
+        }
+
+        if (! empty($this->alias)) {
+            $table .= ' AS ' . $this->alias;
+        }
+
+        return $table;
     }
 
     private function processQueryDefinition($def)
@@ -561,8 +608,6 @@ class QueryBuilder
     private function processSelect()
     {
         $this->processTableDefinition();
-
-        $this->processCounter();
 
         $this->processFieldDefinition();
 
@@ -643,11 +688,6 @@ class QueryBuilder
             $this->table = $this->scheme['table'];
         }
 
-        // Alias setting in scheme always (!) overrides manual set alias definition
-        if (! empty($this->scheme['alias'])) {
-            $this->alias = $this->scheme['alias'];
-        }
-
         // Look for table name when there was none set by a scheme
         if (empty($this->table) && ! empty($this->definition['table'])) {
             $this->table = $this->definition['table'];
@@ -656,6 +696,17 @@ class QueryBuilder
         // Still no table? Time to complain about it with an exception
         if (empty($this->table)) {
             Throw new QueryBuilderException('QueryBuilder needs a table name. Provide tablename by setting "table" element in your query definition or provide a Scheme with a set table element.<br><br><small>Send QueryBuilder definition:</small><pre>' . print_r($this->definition, true) . '</pre>');
+        }
+
+        // Is our table an array, which means that it is a QueryBuilder definition?
+        if (is_array($this->table)) {
+            // Build this sql string
+            $this->table = $this->checkSubquery($this->table);
+        }
+
+        // Alias setting in scheme always (!) overrides manual set alias definition
+        if (! empty($this->scheme['alias'])) {
+            $this->alias = $this->scheme['alias'];
         }
 
         // No alias until here but set in definition?
@@ -861,7 +912,6 @@ class QueryBuilder
                 $this->setParameter($this->definition['filter'][1]);
             }
             else {
-
                 $this->filter = $this->definition['filter'];
             }
         }
@@ -988,5 +1038,32 @@ class QueryBuilder
             'sql' => $sql,
             'values' => $params_val
         ];
+    }
+
+    /**
+     * Checks for an expression for a QB defintion
+     *
+     * When $expression is an array than it is treated like a QB defintion. A new QB instance will be created and the
+     * expression will be parsed. Parameters used in the expression will be added to the parents parameterlist.
+     * When the expression is no array the expression will be returned unchanged.
+     *
+     * @param string $expression
+     *            The expression to check for an array with a QB definition
+     *
+     * @return string
+     */
+    private function checkSubquery($expression)
+    {
+        if (is_array($expression)) {
+            $qb = new QueryBuilder($expression);
+
+            // Build sql string and replace the existing expression with it
+            $expression = '(' . $qb->build() . ')';
+
+            // Add possible params to parents params array
+            $this->params += $qb->getParams();
+        }
+
+        return $expression;
     }
 }
