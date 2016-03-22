@@ -73,7 +73,7 @@ class Language
 
         // IMPORTANT! Keys with spaces won't be processed without any further
         // notice to the developer or user. Spaces mean texts and no keys.
-        if (strpos($key, ' ')) {
+        if (is_array($key) || strpos($key, ' ')) {
             return $key;
         }
 
