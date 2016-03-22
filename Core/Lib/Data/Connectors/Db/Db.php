@@ -183,7 +183,8 @@ class Db extends ConnectorAbstract
 
         if ($autoexec === true) {
             return $this->stmt->execute();
-        } else {
+        }
+        else {
             return $this->stmt;
         }
     }
@@ -281,13 +282,23 @@ class Db extends ConnectorAbstract
      *
      * @return array
      */
-    public function all(array $scheme=[])
+    public function all(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetchAll();
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetchAll($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
 
-        if ($data) {
+        if (! empty($data)) {
             $data = $this->adapter->setDataset($data, $scheme)->getData();
         }
 
@@ -302,11 +313,24 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function fetchAll($fetch_mode = \PDO::FETCH_ASSOC)
+    public function fetchAll($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        return $this->stmt->fetchAll($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetchAll($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
+
+        return $data;
+        ;
     }
 
     /**
@@ -317,13 +341,23 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function single(array $scheme = [])
+    public function single(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetch(\PDO::FETCH_ASSOC);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetch($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
 
-        if ($data) {
+        if (! empty($data)) {
             $data = $this->adapter->setData($data, $scheme)->getData();
         }
 
@@ -338,11 +372,23 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function fetch($fetch_mode = \PDO::FETCH_ASSOC)
+    public function fetch($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        return $this->stmt->fetch($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetch($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -545,7 +591,7 @@ class Db extends ConnectorAbstract
         return true;
     }
 
-   /**
+    /**
      * Creates a string of named parameters and an array of named parameters => values.
      *
      * Use this for sql statements like mySQLs IN().
@@ -591,20 +637,25 @@ class Db extends ConnectorAbstract
 
                     if ($v instanceof \DateTime) {
                         $v = $v->format('Y-m-d H:i:s');
-                    } else {
+                    }
+                    else {
                         continue;
                     }
-                } elseif (is_string($v)) {
+                }
+                elseif (is_string($v)) {
                     $v = "'$v'";
-                } elseif ($v === null) {
+                }
+                elseif ($v === null) {
                     $v = 'NULL';
-                } elseif (is_array($v)) {
+                }
+                elseif (is_array($v)) {
                     $v = implode(',', $v);
                 }
 
                 if ($indexed) {
                     $sql = preg_replace('/\?/', $v, $sql, 1);
-                } else {
+                }
+                else {
                     $sql = str_replace($k, $v, $sql);
                 }
             }
