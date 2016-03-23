@@ -3,6 +3,7 @@ namespace Core\Lib\Mailer;
 
 use Core\Lib\Cfg\Cfg;
 use Core\Lib\Log\Log;
+use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * Mailer.php
@@ -29,26 +30,32 @@ class Mailer
     private $mails = [];
 
     /**
-     * Allowed secure protocols
-     *
-     * @var array
-     */
-    private $protocols = [
-        'tls',
-        'ssl'
-    ];
-
-    /**
-     *
-     * @var Logging
-     */
-    private $logging;
-
-    /**
+     * Cfg service
      *
      * @var Cfg
      */
     private $cfg;
+
+    /**
+     * Log service
+     *
+     * @var Log
+     */
+    private $log;
+
+    /**
+     * Default db service
+     *
+     * @var Db
+     */
+    private $db;
+
+    /**
+     * Mailer active state flag
+     *
+     * @var unknown
+     */
+    private $active = false;
 
     /**
      * Constructor
@@ -57,101 +64,22 @@ class Mailer
      *            Config dependency
      * @param Log $log
      *            Log dependeny
+     * @param Db $db
+     *            Db dependeny
      */
-    public function __construct(Cfg $cfg, Log $log)
+    public function __construct(Cfg $cfg, Log $log, Db $db)
     {
         $this->cfg = $cfg;
         $this->log = $log;
+        $this->db = $db;
     }
 
     /**
      * Registers default MTA with settins from config
      */
     public function init()
-    {
+    {}
 
-        // Create default MTA
-        $MTA = $this->createMTA('default');
-
-        if ($this->cfg->get('Core', 'mail.mta.default.system') == 1) {
-
-            // Is SMTP
-            $MTA->isSMTP(true);
-            $MTA->addHost($this->cfg->get('Core', 'mail.mta.default.host'));
-
-            if ($this->cfg->get('Core', 'mail.mta.default.username')) {
-                $MTA->useAuth(true);
-                $MTA->setUsername($this->cfg->get('Core', 'mail.mta.default.username'));
-                $MTA->setPassword($this->cfg->get('Core', 'mail.mta.default.password'));
-            }
-
-            $MTA->useProtocol($this->cfg->get('Core', 'mail.mta.default.protocol'));
-            $MTA->setPort($this->cfg->get('Core', 'mail.mta.default.port'));
-
-            if ($this->cfg->get('Core', 'mail.mta.default.accept_selfsigned') == 1) {
-                $MTA->hasSelfSignedCert();
-            }
-        }
-    }
-
-    /**
-     * Creates, registers and returns reference to a new MTA object
-     *
-     * @return \Core\Lib\Mailer\MTA
-     */
-    public function &createMTA($id)
-    {
-        $MTA = new MTA();
-
-        $this->MTAs[$id] = $MTA;
-
-        return $MTA;
-    }
-
-    /**
-     * Registers a MTA object
-     *
-     * @param string $id
-     *            Id of the MTA
-     * @param MTA $MATA
-     *            MTA Oobject to register
-     *
-     * @return \Core\Lib\Mailer\Mailer
-     */
-    public function registerMTA($id, MTA $MATA)
-    {
-        $this->MTAs[$id] = $MATA;
-
-        return $this;
-    }
-
-    /**
-     * Returns a registered MTA
-     *
-     * @param string $id
-     *            Id of the MTA
-     *
-     * @throws MailerException
-     *
-     * @return \Core\Lib\Mailer\MTA
-     */
-    public function getMTA($id)
-    {
-        if (! array_key_exists($id, $this->MTAs)) {
-            Throw new MailerException(sprintf('The requested MTA with id "%s" is not registered', $id));
-        }
-
-        return $this->MTAs[$id];
-    }
-
-    /**
-     * Checks for registered MTA by it's id
-     *
-     * @param string $id
-     *            Id of registered MTA
-     *
-     * @return boolean
-     */
     public function checkMTA($id)
     {
         return array_key_exists($id, $this->MTAs);
@@ -192,8 +120,6 @@ class Mailer
      */
     public function send()
     {
-        $MTA_current = '';
-
         $log = [];
 
         /* @var $mail \Core\Lib\Mailer\Mail */
@@ -201,42 +127,46 @@ class Mailer
 
             try {
 
+                // -----------------------------------------------
                 // Handle MTA
-                $MTA_mail = $mail->getMTA();
+                // -----------------------------------------------
 
-                if ($MTA_current != $MTA_mail) {
+                // Get data of MTA mapped to this mail
+                $MTA = $this->loadMta($mail->getMTA());
 
-                    // Create new PHPMAiler instance only when MTA has changed
-                    $phpmailer = new \PHPMailer();
+                $mailer = new \PHPMailer();
 
-                    // Get the MTA
-                    $MTA = $this->getMTA($MTA_mail);
+                $mailer->SMTPDebug = 0;
+                $mailer->Debugoutput = function ($str, $level) {
+                    \FB::log($str);
+                };
 
-                    $MTA_current = $MTA_mail;
+                // Set wthich mail system is used by the MTA
+                switch ($MTA['type']) {
+                    case 1:
+                        $mailer->isSMTP();
+                        break;
+
+                    case 2:
+                        $mailer->isQmail();
+                        break;
                 }
 
-                // Falg debugmode
-                $debug = $this->cfg->get('Core', 'mail.general.smtpdebug');
+                // Connection infos
+                $mailer->Host = $MTA['host'];
+                $mailer->Port = $MTA['port'];
+                $mailer->SMTPSecure = $MTA['smtp_secure'];
 
-                if ($debug) {
-                    $phpmailer->SMTPDebug = 2;
+                // Userlogin
+                $mailer->SMTPAuth = $MTA['smtp_auth'];
+
+                if ($mailer->SMTPAuth) {
+                    $mailer->Username = $MTA['username'];
+                    $mailer->Password = $MTA['password'];
                 }
 
-                $phpmailer->isSMTP($MTA->isSMTP());
-                $phpmailer->Host = implode(';', $MTA->getHosts());
-                $phpmailer->Port = $MTA->getPort();
-                $phpmailer->SMTPSecure = $MTA->getProtocol();
-                $phpmailer->SMTPAuth = $MTA->useAuth();
-
-                if ($phpmailer->SMTPAuth) {
-                    $phpmailer->Username = $MTA->getUsername();
-                    $phpmailer->Password = $MTA->getPassword();
-                }
-
-                $smtp_options = $MTA->getSmtpOptions();
-
-                if ($smtp_options) {
-                    $phpmailer->SMTPOptions = $smtp_options;
+                if (! empty($MTA['smtp_options'])) {
+                    $mailer->SMTPOptions = $MTA['smtp_options'];
                 }
 
                 // -----------------------------------------------
@@ -244,87 +174,79 @@ class Mailer
                 // -----------------------------------------------
 
                 // Basics
-                $phpmailer->CharSet = $mail->getCharset();
-                $phpmailer->Encoding = $mail->getEncoding();
+                $mailer->CharSet = $mail->getCharset();
+                $mailer->Encoding = $mail->getEncoding();
 
                 // Custom headers
                 $headers = $mail->getHeaders();
 
                 foreach ($headers as $name => $value) {
-                    $phpmailer->addCustomHeader($name, $value);
+                    $mailer->addCustomHeader($name, $value);
                 }
 
                 // Priority
-                $phpmailer->Priority = $mail->getPriority();
+                $mailer->Priority = $mail->getPriority();
 
                 // Sender
                 $from = $mail->getFrom();
 
-                $phpmailer->setFrom($from['from'], $from['name']);
+                $mailer->setFrom($from['from'], $from['name']);
 
                 // Reply to
                 $reply_to = $mail->getReplyto();
 
                 foreach ($reply_to as $address => $name) {
-                    $phpmailer->addReplyTo($address, $name);
+                    $mailer->addReplyTo($address, $name);
                 }
 
                 // Send confirm mail to?
-                $phpmailer->ConfirmReadingTo = $mail->getConfirmReadingTo();
+                $mailer->ConfirmReadingTo = $mail->getConfirmReadingTo();
 
                 // Recipients
                 $recipients = $mail->getRecipients();
 
                 foreach ($recipients['to'] as $address => $name) {
-                    $phpmailer->addAddress($address, $name);
+                    $mailer->addAddress($address, $name);
                 }
 
                 foreach ($recipients['cc'] as $address => $name) {
-                    $phpmailer->addCC($address, $name);
+                    $mailer->addCC($address, $name);
                 }
 
                 foreach ($recipients['bcc'] as $address => $name) {
-                    $phpmailer->addBCC($address, $name);
+                    $mailer->addBCC($address, $name);
                 }
 
                 // Content
-                $phpmailer->Subject = $mail->getSubject();
-                $phpmailer->Body = $mail->getBody();
+                $mailer->Subject = $mail->getSubject();
+                $mailer->Body = $mail->getBody();
 
                 if ($mail->isHtml()) {
-                    $phpmailer->isHTML();
-                    $phpmailer->AltBody = $mail->getAltbody();
+                    $mailer->isHTML();
+                    $mailer->AltBody = $mail->getAltbody();
                 }
 
                 // Attachements
                 $attachements = $mail->getAttachements();
 
                 foreach ($attachements as $a) {
-                    $phpmailer->addAttachment($a['path'], $a['name'], $a['encoding'], $a['type']);
+                    $mailer->addAttachment($a['path'], $a['name'], $a['encoding'], $a['type']);
                 }
 
                 // Images
                 $images = $mail->getEmbeddedImages();
 
                 foreach ($images as $i) {
-                    $phpmailer->addEmbeddedImage($i['path'], $i['cid'], $i['name'], $i['encoding'], $i['type']);
+                    $mailer->addEmbeddedImage($i['path'], $i['cid'], $i['name'], $i['encoding'], $i['type']);
                 }
 
-                if ($debug) {
-                    ob_start();
-                }
-
-                if ($phpmailer->send()) {
+                if ($mailer->send()) {
                     $text = sprintf('Mail send ok.');
                     $code = 0;
                 }
                 else {
-                    $text = sprintf('Mail send error: %s', $phpmailer->ErrorInfo);
+                    $text = sprintf('Mail send error: %s', $mailer->ErrorInfo);
                     $code = 1;
-                }
-
-                if ($debug) {
-                    $text .= PHP_EOL . ob_get_clean();
                 }
 
                 $log[] = [
@@ -343,5 +265,26 @@ class Mailer
         foreach ($log as $entry) {
             $this->log->log($entry[0], 'mailer', $entry[1]);
         }
+    }
+
+    private function loadMTA($id)
+    {
+        if (array_key_exists($id, $this->MTAs)) {
+            return $this->MTAs[$id];
+        }
+
+        $MTA = $this->db->find('core_mtas', 'id_mta', $id);
+
+        if (empty($MTA)) {
+            Throw new MailerException('MTA with id "%s" not found');
+        }
+
+        if (! empty($MTA['smtp_options'])) {
+            $MTA['smtp_options'] = parse_ini_string($MTA['smtp_options'], true, INI_SCANNER_TYPED);
+        }
+
+        $this->MTAs[$id] = $MTA;
+
+        return $this->MTAs[$id];
     }
 }
