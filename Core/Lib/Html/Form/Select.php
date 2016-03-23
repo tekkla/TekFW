@@ -42,7 +42,7 @@ class Select extends FormAbstract
     }
 
     /**
-     * Add an Option object to the options array.
+     * Add an Option object to the options array
      *
      * Use parameters to predefine the objects settings.
      * If inner parameter is not set, the value is the inner
@@ -94,7 +94,18 @@ class Select extends FormAbstract
         return $option;
     }
 
-    private function buildOption(Option $option) {
+    /**
+     * Counts and returns the number of options
+     *
+     * @return number
+     */
+    public function countOptions()
+    {
+        return count($this->options);
+    }
+
+    private function buildOption(Option $option)
+    {
 
         // Select unselected options when the options value is in selects value array
         if (! $option->getSelected() && in_array($option->getValue(), $this->value)) {
@@ -104,6 +115,10 @@ class Select extends FormAbstract
         return $option->build();
     }
 
+    /**
+     * {@inheritDoc}
+     * @see \Core\Lib\Html\HtmlAbstract::build()
+     */
     public function build()
     {
         foreach ($this->options as $key => $option) {
