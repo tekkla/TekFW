@@ -2,31 +2,58 @@
 namespace Core\Lib\Html\Bootstrap\Panel;
 
 use Core\Lib\Html\Elements\Div;
+use Core\Lib\Html\HtmlBuildableInterface;
 
 /**
  * Panel.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
- * @deprecated On Bootstrap 4.0 (!!!)
  */
-class Panel extends Div
+class Panel extends PanelElementAbstract implements HtmlBuildableInterface
 {
-
-    protected $css = [
-        'panel'
-    ];
-
-    private $heading = '';
-
-    private $body = '';
-
-    private $footer = '';
 
     private $context = 'default';
 
-    private $use_title;
+    public function __construct()
+    {
+        // Panels are divs
+        $this->html = new Div();
+        $this->html->addCss([
+            'panel',
+            'panel-default'
+        ]);
+    }
+
+    public function &createHeading()
+    {
+        $heading = new PanelHeading();
+
+        $this->content[] = $heading;
+
+        return $heading;
+
+
+    }
+
+    public function &createBody()
+    {
+        $body = new PanelBody();
+
+        $this->content[] = $body;
+
+        return $body;
+    }
+
+    public function &createFooter()
+    {
+        $footer = new PanelFooter();
+
+        $this->content[] = $footer;
+
+        return $footer;
+    }
 
     /**
      * Sets own panel context.
@@ -112,61 +139,5 @@ class Panel extends Div
 
         return $this;
     }
-
-    public function setHeading($heading)
-    {
-        $this->heading = $heading;
-
-        return $this;
-    }
-
-    public function setTitle($title)
-    {
-        $this->use_title = true;
-        $this->heading = $title;
-
-        return $this;
-    }
-
-    public function setBody($body)
-    {
-        $this->body = $body;
-
-        return $this;
-    }
-
-    public function setFooter($footer)
-    {
-        $this->footer = $footer;
-
-        return $this;
-    }
-
-    /**
-     * (non-PHPdoc)
-     *
-     * @see \Core\Lib\Html\HtmlAbstract::build()
-     */
-    public function build()
-    {
-        $this->css[] = 'panel-' . $this->context;
-
-        $this->inner .= '<div class="panel-heading">';
-
-        if ($this->use_title) {
-            $this->inner .= '<h3 class="panel-title">' . $this->heading . '</h3>';
-        }
-        else {
-            $this->inner .= $this->heading;
-        }
-
-        $this->inner .= '</div>
-        <div class="panel-body">' . $this->body . '</div>';
-
-        if ($this->footer) {
-            $this->inner .= '<div class="panel-footer">' . $this->footer . '</div>';
-        }
-
-        return parent::build();
-    }
 }
+
