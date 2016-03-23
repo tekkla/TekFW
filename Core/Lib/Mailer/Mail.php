@@ -12,7 +12,7 @@ use Core\Lib\Traits\ArrayTrait;
  */
 class Mail
 {
-    
+
     use ArrayTrait;
 
     /**
@@ -138,7 +138,7 @@ class Mail
      *
      * @param string $subject
      *            The subject text
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function setSubject($subject)
@@ -161,13 +161,13 @@ class Mail
      *
      * @param string $body
      *            The body content
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function setBody($body)
     {
         $this->body = $body;
-        
+
         return $this;
     }
 
@@ -186,13 +186,13 @@ class Mail
      *
      * @param string $altbody
      *            The altbody content
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function setAltbody($altbody)
     {
         $this->altbody = $altbody;
-        
+
         return $this;
     }
 
@@ -217,7 +217,7 @@ class Mail
      *            Optional encoding (Default: 'base64')
      * @param strng $type
      *            Optional attachement type (Default: 'application/octet-stream')
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addAttachment($path, $name = '', $encoding = 'base64', $type = 'application/octet-stream')
@@ -228,7 +228,7 @@ class Mail
             'encoding' => $encoding,
             'type' => $type
         ];
-        
+
         return $this;
     }
 
@@ -240,7 +240,7 @@ class Mail
     public function clearAttachements()
     {
         $this->attachements = [];
-        
+
         return $this;
     }
 
@@ -267,7 +267,7 @@ class Mail
      *            Optional encoding (Default: 'base64')
      * @param strng $type
      *            Optional attachement type (Default: 'application/octet-stream')
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addEmbeddedImage($path, $cid, $name = '', $encoding = 'base64', $type = 'application/octet-stream')
@@ -279,7 +279,7 @@ class Mail
             'encoding' => $encoding,
             'type' => $type
         ];
-        
+
         return $this;
     }
 
@@ -291,7 +291,7 @@ class Mail
     public function clearEmbeddedImages()
     {
         $this->images = [];
-        
+
         return $this;
     }
 
@@ -300,7 +300,7 @@ class Mail
      *
      * @param boolean $flag
      *            Optional boolean flag
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function isHtml($flag = null)
@@ -308,9 +308,9 @@ class Mail
         if (empty($flag)) {
             return $this->html;
         }
-        
+
         $this->html = (bool) $flag;
-        
+
         return $this;
     }
 
@@ -325,12 +325,12 @@ class Mail
 
     /**
      *
-     * @param string $charset            
+     * @param string $charset
      */
     public function setCharset($charset)
     {
         $this->charset = $charset;
-        
+
         return $this;
     }
 
@@ -354,17 +354,17 @@ class Mail
      *            The 'from' mailaddress
      * @param string $fromname
      *            Optional name the mail is from
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function setFrom($from, $name = '')
     {
         $this->from = $from;
-        
+
         if ($name) {
             $this->fromname = $name;
         }
-        
+
         return $this;
     }
 
@@ -373,10 +373,10 @@ class Mail
      *
      * @param string $mailaddress
      *            Contact reply to mailaddress
-     *            
+     *
      * @param string $name
      *            Optional contact replyto name
-     *            
+     *
      * @throws MailerException
      *
      * @return \Core\Lib\Mailer\Mail
@@ -384,7 +384,7 @@ class Mail
     public function addReplyto($mailaddress, $name = '')
     {
         $this->replyto[$mailaddress] = $name;
-        
+
         return $this;
     }
 
@@ -395,7 +395,7 @@ class Mail
      *            List of contacts to add. This array can be an indexed array with only
      *            the contacts mailaddress or an assoc array with mailaddress as key and
      *            the contactss name as value.
-     *            
+     *
      * @throws MailerException
      *
      * @return \Core\Lib\Mail\Mail
@@ -412,7 +412,7 @@ class Mail
                 $this->addReplyto($mailaddress);
             }
         }
-        
+
         return $this;
     }
 
@@ -431,10 +431,10 @@ class Mail
      *
      * @param string $recipient
      *            Recipients mailaddress
-     *            
+     *
      * @param string $name
      *            Optional recipients name
-     *            
+     *
      * @throws MailerException
      *
      * @return \Core\Lib\Mailer\Mail
@@ -446,13 +446,13 @@ class Mail
             'cc',
             'bcc'
         ];
-        
+
         if (! in_array($type, $types)) {
             Throw new MailerException(sprintf('The recipienttype "%" is not allowed. Please select from "to", "cc" or "bcc"'), $type);
         }
-        
+
         $this->recipients[$type][$recipient] = $name;
-        
+
         return $this;
     }
 
@@ -465,7 +465,7 @@ class Mail
      *            List of recipients to add. This array can be an indexed array with only
      *            the recipients mailaddress or an assoc array with mailaddress as key and
      *            the recipients name as value.
-     *            
+     *
      * @throws MailerException
      *
      * @return \Core\Lib\Mail\Mail
@@ -477,11 +477,11 @@ class Mail
             'cc',
             'bcc'
         ];
-        
+
         if (! in_array($type, $types)) {
             Throw new MailerException(sprintf('The recipienttype "%" is not allowed. Please select from "to", "cc" or "bcc"'), $type);
         }
-        
+
         if ($this->arrayIsAssoc($recipients)) {
             foreach ($recipients as $recipient => $name) {
                 $this->addRecipient($type, $recipients, $name);
@@ -492,7 +492,7 @@ class Mail
                 $this->addRecipient($type, $recipient);
             }
         }
-        
+
         return $this;
     }
 
@@ -514,7 +514,7 @@ class Mail
     public function clearRecipients()
     {
         $this->recipients = [];
-        
+
         return $this;
     }
 
@@ -525,13 +525,13 @@ class Mail
      *            Mailaddress to add to TO recipientlist
      * @param string $name
      *            Optional name for recipient
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addTo($to, $name = '')
     {
         $this->addRecipient('to', $to, $name);
-        
+
         return $this;
     }
 
@@ -544,13 +544,13 @@ class Mail
      *            List of recipients to add. This array can be an indexed array with only
      *            the recipients mailaddress or an assoc array with mailaddress as key and
      *            the recipients name as value.
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addTos(array $tos)
     {
         $this->addRecipients('to', $tos);
-        
+
         return $this;
     }
 
@@ -560,7 +560,7 @@ class Mail
     public function clearTo()
     {
         $this->recipients['to'] = [];
-        
+
         return $this;
     }
 
@@ -571,13 +571,13 @@ class Mail
      *            Mailaddress to add
      * @param string $name
      *            Optional name for recipient
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addCc($cc, $name = '')
     {
         $this->addRecipient('cc', $cc, $name);
-        
+
         return $this;
     }
 
@@ -590,13 +590,13 @@ class Mail
      *            List of recipients to add. This array can be an indexed array with only
      *            the recipients mailaddress or an assoc array with mailaddress as key and
      *            the recipients name as value.
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addCcs(array $tos)
     {
         $this->addRecipients('cc', $tos);
-        
+
         return $this;
     }
 
@@ -606,7 +606,7 @@ class Mail
     public function clearCc()
     {
         $this->recipients['cc'] = [];
-        
+
         return $this;
     }
 
@@ -617,13 +617,13 @@ class Mail
      *            Mailaddress to add
      * @param string $name
      *            Optional name for recipient
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addBcc($bcc, $name = '')
     {
         $this->addRecipient('bcc', $bcc, $name);
-        
+
         return $this;
     }
 
@@ -636,13 +636,13 @@ class Mail
      *            List of recipients to add. This array can be an indexed array with only
      *            the recipients mailaddress or an assoc array with mailaddress as key and
      *            the recipients name as value.
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addBcs(array $tos)
     {
         $this->addRecipients('bcc', $tos);
-        
+
         return $this;
     }
 
@@ -652,7 +652,7 @@ class Mail
     public function clearBcc()
     {
         $this->recipients['bcc'] = [];
-        
+
         return $this;
     }
 
@@ -661,13 +661,13 @@ class Mail
      *
      * @param string $encoding
      *            Encoding type
-     *            
+     *
      * @return \Core\Lib\Mailer\Mail
      */
     public function setEncoding($encoding)
     {
         $this->encoding = $encoding;
-        
+
         return $this;
     }
 
@@ -684,13 +684,13 @@ class Mail
      *
      * @param string $mailadress
      *            Mailaddress to send confirmmail to
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function setConfirmReadingTo($mailadress)
     {
         $this->confirm_reading_to = $mailadress;
-        
+
         return $this;
     }
 
@@ -711,13 +711,13 @@ class Mail
      *            custom header string
      * @param string $value
      *            Optional header value
-     *            
+     *
      * @return \Core\Lib\Mail\Mail
      */
     public function addHeader($header, $value = '')
     {
         $this->headers[$header] = $value;
-        
+
         return $this;
     }
 
@@ -729,7 +729,7 @@ class Mail
     public function cleanHeaders()
     {
         $this->headers = [];
-        
+
         return $this;
     }
 
@@ -746,7 +746,7 @@ class Mail
      *
      * @param int $priority
      *            The mail priority value. Has to be between 1 (high) to 5 (low)
-     *            
+     *
      * @throws MailerException
      *
      * @return \Core\Lib\Mail\Mail
@@ -756,9 +756,9 @@ class Mail
         if ($priority < 1 || $priority > 5) {
             Throw new MailerException('Mail priority has to be betwenn 1 (high) to 5 (low)');
         }
-        
+
         $this->priority = $priority;
-        
+
         return $this;
     }
 
@@ -774,46 +774,36 @@ class Mail
         if (! $this->MTA) {
             Throw new MailerException('No MTA id set.');
         }
-        
+
         return $this->MTA;
     }
 
     /**
      * Id of the MTA to use for sending mail
      *
-     * @param string $id
+     * @param integer $id
      *            The id of registered MTA to use for sending this mail
-     *            
-     * @throws MailerException
      *
      * @return \Core\Lib\Mail\Mail
      */
     public function setMTA($id)
     {
-        if (! isset($this->mailer)) {
-            Throw new MailerException('This mail object needs a reference to the Mailer object. Please use injectMailer() method before calling this method.');
-        }
-        
-        if (! $this->mailer->checkMTA($id)) {
-            Throw new MailerException(sprintf('MTA "%s" is not registered.', $id));
-        }
-        
         $this->MTA = $id;
-        
+
         return $this;
     }
 
     /**
      * Injects reference to Mailer service object
      *
-     * @param Mailer $mailer            
+     * @param Mailer $mailer
      *
      * @return \Core\Lib\Mail\Mail
      */
     public function injectMailer(Mailer $mailer)
     {
         $this->mailer = $mailer;
-        
+
         return $this;
     }
 }
