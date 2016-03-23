@@ -12,7 +12,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
  * @copyright 2015
  * @license MIT
  */
-abstract class HtmlAbstract
+abstract class HtmlAbstract implements HtmlBuildableInterface
 {
     use ArrayTrait;
     use TextTrait;
