@@ -117,7 +117,7 @@ class Header
 
         $protocol = preg_match('~HTTP/1\.[01]~i', $_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
 
-        if (! isset($statuses[$code])) {
+        if (empty($status[$code])) {
             $string = $protocol . ' 500 Internal Server Error';
         }
         else {
