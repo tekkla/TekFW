@@ -19,8 +19,6 @@ class Creator
      * @var array
      */
     private $secure_apps = [
-        'Admin',
-        'Doc',
         'Core'
     ];
 
@@ -30,8 +28,6 @@ class Creator
      * @var Array
      */
     private $allow_secure_instance = [
-        'Admin',
-        'Doc',
         'Core'
     ];
 
