@@ -74,12 +74,6 @@ class Mailer
         $this->db = $db;
     }
 
-    /**
-     * Registers default MTA with settins from config
-     */
-    public function init()
-    {}
-
     public function checkMTA($id)
     {
         return array_key_exists($id, $this->MTAs);
