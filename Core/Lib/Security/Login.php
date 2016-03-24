@@ -11,30 +11,6 @@ class Login
 
     /**
      *
-     * @var string
-     */
-    private $cookie_name = 'tekfw98751822';
-
-    /**
-     *
-     * @var string
-     */
-    private $pepper = 'Sfgg$%fsa""sdfsddf#123WWdä,-$';
-
-    /**
-     *
-     * @var int
-     */
-    private $days = 30;
-
-    /**
-     *
-     * @var int
-     */
-    private $expire_time = 0;
-
-    /**
-     *
      * @var Db
      */
     private $db;
@@ -78,10 +54,6 @@ class Login
         $this->cookies = $cookies;
         $this->token = $token;
         $this->log = $log;
-
-        $this->cookie_name = $this->cfg->data['Core']['cookie.name'] . 'Token';
-        $this->pepper = $this->cfg->data['Core']['security.pepper'];
-        $this->days = $this->cfg->data['Core']['security.autologin_expire_days'];
     }
 
     /**
@@ -145,7 +117,7 @@ class Login
         }
 
         // Append pepper to password
-        $password .= $this->pepper;
+        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
 
         // Password ok?
         if (password_verify($password, $login['password'])) {
@@ -206,7 +178,7 @@ class Login
         $_SESSION['logged_in'] = false;
 
         // Calling logout means to revoke autologin cookies
-        $this->cookies->remove($this->cookie_name);
+        $this->cookies->remove($this->getCookieName());
 
         $this->log->logout('User:' . $id_user);
     }
@@ -224,11 +196,20 @@ class Login
             return true;
         }
 
+        // Get the cookiename of our autologin token
+        $cookie_name  = $this->getCookieName();
+
+        // Remove all autologin cookies when autlogin is off in config
+        if (empty($this->cfg->data['Core']['login.autologin.active'])) {
+            $this->cookies->remove($cookie_name);
+            return false;
+        }
+
         // No autologin when autologin already failed
-        if (isset($_SESSION['autologin_failed'])) {
+        if (! empty($_SESSION['autologin_failed'])) {
 
             // Remove fragments/all of autologin cookies
-            $this->cookies->remove($this->cookie_name);
+            $this->cookies->remove($cookie_name);
 
             // Remove the flag which forces the log off
             unset($_SESSION['autologin_failed']);
@@ -237,12 +218,12 @@ class Login
         }
 
         // No autologin cookie no autologin ;)
-        if (! $this->cookies->exists($this->cookie_name)) {
+        if (! $this->cookies->exists($cookie_name)) {
             return false;
         }
 
         // Let's find the user for the token in cookie
-        list ($selector, $token) = explode(':', $this->cookies->get($this->cookie_name));
+        list ($selector, $token) = explode(':', $this->cookies->get($cookie_name));
 
         $this->db->qb([
             'table' => 'core_auth_tokens',
@@ -289,7 +270,7 @@ class Login
         // Clean up the mess and return a big bad fucking false as failed autologin result.
 
         // Remove token cookie
-        $this->cookies->remove($this->cookie);
+        $this->cookies->remove($cookie_name);
 
         // Set flag that autologin failed
         $_SESSION['autologin_failed'] = true;
@@ -313,14 +294,16 @@ class Login
      */
     private function setAutoLoginCookies($id_user)
     {
-        // Check for empty expire time and generate time if it is empty
-        if (! $this->expire_time) {
-            $this->generateExpireTime();
-        }
+        // Create expire date
+        $expires = time() + 3600 * 24 * $this->cfg->data['Core']['login.autologin.expires_after'];
 
+        // Create selector
         $selector = bin2hex($this->token->generateRandomToken(6));
+
+        // Create token
         $token = $this->token->generateRandomToken(64);
 
+        // hash token
         $hash = hash('sha256', $token);
 
         // Store selector and hash in DB
@@ -337,7 +320,7 @@ class Login
                 ':selector' => $selector,
                 ':token' => $hash,
                 ':id_user' => $id_user,
-                ':expires' => date('Y-m-d H:i:s', $this->expire_time)
+                ':expires' => date('Y-m-d H:i:s', $expires)
             ]
         ], true);
 
@@ -348,10 +331,10 @@ class Login
             $cookie = $this->cookies->createCookie();
 
             // Expiretime for both cookies
-            $cookie->setExpire($this->expire_time);
+            $cookie->setExpire($expires);
 
             // Set token cookie
-            $cookie->setName($this->cookie_name);
+            $cookie->setName($this->getCookieName());
             $cookie->setValue($selector . ':' . $hash);
         }
     }
@@ -387,7 +370,7 @@ class Login
     }
 
     /**
-     * Logs login process.
+     * Logs login process
      *
      * @param boolean $username
      *            Username to use in logentries text
@@ -397,6 +380,8 @@ class Login
      *            Flag to signal that there was a problem with the password
      * @param boolean $ban
      *            Flag to signal that this is a banable action
+     *
+     * @return void
      */
     private function logLogin($username, $error_username = false, $error_password = false, $ban = true)
     {
@@ -434,31 +419,12 @@ class Login
     }
 
     /**
-     * Sets the number of days the login cookie should be valid when user requests autologin
+     * Creates the name of the autologin token cookie based on the cookie name set in core config
      *
-     * @param int $days
-     *            Number of days
-     *
-     * @return \Core\Lib\Security\Security
+     * @return string
      */
-    public function setDaysUntilCookieExpires($days)
+    private function getCookieName()
     {
-        $this->days = (int) $days;
-
-        // Auto calculate expiretime
-        $this->generateExpireTime();
-
-        return $this;
-    }
-
-    /**
-     * Generates the expiring timestamp for cookies
-     *
-     * @return number
-     */
-    private function generateExpireTime()
-    {
-        // Create expire date of autologin
-        return $this->expire_time = time() + 3600 * 24 * $this->days;
+        return $this->cfg->data['Core']['cookie.name'] . 'Token';
     }
 }
