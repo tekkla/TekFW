@@ -11,7 +11,23 @@ use Core\Lib\Traits\StringTrait;
  * @copyright 2016
  * @license MIT
  */
-class Core
+
+// Define framwork constant
+define('COREFW', 1);
+
+// Do not show errors!
+ini_set('display_errors', 0);
+
+// Define path constants to the common framwork dirs
+define('COREDIR', BASEDIR . '/Core');
+define('LOGDIR', BASEDIR . '/logs');
+define('APPSDIR', BASEDIR . '/Apps');
+define('THEMESDIR', BASEDIR . '/Themes');
+define('CACHEDIR', BASEDIR . '/Cache');
+define('APPSSECDIR', COREDIR . '/AppsSec');
+define('LIBDIR', COREDIR . '/Lib');
+
+final class Core
 {
 
     use StringTrait;
@@ -68,29 +84,40 @@ class Core
     {
         try {
 
-            define('COREFW', 1);
-
-            // Do not show errors!
-            ini_set('display_errors', 0);
-
-            $this->defineDirs();
+            // Load settingsfile
             $this->loadSettings();
 
+            // From here starts output buffering
             ob_start();
 
-            $this->defineUrls();
+            // Registe PSR classloader
             $this->registerClassloader();
+
+            // Init DI service
             $this->initDI();
-            $this->initConfig();
+
+            // load config from DB
+            $this->loadConfig();
+
+            // Create paths and urls to be set in config
+            $this->initDirs();
+            $this->initUrls();
+
+            // Init Session service
             $this->initSession();
+
+            // Init the essential secured Core app
             $this->initCoreApp();
-            $this->initMailer();
+
+            // Init security system
             $this->initSecurity();
 
             try {
 
+                // Autodicover all installed apps
                 $this->autodiscoverApps();
 
+                // Create references to Router and Http service
                 $this->router = $this->di->get('core.router');
                 $this->http = $this->di->get('core.http');
 
@@ -105,7 +132,8 @@ class Core
             finally {
 
                 // Send mails
-                $this->mailer->send();
+                $mailer = $this->di->get('core.mailer');
+                $mailer->send();
 
                 // Send cookies
                 $this->http->cookies->send();
@@ -119,13 +147,14 @@ class Core
                 switch ($format) {
 
                     case 'file':
-                    /* @var $download \Core\Lib\IO\Download */
-                    $download = $this->di->get('core.io.download');
+                        /* @var $download \Core\Lib\IO\Download */
+                        $download = $this->di->get('core.io.download');
                         $download->sendFile($result);
 
                         break;
 
                     case 'html':
+
                         $this->http->header->contentType('text/html', 'utf-8');
 
                         /* @var $page \Core\Lib\Page\Page */
@@ -151,54 +180,22 @@ class Core
             echo '
             <h1>Error</h1>
             <p><strong>' . $t->getMessage() . '</strong></p>
-            <p>in ', $t->getFile() . ' (Line: ' , $t->getLine(),')</p>';
+            <p>in ', $t->getFile() . ' (Line: ', $t->getLine(), ')</p>';
 
             error_log($t->getMessage() . ' >> ' . $t->getFile() . ':' . $t->getLine());
         }
     }
 
-    private function defineDirs()
-    {
-        // Define path to the framweork core.
-        define('COREDIR', BASEDIR . '/Core');
-
-        // Define path to the framweork core.
-        define('LOGDIR', BASEDIR . '/logs');
-
-        // Define path to applications.
-        define('APPSDIR', BASEDIR . '/Apps');
-
-        // Define path to themes
-        define('THEMESDIR', BASEDIR . '/Themes');
-
-        // Define path to cache
-        define('CACHEDIR', BASEDIR . '/Cache');
-
-        // Define path to secured apps
-        define('APPSSECDIR', COREDIR . '/AppsSec');
-
-        // Define path to the framweork core.
-        define('LIBDIR', COREDIR . '/Lib');
-    }
-
     private function loadSettings()
     {
         // Check for settings file
-        if (! file_exists(BASEDIR . '/Settings.php')) {
-            die('Settings file could not be loaded.');
+        if (! file_exists(BASEDIR . '/Settings.php') || ! is_readable(BASEDIR . '/Settings.php')) {
+            error_log('Settings file could not be loaded.');
+            die('An error occured. Sorry for that! :(');
         }
 
         // Load basic config from Settings.php
         $this->settings = include (BASEDIR . '/Settings.php');
-    }
-
-    private function defineUrls()
-    {
-        // Define url to Core
-        define('BASEURL', $this->settings['site.general.url']);
-
-        // Define url of themes
-        define('THEMESURL', $this->settings['site.general.url'] . '/Themes');
     }
 
     private function registerClassloader()
@@ -225,6 +222,7 @@ class Core
 
     private function initDI()
     {
+
         // Create core di container
         $this->di = \Core\Lib\DI::getInstance();
 
@@ -258,50 +256,65 @@ class Core
         }
 
         // == DB ===========================================================
-        $check = [
-            'db.driver',
-            'db.host',
-            'db.port',
-            'db.name',
-            'db.user',
-            'db.pass',
-            'db.persistent',
-            'db.errmode',
-            'db.init_command',
-            'db.prefix'
+
+        $defaults = [
+            'driver' => 'mysql',
+            'host' => 'localhost',
+            'port' => 3306,
+            'name' => '',
+            'user' => 'root',
+            'password' => '',
+            'prefix' => '',
+            'options' => [
+                \PDO::ATTR_PERSISTENT => false,
+                \PDO::ATTR_ERRMODE => 2,
+                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1,
+                \PDO::ATTR_EMULATE_PREPARES => false
+            ]
         ];
 
-        if (! in_array($check, $this->settings)) {
-            die('Missing db config. Check settings file.');
+        if (empty($this->settings['db'])) {
+            error_log('No DB data set in Settings.php');
+            Throw new Exception('Error on DB access');
         }
 
-        // == DB ===========================================================
-        $this->di->mapValue('db.default.driver', $this->settings['db.driver']);
-        $this->di->mapValue('db.default.host', $this->settings['db.host']);
-        $this->di->mapValue('db.default.port', $this->settings['db.port']);
-        $this->di->mapValue('db.default.name', $this->settings['db.name']);
-        $this->di->mapValue('db.default.user', $this->settings['db.user']);
-        $this->di->mapValue('db.default.pass', $this->settings['db.pass']);
-        $this->di->mapValue('db.default.options', [
-            \PDO::ATTR_PERSISTENT => $this->settings['db.persistent'],
-            \PDO::ATTR_ERRMODE => $this->settings['db.errmode'],
-            \PDO::MYSQL_ATTR_INIT_COMMAND => $this->settings['db.init_command'],
-            \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1
-        ]);
-        $this->di->mapValue('db.default.prefix', $this->settings['db.prefix']);
-        $this->di->mapService('db.default.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
-            'db.default.name',
-            'db.default.driver',
-            'db.default.host',
-            'db.default.port',
-            'db.default.user',
-            'db.default.pass',
-            'db.default.options'
-        ]);
-        $this->di->mapFactory('db.default', '\Core\Lib\Data\Connectors\Db\Db', [
-            'db.default.conn',
-            'db.default.prefix'
-        ]);
+        if (empty($this->settings['db']['default'])) {
+            error_log('No DB "default" data set in Settings.php');
+            Throw new Exception('Error on DB access');
+        }
+
+        foreach ($this->settings['db'] as $name => $settings) {
+
+            $prefix = 'db.' . $name;
+
+            // Check for DB defaults and map values
+            foreach ($defaults as $key => $default) {
+
+                if (empty($this->settings['db'][$name][$key])) {
+                    $this->settings['db'][$name][$key] = $default;
+                }
+
+                $this->di->mapValue($prefix . '.' . $key, $this->settings['db'][$name][$key]);
+            }
+
+            // Default connection
+            $this->di->mapService($prefix . '.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
+                $prefix . '.name',
+                $prefix . '.driver',
+                $prefix . '.host',
+                $prefix . '.port',
+                $prefix . '.user',
+                $prefix . '.password',
+                $prefix . '.options'
+            ]);
+
+            // Default db connector
+            $this->di->mapFactory($prefix . '', '\Core\Lib\Data\Connectors\Db\Db', [
+                $prefix . '.conn',
+                $prefix . '.prefix'
+            ]);
+        }
 
         // == CONFIG =======================================================
         $this->di->mapService('core.cfg', '\Core\Lib\Cfg\Cfg', 'db.default');
@@ -451,16 +464,25 @@ class Core
         ]);
     }
 
-    private function initConfig()
+    /**
+     * Inits Cfg service and loads config from db
+     *
+     * @return void
+     */
+    private function loadConfig()
     {
         /* @var $cfg \Core\Lib\Cfg\Cfg */
         $this->cfg = $this->di->get('core.cfg');
 
-        // Init config with config from Settings.php
-        $this->cfg->init($this->settings);
-
         // Load additional configs from DB
         $this->cfg->load();
+
+        // Set baseurl to config
+        $this->cfg->data['Core']['site.general.url'] = $this->settings['protcol'] . '://' . $this->settings['baseurl'];
+    }
+
+    private function initDirs()
+    {
 
         // Add dirs to config
         $dirs = [
@@ -483,6 +505,14 @@ class Core
         ];
 
         $this->cfg->addPaths('Core', $dirs);
+    }
+
+    private function initUrls()
+    {
+
+        // Defne some basic url constants
+        define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
+        define('THEMESURL', BASEURL . '/Themes');
 
         // Add urls to config
         $urls = [
@@ -503,17 +533,18 @@ class Core
         $session->init();
     }
 
+    /**
+     * Inits secured app Core
+     *
+     * The Core app is not really an app. It's more or less the logical and visual part of the framework
+     * that puts all the pieces together and offers a frontend to manage parts of the site with all
+     * the other possible apps.
+     */
     private function initCoreApp()
     {
         /* @var $creator \Core\Lib\Amvc\Creator */
         $this->creator = $this->di->get('core.amvc.creator');
         $this->creator->getAppInstance('Core');
-    }
-
-    private function initMailer()
-    {
-        $this->mailer = $this->di->get('core.mailer');
-        $this->mailer->init();
     }
 
     private function initSecurity()
