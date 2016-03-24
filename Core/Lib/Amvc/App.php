@@ -173,6 +173,12 @@ class App
             ];
         }
 
+
+        // Call possible load method
+        if (method_exists($this, 'Load')) {
+            $this->Load();
+        }
+
         // Config will always be initiated. no matter what else follows
         $this->initCfg();
 
@@ -189,13 +195,14 @@ class App
         $this->initPermissions();
         $this->initLanguage();
 
-        // Init page
-        $this->page->init();
-
         // Finally call a possible app specific Init() method
         if (method_exists($this, 'Init')) {
             $this->Init();
         }
+
+        // Init page
+        $this->page->init();
+
     }
 
     /**
