@@ -114,8 +114,6 @@ class Mailer
      */
     public function send()
     {
-        $log = [];
-
         /* @var $mail \Core\Lib\Mailer\Mail */
         foreach ($this->mails as $mail) {
 
@@ -128,12 +126,21 @@ class Mailer
                 // Get data of MTA mapped to this mail
                 $MTA = $this->loadMta($mail->getMTA());
 
+                // Create Ma
                 $mailer = new \PHPMailer();
 
-                $mailer->SMTPDebug = 0;
-                $mailer->Debugoutput = function ($str, $level) {
-                    \FB::log($str);
-                };
+                // Get smtp debug level from config
+                $mailer->SMTPDebug = $this->cfg->data['Core']['mail.general.smtpdebug'];
+
+                if (!empty($mailer->SMTPDebug)) {
+
+                    // Prepare empty array for po
+                    $debug = [];
+
+                    $mailer->Debugoutput = function ($str, $level) use (&$debug) {
+                        $debug[] = $str;
+                    };
+                }
 
                 // Set wthich mail system is used by the MTA
                 switch ($MTA['type']) {
@@ -234,30 +241,24 @@ class Mailer
                     $mailer->addEmbeddedImage($i['path'], $i['cid'], $i['name'], $i['encoding'], $i['type']);
                 }
 
-                if ($mailer->send()) {
-                    $text = sprintf('Mail send ok.');
-                    $code = 0;
-                }
-                else {
-                    $text = sprintf('Mail send error: %s', $mailer->ErrorInfo);
-                    $code = 1;
-                }
+                if (!$mailer->send()) {
 
-                $log[] = [
-                    $text,
-                    $code
-                ];
+                    // Log sned errors
+                    $this->log->log(sprintf('Mail send error: %s', $mailer->ErrorInfo), 'Mailer::send()', 1);
+                }
             }
             catch (\phpmailerException $e) {
-                $log[] = [
-                    'Mailer exception caught: ' . $e->getMessage(),
-                    1
-                ];
-            }
-        }
 
-        foreach ($log as $entry) {
-            $this->log->log($entry[0], 'mailer', $entry[1]);
+                // Log exceptions
+                $this->log->log('Mailer exception caught: ' . $e->getMessage(), 'Mailer::send()', 1);
+            }
+            finally {
+
+                // Any debug infos to log?
+                if (!empty($debug)) {
+                    $this->log->log(implode(PHP_EOL, $debug), 'Mailer::SMTPDebug', $mailer->SMTPDebug);
+                }
+            }
         }
     }
 
