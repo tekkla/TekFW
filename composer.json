@@ -4,7 +4,8 @@
     "altorouter/altorouter" : ">=v1.1.0",
     "mrclay/minify" : ">=2.2.1",
     "firephp/firephp-core" : "=v0.4.0",
-    "phpmailer/phpmailer" : ">=v5.2.14"
+    "phpmailer/phpmailer" : ">=v5.2.14",
+    "phpfastcache/phpfastcache" : ">=4.3.13"
   },
   "repositories" : [ {
     "type" : "composer",
