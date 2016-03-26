@@ -430,8 +430,6 @@ class Javascript
             // End of combined file TTL reached?
             if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
 
-                \FB::log('TTL or not existing');
-
                 // Strat combining all parts
                 $combined = '';
 
@@ -459,7 +457,14 @@ class Javascript
                     $combined .= implode($blocks);
                 }
 
-                file_put_contents($filename, \JSMin::minify($combined));
+                $combined = \JSMin::minify($combined);
+
+                // Make sure we write files only into to cache folder!
+                if (strpos($filename, $this->cfg->data['Core']['dir.cache']) === false) {
+                    Throw new PageException('Writing files outside the cachefolder from Javascript::getFiles() is not permitted.');
+                }
+
+                file_put_contents($filename, $combined);
             }
 
             $files[] = $this->cfg->data['Core']['url.cache'] . '/' . $key . '.' . $extension;
