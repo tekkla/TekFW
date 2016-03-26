@@ -21,7 +21,7 @@ class BlankRule extends RuleAbstract
         $result = $this->value !== '' ? true : false;
 
         if (! $result) {
-            $this->msg = $this->txt('validator_blank');
+            $this->msg = $this->text('validator.blank');
         }
     }
 }

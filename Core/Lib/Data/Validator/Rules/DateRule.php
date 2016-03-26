@@ -22,7 +22,7 @@ class DateRule extends RuleAbstract
         $result = strtotime($this->value) === false ? false : true;
 
         if (! $result) {
-            $this->msg = $this->txt('validator_date');
+            $this->msg = $this->text('validator.date');
         }
     }
 }

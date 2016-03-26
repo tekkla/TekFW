@@ -3,14 +3,13 @@ namespace Core\Lib\Data;
 
 use Core\Lib\Traits\ArrayTrait;
 use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 use Core\Lib\Data\Connectors\ConnectorAbstract;
 
 /**
  * DataAdapter.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class DataAdapter implements \IteratorAggregate
@@ -38,12 +37,6 @@ class DataAdapter implements \IteratorAggregate
 
     /**
      *
-     * @var Container
-     */
-    private $container = [];
-
-    /**
-     *
      * @var array
      */
     private $callbacks = [];
@@ -51,7 +44,7 @@ class DataAdapter implements \IteratorAggregate
     /**
      * (non-PHPdoc)
      *
-     * @see \Core\Lib\Data\Container::getIterator()
+     * @see \Core\Lib\Data\Container\Container::getIterator()
      */
     public function getIterator()
     {
@@ -73,47 +66,13 @@ class DataAdapter implements \IteratorAggregate
     }
 
     /**
-     * Sets container to store dataresult in.
-     *
-     * @param array|object $container
-     *
-     * @return \Core\Lib\Data\DataAdapter
-     */
-    public function setContainer($container = [])
-    {
-        $this->container = $container;
-
-        return $this;
-    }
-
-    /**
-     * Returns a clone of the registered data container.
-     *
-     * @throws UnexpectedValueException
-     *
-     * @return Container
-     */
-    public function getContainer($generic = true)
-    {
-        if ($generic == true) {
-            return new Container();
-        }
-
-        if (! $this->container) {
-            Throw new UnexpectedValueException('There is no data container in this DataAdapter.');
-        }
-
-        return unserialize(serialize($this->container));
-    }
-
-    /**
      * Sets data property as container.
      *
      * @param mixed $data
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setData($data)
+    public function setData($data, array $scheme = [])
     {
         // We have callbacks to use
         foreach ($this->callbacks as $cb) {
@@ -125,28 +84,27 @@ class DataAdapter implements \IteratorAggregate
             $data = call_user_func_array($cb[0], $cb[1]);
         }
 
-        // When data is an assoc array we check here for an existing
-        // Container object and fill the container with our data
-        if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
-            $this->data = $data;
-        } else {
-            $this->data = $this->fillContainer($data);
-        }
+        $this->checkType($data, $scheme);
+
+        $this->data = $data;
 
         return $this;
     }
 
     /**
-     * Set an array of data as list of containers to data property.
+     * Set an array of data to data property.
      *
      * Use this if you want to add a bunch of records to the adapter.
      *
-     * @var array $dataset
+     * @var array $dataset The data to store
+     * @param array $scheme
+     *            Optional data scheme array
      *
      * @return \Core\Lib\Data\DataAdapter
      */
-    public function setDataset(array $dataset)
+    public function setDataset(array $dataset, array $scheme = [])
     {
+        // Init adapters data array
         $this->data = [];
 
         foreach ($dataset as $data) {
@@ -180,34 +138,75 @@ class DataAdapter implements \IteratorAggregate
                 continue;
             }
 
-            // When data is an assoc array we check here for an existing
-            // Container object and fill the container with our data
-            if (! $this->arrayIsAssoc($data) || is_array($this->container)) {
+            $this->checkType($data, $scheme);
+
+            // Use the existing primary field name from scheme when it's available in data
+            if (! empty($scheme['primary']) && !empty($data[$scheme['primary']])) {
+                $this->data[$data[$scheme['primary']]] = $data;
+            }
+            else {
                 $this->data[] = $data;
-            } else {
-                $this->data[] = $this->fillContainer($data);
             }
         }
 
         return $this;
     }
 
-    /**
-     * Creates a data container from provided data by using a copy of set container.
-     *
-     * @param array $data
-     *
-     * @return array|object
-     */
-    public function fillContainer(array $data)
+    private function checkType(&$data, array $scheme)
     {
-        $container = unserialize(serialize($this->container));
-
-        foreach ($data as $field => $value) {
-            $container[$field] = $value;
+        if (empty($scheme) || empty($scheme['fields'])) {
+            return;
         }
 
-        return $container;
+        // Let's set some types
+        foreach ($data as $name => $value) {
+
+            // Data does not exist as field in scheme? Skip it!
+            if (empty($scheme['fields'][$name])) {
+                continue;
+            }
+
+            // copy field defintion for better reading
+            $field = $scheme['fields'][$name];
+
+            // Is this field flagged as serialized?
+            if (! empty($field['serialize'])) {
+                $data[$name] = unserialize($data[$name]);
+            }
+
+            // Empty data value but non empty default value in scheme set? Use it!
+            if (empty($data[$name]) && ! empty($field['default'])) {
+                $data[$name] = $field['default'];
+            }
+
+            // TODO Really neccessary? What are the advantages?
+            /*
+            // Ste type to 'string' when no type is set in scheme
+            if (empty($field['type'])) {
+                $field['type'] = 'string';
+            }
+
+            // Explicit type conversion
+            if (! empty($field['type'])) {
+
+                $types = [
+                    'boolean',
+                    'integer',
+                    'float',
+                    'string',
+                    'array',
+                    'object',
+                    'null'
+                ];
+
+                if (! in_array($field['type'], $types)) {
+                    Throw new DataException(sprintf('Type "%s" is not allowed as fieldtype. Allowed types are: %s', $field['type'], implode(', ', $types)));
+                }
+
+                settype($data[$name], $field['type']);
+
+            }*/
+        }
     }
 
     /**
@@ -261,7 +260,8 @@ class DataAdapter implements \IteratorAggregate
                     $cb[1] = (array) $cb[1];
                 }
                 $args = $cb[1];
-            } else {
+            }
+            else {
                 $args = [];
             }
 
@@ -299,7 +299,7 @@ class DataAdapter implements \IteratorAggregate
 
         $this->callbacks[] = [
             $call,
-            !is_array($args) ? (array) $args : $args
+            ! is_array($args) ? (array) $args : $args
         ];
 
         return $this;

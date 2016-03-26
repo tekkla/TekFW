@@ -1,14 +1,13 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
 use Core\Lib\Data\Connectors\Db\Db;
 
 /**
  * Session.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class Session
@@ -20,10 +19,13 @@ final class Session
      */
     private $db;
 
+    private $table = 'core_sessions';
+
     /**
      * Constructor
      *
      * @param Db $db
+     *            Db dependency
      */
     public function __construct(Db $db)
     {
@@ -56,92 +58,6 @@ final class Session
             $this,
             "gc"
         ]);
-    }
-
-    /**
-     * Access on data stored in session.
-     *
-     * @param string $key
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return mixed
-     */
-    public function get($key)
-    {
-        if (isset($_SESSION[$key])) {
-            return $_SESSION[$key];
-        }
-        else {
-            Throw new InvalidArgumentException('Session key "' . $key . '" not found.');
-        }
-    }
-
-    /**
-     * Stores data in session under the set key
-     *
-     * @param string $key
-     * @param mixed $val
-     *
-     * @return Session
-     */
-    public function set($key, $val)
-    {
-        $_SESSION[$key] = $val;
-
-        return $this;
-    }
-
-    /**
-     * Adds data to existing data in session.
-     * Tries to find data by using the set key. Converts non array data
-     * into an array. Adds set $val at end of data array.
-     *
-     * @param string $key
-     * @param mixed $val
-     *
-     * @return \Core\Lib\Http\Session
-     */
-    public function add($key, $val)
-    {
-        if (! isset($_SESSION[$key])) {
-            $_SESSION[$key] = [];
-        }
-        else {
-            if (! is_array($_SESSION[$key])) {
-                $_SESSION[$key] = (array) $_SESSION[$key];
-            }
-        }
-
-        $_SESSION[$key][] = $val;
-
-        return $this;
-    }
-
-    /**
-     * Checks for existing data by it's key.
-     *
-     * @param boolean $key
-     */
-    public function exists($key)
-    {
-        return isset($_SESSION[$key]);
-    }
-
-    /**
-     * Removes data from session by it's key.
-     *
-     * @param string $key
-     *
-     * @return \Core\Lib\Http\Session
-     */
-    public function remove($key)
-    {
-        if (isset($_SESSION[$key])) {
-            unset($_SESSION[$key]);
-        }
-
-        return $this;
     }
 
     /**
@@ -186,7 +102,7 @@ final class Session
     {
         // Set query
         $this->db->qb([
-            'tbl' => 'sessions',
+            'table' => $this->table,
             'fields' => 'data',
             'filter' => 'id_session = :id_session',
             'params' => [
@@ -207,7 +123,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'REPLACE',
-            'tbl' => 'sessions',
+            'table' => $this->table,
             'fields' => [
                 'id_session',
                 'access',
@@ -232,7 +148,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'tbl' => 'sessions',
+            'table' => $this->table,
             'filter' => 'id_session=:id_session',
             'params' => [
                 'id_session' => $id_session
@@ -254,7 +170,7 @@ final class Session
         // Set query
         $this->db->qb([
             'method' => 'DELETE',
-            'tbl' => 'sessions',
+            'table' => $this->table,
             'filter' => 'access<:old',
             'params' => [
                 ':old' => $old

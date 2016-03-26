@@ -31,7 +31,7 @@ class BiggerOrEqualRule extends RuleAbstract
         }
 
         if (! $result) {
-            $this->msg = $this->txt('validator_bigger_or_equal');
+            $this->msg = $this->text('validator.bigger_or_equal');
         }
     }
 }

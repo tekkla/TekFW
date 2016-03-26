@@ -1,9 +1,10 @@
 {
   "name" : "TekFW",
   "require" : {
-    "altorouter/altorouter" : "=v1.1.0",
-    "mrclay/minify" : "=2.2.0",
-    "firephp/firephp-core" : "=v0.4.0"
+    "altorouter/altorouter" : ">=v1.1.0",
+    "mrclay/minify" : ">=2.2.1",
+    "firephp/firephp-core" : "=v0.4.0",
+    "phpmailer/phpmailer" : ">=v5.2.14"
   },
   "repositories" : [ {
     "type" : "composer",

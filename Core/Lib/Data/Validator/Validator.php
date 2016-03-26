@@ -1,73 +1,64 @@
 <?php
 namespace Core\Lib\Data\Validator;
 
-use Core\Lib\Traits\TextTrait;
+use Core\Lib\Language\TextTrait;
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Data\Validator\Rules\RuleAbstract;
+use Core\Lib\Traits\ArrayTrait;
 
 /**
  * Validator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class Validator
 {
-    use TextTrait, StringTrait;
+    use TextTrait;
+    use StringTrait;
+    use ArrayTrait;
 
     /**
-     * The messages from the current check
      *
      * @var array
      */
-    private $msg = [];
+    private $result = [];
 
     /**
-     * Storage for loaded rule objects
      *
      * @var array
      */
     private $rules = [];
 
     /**
-     * Constructor
-     */
-    public function __construct()
-    {}
-
-    /**
-     * Validates a value against the wanted rules.
+     * Validates a value against the wanted rules
+     *
+     * Returns an empty array when all rules where checked succesfully.
      *
      * @param mixed $value
-     * @param string|array $rules One or more rules
-     * @return multitype:
+     *            The value to validate
+     * @param string|array $rules
+     *            One or more rules
      */
-    public function validate($value, $rules)
+    public function validate($value, array $rules)
     {
+        $this->result = [];
+
         // Our current value (trimmed)
         $value = trim($value);
-
-        if (! is_array($rules)) {
-            $rules = (array) $rules;
-        }
-
-        // Reset present messages
-        $this->msg = [];
 
         // Validate each rule against the
         foreach ($rules as $rule) {
 
-            // Reset the last result
-            $result = false;
-
             // Array type rules are for checks where the func needs one or more parameter
             // So $rule[0] is the func name and $rule[1] the parameter.
-            // Parameters can be of type array where the elements are used as function parameters in the .. they are set.
+            // Parameters can be of type array where the elements are used as function parameters in the .. they are
+            // set.
             if (is_array($rule)) {
 
                 // Get the functionname
-                $rule_name = $this->camelizeString($rule[0]);
+                $rule_name = $this->stringCamelize($rule[0]);
 
                 // Parameters set?
                 if (isset($rule[1])) {
@@ -85,7 +76,7 @@ final class Validator
                 }
             }
             else {
-                $rule_name = $this->camelizeString($rule);
+                $rule_name = $this->stringCamelize($rule);
                 $args = [];
                 unset($custom_message);
             }
@@ -107,62 +98,69 @@ final class Validator
                 'execute'
             ), $args);
 
-            // Get result from rule
-            $result = $rule->isValid();
-
             // Is the validation result negative eg false?
-            if ($result === false) {
+            if ($rule->isValid() === false) {
 
                 // Get msg from rule
                 $msg = $rule->getMsg();
 
                 // If no error message is set, use the default validator error
                 if (empty($msg)) {
-                    $msg = isset($custom_message) ? $this->txt($custom_message) : $this->txt('validator_error');
+                    $msg = isset($custom_message) ? $this->text($custom_message) : $this->text('validator.error');
                 }
 
-                $this->msg[] = htmlspecialchars($msg, ENT_COMPAT, 'UTF-8');
+                $this->result[] = $msg;
             }
         }
-
-        return $this->msg;
     }
 
     /**
-     * Returns the last validation result.
+     * Returns the last validation result
      *
      * @return bool
      */
     public function isValid()
     {
-        return empty($this->msg);
+        return empty($this->result);
     }
 
     /**
-     * Returns the last validation msg.
+     * Returns the last validation msg
      *
      * @return array
      */
-    public function getMsg()
+    public function getResult()
     {
-        return $this->msg;
+        return $this->result;
     }
 
     /**
-     * Creates and returns a rule object.
+     * Creates and returns a singleton rule object
      *
      * @param string $rule_name
+     *            Name of the rule
      *
      * @return RuleAbstract
      */
     public function &createRule($rule_name)
     {
-        // Rules are singletons
-        if (! array_key_exists($rule_name, $this->rules)) {
+        // Rules have to be singletons
+        if (empty($this->rules[$rule_name])) {
 
-            $rule_class = '\Core\Lib\Data\Validator\Rules\\' . $rule_name . 'Rule';
+            // Without a leading \ in the rulename it is assumened that we use a Core FW builtin rule
+            // otherwise the $rule_name points to a class somewhere outsite of the frasmworks default rules.
+            $rule_class = strpos($rule_name, '\\') == 0 ? __NAMESPACE__ . '\Rules\\' . $rule_name . 'Rule' : $rule_name;
 
-            $this->rules[$rule_name] = new $rule_class($this);
+            // Create the rule obejct instance
+            $rule_object = new $rule_class($this);
+
+            // The rule object must be a child of RuleAbstract!
+            if (! $rule_object instanceof RuleAbstract) {
+                Throw new ValidatorException('Validator rules MUST BE a child of RuleAbstract');
+            }
+
+            // Add rule to the rules stack
+            $this->rules[$rule_name] = $rule_object;
         }
         else {
 

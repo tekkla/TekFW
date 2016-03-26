@@ -1,24 +1,23 @@
 <?php
 namespace Core\Lib\Ajax;
 
-use Core\Lib\Content\Message;
 use Core\Lib\IO\Files;
-use Core\Lib\Errors\Exceptions\AjaxException;
+use Core\Lib\Cfg\Cfg;
+use Core\Lib\Page\Body\Message\Message;
 
 /**
  * Ajax.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Ajax
 {
 
     /**
-     * Storage for ajax commands
      *
-     * @var \stdClass
+     * @var array
      */
     private $ajax = [];
 
@@ -34,10 +33,27 @@ class Ajax
      */
     private $files;
 
-    public function __construct(Message $message, Files $files)
+    /**
+     *
+     * @var Cfg
+     */
+    private $cfg;
+
+    /**
+     * Constructor
+     *
+     * @param Message $message
+     *            Message service dependency
+     * @param Files $files
+     *            Files services dependency
+     * @param Cfg $cfg
+     *            Cfg service dependency
+     */
+    public function __construct(Message $message, Files $files, Cfg $cfg)
     {
         $this->message = $message;
         $this->files = $files;
+        $this->cfg = $cfg;
     }
 
     /**
@@ -69,8 +85,7 @@ class Ajax
 
         if ($cmd->getType() == 'dom') {
             $this->ajax['dom'][$cmd->getSelector()][] = $ajax;
-        }
-        else {
+        } else {
             $this->ajax['act'][] = $ajax;
         }
     }
@@ -83,10 +98,12 @@ class Ajax
 
         // With each ajax request processing all currently
         // diplayed messages will be cleared.
-       /* $this->ajax['dom']['#core-message'][] = [
-            'f' => 'html',
-            'a' => ''
-        ];*/
+        /*
+         * $this->ajax['dom']['#core-message'][] = [
+         * 'f' => 'html',
+         * 'a' => ''
+         * ];
+         */
 
         // Add messages
         $messages = $this->message->getMessages();
@@ -112,7 +129,7 @@ class Ajax
                 }
 
                 // Fadeout message?
-                if ($this->di->get('core.cfg')->get('Core', 'js_fadeout_time') > 0 && $msg->getFadeout()) {
+                if ($this->cfg->data['Core']['js.style.fadeout_time'] > 0 && $msg->getFadeout()) {
                     $html .= ' fadeout';
                 }
 
@@ -128,7 +145,7 @@ class Ajax
             }
         }
 
-        // Output is json encoded
+        // Return JSON encoded ajax command stackk
         return json_encode($this->ajax);
     }
 
@@ -143,7 +160,7 @@ class Ajax
     }
 
     /**
-     * Cleans the current ajax command stack.
+     * Cleans the current ajax command stack
      *
      * @return \Core\Lib\Ajax\Ajax
      */
@@ -155,14 +172,16 @@ class Ajax
     }
 
     /**
-     * Creates and returns a named ajax command.
+     * Creates and returns a named ajax command
+     *
      * Commands are split into DOM (Dom) manipulation and predifined actions (Act) to call.
      *
-     * @param string $command_name Name of command to create. Default: Dom\Html
+     * @param string $command_name
+     *            Name of command to create. Default: Dom\Html
      *
      * @throws AjaxException
      *
-     * @return \Core\Lib\Ajax\Command
+     * @return \Core\Lib\Ajax\AjaxCommandAbstract
      */
     public function createCommand($command_name = 'Dom\Html')
     {
@@ -172,8 +191,8 @@ class Ajax
 
         $class = '\Core\Lib\Ajax\Commands\\' . $command_name;
 
-        if (!$this->files->checkClassFileExists($class)) {
-            Throw new AjaxException('Classfile for command "' . $command_name . '" does not exist.');
+        if (! $this->files->checkClassFileExists($class)) {
+            Throw new AjaxException(sprintf('Classfile for command "%s" does not exist.', $class));
         }
 
         return new $class($this);

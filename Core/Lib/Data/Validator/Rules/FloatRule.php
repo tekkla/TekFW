@@ -22,7 +22,7 @@ class FloatRule extends RuleAbstract
         $result = is_float($this->value);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_float');
+            $this->msg = $this->text('validator.float');
         }
     }
 }

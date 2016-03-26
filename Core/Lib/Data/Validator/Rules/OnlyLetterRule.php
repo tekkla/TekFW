@@ -27,7 +27,7 @@ class OnlyLetterRule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_alpha');
+            $this->msg = $this->text('validator.alpha');
         }
     }
 }

@@ -2,8 +2,10 @@
 namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
-use Core\Lib\Errors\Exceptions\SecurityException;
 use Core\Lib\Errors\Exceptions\RuntimeException;
+use Core\AppsSec\Core\Model\ConfigModel;
+use Core\Lib\Html\FormDesigner\FormGroup;
+use Core\Lib\Security\SecurityException;
 
 /**
  * ConfigController.php
@@ -24,6 +26,12 @@ class ConfigController extends Controller
 
     /**
      *
+     * @var ConfigModel
+     */
+    public $model;
+
+    /**
+     *
      * @param string $app_name
      *
      * @throws SecurityException
@@ -33,227 +41,285 @@ class ConfigController extends Controller
      */
     public function Config($app_name)
     {
+        $app_name = $this->stringCamelize($app_name);
+
+        $groups = $this->model->getConfigGroups($app_name);
+
+        foreach ($groups as $group_name) {
+
+            $forms[$group_name] = $this->getController()->run('ConfigGroup', [
+                'app_name' => $app_name,
+                'group_name' => $group_name
+            ]);
+        }
+
+        $this->setVar([
+            'headline' => $this->text('name', $app_name),
+            'icon' => $this->html->create('Elements\Icon')
+                ->useIcon('cog'),
+            'groups' => $groups,
+            'forms' => $forms
+        ]);
+
+        // Add linktreee
+        $this->page->breadcrumbs->createItem('Admin', $this->url('admin'));
+        $this->page->breadcrumbs->createActiveItem($this->text('name', $app_name));
+
+        $this->setAjaxTarget('#core-admin');
+    }
+
+    public function ConfigGroup($app_name, $group_name)
+    {
         // Camelize app name becaus this parameter comes uncamelized from request handler
-        $app_name = $this->camelizeString($app_name);
+        $app_name = $this->stringCamelize($app_name);
 
         // check permission
-        if (! $this->checkAccess($app_name . '_config')) {
+        if (! $this->checkAccess('config', false, $app_name)) {
             Throw new SecurityException('No accessrights');
         }
 
-        $data = $this->post->get();
+        $data = $this->http->post->get();
 
         // save process
         if ($data) {
 
             $this->model->saveConfig($data);
 
-            if (! $data->hasErrors()) {
-                $this->content->msg->success($this->txt('config_saved'));
-                $redir_url = $this->url($this->router->getCurrentRoute(), [
-                    'app_name' => $this->uncamelizeString($app_name)
-                ]);
-
-                $this->redirectExit($redir_url);
-                return;
+            if (! $this->model->hasErrors()) {
+                // Reload config
+                $this->di->get('core.cfg')->load();
+                unset($data);
             }
         }
 
-        // config headarea
-        $this->setVar(array(
-            'app_name' => $this->txt('name', $app_name),
-            'icon' => $this->html->create('Elements\Icon')
-                ->useIcon('cog')
-        ));
-
-        // Load the app's config data
         if (empty($data)) {
-            $data = $this->model->loadByApp($app_name);
+            $data = $this->model->getData($app_name, $group_name);
         }
 
         // Use form designer
-        $form = $this->getFormDesigner($data);
+        $fd = $this->getFormDesigner('core-admin-config-' . $app_name . '-' . $group_name);
+        $fd->mapErrors($this->model->getErrors());
+        $fd->mapData($data);
+        $fd->isHorizontal('sm', 4);
+        $fd->isAjax();
 
         // Set forms action route
-        $form->setActionRoute($this->router->getCurrentRoute(), array(
-            'app_name' => $this->uncamelizeString($app_name)
-        ));
+        $fd->html->setAction($this->url('config.group', [
+            'app_name' => $app_name,
+            'group_name' => $group_name
+        ]));
 
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
 
         // Add hidden app control
-        $group->addControl('hidden', 'app_name')->setValue($app_name);
+        $group->addControl('hidden', 'app')->setValue($app_name);
 
-        // storage for active group
-        $groupname = '';
+        $group = $fd->addGroup();
+        $group->setName($group_name);
 
-        // App creator
-        $creator = $this->di->get('core.amvc.creator');
+        $this->createGroups($app_name, $this->di->get('core.cfg')->definitions[$app_name][$group_name], $group, 0, [
+            $group_name
+        ]);
 
-        // Get the config definition from app
-        $app = $creator->getAppInstance($app_name);
-        $app_cfg = $app->getConfig();
-
-        // controls for each config key will be created as a loop
-        foreach ($data as $key => $fld) {
-
-            if ($key == 'app_name') {
-                continue;
-            }
-
-            $cfg = $app_cfg[$key];
-
-            // add a group header if the controls group is
-            // different the one stored as active group
-            if ($cfg['group'] !== $groupname) {
-
-                $group = $form->addGroup();
-
-                $group->addElement('Elements\Heading', [
-                    'setInner' => $this->txt($this->uncamelizeString('cfg_group_' . $cfg['group'], $app_name)),
-                    'setSize' => 4
-                ]);
-
-                // Set this group as active group
-                $groupname = $cfg['group'];
-            }
-
-            // Is this a control with more settings or only the controltype
-            if (! isset($cfg['control'])) {
-                $cfg['control'] = 'text';
-            }
-
-            $control_type = is_array($cfg['control']) ? $cfg['control'][0] : $cfg['control'];
-
-            // Create control object
-            $control = $group->addControl($control_type, $key);
-
-            // Are there attributes to add?
-            if (is_array($cfg['control']) && isset($cfg['control'][1]) && is_array($cfg['control'][1])) {
-
-                // Add all attributes to the control
-                foreach ($cfg['control'][1] as $attr => $val) {
-                    $control->addAttribute($attr, $val);
-                }
-            }
-
-            // Create controls
-            switch ($control_type) {
-                case 'textarea':
-                case 'text':
-
-                    if (isset($cfg['translate'])) {
-                        $cfg['value'] = $this->txt($app_name . '_' . $fld->getValue());
-                    }
-
-                    if ($control_type == 'textarea') {
-                        $control->setInner($fld->getValue());
-                    }
-                    else {
-                        $control->setValue($fld->getValue());
-                    }
-
-                    break;
-
-                // Create datasource driven controls
-                case 'optiongroup':
-                case 'select':
-                case 'multiselect':
-
-                    if (! isset($cfg['data']) || isset($cfg['data']) && ! is_array($cfg['data'])) {
-                        Throw new RuntimeException('No or not correct set data definition.');
-                    }
-
-                    // Load optiongroup datasource type
-                    switch ($cfg['data'][0]) {
-
-                        // DataType: model
-                        case 'model':
-                            list ($model_app, $model_name, $model_action) = explode('::', $cfg['data'][1]);
-                            $datasource = $creator->getAppInstance($model_app)->getModel($model_name);
-                            break;
-
-                        // DataType: array
-                        case 'array':
-                            $datasource = $cfg['data'][1];
-                            break;
-
-                        // Datasource has to be of type array or model. All other will result in an exception
-                        default:
-                            Throw new RuntimeException('Wrong or none datasource set for control "' . $key . '" of type "' . $cfg['control'] . '"');
-                    }
-
-                    // if no bound column number is set, set default to column 0
-                    if (! isset($cfg['data'][2])) {
-                        $cfg['data'][2] = 0;
-                    }
-
-                    // Create the list of options
-                    foreach ($datasource as $ds_key => $ds_val) {
-
-                        $option_value = $cfg['data'][2] == 0 ? $ds_key : $ds_val;
-
-                        $option = $control->createOption();
-                        $option->setInner($ds_val);
-                        $option->setValue($option_value);
-
-                        if (is_array($fld->getValue())) {
-                            foreach ($fld->getValue() as $k => $v) {
-                                if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($cfg['data'][2] == 0 && $k == $option_value) || ($cfg['data'][2] == 1 && $v == $option_value))) {
-                                    $option->isSelected(1);
-                                    continue;
-                                }
-                            }
-                        }
-                        else {
-
-                            // this is for simple select control
-                            if (($cfg['data'][2] == 0 && $ds_key === $fld->getValue()) || ($cfg['data'][2] == 1 && $ds_val == $fld->getValue())) {
-                                $option->isSelected(1);
-                            }
-                        }
-                    }
-
-                    break;
-
-                case 'switch':
-
-                    if ($fld->getValue() == 1) {
-                        $control->switchOn();
-                    }
-                    break;
-
-                default:
-                    if (! $control->checkAttribute('size')) {
-                        $control->setSize(55);
-                    }
-
-                    $control->setValue($fld->getValue());
-
-                    break;
-            }
-
-            $txt = $this->uncamelizeString('cfg_' . $key);
-            $app = $app_name == 'admin' ? 'web' : $app_name;
-
-            $control->setLabel($this->txt($txt, $app));
-            $control->setDescription($this->txt($txt . '_desc', $app));
-        }
-
+        $group = $fd->addGroup();
 
         $control = $group->addControl('Submit');
-        $group->addElement('Elements\Hr');
+        $control->setUnbound();
+        $control->setInner('<i class="fa fa-' . $this->text('action.save.icon') . '"></i> ' . $this->text('action.save.text'));
+        $control->addCss([
+            'btn-sm',
+            'btn-block'
+        ]);
 
-        $this->setVar('form', $form);
+        $this->setVar([
+            'headline' => $this->text('config.' . $group_name . '.head'),
+            'app_name' => $app_name,
+            'group_name' => $group_name,
+            'form' => $fd,
+            'error' => $this->model->hasErrors()
+        ]);
 
-        // Add linktreee
-        $this->content->breadcrumbs->createItem('Admin', $this->router->url('core_admin'));
-
-        $this->content->breadcrumbs->createActiveItem($this->txt('name', $app_name));
+        $this->setAjaxTarget('#config-' . $group_name);
     }
 
-    public function Reconfigure($app_name)
+    private function createGroups($app_name, $config, FormGroup $group, $level = 0, $names = [])
     {
-        $this->model->rewriteConfig($app_name);
+        $level ++;
+
+        foreach ($config as $key => $value) {
+
+            if (array_key_exists('name', $value) && is_string($value['name'])) {
+
+                $value['groupnames'] = $names;
+
+                \FB::log($value);
+
+                $this->createControl($app_name, $group, $value);
+            }
+            else {
+
+                $subgroup = $group->addGroup();
+                $subgroup->setName($key);
+
+                $subgroup_names = $names;
+                $subgroup_names[] = $key;
+
+                $subgroup->html->addCss('bottom-buffer');
+
+                if ($level == 1) {
+
+                    $heading = $subgroup->addElement('Elements\Heading');
+                    $heading->setSize($level + 3);
+
+                    $heading->setInner($this->text('config.' . implode('.', $subgroup_names) . '.head', $app_name));
+
+                    $heading->addCss([
+                        'no-top-margin',
+                        'text-uppercase'
+                    ]);
+
+                    $subgroup->html->addCss([
+                        'well',
+                        'well-sm'
+                    ]);
+                }
+
+                $this->createGroups($app_name, $value, $subgroup, $level, $subgroup_names);
+            }
+        }
+    }
+
+    private function createControl($app_name, FormGroup $group, array $settings)
+    {
+        if ($settings['name'] == 'app.name') {
+            return;
+        }
+
+        // Check for missing settings and extend settings if needed
+        $this->model->checkDefinitionFields($settings);
+
+        // Get value for this control from stored config by using flattened key
+        $flat_name = implode('.', $settings['groupnames']) . '.' . $settings['name'];
+
+        $cfg = $this->di->get('core.cfg');
+
+        if (! empty($cfg->data[$app_name][$flat_name])) {
+            $settings['value'] = $cfg->data[$app_name][$flat_name];
+        }
+
+        // Is this a control with more settings or only the controltype
+        $control_type = $settings['control'];
+
+        // We need the controls type even when the control is data driven
+        if (is_array($control_type)) {
+            $control_type = $control_type[0];
+        }
+
+        // Create control object
+        $control = $group->addControl($control_type, $settings['name']);
+
+        // Are there attributes to add?
+        if (is_array($settings['control']) && isset($settings['control'][1]) && is_array($settings['control'][1])) {
+
+            // Add all attributes to the control
+            foreach ($settings['control'][1] as $attr => $val) {
+                $control->addAttribute($attr, $val);
+            }
+        }
+
+        // Create controls
+        switch ($control_type) {
+
+            // Create datasource driven controls
+            case 'optiongroup':
+            case 'select':
+            case 'multiselect':
+
+                if (! $settings['data']) {
+                    Throw new RuntimeException('No or not correct set data definition.');
+                }
+
+                // Load optiongroup datasource type
+                switch ($settings['data'][0]) {
+
+                    // DataType: model
+                    case 'model':
+                        list ($model_app, $model_name, $model_action) = explode('::', $settings['data'][1]);
+                        $datasource = $this->di->get('core.amvc.creator')
+                            ->getAppInstance($model_app)
+                            ->getModel($model_name);
+                        break;
+
+                    // DataType: array
+                    case 'array':
+                        $datasource = $settings['data'][1];
+                        break;
+
+                    // Datasource has to be of type array or model. All other will result in an exception
+                    default:
+                        Throw new RuntimeException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
+                }
+
+                // if no bound column number is set, set default to column 0
+                if (! isset($settings['data'][2])) {
+                    $settings['data'][2] = 0;
+                }
+
+                // Create the list of options
+                foreach ($datasource as $ds_key => $ds_val) {
+
+                    $option_value = $settings['data'][2] == 0 ? $ds_key : $ds_val;
+
+                    $option = $control->createOption();
+                    $option->setInner($ds_val);
+                    $option->setValue($option_value);
+
+                    if (is_array($settings['value'])) {
+                        foreach ($settings['value'] as $k => $v) {
+                            if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($settings['data'][2] == 0 && $k == $option_value) || ($settings['data'][2] == 1 && $v == $option_value))) {
+                                $option->isSelected(1);
+                                continue;
+                            }
+                        }
+                    }
+                    else {
+
+                        // this is for simple select control
+                        if (($settings['data'][2] == 0 && $ds_key === $settings['value']) || ($settings['data'][2] == 1 && $ds_val == $settings['value'])) {
+                            $option->isSelected(1);
+                        }
+                    }
+                }
+
+                break;
+
+            case 'switch':
+
+                if ($settings['value'] == 1) {
+                    $control->switchOn();
+                }
+                break;
+
+            default:
+
+                if (! empty($settings['translate'])) {
+                    $settings['value'] = $this->text($settings['value'], $app_name);
+                }
+
+                $control->setValue($settings['value']);
+
+                break;
+        }
+
+        /* @var $icon \Core\Lib\Html\Elements\Icon */
+        $icon = $this->html->create('Elements\Icon');
+        $icon->setIcon('question-circle');
+        $icon->addData([
+            'toggle' => 'popover',
+            'trigger' => 'click',
+            'content' => $this->text('config.' . $flat_name . '.desc')
+        ]);
+
+        $control->setLabel($this->text('config.' . $flat_name . '.label') . ' ' . $icon->build());
     }
 }

@@ -1,15 +1,6 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Data\Connectors\Db\Db;
-
-/**
- * Permission.php
- *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
- * @license MIT
- */
 class Permission
 {
 
@@ -20,81 +11,88 @@ class Permission
     private $permissions = [];
 
     /**
+     * Adds one app permission
      *
-     * @var Db
+     * @param string $app_name
+     *            Name of app
+     * @param string $permission
+     *            Name of permission
+     *
+     * @throws SecurityException
+     *
+     * @return \Core\Lib\Security\Permission
      */
-    private $db;
-
-    public function __construct(Db $db)
+    public function addPermission($app_name, $permission)
     {
-        $this->db = $db;
+        if (! empty($this->permissions[$app_name]) && in_array($permission, $this->permissions[$app_name])) {
+            Throw new SecurityException(sprintf('There is already a registered permission "%s" for app "%s"', $permission, $app_name));
+        }
+
+        $this->permissions[$app_name][] = $permission;
+
+        return $this;
     }
 
     /**
-     * Adds one or more permissions to permissions list.
+     * Sets a list of permissions of an app by overwritin already existing permissions of this app.
      *
-     * @param string $app_name Name of permission related app
-     * @param array $permissions One or more permissions to add
+     * @param string $app_name
+     *            Name of app
+     * @param array $permissions
+     *            Array with permission names
+     *
+     * @return \Core\Lib\Security\Permission
      */
-    public function addPermission($app_name, $permissions = [])
+    public function setPermissions($app_name, array $permissions)
     {
-        if ($permissions) {
+        $this->permissions[$app_name] = $permissions;
 
-            if (! is_array($permissions)) {
-                $permissions = (array) $permissions;
-            }
-
-            foreach ($permissions as $perm) {
-                $this->permissions[] = $app_name . '_' . $perm;
-            }
-        }
+        return $this;
     }
 
     /**
-     * Returns all or app related permissions
-     *
-     * @param string $app
-     *
-     * @return array
+     * Returns all stored permissions
      */
-    public function getPermissions($app = '')
+    public function getPermissions()
     {
-        return $app ? $this->permissions[$app] : $this->permissions;
+        return $this->permissions;
     }
 
     /**
-     * Loads all permissions from DB which are mathing the groups argument.
-     * Returns an empty array when groups argument is not set.
+     * Returns all stored permissions of an app.
+     * Returns boolean false when the app has no permissions.
      *
-     * @param unknown $group_id
+     * @param string $app_name
+     *            Name of app
      *
-     * @return array
+     * @return boolean|array
      */
-    public function loadPermission($groups = [])
+    public function getAppPermissions($app_name)
     {
-        // Queries without group IDs always results in an empty permission list
-        if (empty($groups)) {
-            return [];
+        if (empty($this->permissions[$app_name])) {
+            return false;
         }
 
-        // Convert group ID explicit into array
-        if (! is_array($groups)) {
-            $groups = (array) $groups;
+        return $this->permissions[$app_name];
+    }
+
+    /**
+     * Checks for existance of an app permission.
+     *
+     * @param string $app_name
+     *            Name of app
+     * @param string $permission
+     *            Name of permission
+     *
+     * @return boolean
+     */
+    public function exists($app_name, $permission)
+    {
+        if (empty($this->permissions[$app_name])) {
+            return false;
         }
 
-        // Create a prepared string and param array to use in query
-        $prepared = $this->db->prepareArrayQuery('group', $groups);
-
-        // Get and return the permissions
-        $query = [
-            'table' => 'permissions',
-            'method' => 'SELECT DISTINCT',
-            'filter' => 'id_group IN (' . $prepared['sql'] .')',
-            'params' => $prepared['values']
-        ];
-
-        $this->db->qb($query);
-
-        return $this->db->column(2);
+        return in_array($permission, $this->permissions[$app_name]);
     }
 }
+

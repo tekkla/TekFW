@@ -2,6 +2,7 @@
 namespace Core\Lib\Security;
 
 use Core\Lib\Data\Connectors\Db\Db;
+
 /**
  * Wrapper class to access SMF user information from one point
  *
@@ -26,7 +27,7 @@ class User
      *
      * @var string
      */
-    private $username = '';
+    private $username = 'Guest';
 
     /**
      * Name to show instead of login
@@ -34,13 +35,6 @@ class User
      * @var string
      */
     private $display_name = 'Guest';
-
-    /**
-     * Password
-     *
-     * @var string
-     */
-    private $password = '';
 
     /*
      * +
@@ -72,14 +66,12 @@ class User
 
     /**
      *
-     * @var Permission
+     * @param Db $db
+     * @param number $id_user
      */
-    private $permission;
-
-    public function __construct(Db $db, Permission $permission, $id_user = 0)
+    public function __construct(Db $db, $id_user = 0)
     {
         $this->db = $db;
-        $this->permission = $permission;
 
         if ($id_user > 0) {
             $this->load($id_user);
@@ -118,25 +110,23 @@ class User
     }
 
     /**
-     * Returns the users login name.
-     * Returns false when login is empty.
+     * Returns the users login name
      *
-     * @return string|boolean
+     * @return string
      */
     public function getUsername()
     {
-        return $this->username ? $this->username : false;
+        return $this->username;
     }
 
     /**
-     * Returns the users current password.
-     * Returns false when password is empty.
+     * Returns the users displayname
      *
-     * @return string|boolean
+     * @return string
      */
-    public function getPassword()
+    public function getDisplayname()
     {
-        return $this->password ? $this->password : false;
+        return $this->display_name;
     }
 
     /**
@@ -150,17 +140,42 @@ class User
     }
 
     /**
-     * Returns the users permissions
+     * Returns informations of the current user like username, display_name, groups, permission, admin/guest state etc
      *
      * @return array
      */
-    public function getPermissions()
+    public function getUserInfo()
     {
+        return [
+            'username' => $this->username,
+            'display_name' => $this->display_name,
+            'groups' => $this->groups,
+            'perms' => $this->perms,
+            'is_admin' => $this->isAdmin(),
+            'is_guest' => $this->isGuest()
+        ];
+    }
+
+    /**
+     * Returns the users permissions
+     *
+     * @param string $app
+     *            Optional name of app to get the permissions from. Without this name all existing permissions will be returned.
+     *
+     * @return array
+     */
+    public function getPermissions($app = '')
+    {
+        if (array_key_exists($app, $this->perms)) {
+            return $this->perms[$app];
+        }
+
         return $this->perms;
     }
 
     /**
      * Loads user from DB.
+     *
      * Takes care about not to load a user more than once
      *
      * @param int $id_user
@@ -168,6 +183,7 @@ class User
      */
     public function load($id_user, $force = false)
     {
+
         // Do not load the user more than once
         if ($this->id_user == $id_user && $force == false) {
             return;
@@ -176,10 +192,9 @@ class User
         $this->id_user = $id_user;
 
         $this->db->qb([
-            'tbl' => 'users',
+            'table' => 'core_users',
             'field' => [
                 'username',
-                'password',
                 'display_name'
             ],
             'filter' => 'id_user=:id_user',
@@ -188,16 +203,18 @@ class User
             ]
         ]);
 
-        $data =  $this->db->single();
+        $data = $this->db->single();
 
         if ($data) {
 
             $this->username = $data['username'];
-            $this->display_name = $data['display_name'];
-            $this->password = $data['password'];
 
+            // Use username as display_name when there is no display_name for this user
+            $this->display_name = empty($data['display_name']) ? $data['username'] : $data['display_name'];
+
+            // Load the groups the user is in
             $this->db->qb([
-                'tbl' => 'users_groups',
+                'table' => 'core_users_groups',
                 'fields' => 'id_group',
                 'filter' => 'id_user=:id_user',
                 'params' => [
@@ -208,48 +225,108 @@ class User
             $this->groups = $this->db->column();
 
             // Load user permissions based on groups of the user
-            $this->perms = $this->permission->loadPermission($this->groups);
+            $this->loadPermissions();
 
             // Is the user an admin?
-            if (in_array('core_admin', $this->perms)) {
+            if (isset($this->perms['Core']) && in_array('admin', $this->perms['Core'])) {
                 $this->is_admin = true;
             }
         }
     }
 
     /**
-     * Creates a new user
+     * Checks user access by permissions
      *
-     * Uses given username and password and returns it's user id.
-     * Optional state flag to activate user on creation.
+     * @param array $perms
+     * @param boolean $force
      *
-     * Given password will be hashed by password_hash($password, PASSWORD_DEFAULT) by default.
-     *
-     * @param string $username Username
-     * @param string $password Password
-     * @param boolean $state Optional: Stateflag. 0=inactive | 1=active (default: 0)
-     * @param boolean $password_hash Optional: Flag to activate password hashing by using password_hash (Default: true)
-     *
-     * @return integer
+     * @return boolean
      */
-    public function create($username, $password, $state=0, $password_hash=true)
+    public function checkAccess($perms = [], $force = false, $app = 'Core')
     {
-        $data = $this->db->adapter->getContainer(true);
-
-        $data['username'] = $username;
-
-        if ($password_hash == true) {
-            $password = password_hash($password, PASSWORD_DEFAULT);
+        // Guests are not allowed by default
+        if ($this->isGuest()) {
+            return false;
         }
 
-        $data['password'] = $password;
-        $data['state'] = (int) $state;
+        // Allow access to all users when perms argument is empty
+        if (empty($perms)) {
+            return true;
+        }
 
-        $this->db->qb([
-            'table' => 'users',
-            'data' => $data
-        ], true);
+        // Administrators are supermen :P
+        if ($this->isAdmin()) {
+            return true;
+        }
 
-        return $this->db->lastInsertId();
+        // Explicit array conversion of perms arg
+        if (! is_array($perms)) {
+            $perms = (array) $perms;
+        }
+
+        // User has the right to do this?
+        if (count(array_intersect($perms, $this->getPermissions($app))) > 0) {
+            return true;
+        }
+
+        // You aren't allowed, by default.
+        return false;
+    }
+
+    /**
+     * Security method to log suspisious actions and start banning process.
+     *
+     * @param string $msg
+     *            Message to log
+     * @param boolean|int $ban
+     *            Set this to the number of tries the user is allowed to do other suspicious things until he gets
+     *            banned.
+     *
+     * @return Security
+     */
+    public function logSuspicious($msg, $ban = false)
+    {
+        $this->logging->suspicious($msg);
+
+        return $this;
+    }
+
+    /**
+     * Loads permissions for a given list of group ids
+     *
+     * @param array $groups
+     *            Array of group ids to load the permissions for
+     *
+     * @param array $groups
+     */
+    private function loadPermissions()
+    {
+        // Queries without group IDs always results in an empty permission list
+        if (empty($this->groups)) {
+            return [];
+        }
+
+        // Create a prepared string and param array to use in query
+        $prepared = $this->db->prepareArrayQuery('group', $this->groups);
+
+        // Get and return the permissions
+        $qb = [
+            'table' => 'core_groups_permissions',
+            'fields' => [
+                'app',
+                'permission'
+            ],
+            'method' => 'SELECT DISTINCT',
+            'filter' => 'id_group IN (' . $prepared['sql'] . ')',
+            'params' => $prepared['values']
+        ];
+
+        $this->db->qb($qb);
+
+        $perms = $this->db->all();
+
+        foreach ($perms as $perm) {
+            $this->perms[$perm['app']][] = $perm['permission'];
+        }
     }
 }

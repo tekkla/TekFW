@@ -16,12 +16,32 @@ final class AdminController extends Controller
     public function Index()
     {
         $this->setVar([
-            'config' => $this->router->url('core_config', [
-                'app_name' => 'core'
-            ]),
-            'loaded_apps' => $this->model->getApplist()
-        ]);
+            'loaded_apps' => $this->model->getApplist(),
+            'logs' => $this->getController('Log')
+                ->run('Index'),
 
-        $this->content->breadcrumbs->createActiveItem('TekFW Framework Center');
+            // Links to users and permissions
+            'menu' => [
+                'users' => [
+                    'title' => $this->text('admin.menu.users'),
+                    'links' => [
+                        'users' => [
+                            'url' => $this->url('action', [
+                                'controller' => 'User',
+                                'action' => 'Index'
+                            ]),
+                            'text' => $this->text('user.plural')
+                        ],
+                        'groups' => [
+                            'url' => $this->url('action', [
+                                'controller' => 'Group',
+                                'action' => 'Index'
+                            ]),
+                            'text' => $this->text('group.plural')
+                        ]
+                    ]
+                ]
+            ]
+        ]);
     }
 }

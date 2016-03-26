@@ -21,7 +21,7 @@ class RequiredRule extends RuleAbstract
         $result = ! empty($this->value);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_required');
+            $this->msg = $this->text('validator.required');
         }
     }
 }

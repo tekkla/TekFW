@@ -3,58 +3,59 @@ namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
 
-/**
- * UserController.php
- *
- * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
- * @license MIT
- */
 class UserController extends Controller
 {
 
+    /**
+     *
+     * @var UserModel
+     */
+    public $model;
+
     public function Index()
     {
-        $this->setVar([
-            'selection' => $this->getController()->run('Selection'),
-            'start' => $this->getController()->run('Start')
-        ]);
-
-        $this->setAjaxTarget('#content');
+        $this->redirect('Userlist');
     }
 
-    public function Start()
-    {
-        $this->setAjaxTarget('#main');
-    }
-
-    public function Selection()
-    {
-        $data = $this->model->getAlphabet();
-        $this->setVar([
-            'alphabet' => $data
-        ]);
-
-        $this->setAjaxTarget('#selection');
-    }
-
-    public function ListByLetter($letter)
+    public function Userlist()
     {
         $this->setVar([
-            'data' => $this->model->getUserlistByLetter($letter),
-            'link' => $this->url('service_edit', [
-                'controller' => 'user'
+            'userlist' => $this->model->getList('display_name', '%', 100, [
+                [
+                    function ($data) {
+                        $data['link'] = $this->url('edit', [
+                            'controller' => 'User',
+                            'id' => $data['id_user']
+                        ]);
+                        return $data;
+                    }
+                ]
             ]),
-            'new' => $this->txt('user_new'),
-            'customer' => $this->txt('username'),
+            'links' => [
+                'new' => [
+                    'text' => $this->text('user.action.new.text'),
+                    'url' => $this->url('edit', [
+                        'controller' => 'user'
+                    ])
+                ]
+            ],
+            'text' => [
+                'headline' => $this->text('user.list'),
+                'username' => $this->text('user.field.username'),
+                'display_name' => $this->text('user.field.display_name')
+            ]
         ]);
 
-        $this->setAjaxTarget('#main');
+        $this->setAjaxTarget('#core-admin');
     }
 
-    public function Edit($id)
+    public function Edit($id = null)
     {
-        $data = $this->post->get();
+        if (! $id) {
+            $id = $this->security->user->getId();
+        }
+
+        $data = $this->http->post->get();
 
         if ($data) {
 
@@ -69,17 +70,19 @@ class UserController extends Controller
         }
 
         if (! $data) {
-            $data = $this->model->getEdit($id);
+            $data = $this->model->getEdit($this->security->user, $id);
         }
 
         // Get FormDesigner object
-        $form = $this->getFormDesigner($data);
+        $fd = $this->getFormDesigner('core-user-edit');
+
+        $fd->addData($data);
 
         // Flag form to be ajax
-        $form->isAjax();
+        $fd->isAjax();
 
         // Start new group for controls
-        $group = $form->addGroup();
+        $group = $fd->addGroup();
 
         // Add hidden field for invoice id
         $group->addControl('hidden', 'id_user');
@@ -87,22 +90,59 @@ class UserController extends Controller
         // Username
         $control = $group->addControl('text', 'username');
 
-        // Password
-        $control = $group->addControl('password', 'password');
+        // Displayname
+        $control = $group->addControl('text', 'display_name');
 
         // Usergroups
-        $control = $group->addControl('Optiongroup', 'groups');
+        $heading = $group->addElement('Elements\Heading');
+        $heading->setSize(3);
+        $heading->setInner($this->text('user.field.groups'));
 
-        /* @var $editbox \Core\Lib\Content\Html\Controls\Editbox */
-        $editbox = $this->getHtmlObject('Controls\Editbox');
-        $editbox->setForm($form);
+        $groups = $this->security->group->getGroups();
+
+        /* @var $control \Core\Lib\Html\Controls\Optiongroup */
+        $control = $group->addControl('Optiongroup');
+        $control->addCss('well well-sm');
+
+        foreach ($groups as $app => $app_groups) {
+
+            $control->createHeading($app);
+
+            foreach ($app_groups as $id_group => $group) {
+
+                // Skip guest and user group because guest is everyone unregisterted and user
+                // everyone registered
+                if ($id_group == - 1 || $id_group == 2) {
+                    continue;
+                }
+
+                $option = $control->createOption();
+                $option->setValue($id_group);
+                $option->setInner($group['display_name']);
+
+                if (array_key_exists($id_group, $data['groups'])) {
+                    $option->isChecked();
+                }
+            }
+        }
+
+        // Remove core groups
+        unset($groups['Core']);
+
+        // Display all
+        foreach ($groups as $app => $group) {}
+
+        /* @var $editbox \Core\Lib\Html\Controls\Editbox */
+        $editbox = $this->html->create('Controls\Editbox');
+        $editbox->setForm($fd);
 
         // Editbox caption
-        $editbox->setCaption($this->txt('invoice_edit'));
+        $editbox->setCaption($this->text('user.action.edit.text'));
 
         // Cancel action only when requested
-        $editbox->setCancelAction($this->url('detail', [
+        $editbox->setCancelAction($this->url('byid', [
             'controller' => 'User',
+            'action' => 'Detail',
             'id' => $id
         ]));
 
@@ -111,8 +151,7 @@ class UserController extends Controller
             'form' => $editbox
         ]);
 
-        // Ajax target definition
-        $this->setAjaxTarget('#content');
+        $this->setAjaxTarget('#core-admin');
     }
 }
 

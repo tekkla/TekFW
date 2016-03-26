@@ -3,13 +3,12 @@ namespace Core\Lib\Data\Connectors;
 
 use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\CallbackInterface;
-use Core\Lib\Data\Container;
 
 /**
  * AdapterAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class ConnectorAbstract implements CallbackInterface
@@ -20,16 +19,6 @@ abstract class ConnectorAbstract implements CallbackInterface
      * @var DataAdapter
      */
     public $adapter;
-
-    /**
-     * Sets container to store dataresult in.
-     *
-     * @param array|object $container
-     */
-    public function setContainer(Container $container)
-    {
-        $this->adapter->setContainer($container);
-    }
 
     /**
      * Injects DataAdapter into adapter class
@@ -45,7 +34,7 @@ abstract class ConnectorAbstract implements CallbackInterface
      * (non-PHPdoc)
      * @see \Core\Lib\Data\CallbackInterface::addCallback()
      */
-    public function addCallback($call, array $args = array(), $clear_callbacks_stack = true)
+    public function addCallback($call, array $args = [], $clear_callbacks_stack = true)
     {
         $this->adapter->addCallback($call, $args, $clear_callbacks_stack);
     }
@@ -54,7 +43,7 @@ abstract class ConnectorAbstract implements CallbackInterface
      * (non-PHPdoc)
      * @see \Core\Lib\Data\CallbackInterface::addCallbacks()
      */
-    public function addCallbacks(array $callbacks = array(), $clear_callbacks_stack = true)
+    public function addCallbacks(array $callbacks = [], $clear_callbacks_stack = true)
     {
         $this->adapter->addCallbacks($callbacks, $clear_callbacks_stack);
     }

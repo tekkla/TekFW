@@ -24,7 +24,7 @@ class NumberMaxRule extends RuleAbstract
         $result = $this->value <= $max;
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_numbermax'), $max);
+            $this->msg = sprintf($this->text('validator.numbermax'), $max);
         }
     }
 }

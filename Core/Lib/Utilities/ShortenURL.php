@@ -51,31 +51,34 @@ class ShortenURL
      *
      * @todo This method currently does not ignore urls of img, css or already BBCed urls.
      *       => It's important to take care of this.
+     *
      * @param string $content
+     *
      * @return string
      */
-    private function shortenUrls($content)
+    private function shortenUrls($content, array $exclude = [])
     {
         $url_pattern = '#\bhttps?://[^\s()]+(?:\([\w\d]+\)|([^[:punct:]\s]|/))#';
 
         preg_match_all($url_pattern, $content, $urls);
 
-        if (Cfg::exists('web', 'url_shortener_exclude'))
-            $exclude_pattern = '#' . implode('|', Cfg::get('Core', 'url_shortener_exclude')) . '#';
+        if (! empty($exclude)) {
+            $exclude_pattern = '#' . implode('|', $exclude) . '#';
+        }
 
         foreach ($urls[0] as $url) {
+
             // modify not exluded urls
-            if (isset($exclude_pattern) && preg_match($exclude_pattern, $url))
+            if (! empty($exclude_pattern) && preg_match($exclude_pattern, $url)) {
                 continue;
-
-            if (Cfg::get('Core', 'url_shortener_use') == 1) {
-                // get pagetitle
-                $doc = new \DOMDocument();
-                @$doc->loadHTMLFile($url);
-
-                $xpath = new \DOMXPath($doc);
-                $inner = $xpath->query('//title')->item(0)->nodeValue . "";
             }
+
+            // get pagetitle
+            $doc = new \DOMDocument();
+            @$doc->loadHTMLFile($url);
+
+            $xpath = new \DOMXPath($doc);
+            $inner = $xpath->query('//title')->item(0)->nodeValue . "";
 
             if (! $inner) {
                 $url_parts = parse_url($url);
@@ -83,8 +86,7 @@ class ShortenURL
             }
 
             // shorten url
-            if (Cfg::get('Core', 'url_shortener_tiny') == 1)
-                $url = $this->getTinyUrl($url);
+            $url = $this->getTinyUrl($url);
 
             $content = str_replace($url, '[url=' . $url . ']' . $inner . '[/url]', $content);
         }

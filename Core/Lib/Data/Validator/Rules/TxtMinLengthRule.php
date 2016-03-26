@@ -24,7 +24,7 @@ class TxtMinLengthRule extends RuleAbstract
         $result = strlen((string) $this->value) >= $min;
 
         if (! $result) {
-            $this->msg = sprintf($this->txt('validator_textminlength'), $min);
+            $this->msg = sprintf($this->text('validator.textminlength'), $min);
         }
     }
 }

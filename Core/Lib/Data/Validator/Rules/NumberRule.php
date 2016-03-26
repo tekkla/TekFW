@@ -27,7 +27,7 @@ class NumberRule extends RuleAbstract
         ]);
 
         if (! $result) {
-            $this->msg = $this->txt('validator_number');
+            $this->msg = $this->text('validator.number');
         }
     }
 }

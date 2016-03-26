@@ -1,13 +1,13 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Cfg;
+use Core\Lib\Cfg\Cfg;
 
 /**
  * Creator.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Creator
@@ -19,22 +19,23 @@ class Creator
      * @var array
      */
     private $secure_apps = [
-        'Admin',
-        'Doc',
         'Core'
     ];
 
     /**
      * List of apps, which can get instances of secured apps.
      *
-     * @var unknown
+     * @var Array
      */
     private $allow_secure_instance = [
-        'Admin',
-        'Doc',
         'Core'
     ];
 
+    /**
+     * Storage for app instances
+     *
+     * @var array
+     */
     private $instances = [];
 
     /**
@@ -44,7 +45,10 @@ class Creator
     private $cfg;
 
     /**
-     * Make this class defintive a singleton
+     * Constructor
+     *
+     * @param Cfg $cfg
+     *            Cfg dependency
      */
     public function __construct(Cfg $cfg)
     {
@@ -55,9 +59,9 @@ class Creator
      * Get a singleton app object
      *
      * @param string $name
-     * @param bool $do_init
+     *            Name of app instance to get
      *
-     * @return App
+     * @return \core\Lib\Amvc\App
      */
     public function &getAppInstance($name)
     {
@@ -65,43 +69,49 @@ class Creator
             $this->send404();
         }
 
-        // Check for already existing instance of app
-        // and create new instance when none is found
-        if (! array_key_exists($name, $this->instances)) {
-
-            // Create app namespace and take care of secured apps.
-            $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
-
-            $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
-
-            if (! file_exists($filename)) {
-                $this->send404();
-            }
-
-            // Default arguments for each app instance
-            $args = [
-                $name,
-                'core.cfg',
-                'core.http.router',
-                'core.content',
-                'core.sec.permission',
-                'core.sec.security',
-                'core.di'
-            ];
-
-            // Create an app instance
-            $this->instances[$name] = $this->di->instance($class, $args);
+        // Check for already existing instance of app and return reference to app if is
+        if (array_key_exists($name, $this->instances)) {
+            return $this->instances[$name];
         }
+
+        // New app instance Create app namespace and take care of secured apps.
+        $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
+
+        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+
+        if (! file_exists($filename)) {
+            $this->send404($filename);
+        }
+
+        // Default arguments for each app instance
+        $args = [
+            $name,
+            'core.cfg',
+            'core.router',
+            'core.page',
+            'core.security',
+            'core.io',
+            'core.language',
+            'core.amvc.creator',
+            'core.di'
+        ];
+
+        // Create an app instance
+        $this->instances[$name] = $this->di->instance($class, $args);
 
         // Return app instance
         return $this->instances[$name];
     }
 
-    private function send404()
+    private function send404($filename)
     {
+        error_log(sprintf('AMVC Creator Error: App class "%s" was not found.', $filename));
+
         header("HTTP/1.0 404 Page not found.");
-        echo '<h1>404 - Not Found</h1><p>The requsted page does not exists.</p><p><a href="/">Goto to Homepage?<a></p>';
-        error_log('AMVC Creator Error: App class was not found.' . PHP_EOL . print_r(debug_backtrace(null, 10), true));
+        echo '<h1>404 - Not Found</h1><p>The requested page does not exists.</p><p><a href="/">Goto to Homepage?</a></p>';
+        echo '<hr>';
+        echo '<small>Missing: ', $filename, '</small>';
+
         exit();
     }
 
@@ -109,7 +119,8 @@ class Creator
      * Autodiscovers installed apps in the given path.
      * When an app is found an instance of it will be created.
      *
-     * @param string|array $path Path to check for apps. Can be an array of paths.
+     * @param string|array $path
+     *            Path to check for apps. Can be an array of paths.
      */
     public function autodiscover($path)
     {
@@ -134,14 +145,13 @@ class Creator
                         }
 
                         // Create app by using the current dirs name as app name
-                        $this->getAppInstance($name);
+                        $app = $this->getAppInstance($name);
                     }
 
                     closedir($dh);
                 }
             }
         }
-
         // Run possible Start() method in apps
         foreach ($this->instances as $app) {
             if (method_exists($app, 'Start')) {
@@ -151,35 +161,19 @@ class Creator
     }
 
     /**
-     * Inits configuration of an app
-     *
-     * Uuses both config values stroed in db and adds default values from app
-     * config definition for missing config values.
-     *
-     * @param string $app_name
-     */
-    public function initAppConfig($app_name)
-    {
-        // Init app
-        $cfg_app = $this->getAppInstance($app_name)->getConfig();
-
-        // Add default values for not set config
-        foreach ($cfg_app as $key => $cfg_def) {
-
-            // Set possible vaue from apps default config when no config was loaded from db
-            if (! $this->cfg->exists($app_name, $key) && isset($cfg_def['default'])) {
-                $this->cfg->set($app_name, $key, $cfg_def['default']);
-            }
-        }
-    }
-
-    /**
      * Returns a list of loaded app names
+     *
+     * @param boolean $only_names
+     *            Optional flag to switch the return value to be only an array of app names or instances (Default: true)
      *
      * @return array
      */
-    public function getLoadedApps()
+    public function getLoadedApps($only_names = true)
     {
-        return array_keys($this->instances);
+        if ($only_names) {
+            return array_keys($this->instances);
+        }
+
+        return $this->instances;
     }
 }

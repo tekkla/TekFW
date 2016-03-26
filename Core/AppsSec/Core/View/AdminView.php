@@ -16,25 +16,45 @@ class AdminView extends View
     public function Index()
     {
         echo '
-        <h1>TekFW Framework Config</h1>
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        <a class="btn btn-default" href="', $this->config, '">Framework Config</a>
-                        <h2><strong>Applications:</strong></h2>
-                        <ul class="list-group">';
+        <h1>Admincenter</h1>
+        <ul class="nav nav-pills ">
+            <li role="presentation"><a href="#">Admin</a></li>
+            <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Applications <span class="caret"></span> </a>
+                <ul class="dropdown-menu">';
 
-                    foreach ($this->loaded_apps as $app_name => $link) {
-                        echo '<li class="list-group-item clearfix">', $app_name, ($link ? '<a href="' . $link . '" class="btn btn-default btn-xs pull-right"><i class="fa fa-cog"></i></a></li>' : '');
-                    }
+        foreach ($this->loaded_apps as $app_name => $link) {
 
-                        echo '
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            if (! $link) {
+                continue;
+            }
+
+            echo '<li><a data-ajax href="', $link, '">', $app_name, '</a></li>';
+        }
+
+        echo '
+                </ul>
+            </li>
+            <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">', $this->menu['users']['title'], '<span class="caret"></span> </a>
+                <ul class="dropdown-menu">
+                    <li><a data-ajax href="', $this->menu['users']['links']['users']['url'], '">', $this->menu['users']['links']['users']['text'], '</a></li>
+                    <li><a data-ajax href="', $this->menu['users']['links']['groups']['url'], '">', $this->menu['users']['links']['groups']['text'], '</a></li>
+                </ul>
+            </li>
+            <li role="presentation"><a href="#">Log</a></li>
+        </ul>
+        <div id="core-admin">';
+
+        $this->Admincenter();
+
+        echo '
         </div>';
+    }
+
+    public function Admincenter()
+    {
+        echo $this->logs;
     }
 }
 

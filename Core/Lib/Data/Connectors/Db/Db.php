@@ -1,43 +1,21 @@
 <?php
 namespace Core\Lib\Data\Connectors\Db;
 
+// Data Libs
+use Core\Lib\Data\DataAdapter;
 use Core\Lib\Data\Connectors\ConnectorAbstract;
 use Core\Lib\Data\Connectors\Db\Connection;
-use Core\Lib\Data\Connectors\Db\QueryBuilder;
-use Core\Lib\Traits\SerializeTrait;
-use Core\Lib\Traits\DebugTrait;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Data\DataAdapter;
+use Core\Lib\Data\Connectors\Db\QueryBuilder\QueryBuilder;
 
 /**
  * Database connector
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Db extends ConnectorAbstract
 {
-    use SerializeTrait;
-    use DebugTrait;
-
-    /**
-     * Conversionlist from db fieldtype to smf fieldtypes
-     *
-     * @var array
-     */
-    private $conversionlist = [
-        'text' => \PDO::PARAM_STR,
-        'char' => \PDO::PARAM_STR,
-        'int' => \PDO::PARAM_INT,
-        'decimal' => \PDO::PARAM_STR,
-        'double' => \PDO::PARAM_STR,
-        'float' => \PDO::PARAM_STR,
-        'numeric' => \PDO::PARAM_STR,
-        'date' => \PDO::PARAM_STR,
-        'time' => \PDO::PARAM_STR,
-        'string' => \PDO::PARAM_STR
-    ];
 
     /**
      * Sql string
@@ -88,13 +66,6 @@ class Db extends ConnectorAbstract
      */
     private $prefix;
 
-    /**
-     * Storage for default database object
-     *
-     * @var unknown
-     */
-    private static $default_instance;
-
     private static $queries = [];
 
     private static $query_count = 0;
@@ -115,6 +86,7 @@ class Db extends ConnectorAbstract
         // Connect to db
         $this->dbh = $this->conn->connect();
 
+        // Inject an empty DataAdapter object
         $this->injectAdapter(new DataAdapter());
     }
 
@@ -128,61 +100,30 @@ class Db extends ConnectorAbstract
         return $this->prefix;
     }
 
+    /**
+     * Sets the tabel prefix
+     *
+     * @param string $prefix
+     *            Table prefix
+     *
+     * @return \Core\Lib\Data\Connectors\Db\Db
+     */
     public function setPrefix($prefix)
     {
         $this->prefix = $prefix;
+
+        return $this;
     }
 
     /**
-     * Converts as string => type to smf db type.
+     * Run QueryBuilder to create a sql query
      *
-     * Returns false on failed conversion.
-     *
-     * @param string $type
-     *
-     * @return string|bool
-     */
-    public function convertType($type)
-    {
-        foreach ($this->conversionlist as $to_search => $new_type) {
-
-            if (preg_match('/' . $to_search . '/', $type)) {
-                return $new_type;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Converts the table datafields into smf compatible datatypes for usage as parameter in queries
-     *
-     * @param array $fieldlist
-     *
-     * @return array $fieldlist
-     */
-    public function convFldTypes($fieldlist)
-    {
-        foreach ($fieldlist as $field => $type) {
-
-            foreach ($this->conversionlist as $to_search => $new_type) {
-
-                if (preg_match('/' . $to_search . '/', $type)) {
-                    $fieldlist{$field} = $new_type;
-                }
-            }
-        }
-
-        return $fieldlist;
-    }
-
-    /**
-     * Run query by QueryBuilder.
-     *
-     * @param array $definition QueryBuilder definition array
+     * @param array $definition
+     *            QueryBuilder definition array
      * @param bool $autoexec
+     *            Optional flag to autoexecute the created query
      *
-     * @return \PDOStatement | queryresult
+     * @return \PDOStatement
      */
     public function qb(array $definition, $autoexec = false)
     {
@@ -200,9 +141,13 @@ class Db extends ConnectorAbstract
     /**
      * Run query by sql string.
      *
-     * @param unknown $sql
-     * @param unknown $params
-     * @param string $autoexec
+     * @param string $sql
+     *            The sql string
+     * @param array $params
+     *            Optional parameter array
+     * @param boolean $autoexec
+     *            Optional flag to autoexecute query
+     *
      * @return PDOStatement
      */
     public function sql($sql, array $params = [], $autoexec = false)
@@ -215,9 +160,10 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * This is the db query method.
+     * This is the db query method
      *
-     * @param boolean $exec Optional autoexec flag
+     * @param boolean $exec
+     *            Optional autoexec flag
      *
      * @return \PDOStatement | queryresult
      */
@@ -247,8 +193,11 @@ class Db extends ConnectorAbstract
      * Bind parameter by value to PDO statement
      *
      * @param string $param
+     *            Prameter name
      * @param mixed $value
-     * @param string $type Optional
+     *            Parameter value
+     * @param string $type
+     *            Optional parameter datatype
      *
      * @return \PDOStatement
      */
@@ -283,8 +232,11 @@ class Db extends ConnectorAbstract
      * Bind parameter by param to PDO statement
      *
      * @param string $param
+     *            Parameter name
      * @param mixed $value
-     * @param string $type Optional
+     *            Parameter value
+     * @param string $type
+     *            Optional parameter datatype
      *
      * @return \PDOStatement
      */
@@ -313,7 +265,7 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * Executes prepared statement.
+     * Executes prepared statement
      *
      * @return boolean
      */
@@ -323,54 +275,90 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * Returns all queried data.
+     * Returns all queried data
      *
-     * @param int $fetch_mode PDO fetch mode
+     * @param int $fetch_mode
+     *            Optional PDO fetch mode (Default: \PDO::FETCH_ASSOC)
      *
      * @return array
      */
-    public function all($fetch_mode = \PDO::FETCH_ASSOC)
+    public function all(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetchAll($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetchAll($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
 
-        if ($data) {
-            $data = $this->adapter->setDataset($data)->getData();
+        if (! empty($data)) {
+            $data = $this->adapter->setDataset($data, $scheme)->getData();
         }
 
         return $data;
     }
 
     /**
-     * PDO fetchAll
+     * Executes statement and returns result of PDO fetchAll()
      *
-     * @param PDO $fetch_mode PDO fetchmode constant
+     * @param PDO $fetch_mode
+     *            Optional PDO fetchmode constant (Default: \PDO::FETCH_ASSOC)
      *
      * @return mixed
      */
-    public function fetchAll($fetch_mode = \PDO::FETCH_ASSOC)
+    public function fetchAll($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        return $this->stmt->fetchAll($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetchAll($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
+
+        return $data;
+        ;
     }
 
     /**
-     * Returns current row of resultset
+     * Executes statement and returns result of PDO fetch()
      *
-     * @param int $fetch_mode PDO fetch mode
+     * @param int $fetch_mode
+     *            Optional PDO fetch mode (Default: \PDO::FETCH_ASSOC)
      *
-     * @return mices
+     * @return mixed
      */
-    public function single($fetch_mode = \PDO::FETCH_ASSOC)
+    public function single(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        $data = $this->stmt->fetch($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetch($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
 
-        if ($data) {
-            $data = $this->adapter->setData($data)->getData();
+        if (! empty($data)) {
+            $data = $this->adapter->setData($data, $scheme)->getData();
         }
 
         return $data;
@@ -379,21 +367,35 @@ class Db extends ConnectorAbstract
     /**
      * PDO fetch.
      *
-     * @param PDO $fetch_mode PDO fetchmode constant
+     * @param PDO $fetch_mode
+     *            Optional PDO fetchmode constant (Default: \PDO::FETCH_ASSOC)
      *
      * @return mixed
      */
-    public function fetch($fetch_mode = \PDO::FETCH_ASSOC)
+    public function fetch($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
         $this->stmt->execute();
 
-        return $this->stmt->fetch($fetch_mode);
+        if (empty($fetch_argument)) {
+            $data = $this->stmt->fetch($fetch_style);
+        }
+        else {
+            if (empty($ctor_args)) {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument);
+            }
+            else {
+                $data = $this->stmt->fetch($fetch_style, $fetch_argument, $ctor_args);
+            }
+        }
+
+        return $data;
     }
 
     /**
-     * Returns all rows of specific column in resultset.
+     * Executes statement and returns all rows of specific column
      *
-     * @param number $column Colum to return
+     * @param number $column
+     *            Number of column to return (Default: 0)
      *
      * @return array
      */
@@ -405,7 +407,7 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * Returns value of first column in first row
+     * Executes the statement and returns value of first column in first row
      *
      * @return mixed
      */
@@ -419,9 +421,12 @@ class Db extends ConnectorAbstract
     /**
      * Shorthand method to perform Count(*) query
      *
-     * @param string $table Table to delete from
-     * @param string $filter Optional: Filterstatement (Defaul='')
-     * @param array $params Optional: Parameter array to be used in filter
+     * @param string $table
+     *            Table to delete from
+     * @param string $filter
+     *            Optional filterstatement (Default: empty)
+     * @param array $params
+     *            Optional parameter array to be used in filter (Default: empty)
      *
      * @return number
      */
@@ -443,10 +448,20 @@ class Db extends ConnectorAbstract
 
         $this->qb($query);
 
-        return $this->rowCount();
+        return $this->value();
     }
 
-    public function find($table, $key_field, $value, $fetch_mode = \PDO::FETCH_ASSOC)
+    /**
+     * Finds one row by using one field and a value as filter
+     *
+     * @param string $table
+     *            Name of table
+     * @param unknown $key_field
+     *            Name of the field to filter
+     * @param mixed $value
+     *            Filter value
+     */
+    public function find($table, $key_field, $value)
     {
         $this->qb([
             'table' => $table,
@@ -456,15 +471,18 @@ class Db extends ConnectorAbstract
             ]
         ]);
 
-        return $this->single($fetch_mode);
+        return $this->single();
     }
 
     /**
      * Shorthand delete method.
      *
-     * @param string $table Table to delete from
-     * @param string $filter Optional: Filterstatement (Defaul='')
-     * @param array $params Optional: Parameter array to be used in filter
+     * @param string $table
+     *            Table to delete from
+     * @param string $filter
+     *            Optional: Filterstatement (Defaul='')
+     * @param array $params
+     *            Optional: Parameter array to be used in filter
      */
     public function delete($table, $filter = '', array $params = [])
     {
@@ -574,71 +592,24 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     *
-     * @param string $method "Insert" or "Replace"
-     * @param string $tbl Full name of the table to insert data. Do not forget {db_prefix}!
-     * @param array $fields Array of the coloums we have data for
-     * @param array $values The value to insert
-     * @param array $keys Array of table keys
-     *
-     * @return integer The id of the last inserted record
-     */
-    public function insert($method, $tbl, $fields, $values, $keys)
-    {
-        // Generate field and parameter list
-        $field_list = array_keys($fields);
-        $param_list = [];
-
-        foreach ($field_list as $field_name) {
-            $param_list[] = ':' . $field_name;
-        }
-
-        $stmt = $this->dbh->prepare('INSERT INTO ' . $tbl . ' (' . implode(', ', $field_list) . ') VALUES (' . implode(', ', $param_list) . ')');
-
-        foreach ($fields as $param => &$var) {
-            $stmt->bindValue(':' . $param, $var);
-        }
-
-        $stmt->execute();
-
-        return $this->dbh->lastInsertId($keys[0]);
-    }
-
-    /**
-     * Returns the list of queries done.
-     *
-     * @return multitype:
-     */
-    public function getQueryList()
-    {
-        return self::$queries;
-    }
-
-    /**
-     * Returns the number counter of queries done.
-     *
-     * @return number
-     */
-    public function getQueryCounter()
-    {
-        return $this->query_counter;
-    }
-
-    /**
      * Creates a string of named parameters and an array of named parameters => values.
      *
+     * Use this for sql statements like mySQLs IN().
+     *
      * @param string $param
+     *            Params prefix (Default: 'prm')
      * @param array $values
+     *            Values array
      *
      * @return array
      */
-    public function prepareArrayQuery($params='param', $values = [])
+    public function prepareArrayQuery($param_prefix = 'prm', $values = [])
     {
         $params_names = [];
         $params_val = [];
 
         foreach ($values as $key => $val) {
-            $name = ':' . $params . $key;
+            $name = ':' . $param_prefix . $key;
             $params_name[] = $name;
             $params_val[$name] = $val;
         }
@@ -696,7 +667,7 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * Creates and return an QueryBuilder instance.
+     * Creates and returns an QueryBuilder instance.
      *
      * @return \Core\Lib\Data\Connectors\Db\QueryBuilder
      */
@@ -706,9 +677,9 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * Returns current sql string and parameter array.
+     * Returns current sql string and parameter array
      *
-     * @return multitype:string array
+     * @return array
      */
     public function getSqlAndParams()
     {

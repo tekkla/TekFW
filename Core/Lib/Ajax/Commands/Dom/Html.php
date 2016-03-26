@@ -2,30 +2,41 @@
 namespace Core\Lib\Ajax\Commands\Dom;
 
 use Core\Lib\Ajax\AjaxCommandAbstract;
-use Core\Lib\Errors\Exceptions\AjaxException;
+use Core\Lib\Ajax\AjaxException;
 
 /**
  * Html.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Html extends AjaxCommandAbstract
 {
 
+    /**
+     *
+     * @var string
+     */
     protected $type = 'dom';
 
+    /**
+     *
+     * @var string
+     */
     protected $fn = 'html';
 
     /**
      * Create a HTML ajax which changes the html of target selector
      *
-     * @param $selector Selector to be changed
-     * @param $content Content be used
-     * @param $function Optional mode how to change the selected element. Can be: html(default), append or prepend.
+     * @param string $selector
+     *            Selector to be changed
+     * @param string $content
+     *            Content be used
+     * @param string $function
+     *            Optional mode how to change the selected element. Can be: 'html' (default), 'append' or 'prepend'.
      *
-     * @throws AjaxException
+     * @throws \Core\Lib\Ajax\AjaxException
      */
     public function html($selector, $content, $function = 'html')
     {

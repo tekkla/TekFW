@@ -1,3 +1,7 @@
+body {
+	padding-top: 70px;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Actionbar
@@ -51,18 +55,21 @@
 
 /*
 |--------------------------------------------------------------------------
-| To remove top or all vertical margins from elements
+| To remove top, bottom or all vertical margins from elements
 |--------------------------------------------------------------------------
 */
 .no-top-margin {
 	margin-top: 0;
 }
 
+.no-bottom-margin {
+    margin-bottom: 0;
+}
+
 .no-v-margin {
 	margin-top: 0;
 	margin-bottom: 0;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +87,16 @@
 .buffer {
 	margin-top: 15px;
 	margin-bottom: 15px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Scrolling
+|--------------------------------------------------------------------------
+*/
+.scroll {
+	max-height: 250px;
+	overflow-y: scroll;
 }
 
 /*

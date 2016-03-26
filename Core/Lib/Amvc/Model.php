@@ -1,71 +1,71 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Traits\SerializeTrait;
-use Core\Lib\Traits\ArrayTrait;
-use Core\Lib\Traits\UrlTrait;
 use Core\Lib\Data\Connectors\Db\Db;
-use Core\Lib\Data\Connectors\Db\Connection;
-use Core\Lib\Data\Container;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-;
+use Core\Lib\Security\Security;
+use Core\Lib\Data\Validator\Validator;
+use Core\Lib\Amvc\ModelException;
+use Core\Lib\Traits\ArrayTrait;
+use Core\Lib\Router\UrlTrait;
+use Core\Lib\Cfg\CfgTrait;
+use Core\Lib\Language\TextTrait;
 
 /**
  * Model.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
-class Model extends MvcAbstract implements \ArrayAccess
+class Model extends MvcAbstract
 {
 
-    use SerializeTrait;
-    use ArrayTrait;
     use UrlTrait;
+    use TextTrait;
+    use CfgTrait;
+    use ArrayTrait;
 
     /**
-     * MVC component type
      *
      * @var string
      */
     protected $type = 'Model';
 
-    protected $data = false;
+    /**
+     *
+     * @var array
+     */
+    protected $scheme = [];
+
+    /**
+     *
+     * @var Security
+     */
+    protected $security;
+
+    /**
+     *
+     * @var array
+     */
+    protected $errors = [];
 
     /**
      * Constructor
      *
-     * @param unknown $name
+     * @param string $name
      * @param App $app
-     * @param Vars $vars
+     * @param Security $security
      */
-    final public function __construct($name, App $app)
+    final public function __construct($name, App $app, Security $security)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
+        $this->security = $security;
     }
 
     /**
-     * Access to the apps config.
-     *
-     * Without any paramter set this method returns the complete config.
-     * With only key set, it returns the value associated with it.
-     * Set key and value, and the config will be updated.
-     *
-     * @param string $key
-     * @param string $val
-     *
-     * @return mixed
-     */
-    final public function cfg($key = null, $val = null)
-    {
-        return $this->app->cfg($key, $val);
-    }
-
-    /**
-     * Wrapper function for $this->appgetModel($model_name).
+     * Wrapper function for $this->app->getModel($model_name).
      *
      * There is a little difference in using this method than the long term. Not setting a model name
      * means, that you get a new instance of the currently used model.
@@ -85,56 +85,19 @@ class Model extends MvcAbstract implements \ArrayAccess
     }
 
     /**
-     * Creates an app related container
-     *
-     * @param string $container_name
-     *            Optional: Name of the container to load. When no name is given the name of the current model will be used.
-     * @param bool $auto_init
-     *            Optional: Autoinit uses the requested action to fill the container with according fields by calling the same called method of container.
-     *
-     * @return \Core\Lib\Data\Container
-     */
-    final public function getContainer($container_name = '')
-    {
-        if (empty($container_name)) {
-            $container_name = $this->getName();
-        }
-
-        return $this->app->getContainer($container_name);
-    }
-
-    /**
-     * Creates an generic container object.
-     *
-     * @return \Core\Lib\Data\Container
-     */
-    final public function getGenericContainer($fields = [])
-    {
-        $container = new Container();
-
-        if (! empty($fields)) {
-            $container->parseFields($fields);
-        }
-
-        return $container;
-    }
-
-    /**
      * Creates a database connector
      *
      * @param string $resource_name
      *            Name of the registered db factory
      * @param string $prefix
      *            Optional table prefix.
-     * @param array $fields
-     *            Optional field definition list to be used as containerscheme
      *
      * @return Db
      */
-    final protected function getDbConnector($resource_name = 'db.default', $prefix = '', $fields = [])
+    final protected function getDbConnector($resource_name = 'db.default', $prefix = '')
     {
         if (! $this->di->exists($resource_name)) {
-            Throw new InvalidArgumentException(sprintf('A database service with name "%s" ist not registered', $resource_name));
+            Throw new ModelException(sprintf('A database service with name "%s" ist not registered', $resource_name));
         }
 
         /* @var $db Db */
@@ -144,57 +107,200 @@ class Model extends MvcAbstract implements \ArrayAccess
             $db->setPrefix($prefix);
         }
 
-        if ($fields !== false) {
-
-            // Try to get a container object
-            $container = empty($fields) ? $this->getContainer() : $this->getGenericContainer($fields);
-
-            // Pass it to the DataAdapter
-            $db->setContainer($container);
-        }
-
         return $db;
     }
 
     /**
-     * (non-PHPdoc)
+     * Filters the fields value by using the set filter statements
      *
-     * @see ArrayAccess::offsetSet()
+     * It is possible to filter the field with multiple filters.
+     * This method uses filter_var_array() to filter the value.
+     *
+     * @return array
      */
-    public function offsetSet($offset, $value)
+    final protected function filter(array &$data, array $scheme = [])
     {
-        if (! is_null($offset)) {
-            $this->data[$offset] = $value;
+        if (empty($scheme)) {
+            $scheme = $this->scheme;
         }
+
+        if (empty($scheme['filter'])) {
+            return $data;
+        }
+
+        $filter = [];
+
+        foreach ($scheme['filter'] as $f => $r) {
+            $filter[$f] = $r;
+        }
+
+        if (empty($filter)) {
+            return $data;
+        }
+
+        $result = filter_var_array($data, $filter);
+
+        if (empty($result)) {
+            return $data;
+        }
+
+        foreach ($result as $key => $value) {
+            $data[$key] = $value;
+        }
+
+        return $data;
     }
 
     /**
-     * (non-PHPdoc)
+     * Validates data against the set validation rules
      *
-     * @see ArrayAccess::offsetExists()
+     * Returns boolean true when successful validate without errors.
+     *
+     * @param array $skip
+     *            Optional array of fieldnames to skip on validation
+     *
+     * @return boolean
      */
-    public function offsetExists($offset)
+    protected function validate(array &$data, array $fields = [], $filter_before_validate = true, array $skip = [])
     {
-        return isset($this->data[$offset]);
+        static $validator;
+
+        if (empty($fields)) {
+
+            if (empty($this->scheme['fields'])) {
+                return;
+            }
+
+            $fields = $this->scheme['fields'];
+        }
+
+        if (empty($fields)) {
+            return;
+        }
+
+        foreach ($data as $key => $val) {
+
+            if (in_array($key, $skip)) {
+                continue;
+            }
+
+            if ($filter_before_validate && ! empty($fields[$key]['filter'])) {
+
+                if (! is_array($fields[$key]['filter'])) {
+                    $fields[$key]['filter'] = (array) $fields[$key]['filter'];
+                }
+
+                foreach ($fields[$key]['filter'] as $filter) {
+
+                    $options = [];
+
+                    if (is_array($filter)) {
+                        $options = $filter[1];
+                        $filter = $filter[0];
+                    }
+
+                    $result = filter_var($val, $filter, $options);
+
+                    if ($result === false) {
+                        $this->addError($key, sprintf($this->text('validator.filter'), $filter));
+                    }
+                    else {
+                        $data[$key] = $result;
+                    }
+                }
+            }
+
+            if (empty($fields[$key]['validate'])) {
+                continue;
+            }
+
+            if (empty($validator)) {
+                $validator = new Validator();
+            }
+
+            if (! is_array($fields[$key]['validate'])) {
+                $fields[$key]['validate'] = (array) $fields[$key]['validate'];
+            }
+
+            $validator->validate($val, $fields[$key]['validate']);
+
+            if (! $validator->isValid()) {
+                $this->errors[$key] = $validator->getResult();
+            }
+        }
+
+        return $data;
     }
 
     /**
-     * (non-PHPdoc)
+     * Checks for existing model errors and returns boolean true or false
      *
-     * @see ArrayAccess::offsetUnset()
+     * @return boolean
      */
-    public function offsetUnset($offset)
+    final public function hasErrors()
     {
-        unset($this->data[$offset]);
+        return ! empty($this->errors);
     }
 
     /**
-     * (non-PHPdoc)
+     * Returns the models error array (can be empty)
      *
-     * @see ArrayAccess::offsetGet()
+     * @return array
      */
-    public function offsetGet($offset)
+    final public function getErrors()
     {
-        return isset($this->data[$offset]) ? $this->data[$offset] : null;
+        return $this->errors;
+    }
+
+    /**
+     * Resets models error array
+     */
+    final public function resetErrors()
+    {
+        $this->errors = [];
+
+        return $this;
+    }
+
+    /**
+     * Adds an error for a specific field (or global) to the models errorstack
+     *
+     * @param string $key
+     *            Fieldname the error belongs to. Use '@' to add a global and non field specific error. @-Errors will be
+     *            recognized by FormDesigner and shown on top of the form.
+     * @param string $error
+     *            The error text to add
+     *
+     * @return \Core\Lib\Amvc\Model
+     */
+    final public function addError($key, $error)
+    {
+        $this->errors[$key][] = $error;
+
+        return $this;
+    }
+
+    /**
+     * Creates an associative array based on the fields and default values of the scheme
+     *
+     * Throws an exception when calling this method without a scheme or with a scheme but with missing fieldlist in it.
+     *
+     * @throws ModelException
+     *
+     * @return array
+     */
+    final protected function getDataFromScheme()
+    {
+        if (empty($this->scheme) || empty($this->scheme['fields'])) {
+            Throw new ModelException('There is no scheme/fields in scheme in this model');
+        }
+
+        $data = [];
+
+        foreach ($this->scheme['fields'] as $key => $field) {
+            $data[$key] = ! empty($field['default']) ? $field['default'] : '';
+        }
+
+        return $data;
     }
 }

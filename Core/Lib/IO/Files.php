@@ -1,16 +1,14 @@
 <?php
 namespace Core\Lib\IO;
 
-use Core\Lib\Logging\Logging;
+use Core\Lib\Log\Log;
 use Core\Lib\Traits\StringTrait;
-use Core\Lib\Errors\Exceptions\InvalidArgumentException;
-use Core\Lib\Errors\Exceptions\FileException;
 
 /**
  * File.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Files
@@ -19,16 +17,16 @@ class Files
 
     /**
      *
-     * @var Logging
+     * @var Log
      */
     private $log;
 
     /**
      * Constructor
      *
-     * @param Logging $log
+     * @param Log $log
      */
-    public function __construct(Logging $log)
+    public function __construct(Log $log)
     {
         $this->log = $log;
     }
@@ -39,7 +37,8 @@ class Files
      * value will be the given path. If not, the path is created and the return
      * value boolean false/true
      *
-     * @param string $path Path and name of dir
+     * @param string $path
+     *            Path and name of dir
      *
      * @return string bool
      */
@@ -52,10 +51,11 @@ class Files
     /**
      * Deletes recursive a given dir inclusive all files and folders within it.
      *
-     * @param $dirname Path to the dir
+     * @param $dirname Path
+     *            to the dir
      *
-     * @throws FileException
-     * @throws InvalidArgumentException
+     * @throws IOException
+     * @throws IOException
      *
      * @return boolean
      */
@@ -65,11 +65,11 @@ class Files
             $dir_handle = opendir($dirname);
         }
         else {
-            Throw new InvalidArgumentException('The dirname parameter is not a valid directory');
+            Throw new IOException('The dirname parameter is not a valid directory');
         }
 
         if (! $dir_handle) {
-            Throw new FileException('Directory handle couldn\'t be created.');
+            Throw new IOException('Directory handle couldn\'t be created.');
         }
 
         while (($file = readdir($dir_handle)) != false) {
@@ -94,8 +94,10 @@ class Files
      * Both parameter have to be a full paths.On success the return value will be the destination path.
      * Otherwise it will be boolean false.
      *
-     * @param string $source Path to source file
-     * @param string $destination Path to destination file
+     * @param string $source
+     *            Path to source file
+     * @param string $destination
+     *            Path to destination file
      *
      * @return string boolean
      */
@@ -119,14 +121,14 @@ class Files
      * @param string $destination
      * @param bool $check_exists
      *
-     * @throws FileException
+     * @throws IOException
      *
      * @return boolean
      */
     public function moveUploadedFile($source, $destination, $check_exists = true)
     {
         if ($check_exists == true && $this->exists($destination)) {
-            Throw new FileException('File already exits', 2001);
+            Throw new IOException('File already exits', 2001);
         }
 
         return move_uploaded_file($source, $destination);
@@ -135,7 +137,8 @@ class Files
     /**
      * Wrapper method for file_exists() which throws an error.
      *
-     * @param string $full_path Complete path to file
+     * @param string $full_path
+     *            Complete path to file
      * @param string $log_missing
      *
      * @return boolean
@@ -144,7 +147,7 @@ class Files
      */
     public function exists($full_path, $log_missing = false)
     {
-        $exists = file_exists($full_path);
+        $exists = file_exists($full_path) && is_file($full_path);
 
         if (! $exists && $log_missing == true) {
             $this->log->file(sprintf('File "%s" not found.', $full_path), - 1);
@@ -159,14 +162,14 @@ class Files
      *
      * @param int $bytes
      *
-     * @throws InvalidArgumentException
+     * @throws IOException
      *
      * @return string unknown
      */
     public function convFilesize($bytes)
     {
         if (! $bytes == '0' . $bytes) {
-            Throw new InvalidArgumentException('Wrong parameter type');
+            Throw new IOException('Wrong parameter type');
         }
 
         if ($bytes > 0) {
@@ -189,7 +192,8 @@ class Files
     /**
      * Cleans up a filename string from all characters which can make trouble on filesystems.
      *
-     * @param string $name The string to cleanup
+     * @param string $name
+     *            The string to cleanup
      * @param string $delimiter
      *
      * @return string
@@ -214,9 +218,10 @@ class Files
     /**
      * Returns an array of files inside the given directory path.
      *
-     * @param string $path Directory path to get filelist from
+     * @param string $path
+     *            Directory path to get filelist from
      *
-     * @throws InvalidArgumentException
+     * @throws IOException
      *
      * @return void multitype:string
      */
@@ -235,7 +240,7 @@ class Files
 
         // No handle, error exception
         if ($handle === false) {
-            Throw new InvalidArgumentException(sprintf('Path "%s" not found.', $path, 2000));
+            Throw new IOException(sprintf('Path "%s" not found.', $path, 2000));
         }
 
         while (($file = readdir($handle)) !== false) {
@@ -315,5 +320,40 @@ class Files
     public function checkClassFileExists($class)
     {
         return file_exists(BASEDIR . '/' . str_replace('\\', '/', $class) . '.php');
+    }
+
+    /**
+     * Returns the mime type of a file by analyzing it's extension
+     *
+     * !!! DISCLAIMER !!!
+     * This will just match the file extension to the following array.
+     * It does not guarantee that the file is TRULY that of the extension that this function returns.
+     *
+     * @param string $file
+     *            Filepath
+     *
+     *            Thanks to Erutan409
+     * @see https://gist.github.com/Erutan409/8e774dfb2b343fe78b14
+     *
+     * @throws Exception
+     */
+    public function getMimeType($file)
+    {
+
+        // there's a bug that doesn't properly detect
+        // the mime type of css files
+        // https://bugs.php.net/bug.php?id=53035
+        // so the following is used, instead
+        // src: http://www.freeformatter.com/mime-types-list.html#mime-types-list
+        $mime_type = include ('mime_types.php');
+
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+        if (isset($mime_type[$extension])) {
+            return $mime_type[$extension];
+        }
+        else {
+            Throw new IOException("Unknown file type");
+        }
     }
 }

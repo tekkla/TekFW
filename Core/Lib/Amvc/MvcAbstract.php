@@ -1,25 +1,21 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Traits\DebugTrait;
-use Core\Lib\Traits\AccessTrait;
-use Core\Lib\Traits\TextTrait;
+// Traits
+use Core\Lib\Security\AccessTrait;
 use Core\Lib\Traits\StringTrait;
-use Core\Lib\Errors\Exceptions\UnexpectedValueException;
 
 /**
  * MvcAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class MvcAbstract
 {
     use StringTrait;
-    use TextTrait;
     use AccessTrait;
-    use DebugTrait;
 
     /**
      * Name of the MVC object
@@ -29,16 +25,17 @@ abstract class MvcAbstract
     protected $name;
 
     /**
-     * Hold injected App object this MVC object is used for
+     * Holds injected App object this MVC object is used for
      *
      * @var App
      */
     public $app;
 
     /**
-     * MVC objects need an app instance.
+     * MVC objects need an app instance
      *
      * @param App $app
+     *            App object to inject
      *
      * @return \Core\Lib\Abstracts\MvcAbstract
      */
@@ -53,6 +50,7 @@ abstract class MvcAbstract
      * Sets the name of the MVC object
      *
      * @param string $name
+     *            Name of this object
      *
      * @return \Core\Lib\Abstracts\MvcAbstract
      */
@@ -65,9 +63,8 @@ abstract class MvcAbstract
 
     /**
      * Returns the name of the MVC object.
-     * Throws error when name is not set.
      *
-     * @throws UnexpectedValueException
+     * @throws AmvcException
      *
      * @return string
      */
@@ -77,22 +74,20 @@ abstract class MvcAbstract
             return $this->name;
         }
 
-        Throw new UnexpectedValueException('Name from MVC component is not set.');
+        Throw new AmvcException('Name from MVC component is not set.');
     }
 
     /**
      * Returns the name of the App object insite the MVC object.
-     * Throws an error
-     * if the App object is not set.
      *
-     * @throws UnexpectedValueException
+     * @throws AmvcException
      *
      * @return string
      */
     public function getAppName()
     {
         if (! isset($this->app)) {
-            Throw new UnexpectedValueException('MVC component has no set app name.');
+            Throw new AmvcException('MVC component has no set app name.');
         }
 
         return $this->app->getName();

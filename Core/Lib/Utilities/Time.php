@@ -5,11 +5,14 @@ namespace Core\Lib\Utilities;
  * Time.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Time
 {
+
+    const SEC_PER_DAY = 60 * 60 * 24;
+    const SEC_PER_HOUR = 60 * 60;
 
     /**
      * Converts a date and time string into timestamp

@@ -2,18 +2,18 @@
 namespace Core\Lib\Errors;
 
 use Core\Lib\Errors\Exceptions\BasicException;
-use Core\Lib\Http\Router;
+use Core\Lib\Router\Router;
 use Core\Lib\Security\User;
 use Core\Lib\Ajax\Ajax;
-use Core\Lib\Content\Message;
-use Core\Lib\Cfg;
+use Core\Lib\Cfg\Cfg;
 use Core\Lib\Data\Connectors\Db\Db;
+use Core\Lib\Page\Body\Message\Message;
 
 /**
  * ExceptionHandler.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class ExceptionHandler
@@ -98,17 +98,22 @@ class ExceptionHandler
      * Exceptionhandler
      *
      * @param \Exception $e
-     * @param boolean $fatal Optional flags exception to be a fatal error (Default: false)
-     * @param boolean $clean_buffer Optional flag to switch buffer clean on/off. (Default: false)
-     * @param boolean $error_log Optional flag to switch error logging on/off. (Default: true)
-     * @param boolean $send_mail Optional flag to send error message to admins. (Default: false)
-     * @param boolean $to_db Optional flag to switch error logging to db driven errorlog on/off. (Default: true)
+     *            The exception or the error (PHP7)
+     * @param boolean $fatal
+     *            Optional flags exception to be a fatal error (Default: false)
+     * @param boolean $clean_buffer
+     *            Optional flag to switch buffer clean on/off. (Default: false)
+     * @param boolean $error_log
+     *            Optional flag to switch error logging on/off. (Default: true)
+     * @param boolean $send_mail
+     *            Optional flag to send error message to admins. (Default: false)
+     * @param boolean $to_db
+     *            Optional flag to switch error logging to db driven errorlog on/off. (Default: true)
      *
      * @return boolean|string
      */
     public function handleException($e, $fatal = false, $clean_buffer = false, $error_log = true, $send_mail = false, $to_db = true, $public = false)
     {
-
 
         // Store exception
         $this->exception = $e;
@@ -129,7 +134,7 @@ class ExceptionHandler
             $public = $this->exception->getPublic();
         }
 
-        // Override db logging on
+        // Override db logging on PDO exceptions
         if ($this->exception instanceof \PDOException) {
 
             $error_log = true;
@@ -140,21 +145,21 @@ class ExceptionHandler
         }
 
         // Log error
-        if ($this->cfg->exists('Core', 'error_logger')) {
+        if (isset($this->cfg->data['Core']['error.log.use'])) {
 
             // Write to error log?
-            if ($error_log == true || $this->cfg->get('Core', 'error_to_log') == true) {
+            if ($error_log == true || $this->cfg->data['Core']['error.log.modes.php'] == true) {
                 error_log($message . ' (' . $file . ':' . $line . ')');
             }
 
             // Write to db error log? Take care of avoid flag (-1) due to PDOExceptions
-            if ($to_db == true || $this->cfg->get('Core', 'error_to_db') == true) {
+            if ($to_db == true || $this->cfg->data['Core']['error.log.modes.db'] == true) {
 
                 try {
 
                     $this->db->qb([
                         'method' => 'INSERT',
-                        'tbl' => 'error_log',
+                        'table' => 'core_error_logs',
                         'fields' => [
                             'stamp',
                             'msg',
@@ -190,7 +195,6 @@ class ExceptionHandler
             $this->ajax->cleanCommandStack();
 
             $command = $this->ajax->createCommand('Act\Error');
-
             $command->error($this->createErrorHtml(true));
             $command->send();
 
@@ -229,7 +233,7 @@ class ExceptionHandler
         switch (true) {
             case method_exists($this->exception, 'getPublic') && $this->exception->getPublic():
             case (bool) $this->user->isAdmin():
-            case (bool) $this->cfg->get('Core', 'skip_security_check'):
+            case (bool) $this->cfg->data['Core']['error.display.skip_security_check']:
                 $this->error_html .= '
                 <h3 class="no-v-margin">' . $this->exception->getMessage() . '<br>
                 <small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></h3>
@@ -256,6 +260,7 @@ class ExceptionHandler
     }
 
     /**
+     * Fatal error!
      */
     private function fatal()
     {
@@ -269,7 +274,7 @@ class ExceptionHandler
         <html>
             <head>
                 <title>Error</title>
-                <link href="/Cache/combined.css" rel="stylesheet">
+                <link href="' . BASEURL . '/Cache/combined.css" rel="stylesheet">
                 <style type="text/css">
                     * { margin: 0; padding: 0; }
                     body { background-color: #aaa; color: #eee; font-family: Sans-Serif; }
