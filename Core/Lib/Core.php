@@ -286,18 +286,18 @@ final class Core
             Throw new Exception('Error on DB access');
         }
 
-        foreach ($this->settings['db'] as $name => $settings) {
+        foreach ($this->settings['db'] as $name => &$settings) {
 
             $prefix = 'db.' . $name;
 
             // Check for DB defaults and map values
             foreach ($defaults as $key => $default) {
 
-                if (empty($this->settings['db'][$name][$key])) {
-                    $this->settings['db'][$name][$key] = $default;
+                if (empty($settings[$key])) {
+                    $settings[$key] = $default;
                 }
 
-                $this->di->mapValue($prefix . '.' . $key, $this->settings['db'][$name][$key]);
+                $this->di->mapValue($prefix . '.' . $key, $settings[$key]);
             }
 
             // Default connection
