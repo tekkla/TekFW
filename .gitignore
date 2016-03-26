@@ -5,7 +5,7 @@
 .gitattributes
 /logs/
 /vendor/
-/Core/Tools/
+/Cache/*.*
 Settings.php
 info.php
 gnokii-errors
