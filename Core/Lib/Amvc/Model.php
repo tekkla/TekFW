@@ -26,7 +26,6 @@ class Model extends MvcAbstract
     use ArrayTrait;
 
     /**
-     * MVC component type
      *
      * @var string
      */
@@ -39,14 +38,12 @@ class Model extends MvcAbstract
     protected $scheme = [];
 
     /**
-     * Access om Security service
      *
      * @var Security
      */
     protected $security;
 
     /**
-     * Storage for model errors
      *
      * @var array
      */
@@ -68,7 +65,7 @@ class Model extends MvcAbstract
     }
 
     /**
-     * Wrapper function for $this->appgetModel($model_name).
+     * Wrapper function for $this->app->getModel($model_name).
      *
      * There is a little difference in using this method than the long term. Not setting a model name
      * means, that you get a new instance of the currently used model.
@@ -127,32 +124,26 @@ class Model extends MvcAbstract
             $scheme = $this->scheme;
         }
 
-        // No filter in scheme? End here!
         if (empty($scheme['filter'])) {
             return $data;
         }
 
         $filter = [];
 
-        // Get all filter
         foreach ($scheme['filter'] as $f => $r) {
             $filter[$f] = $r;
         }
 
-        // No filter to use? End here!
         if (empty($filter)) {
             return $data;
         }
 
-        // Run filter agains data
         $result = filter_var_array($data, $filter);
 
-        // No result? End here!
         if (empty($result)) {
             return $data;
         }
 
-        // Copy filtered results into data
         foreach ($result as $key => $value) {
             $data[$key] = $value;
         }
@@ -174,32 +165,25 @@ class Model extends MvcAbstract
     {
         static $validator;
 
-        // No fields provided?
         if (empty($fields)) {
 
-            // When there is no scheme with fields in this model we have to end here
             if (empty($this->scheme['fields'])) {
                 return;
             }
 
-            // Otherwise use the fields list from models scheme
             $fields = $this->scheme['fields'];
         }
 
-        // No fields, no validation
         if (empty($fields)) {
             return;
         }
 
-        // Let's validate the data!
         foreach ($data as $key => $val) {
 
-            // Skip field? Next please!
             if (in_array($key, $skip)) {
                 continue;
             }
 
-            // Run some filters prior to field validation?
             if ($filter_before_validate && ! empty($fields[$key]['filter'])) {
 
                 if (! is_array($fields[$key]['filter'])) {
@@ -226,12 +210,10 @@ class Model extends MvcAbstract
                 }
             }
 
-            // No validation rules to call? Next please!
             if (empty($fields[$key]['validate'])) {
                 continue;
             }
 
-            // Only instantiate validator once
             if (empty($validator)) {
                 $validator = new Validator();
             }
@@ -240,10 +222,8 @@ class Model extends MvcAbstract
                 $fields[$key]['validate'] = (array) $fields[$key]['validate'];
             }
 
-            // Validate the value against the rules
             $validator->validate($val, $fields[$key]['validate']);
 
-            // Errors on validation?
             if (! $validator->isValid()) {
                 $this->errors[$key] = $validator->getResult();
             }
@@ -314,6 +294,8 @@ class Model extends MvcAbstract
         if (empty($this->scheme) || empty($this->scheme['fields'])) {
             Throw new ModelException('There is no scheme/fields in scheme in this model');
         }
+
+        $data = [];
 
         foreach ($this->scheme['fields'] as $key => $field) {
             $data[$key] = ! empty($field['default']) ? $field['default'] : '';
