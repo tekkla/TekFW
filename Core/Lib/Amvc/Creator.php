@@ -14,7 +14,6 @@ class Creator
 {
 
     /**
-     * List of secured app, which resides within the framework folder.
      *
      * @var array
      */
@@ -23,7 +22,6 @@ class Creator
     ];
 
     /**
-     * List of apps, which can get instances of secured apps.
      *
      * @var Array
      */
@@ -32,7 +30,6 @@ class Creator
     ];
 
     /**
-     * Storage for app instances
      *
      * @var array
      */
@@ -69,7 +66,7 @@ class Creator
             $this->send404();
         }
 
-        // Check for already existing instance of app and return reference to app if is
+        // App instances are singletons!
         if (array_key_exists($name, $this->instances)) {
             return $this->instances[$name];
         }
@@ -96,11 +93,11 @@ class Creator
             'core.di'
         ];
 
-        // Create an app instance
-        $this->instances[$name] = $this->di->instance($class, $args);
+        $instance = $this->di->instance($class, $args);
 
-        // Return app instance
-        return $this->instances[$name];
+        $this->instances[$name] = $instance;
+
+        return $instance;
     }
 
     private function send404($filename)
@@ -116,11 +113,12 @@ class Creator
     }
 
     /**
-     * Autodiscovers installed apps in the given path.
+     * Autodiscovers installed apps in the given path
+     *
      * When an app is found an instance of it will be created.
      *
      * @param string|array $path
-     *            Path to check for apps. Can be an array of paths.
+     *            Path to check for apps. Can be an array of paths
      */
     public function autodiscover($path)
     {
@@ -130,21 +128,15 @@ class Creator
 
         foreach ($path as $apps_dir) {
 
-            // Dir found?
             if (is_dir($apps_dir)) {
-
-                // Try to open apps dir
                 if (($dh = opendir($apps_dir)) !== false) {
 
-                    // Check each dir member for apps
                     while (($name = readdir($dh)) !== false) {
 
-                        // Skip Core app and parent names
-                        if ($name == '..' || $name == '.' || $name == 'Core' || substr($name, 0, 1) == '.') {
+                        if ($name{0} == '.' || $name == 'Core' || is_file($name)) {
                             continue;
                         }
 
-                        // Create app by using the current dirs name as app name
                         $app = $this->getAppInstance($name);
                     }
 
@@ -152,7 +144,8 @@ class Creator
                 }
             }
         }
-        // Run possible Start() method in apps
+
+        // Call Start() event after all app instances have been loaded
         foreach ($this->instances as $app) {
             if (method_exists($app, 'Start')) {
                 $app->Start();
