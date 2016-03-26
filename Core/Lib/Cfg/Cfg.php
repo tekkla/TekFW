@@ -7,6 +7,7 @@ use Core\Lib\Data\Connectors\Db\Db;
 // Traits
 use Core\Lib\Traits\StringTrait;
 use Core\Lib\Traits\ArrayTrait;
+use phpFastCache\CacheManager;
 
 /**
  * Cfg.php
@@ -146,26 +147,32 @@ final class Cfg
      */
     public function load()
     {
-        $this->db->qb([
-            'table' => 'core_configs',
-            'fields' => [
-                'app',
-                'cfg',
-                'val'
-            ],
-            'order' => 'app, cfg'
-        ]);
+        $cache = CacheManager::getInstance();
 
-        $results = $this->db->all();
+        $config = $cache->get('Core.Config');
 
-        foreach ($results as $row) {
+        if (empty($config)) {
 
-            // Check for serialized config value and unserialize it
-            $val = $this->stringIsSerialized($row['val']) ? unserialize($row['val']) : $row['val'];
+            $this->db->qb([
+                'table' => 'core_configs',
+                'fields' => [
+                    'app',
+                    'cfg',
+                    'val'
+                ],
+                'order' => 'app, cfg'
+            ]);
 
-            // Set config
-            $this->data[$row['app']][$row['cfg']] = $val;
+            $results = $this->db->all();
+
+            foreach ($results as $row) {
+                $val = $this->stringIsSerialized($row['val']) ? unserialize($row['val']) : $row['val'];
+                $this->data[$row['app']][$row['cfg']] = $val;
+            }
+
+            $cache->set('Core.Config', $this->data);
         }
+
     }
 
     /**
@@ -253,29 +260,8 @@ final class Cfg
                     $this->data[$app_name][$cfg] = $value['default'];
                 }
 
-                if (!empty($value['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
+                if (! empty($value['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
                     $this->data[$app_name][$cfg] = unserialize($this->data[$app_name][$cfg]);
-                }
-
-                // Check posible set
-                if (!empty($value['type'])) {
-
-                    $types = [
-                        'boolean',
-                        'integer',
-                        'float',
-                        'string',
-                        'array',
-                        'object',
-                        'null'
-                    ];
-
-                    if (! in_array($value['type'], $types)) {
-                        Throw new CfgException(sprintf('Type "%s" is not allowed as fieldtype. Allowed types are: %s', $value['type'], implode(', ', $types)));
-                    }
-
-                    settype($this->data[$app_name][$cfg], $value['type']);
-
                 }
             }
             else {

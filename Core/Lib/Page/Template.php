@@ -3,7 +3,6 @@ namespace Core\Lib\Page;
 
 use Core\Lib\Cfg\Cfg;
 use Core\Lib\Html\HtmlFactory;
-use Core\Lib\Cache\Cache;
 use Core\Lib\Page\PageException;
 
 /**
@@ -60,12 +59,11 @@ class Template
      * @param HtmlFactory $html
      *            HtmlFactory dependency
      */
-    public function __construct(Cfg $cfg, Page $page, HtmlFactory $html, Cache $cache)
+    public function __construct(Cfg $cfg, Page $page, HtmlFactory $html)
     {
         $this->cfg = $cfg;
         $this->page = $page;
         $this->html = $html;
-        $this->cache = $cache;
     }
 
     /**

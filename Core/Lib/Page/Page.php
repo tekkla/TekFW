@@ -287,7 +287,7 @@ class Page
 
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
 
-        $template = new $class($this->cfg, $this, $this->html, $this->di->get('core.cache'));
+        $template = new $class($this->cfg, $this, $this->html);
 
         return $template->render();
     }

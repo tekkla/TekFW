@@ -172,6 +172,8 @@ final class Core
                     echo $result;
                 }
 
+
+
                 ob_end_flush();
             }
         }
@@ -380,12 +382,6 @@ final class Core
         $this->di->mapService('core.amvc.creator', '\Core\Lib\Amvc\Creator', 'core.cfg');
         $this->di->mapFactory('core.amvc.app', '\Core\Lib\Amvc\App');
 
-        // == CACHE ========================================================
-        $this->di->mapService('core.cache', '\Core\Lib\Cache\Cache', [
-            'core.cfg'
-        ]);
-        $this->di->mapFactory('core.cache.object', '\Core\Lib\Cache\CacheObject');
-
         // == IO ===========================================================
         $this->di->mapService('core.io', '\Core\Lib\IO\IO', [
             'core.io.files',
@@ -432,12 +428,10 @@ final class Core
         ]);
         $this->di->mapFactory('core.page.head.css', '\Core\Lib\Page\Head\Css\Css', [
             'core.cfg',
-            'core.cache'
         ]);
         $this->di->mapFactory('core.page.head.js', '\Core\Lib\Page\Head\Javascript\Javascript', [
             'core.cfg',
             'core.router',
-            'core.cache'
         ]);
         $this->di->mapService('core.page.body.message', '\Core\Lib\Page\Body\Message\Message');
         $this->di->mapService('core.page.body.nav', '\Core\Lib\Page\Body\Menu\Menu');
@@ -478,7 +472,7 @@ final class Core
         $this->cfg->load();
 
         // Set baseurl to config
-        $this->cfg->data['Core']['site.general.url'] = $this->settings['protcol'] . '://' . $this->settings['baseurl'];
+        $this->cfg->data['Core']['site.general.url'] = $this->settings['protocol'] . '://' . $this->settings['baseurl'];
     }
 
     private function initDirs()

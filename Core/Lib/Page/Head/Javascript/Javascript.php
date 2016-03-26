@@ -1,29 +1,21 @@
 <?php
 namespace Core\Lib\Page\Head\Javascript;
 
-// Config Service
 use Core\Lib\Cfg\Cfg;
-
-// Router Service
 use Core\Lib\Router\Router;
-
-// Cache Service
-use Core\Lib\Cache\Cache;
 use Core\Lib\Page\PageException;
-
 
 /**
  * Javascript.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Javascript
 {
 
     /**
-     * Stack of core javascript objects
      *
      * @var array
      */
@@ -33,7 +25,6 @@ class Javascript
     ];
 
     /**
-     * Stack of app javascript objects
      *
      * @var array
      */
@@ -43,22 +34,34 @@ class Javascript
     ];
 
     /**
-     * For double file use prevention
      *
      * @var array
      */
     private $files_used = [];
 
     /**
-     * Internal filecounter
      *
      * @var int
      */
     private $filecounter = 0;
 
+    /**
+     *
+     * @var string
+     */
     private $mode = 'apps';
 
+    /**
+     *
+     * @var string
+     */
     private $js_url = '';
+
+    /**
+     *
+     * @var string
+     */
+    private $js_dir = '';
 
     /**
      *
@@ -74,22 +77,13 @@ class Javascript
 
     /**
      *
-     * @var Cache
-     */
-    private $cache;
-
-    /**
-     * Constructor
-     *
      * @param Cfg $cfg
      * @param Router $router
-     * @param Cache $cache
      */
-    public function __construct(Cfg $cfg, Router $router, Cache $cache)
+    public function __construct(Cfg $cfg, Router $router)
     {
         $this->cfg = $cfg;
         $this->router = $router;
-        $this->cache = $cache;
 
         $this->js_url = $cfg->data['Core']['url.js'];
         $this->js_dir = $cfg->data['Core']['dir.js'];
@@ -235,7 +229,9 @@ class Javascript
         $script->setIsExternal($is_external);
         $script->setDefer($defer);
 
-        return $this->add($script);
+        $this->add($script);
+
+        return $script;
     }
 
     /**
@@ -254,7 +250,9 @@ class Javascript
         $script->setScript($script);
         $script->setDefer($defer);
 
-        return $this->add($script);
+        $this->add($script);
+
+        return $script;
     }
 
     /**
@@ -273,7 +271,9 @@ class Javascript
         $script->setScript($script);
         $script->setDefer($defer);
 
-        return $this->add($script);
+        $this->add($script);
+
+        return $script;
     }
 
     /**
@@ -293,7 +293,9 @@ class Javascript
         $script->setScript($script);
         $script->setDefer($defer);
 
-        return $this->add($script);
+        $this->add($script);
+
+        return $script;
     }
 
     /**
@@ -319,7 +321,9 @@ class Javascript
             $value
         ]);
 
-        return $this->add($script);
+        $this->add($script);
+
+        return $script;
     }
 
     /**
@@ -370,7 +374,7 @@ class Javascript
         }
 
         // Init js storages
-        $files = $blocks = $inline = $scripts = $ready = $vars = [];
+        $files = $blocks = $inline = $scripts = $ready = $vars = $local_files = [];
 
         /* @var $script JavascriptObject */
         foreach ($script_stack as $key => $script) {
@@ -415,54 +419,47 @@ class Javascript
             unset($script_stack[$key]);
         }
 
-        $combined = '';
-
         // Check cache
-        if ($local_files) {
-
-            // Yes! Now check cache
-            $cache_object = $this->cache->createCacheObject();
+        if ($local_files || $inline || $vars || $scripts || $ready) {
 
             $key = 'combined_' . $area;
             $extension = 'js';
 
-            $cache_object->setKey($key);
-            $cache_object->setExtension($extension);
-            $cache_object->setTTL($this->cfg->data['Core']['cache.file.ttl_js']);
+            $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
 
-            if ($this->cache->checkExpired($cache_object)) {
+            // End of combined file TTL reached?
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
 
-                // Create combined output
-                foreach ($local_files as $filename) {
-                    $combined .= file_get_contents($filename);
+                \FB::log('TTL or not existing');
+
+                // Strat combining all parts
+                $combined = '';
+
+                if ($local_files) {
+                    foreach ($local_files as $js_file) {
+                        $combined .= file_get_contents($js_file);
+                    }
                 }
 
                 if ($inline) {
                     $combined .= implode('', $inline);
                 }
 
-                if ($vars || $scripts || $ready) {
-
-                    // Create script html object
+                if ($vars) {
                     foreach ($vars as $name => $val) {
                         $combined .= 'var ' . $name . ' = ' . (is_string($val) ? '"' . $val . '"' : $val) . ';';
                     }
+                }
 
-                    // Create $(document).ready()
-                    if ($ready) {
-                        $combined .= '$(document).ready(function() {' . implode('', $ready) . '});';
-                    }
+                if ($ready) {
+                    $combined .= '$(document).ready(function() {' . implode('', $ready) . '});';
+                }
 
-                    // Add complete blocks
+                if ($blocks) {
                     $combined .= implode($blocks);
                 }
 
-                // Minify combined css code
-                $combined = \JSMin::minify($combined);
-
-                $cache_object->setContent($combined);
-
-                $this->cache->put($cache_object);
+                file_put_contents($filename, \JSMin::minify($combined));
             }
 
             $files[] = $this->cfg->data['Core']['url.cache'] . '/' . $key . '.' . $extension;

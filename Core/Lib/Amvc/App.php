@@ -380,7 +380,6 @@ class App
             'core.security',
             'core.page',
             'core.html.factory',
-            'core.cache',
             'core.ajax'
         ];
 
@@ -465,7 +464,7 @@ class App
     final public function getAppType()
     {
         // Normal app or secure app?
-        return $this->secure === true ? 'appssec' : 'apps';
+        return in_array(self::SECURE, $this->flags) ? 'appssec' : 'apps';
     }
 
     /**

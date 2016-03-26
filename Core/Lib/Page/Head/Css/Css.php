@@ -1,11 +1,7 @@
 <?php
 namespace Core\Lib\Page\Head\Css;
 
-// Cfg Service
 use Core\Lib\Cfg\Cfg;
-
-// Cache Service
-use Core\Lib\Cache\Cache;
 
 /**
  * Css.php
@@ -22,14 +18,14 @@ final class Css
      *
      * @var array
      */
-    private static $core_css = [];
+    private $core_css = [];
 
     /**
      * Storage of app css objects
      *
      * @var array
      */
-    private static $app_css = [];
+    private $app_css = [];
 
     /**
      * Type of css object
@@ -39,7 +35,6 @@ final class Css
     private $type;
 
     /**
-     * Css object content
      *
      * @var string
      */
@@ -53,10 +48,8 @@ final class Css
 
     /**
      *
-     * @var Cache
+     * @var string
      */
-    private $cache;
-
     private $mode = 'apps';
 
     /**
@@ -64,10 +57,9 @@ final class Css
      *
      * @param Cfg $cfg
      */
-    public function __construct(Cfg $cfg, Cache $cache)
+    public function __construct(Cfg $cfg)
     {
         $this->cfg = $cfg;
-        $this->cache = $cache;
     }
 
     /**
@@ -89,7 +81,8 @@ final class Css
         // Add existing local user/theme related bootstrap file or load it from cdn
         if ($this->cfg->data['Core']['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
             $this->link(THEMESURL . $file);
-        } else {
+        }
+        else {
             // Add bootstrap main css file from cdn
             $this->link('https://maxcdn.bootstrapcdn.com/bootstrap/' . $version . '/css/bootstrap.min.css');
         }
@@ -103,7 +96,8 @@ final class Css
         // Add existing font-awesome font icon css file or load it from cdn
         if ($this->cfg->data['Core']['style.fontawesome.local'] && file_exists(THEMESDIR . $file)) {
             $this->link(THEMESURL . $file);
-        } else {
+        }
+        else {
             $this->link('https://maxcdn.bootstrapcdn.com/font-awesome/' . $version . '/css/font-awesome.min.css');
         }
 
@@ -123,9 +117,10 @@ final class Css
     public function &add(CssObject $css)
     {
         if ($this->mode == 'core') {
-            self::$core_css[] = $css;
-        } else {
-            self::$app_css[] = $css;
+            $this->core_css[] = $css;
+        }
+        else {
+            $this->app_css[] = $css;
         }
 
         return $css;
@@ -140,12 +135,14 @@ final class Css
      */
     public function &link($url)
     {
-        $css = new CssObject();
+        $css_object = new CssObject();
 
-        $css->setType('file');
-        $css->setCss($url);
+        $css_object->setType('file');
+        $css_object->setCss($url);
 
-        return $this->add($css);
+        $this->add($css_object);
+
+        return $css_object;
     }
 
     /**
@@ -157,12 +154,14 @@ final class Css
      */
     public function &inline($styles)
     {
-        $css = new CssObject();
+        $css_object = new CssObject();
 
-        $css->setType('inline');
-        $css->setCss($styles);
+        $css_object->setType('inline');
+        $css_object->setCss($styles);
 
-        return $this->add($css);
+        $this->add($css_object);
+
+        return $css_object;
     }
 
     /**
@@ -170,7 +169,7 @@ final class Css
      */
     public function getObjectStack()
     {
-        return array_merge(self::$core_css, self::$app_css);
+        return array_merge($this->core_css, $this->app_css);
     }
 
     /**
@@ -189,23 +188,24 @@ final class Css
         $inline = [];
 
         /* @var $css Css */
-        foreach ($css_stack as $css) {
+        foreach ($css_stack as $css_object) {
 
-            switch ($css->getType()) {
+            switch ($css_object->getType()) {
                 case 'file':
 
-                    $filename = $css->getCss();
+                    $filename = $css_object->getCss();
 
                     if (strpos($filename, BASEURL) !== false) {
                         $local_files[] = str_replace(BASEURL, BASEDIR, $filename);
-                    } else {
+                    }
+                    else {
                         $files[] = $filename;
                     }
 
                     break;
 
                 case 'inline':
-                    $inline[] = $css->getCss();
+                    $inline[] = $css_object->getCss();
                     break;
             }
         }
@@ -213,31 +213,31 @@ final class Css
         $combined = '';
 
         // Any local files?
-        if ($local_files) {
-
-            // Yes! Now check cache
-            $cache_object = $this->cache->createCacheObject();
+        if ($local_files || $inline) {
 
             $key = 'combined';
             $extension = 'css';
 
-            $cache_object->setKey($key);
-            $cache_object->setExtension($extension);
-            $cache_object->setTTL($this->cfg->data['Core']['cache.file.ttl_css']);
+            $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
 
-            if ($this->cache->checkExpired($cache_object)) {
+            // End of combined file TTL reached?
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
 
-                foreach ($local_files as $filename) {
-                    $combined .= file_get_contents($filename);
+                \FB::log('TTL or not existing');
+
+                if (! empty($local_files)) {
+                    foreach ($local_files as $css_file) {
+                        $combined .= file_get_contents($css_file);
+                    }
                 }
 
-                if ($inline) {
+                if (! empty($inline)) {
                     $combined .= implode(PHP_EOL, $inline);
                 }
 
                 // Minify combined css code
-                $cssmin = new \CSSmin();
-                $combined = $cssmin->run($combined);
+                $css_min = new \CSSmin();
+                $combined = $css_min->run($combined);
 
                 $theme = $this->cfg->data['Core']['style.theme.name'];
 
@@ -247,9 +247,7 @@ final class Css
                 // Rewrite images path
                 $combined = str_replace('../img/', '../Themes/' . $theme . '/img/', $combined);
 
-                $cache_object->setContent($combined);
-
-                $this->cache->put($cache_object);
+                file_put_contents($filename, $combined);
             }
 
             $files[] = $this->cfg->data['Core']['url.cache'] . '/' . $key . '.' . $extension;

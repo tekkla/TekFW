@@ -7,7 +7,6 @@ use Core\Lib\Security\Security;
 use Core\Lib\Page\Page;
 use Core\Lib\Html\HtmlFactory;
 use Core\Lib\Html\FormDesigner\FormDesigner;
-use Core\Lib\Cache\Cache;
 use Core\Lib\Ajax\Ajax;
 use Core\Lib\Ajax\AjaxCommandAbstract;
 use Core\Lib\Router\UrlTrait;
@@ -163,12 +162,10 @@ class Controller extends MvcAbstract
      *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
-     * @param Cache $cache
-     *            Cache dependency
      * @param Ajax $ajax
      *            Ajax dependency
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Cache $cache, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax)
     {
         // Store name
         $this->name = $name;
@@ -178,7 +175,6 @@ class Controller extends MvcAbstract
         $this->security = $security;
         $this->page = $page;
         $this->html = $html;
-        $this->cache = $cache;
         $this->ajax = $ajax;
 
         // Model to bind?
