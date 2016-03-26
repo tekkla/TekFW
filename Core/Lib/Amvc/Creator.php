@@ -133,7 +133,7 @@ class Creator
 
                     while (($name = readdir($dh)) !== false) {
 
-                        if ($name{0} == '.' || $name == 'Core' || is_file($name)) {
+                        if ($name{0} == '.' || $name == 'Core' || is_file($apps_dir . '/' . $name)) {
                             continue;
                         }
 
