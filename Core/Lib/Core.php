@@ -96,12 +96,8 @@ final class Core
             // Init DI service
             $this->initDI();
 
-            // load config from DB
-            $this->loadConfig();
-
-            // Create paths and urls to be set in config
-            $this->initDirs();
-            $this->initUrls();
+            // Inits confix with data from db and adds basic dirs and urls to config
+            $this->initConfig();
 
             // Init Session service
             $this->initSession();
@@ -477,7 +473,7 @@ final class Core
      *
      * @return void
      */
-    private function loadConfig()
+    private function initConfig()
     {
         /* @var $cfg \Core\Lib\Cfg\Cfg */
         $this->cfg = $this->di->get('core.cfg');
@@ -486,11 +482,27 @@ final class Core
         $this->cfg->load();
 
         // Set baseurl to config
-        $this->cfg->data['Core']['site.general.url'] = $this->settings['protocol'] . '://' . $this->settings['baseurl'];
-    }
+        if (empty($this->settings['protcol'])) {
+            $this->settings['protocol'] = 'http';
+        }
 
-    private function initDirs()
-    {
+        if (empty($this->settings['baseurl'])) {
+            Throw new Exception('Baseurl not set in Settings.php');
+        }
+
+        // Define some basic url constants
+        define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
+        define('THEMESURL', BASEURL . '/Themes');
+
+        $this->cfg->data['Core']['site.protocol'] = $this->settings['protocol'];
+        $this->cfg->data['Core']['site.baseurl'] = $this->settings['baseurl'];
+
+        // Check and set basic cookiename to config
+        if (empty($this->settings['cookie'])) {
+            Throw new Exception('Cookiename not set in Settings.php');
+        }
+
+        $this->cfg->data['Core']['cookie.name'] = $this->settings['cookie'];
 
         // Add dirs to config
         $dirs = [
@@ -513,14 +525,6 @@ final class Core
         ];
 
         $this->cfg->addPaths('Core', $dirs);
-    }
-
-    private function initUrls()
-    {
-
-        // Defne some basic url constants
-        define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
-        define('THEMESURL', BASEURL . '/Themes');
 
         // Add urls to config
         $urls = [
@@ -533,6 +537,7 @@ final class Core
         ];
 
         $this->cfg->addUrls('Core', $urls);
+
     }
 
     private function initSession()
