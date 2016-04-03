@@ -300,8 +300,14 @@ final class Core
 
                 // Append default options to settings
                 if ($key == 'options') {
+
+                    if (empty($settings['options'])) {
+                        $settings['options'] = [];
+                    }
+
                     foreach ($defaults['options'] as $option => $value) {
-                        if (array_key_exists($option, $settings['option'])) {
+
+                        if (array_key_exists($option, $settings['options'])) {
                             continue;
                         }
 
