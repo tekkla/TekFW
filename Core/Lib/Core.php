@@ -263,7 +263,6 @@ final class Core
             'driver' => 'mysql',
             'host' => 'localhost',
             'port' => 3306,
-            'name' => '',
             'user' => 'root',
             'password' => '',
             'prefix' => '',
@@ -289,6 +288,9 @@ final class Core
         foreach ($this->settings['db'] as $name => &$settings) {
 
             $prefix = 'db.' . $name;
+
+            // Set db name
+            $this->di->mapValue($prefix . '.name', $name);
 
             // Check for DB defaults and map values
             foreach ($defaults as $key => $default) {
