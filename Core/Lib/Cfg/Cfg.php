@@ -75,7 +75,7 @@ final class Cfg
         // Calls with app and key are normal cfg requests
         if (! empty($key)) {
             if (! array_key_exists($key, $this->data[$app_name])) {
-                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist.<br><br>Current config:<pre>%s</pre>"', $key, $app_name, print_r($this->data[$app_name], true)));
+                Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist.', $key, $app_name));
             }
 
             return $this->data[$app_name][$key];
