@@ -141,16 +141,16 @@
         },
         {
             "name": "phpfastcache/phpfastcache",
-            "version": "4.3.13",
+            "version": "4.3.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPSocialNetwork/phpfastcache.git",
-                "reference": "8ccdb7805727300af6e2416fc8f890dba7c9921e"
+                "reference": "39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/8ccdb7805727300af6e2416fc8f890dba7c9921e",
-                "reference": "8ccdb7805727300af6e2416fc8f890dba7c9921e",
+                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f",
+                "reference": "39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f",
                 "shasum": ""
             },
             "require": {
@@ -208,7 +208,7 @@
                 "redis",
                 "wincache"
             ],
-            "time": "2016-03-24 20:41:41"
+            "time": "2016-03-26 20:17:14"
         },
         {
             "name": "phpmailer/phpmailer",
