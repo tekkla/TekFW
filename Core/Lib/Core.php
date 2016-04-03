@@ -172,8 +172,6 @@ final class Core
                     echo $result;
                 }
 
-
-
                 ob_end_flush();
             }
         }
@@ -289,34 +287,42 @@ final class Core
 
             $prefix = 'db.' . $name;
 
-            // Set db name
-            $this->di->mapValue($prefix . '.name', $name);
+            // Check for databasename
+            if (empty($settings['name'])) {
+                Throw new Exception(sprintf('Name key of DB setting "%s" is missing.'), $name);
+            }
+
+            // Set map default db name
+            $this->di->mapValue($prefix . '.name', $settings['name']);
 
             // Check for DB defaults and map values
             foreach ($defaults as $key => $default) {
 
+                // Append default options to settings
+                if ($key == 'options') {
+                    foreach ($defaults['options'] as $option => $value) {
+                        if (array_key_exists($option, $settings['option'])) {
+                            continue;
+                        }
+
+                        $settings[$key][$option] = $value;
+                    }
+                }
+
                 if (empty($settings[$key])) {
                     $settings[$key] = $default;
                 }
-
-                $this->di->mapValue($prefix . '.' . $key, $settings[$key]);
             }
 
+            $this->di->mapValue($prefix . '.settings', $settings);
+
             // Default connection
-            $this->di->mapService($prefix . '.conn', '\Core\Lib\Data\Connectors\Db\Connection', [
-                $prefix . '.name',
-                $prefix . '.driver',
-                $prefix . '.host',
-                $prefix . '.port',
-                $prefix . '.user',
-                $prefix . '.password',
-                $prefix . '.options'
-            ]);
+            $this->di->mapService($prefix . '.conn', '\Core\Lib\Data\Connectors\Db\Connection', $prefix . '.settings');
 
             // Default db connector
-            $this->di->mapFactory($prefix . '', '\Core\Lib\Data\Connectors\Db\Db', [
+            $this->di->mapFactory($prefix, '\Core\Lib\Data\Connectors\Db\Db', [
                 $prefix . '.conn',
-                $prefix . '.prefix'
+                $settings['prefix']
             ]);
         }
 
@@ -429,11 +435,11 @@ final class Core
             'core.page.body.message'
         ]);
         $this->di->mapFactory('core.page.head.css', '\Core\Lib\Page\Head\Css\Css', [
-            'core.cfg',
+            'core.cfg'
         ]);
         $this->di->mapFactory('core.page.head.js', '\Core\Lib\Page\Head\Javascript\Javascript', [
             'core.cfg',
-            'core.router',
+            'core.router'
         ]);
         $this->di->mapService('core.page.body.message', '\Core\Lib\Page\Body\Message\Message');
         $this->di->mapService('core.page.body.nav', '\Core\Lib\Page\Body\Menu\Menu');
