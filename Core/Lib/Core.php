@@ -15,7 +15,8 @@ use Core\Lib\Traits\StringTrait;
 // Define framwork constant
 define('COREFW', 1);
 
-// Do not show errors!
+// Do not show errors by default!
+// @see loadSettings()
 ini_set('display_errors', 0);
 
 // Define path constants to the common framwork dirs
@@ -93,29 +94,27 @@ final class Core
             // Registe PSR classloader
             $this->registerClassloader();
 
-            // Init DI service
-            $this->initDI();
+            // Create core DI container instance!
+            $this->di = \Core\Lib\DI::getInstance();
 
-            // Inits confix with data from db and adds basic dirs and urls to config
+            // Run inits
+            $this->initDatabase();
+            $this->initDependencies();
             $this->initConfig();
-
-            // Init Session service
             $this->initSession();
-
-            // Init the essential secured Core app
+            $this->initRouter();
             $this->initCoreApp();
-
-            // Init security system
             $this->initSecurity();
 
             try {
 
-                // Autodicover all installed apps
-                $this->autodiscoverApps();
-
                 // Create references to Router and Http service
-                $this->router = $this->di->get('core.router');
                 $this->http = $this->di->get('core.http');
+
+                $this->creator->autodiscover([
+                    APPSSECDIR,
+                    APPSDIR
+                ]);
 
                 // Get result
                 $result = $this->dispatch();
@@ -134,13 +133,7 @@ final class Core
                 // Send cookies
                 $this->http->cookies->send();
 
-                // Handle output format
-                $format = $this->router->getFormat();
-
-                // Send headers so far
-                $this->http->header->send();
-
-                switch ($format) {
+                switch ($this->router->getFormat()) {
 
                     case 'file':
                         /* @var $download \Core\Lib\IO\Download */
@@ -173,10 +166,12 @@ final class Core
         }
         catch (Throwable $t) {
 
-            echo '
-            <h1>Error</h1>
-            <p><strong>' . $t->getMessage() . '</strong></p>
-            <p>in ', $t->getFile() . ' (Line: ', $t->getLine(), ')</p>';
+            if (ini_get('display_errors') == 1) {
+                echo '
+                <h1>Error</h1>
+                <p><strong>' . $t->getMessage() . '</strong></p>
+                <p>in ', $t->getFile() . ' (Line: ', $t->getLine(), ')</p>';
+            }
 
             error_log($t->getMessage() . ' >> ' . $t->getFile() . ':' . $t->getLine());
         }
@@ -192,6 +187,10 @@ final class Core
 
         // Load basic config from Settings.php
         $this->settings = include (BASEDIR . '/Settings.php');
+
+        if (! empty($this->settings['display_errors'])) {
+            ini_set('display_errors', 1);
+        }
     }
 
     private function registerClassloader()
@@ -216,117 +215,14 @@ final class Core
         require_once (BASEDIR . '/vendor/autoload.php');
     }
 
-    private function initDI()
+    /**
+     * Initiates framework component dependencies
+     */
+    private function initDependencies()
     {
 
-        // Create core di container
-        $this->di = \Core\Lib\DI::getInstance();
-
-        $to_map = [
-            [
-                'value',
-                'core.di',
-                $this->di
-            ]
-        ];
-
-        foreach ($to_map as $map) {
-
-            switch ($map[0]) {
-
-                case 'value':
-                    $this->di->mapValue($map[1], $map[2]);
-                    break;
-
-                case 'factory':
-                    $this->di->mapFactory($map[1], $map[2], isset($map[3]) ? $map[3] : null);
-                    break;
-
-                case 'service':
-                    $this->di->mapService($map[1], $map[2], isset($map[3]) ? $map[3] : null);
-                    break;
-
-                default:
-                    Throw new InvalidArgumentException(sprintf('Mappingtype "%s" is not supported by DI container', $map[0]));
-            }
-        }
-
-        // == DB ===========================================================
-
-        $defaults = [
-            'driver' => 'mysql',
-            'host' => 'localhost',
-            'port' => 3306,
-            'user' => 'root',
-            'password' => '',
-            'prefix' => '',
-            'options' => [
-                \PDO::ATTR_PERSISTENT => false,
-                \PDO::ATTR_ERRMODE => 2,
-                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1,
-                \PDO::ATTR_EMULATE_PREPARES => false
-            ]
-        ];
-
-        if (empty($this->settings['db'])) {
-            error_log('No DB data set in Settings.php');
-            Throw new Exception('Error on DB access');
-        }
-
-        if (empty($this->settings['db']['default'])) {
-            error_log('No DB "default" data set in Settings.php');
-            Throw new Exception('Error on DB access');
-        }
-
-        foreach ($this->settings['db'] as $name => &$settings) {
-
-            $prefix = 'db.' . $name;
-
-            // Check for databasename
-            if (empty($settings['name'])) {
-                Throw new Exception(sprintf('Name key of DB setting "%s" is missing.'), $name);
-            }
-
-            // Set map default db name
-            $this->di->mapValue($prefix . '.name', $settings['name']);
-
-            // Check for DB defaults and map values
-            foreach ($defaults as $key => $default) {
-
-                // Append default options to settings
-                if ($key == 'options') {
-
-                    if (empty($settings['options'])) {
-                        $settings['options'] = [];
-                    }
-
-                    foreach ($defaults['options'] as $option => $value) {
-
-                        if (array_key_exists($option, $settings['options'])) {
-                            continue;
-                        }
-
-                        $settings[$key][$option] = $value;
-                    }
-                }
-
-                if (empty($settings[$key])) {
-                    $settings[$key] = $default;
-                }
-            }
-
-            $this->di->mapValue($prefix . '.settings', $settings);
-
-            // Default connection
-            $this->di->mapService($prefix . '.conn', '\Core\Lib\Data\Connectors\Db\Connection', $prefix . '.settings');
-
-            // Default db connector
-            $this->di->mapFactory($prefix, '\Core\Lib\Data\Connectors\Db\Db', [
-                $prefix . '.conn',
-                $settings['prefix']
-            ]);
-        }
+        // == CORE DI CONTAINER ============================================
+        $this->di->mapValue('core.di', $this->di);
 
         // == CONFIG =======================================================
         $this->di->mapService('core.cfg', '\Core\Lib\Cfg\Cfg', 'db.default');
@@ -469,7 +365,95 @@ final class Core
     }
 
     /**
-     * Inits Cfg service and loads config from db
+     * Initiates database connections
+     *
+     * Transforms all DB settings from Settings.php db array into DI registered connection objects and database objects.
+     * Checks db settings for missing values, adds them if present as default value or throws an exception if essential
+     * data is not set.
+     * Checks for an db setting with key 'default' and throws an exception when 'default' is missing.
+     *
+     * @return void
+     */
+    private function initDatabase()
+    {
+        $defaults = [
+            'driver' => 'mysql',
+            'host' => 'localhost',
+            'port' => 3306,
+            'user' => 'root',
+            'password' => '',
+            'prefix' => '',
+            'options' => [
+                \PDO::ATTR_PERSISTENT => false,
+                \PDO::ATTR_ERRMODE => 2,
+                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1,
+                \PDO::ATTR_EMULATE_PREPARES => false
+            ]
+        ];
+
+        if (empty($this->settings['db'])) {
+            error_log('No DB data set in Settings.php');
+            Throw new Exception('Error on DB access');
+        }
+
+        if (empty($this->settings['db']['default'])) {
+            error_log('No DB "default" data set in Settings.php');
+            Throw new Exception('Error on DB access');
+        }
+
+        foreach ($this->settings['db'] as $name => &$settings) {
+
+            $prefix = 'db.' . $name;
+
+            // Check for databasename
+            if (empty($settings['name'])) {
+                Throw new Exception(sprintf('Name key of DB setting "%s" is missing.'), $name);
+            }
+
+            $this->di->mapValue($prefix . '.name', $settings['name']);
+
+            // Check for DB defaults and map values
+            foreach ($defaults as $key => $default) {
+
+                // Append default options to settings
+                if ($key == 'options') {
+
+                    if (empty($settings['options'])) {
+                        $settings['options'] = [];
+                    }
+
+                    foreach ($defaults['options'] as $option => $value) {
+
+                        if (array_key_exists($option, $settings['options'])) {
+                            continue;
+                        }
+
+                        $settings[$key][$option] = $value;
+                    }
+                }
+
+                if (empty($settings[$key])) {
+                    $settings[$key] = $default;
+                }
+            }
+
+            $this->di->mapValue($prefix . '.settings', $settings);
+            $this->di->mapService($prefix . '.conn', '\Core\Lib\Data\Connectors\Db\Connection', $prefix . '.settings');
+            $this->di->mapFactory($prefix, '\Core\Lib\Data\Connectors\Db\Db', [
+                $prefix . '.conn',
+                $settings['prefix']
+            ]);
+        }
+    }
+
+    /**
+     * Inits Cfg service
+     *
+     * Creates Cfg service instance.
+     * Loads config data from db
+     * Sets essential configs from Settings.php
+     * Set basic paths and urls which are used by framework component.
      *
      * @return void
      */
@@ -477,8 +461,6 @@ final class Core
     {
         /* @var $cfg \Core\Lib\Cfg\Cfg */
         $this->cfg = $this->di->get('core.cfg');
-
-        // Load additional configs from DB
         $this->cfg->load();
 
         // Set baseurl to config
@@ -537,13 +519,109 @@ final class Core
         ];
 
         $this->cfg->addUrls('Core', $urls);
-
     }
 
+    /**
+     * Initiates session
+     *
+     * Calls session_start().
+     * Sets default values about the current user.
+     * Defines SID as session id holding constant.
+     *
+     * @return void
+     */
     private function initSession()
     {
-        $session = $this->di->get('core.http.session');
-        $session->init();
+        // Start the session
+        session_start();
+
+        if (! isset($_SESSION['id_user'])) {
+            $_SESSION['id_user'] = 0;
+            $_SESSION['logged_in'] = false;
+        }
+
+        // Create session id constant
+        define('SID', session_id());
+    }
+
+    /**
+     * Initiates router
+     *
+     * Creates generic routes.
+     * Adds custom route matchtypes.
+     *
+     * @return void
+     */
+    private function initRouter()
+    {
+        $this->router = $this->di->get('core.router');
+
+        // Generic routes
+        $prefix = 'generic';
+        $routes = [
+            [
+                'name' => 'app',
+                'route' => '/[mvc:app]/[mvc:controller]',
+                'target' => [
+                    'action' => 'index'
+                ]
+            ],
+            [
+                'name' => 'action',
+                'route' => '/[mvc:app]/[mvc:controller]/[mvc:action]'
+            ],
+            [
+                'name' => 'ceneric.byid',
+                'method' => 'GET|POST',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]/[mvc:action]'
+            ],
+            [
+                'name' => 'edit',
+                'method' => 'POST|GET',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit',
+                'target' => [
+                    'action' => 'edit'
+                ]
+            ],
+            [
+                'name' => 'edit.child',
+                'method' => 'POST|GET',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit/of/[i:id_parent]',
+                'target' => [
+                    'action' => 'edit'
+                ]
+            ],
+            [
+                'name' => 'delete',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]/delete',
+                'target' => [
+                    'action' => 'delete'
+                ]
+            ],
+            [
+                'name' => 'delete.child',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/delete/of/[i:id_parent]',
+                'target' => [
+                    'action' => 'delete'
+                ]
+            ]
+        ];
+
+        foreach ($routes as $route) {
+
+            $method = empty($route['method']) ? 'GET' : $route['method'];
+            $target = ! empty($route['target']) ? $route['target'] : [];
+            $name = ! empty($route['name']) ? $prefix . '.' . $route['name'] : '';
+
+            $this->router->map($method, $route['route'], $target, $name);
+        }
+
+        // Custom matchtype patterns
+        $matchtypes = [
+            'mvc' => '[A-Za-z0-9_]++'
+        ];
+
+        $this->router->addMatchTypes($matchtypes);
     }
 
     /**
@@ -560,42 +638,33 @@ final class Core
         $this->creator->getAppInstance('Core');
     }
 
+    /**
+     * Inits security system
+     *
+     * Creates Security service instance.
+     * Checks current user if there is a ban.
+     * Runs autologin procedure and loads user data on success.
+     * Creates random session token which must be sent with each form or all posted data will be dropped.
+     *
+     * @return void
+     */
     private function initSecurity()
     {
         /* @var $security \Core\Lib\Security\Security */
         $this->security = $this->di->get('core.security');
 
-        // Check ban!
         $this->security->users->checkBan();
-
-        // Try to autologin
         $this->security->login->doAutoLogin();
 
-        // Load User
         if ($this->security->login->loggedIn()) {
             $this->security->user->load($_SESSION['id_user']);
         }
 
-        // Create session token
         $this->security->token->generateRandomSessionToken();
-    }
-
-    private function autodiscoverApps()
-    {
-        $this->creator->autodiscover([
-            APPSSECDIR,
-            APPSDIR
-        ]);
     }
 
     private function dispatch()
     {
-
-        // Add mvc name pattern to router
-        $this->router->addMatchTypes([
-            'mvc' => '[A-Za-z0-9_]++'
-        ]);
-
         // Match request against stored routes
         $this->router->match();
 
