@@ -471,4 +471,14 @@ final class Router extends \AltoRouter
             'raw' => $this->raw
         ];
     }
+
+    /**
+     * Returns mapped routes stack
+     *
+     * @return array
+     */
+    public function getRoutes()
+    {
+        return $this->routes;
+    }
 }
