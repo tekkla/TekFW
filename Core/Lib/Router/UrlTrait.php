@@ -54,7 +54,7 @@ trait UrlTrait
         }
 
         if (strpos($route, $app) === false && strpos($route, 'generic.') === false) {
-            $route = $app . '_' . $route;
+            $route = $app . '.' . $route;
         }
 
         if (! $router instanceof Router) {
