@@ -80,7 +80,7 @@ final class Router extends \AltoRouter
      *
      * @var array
      */
-    private $raw = [];
+    private $match = [];
 
     /**
      *
@@ -101,6 +101,57 @@ final class Router extends \AltoRouter
     public function url($route_name, $params = [])
     {
         return $this->generate($route_name, $params);
+    }
+
+    public function mapAppRoutes($app_name, array $routes)
+    {
+        // Get uncamelized app name
+        $app_name = $this->stringUncamelize($app_name);
+
+        // Add always a missing index route!
+        if (! array_key_exists('index', $routes)) {
+            $routes['index'] = [];
+        }
+
+        foreach ($routes as $name => $route) {
+
+            $name = $this->stringUncamelize($name);
+
+            if (empty($route['route']) || empty($route['target'])) {
+
+                // Try to get controller and action from route name
+                $ca = explode('.', $name);
+
+                if (empty($route['route'])) {
+                    $route['route'] = '/' . $ca[0];
+                }
+
+                if (empty($route['target'])) {
+                    $route['target'] = [
+                        'controller' => empty($ca[0]) ? $name : $ca[0],
+                        'action' => empty($ca[1]) ? $name : $ca[1]
+                    ];
+                }
+            }
+
+            // Create route string
+            $route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
+
+            if (empty($route['target']['app'])) {
+                $route['target']['app'] = $app_name;
+            }
+
+            if (empty($route['method'])) {
+                $route['method'] = 'GET';
+            }
+
+            if (strpos($name, $app_name) === false) {
+                $name = $app_name . '.' . $name;
+            }
+
+            $this->map($route['method'], $route['route'], $route['target'], $name);
+
+        }
     }
 
     /**
@@ -134,51 +185,64 @@ final class Router extends \AltoRouter
             $request_url = str_replace('/ajax', '', $request_url);
         }
 
-        $this->raw = parent::match($request_url, $request_method);
+        $this->match = parent::match($request_url, $request_method);
 
-        // Try to match request
-        $match = $this->raw;
+        if (! empty($this->match)) {
 
-        if ($match) {
-
-            if (isset($match['name'])) {
-                $this->name = $match['name'];
+            if (isset($this->match['name'])) {
+                $this->name = $this->match['name'];
             }
 
             // Map target results to request properties
-            foreach ($match['target'] as $key => $val) {
+            foreach ($this->match['target'] as $key => $val) {
                 if (property_exists($this, $key)) {
                     $this->{$key} = $this->stringCamelize($val);
                 }
             }
 
-            // When no target controller defined in route but provided by parameter
-            // we use the parameter as requested controller
-            if (! $this->controller && isset($match['params']['controller'])) {
-                $this->controller = $this->stringCamelize($match['params']['controller']);
+            // Some parameters will always override target settings from route
+            $overrides = [
+                'app',
+                'controller',
+                'action'
+            ];
+
+            foreach ($overrides as $key) {
+                if (! empty($this->match['params'][$key])) {
+                    $this->{$key} = $this->stringCamelize($this->match['params'][$key]);
+                    unset($this->match['params'][$key]);
+                }
             }
 
-            // Same for action as for controller
-            if (! $this->action && isset($match['params']['action'])) {
-                $this->action = $this->stringCamelize($match['params']['action']);
+            // Some parameters only have control or workflow character and are no parameters for public use.
+            // Those will be removed from the parameters array after using them to set corresponding values and/or flags
+            // in router.
+            $controls = [
+                'ajax',
+                'format'
+            ];
+
+            foreach ($controls as $key) {
+
+                switch (true) {
+                    case $key == 'ajax' && isset($this->match['params'][$key]):
+                        $this->is_ajax = true;
+                        break;
+
+                    default:
+                        if (isset($this->match['params'][$key])) {
+                            $this->{$key} = $this->match['params'][$key];
+                        }
+                        break;
+                }
+
+                unset($this->match['params'][$key]);
             }
 
-            // Is this an ajax request?
-            if (isset($match['params']['ajax'])) {
-                $this->is_ajax = true;
-            }
-
-            // Handle format parameter seperately and remove it from match params array.
-            if (isset($match['params']['format'])) {
-                $this->format = $match['params']['format'];
-                unset($match['params']['format']);
-            }
-
-            // Stroe params
-            $this->params = $match['params'];
+            $this->params = $this->match['params'];
         }
 
-        return $match;
+        return $this->match;
     }
 
     /**
@@ -468,7 +532,7 @@ final class Router extends \AltoRouter
             'action' => $this->getAction(),
             'params' => $this->getParam(),
             'format' => $this->getFormat(),
-            'raw' => $this->raw
+            'match' => $this->match
         ];
     }
 
