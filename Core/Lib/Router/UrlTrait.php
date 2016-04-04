@@ -53,7 +53,7 @@ trait UrlTrait
             $app = $this->stringUncamelize($app);
         }
 
-        if (strpos($route, $app) === false) {
+        if (strpos($route, $app) === false && strpos($route, 'generic.') === false) {
             $route = $app . '_' . $route;
         }
 
