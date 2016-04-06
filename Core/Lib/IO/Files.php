@@ -74,11 +74,11 @@ class Files
 
         while (($file = readdir($dir_handle)) != false) {
             if ($file != "." && $file != "..") {
-                if (! is_dir($dirname . "/" . $file)) {
-                    unlink($dirname . "/" . $file);
+                if (! is_dir($dirname . DIRECTORY_SEPARATOR . $file)) {
+                    unlink($dirname . DIRECTORY_SEPARATOR . $file);
                 }
                 else {
-                    $this->deleteDir($dirname . '/' . $file);
+                    $this->deleteDir($dirname . DIRECTORY_SEPARATOR . $file);
                 }
             }
         }
@@ -135,7 +135,7 @@ class Files
     }
 
     /**
-     * Wrapper method for file_exists() which throws an error.
+     * Wrapper method for file_exists() plus logging feature
      *
      * @param string $full_path
      *            Complete path to file
@@ -147,7 +147,8 @@ class Files
      */
     public function exists($full_path, $log_missing = false)
     {
-        $exists = file_exists($full_path) && is_file($full_path);
+        $full_path = str_replace('\\', DIRECTORY_SEPARATOR, $full_path);
+        $exists = file_exists($full_path);
 
         if (! $exists && $log_missing == true) {
             $this->log->file(sprintf('File "%s" not found.', $full_path), - 1);
@@ -231,6 +232,8 @@ class Files
         if (substr($path, - 1) != '/') {
             $path .= '/';
         }
+
+        $path = str_replace('\\', DIRECTORY_SEPARATOR, $path);
 
         // Output array for filenames
         $filenames = [];
@@ -319,7 +322,7 @@ class Files
      */
     public function checkClassFileExists($class)
     {
-        return file_exists(BASEDIR . '/' . str_replace('\\', '/', $class) . '.php');
+        return file_exists(BASEDIR . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php');
     }
 
     /**
