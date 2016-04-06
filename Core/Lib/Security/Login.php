@@ -6,6 +6,13 @@ use Core\Lib\Cfg\Cfg;
 use Core\Lib\Log\Log;
 use Core\Lib\Http\Cookie\Cookies;
 
+/**
+ * Login.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2016
+ * @license MIT
+ */
 class Login
 {
 
@@ -102,7 +109,7 @@ class Login
         $login = $this->db->single();
 
         // No user found => login failed
-        if (! $login) {
+        if (empty($login)) {
 
             // Log login try with not existing username
             $this->logLogin($username, true, false);
@@ -192,12 +199,12 @@ class Login
     public function doAutoLogin()
     {
         // User already logged in?
-        if ($_SESSION['logged_in'] === true) {
+        if (! empty($_SESSION['logged_in'])) {
             return true;
         }
 
         // Get the cookiename of our autologin token
-        $cookie_name  = $this->getCookieName();
+        $cookie_name = $this->getCookieName();
 
         // Remove all autologin cookies when autlogin is off in config
         if (empty($this->cfg->data['Core']['login.autologin.active'])) {
