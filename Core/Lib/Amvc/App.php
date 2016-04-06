@@ -351,6 +351,7 @@ class App
             $name = $this->getComponentsName();
         }
 
+        $name = $this->stringCamelize($name);
         $args = [
             'core.security'
         ];
@@ -372,6 +373,7 @@ class App
             $name = $this->getComponentsName();
         }
 
+        $name = $this->stringCamelize($name);
         $args = [
             'core.router',
             'core.http',
@@ -396,6 +398,8 @@ class App
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
+
+        $name = $this->stringCamelize($name);
 
         return $this->MVCFactory($name, 'View');
     }
