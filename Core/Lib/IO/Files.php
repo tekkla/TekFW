@@ -32,61 +32,42 @@ class Files
     }
 
     /**
-     * Creates a directory by given path.
-     * If the directory exitsts the return
-     * value will be the given path. If not, the path is created and the return
-     * value boolean false/true
+     * Deletes a file or a complete directory tree
      *
      * @param string $path
-     *            Path and name of dir
-     *
-     * @return string bool
-     */
-    public function createDir($path)
-    {
-        // does dir exist? use it?
-        return file_exists($path) ? $path : mkdir($path);
-    }
-
-    /**
-     * Deletes recursive a given dir inclusive all files and folders within it.
-     *
-     * @param $dirname Path
-     *            to the dir
-     *
-     * @throws IOException
-     * @throws IOException
+     *            Full path of the file or directory to delete
+     * @param boolean $clean_only
+     *            Flag to delete only files while a directorystructure stays intact
      *
      * @return boolean
      */
-    public function deleteDir($dirname)
+    public function delete($path, $clean_only = false)
     {
-        if (is_dir($dirname)) {
-            $dir_handle = opendir($dirname);
-        }
-        else {
-            Throw new IOException('The dirname parameter is not a valid directory');
+        $path = $this->replaceDirectorySeperator($path);
+
+        if (! file_exists($path)) {
+            return true;
         }
 
-        if (! $dir_handle) {
-            Throw new IOException('Directory handle couldn\'t be created.');
+        if (! is_dir($path)) {
+            return unlink($path);
         }
 
-        while (($file = readdir($dir_handle)) != false) {
-            if ($file != "." && $file != "..") {
-                if (! is_dir($dirname . DIRECTORY_SEPARATOR . $file)) {
-                    unlink($dirname . DIRECTORY_SEPARATOR . $file);
-                }
-                else {
-                    $this->deleteDir($dirname . DIRECTORY_SEPARATOR . $file);
-                }
+        $files = scandir($path);
+
+        foreach ($files as $item) {
+
+            $file = $path . DIRECTORY_SEPARATOR . $item;
+
+            if (is_dir($file)) {
+                $this->delete($file);
+            }
+            else {
+                unlink($file);
             }
         }
 
-        closedir($dir_handle);
-        rmdir($dirname);
-
-        return true;
+        return $clean_only == false ? rmdir($path) : true;
     }
 
     /**
@@ -137,21 +118,22 @@ class Files
     /**
      * Wrapper method for file_exists() plus logging feature
      *
-     * @param string $full_path
+     * @param string $filename
      *            Complete path to file
-     * @param string $log_missing
-     *
-     * @return boolean
+     * @param boolean $log_missing
+     *            Flag to activate logging of non existant files
      *
      * @throws \RuntimeException
+     *
+     * @return boolean
      */
-    public function exists($full_path, $log_missing = false)
+    public function exists($filename, $log_missing = false)
     {
-        $full_path = str_replace('\\', DIRECTORY_SEPARATOR, $full_path);
-        $exists = file_exists($full_path);
+        $filename = $this->replaceDirectorySeperator($filename);
+        $exists = file_exists($filename);
 
         if (! $exists && $log_missing == true) {
-            $this->log->file(sprintf('File "%s" not found.', $full_path), - 1);
+            $this->log->file(sprintf('File "%s" not found.', $filename), - 1);
         }
 
         return $exists;
@@ -226,38 +208,41 @@ class Files
      *
      * @return void multitype:string
      */
-    public function getFilenamesFromDir($path)
+    public function getFilenamesFromDir($path, $recursive = false)
     {
         // Add trailing slash if missing
         if (substr($path, - 1) != '/') {
             $path .= '/';
         }
 
-        $path = str_replace('\\', DIRECTORY_SEPARATOR, $path);
+        $path = $this->replaceDirectorySeperator($path);
 
-        // Output array for filenames
         $filenames = [];
 
-        // Get dir handle
-        $handle = opendir($path);
-
         // No handle, error exception
-        if ($handle === false) {
+        if (! file_exists($path)) {
             Throw new IOException(sprintf('Path "%s" not found.', $path, 2000));
         }
 
-        while (($file = readdir($handle)) !== false) {
+        $files = scandir($path);
 
-            // no '.' or '..' or dir
-            if ('.' == $file || '..' == $file || is_dir($path . $file)) {
+        foreach ($files as $file) {
+
+            // no '.' or '..'
+            if ($file{0} == '.') {
+                continue;
+            }
+
+            if (is_dir($path . $file) && $recursive) {
+                $filenames[$file] = $this->getFilenamesFromDir($path . $file, $recursive);
+            }
+            else {
                 continue;
             }
 
             // store filename
-            $filenames[] = $file;
+            $filenames[$file] = $file;
         }
-
-        closedir($handle);
 
         return $filenames;
     }
@@ -322,7 +307,7 @@ class Files
      */
     public function checkClassFileExists($class)
     {
-        return file_exists(BASEDIR . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php');
+        return file_exists(BASEDIR . DIRECTORY_SEPARATOR . $this->replaceDirectorySeperator($class) . '.php');
     }
 
     /**
@@ -358,5 +343,13 @@ class Files
         else {
             Throw new IOException("Unknown file type");
         }
+    }
+
+    private function replaceDirectorySeperator($filename)
+    {
+        return str_replace([
+            '\\',
+            '/'
+        ], DIRECTORY_SEPARATOR, $filename);
     }
 }
