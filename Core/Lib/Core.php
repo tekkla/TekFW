@@ -674,12 +674,16 @@ final class Core
         $app_name = $this->router->getApp();
 
         // Handle default settings when we have a default
-        if (empty($app_name) && $this->cfg->exists('Core', 'execute.default.app')) {
-            $app_name = $this->cfg->data['Core']['execute.default.app'];
+        if (empty($app_name)) {
+            return $this->send404('app.name');
         }
 
         /* @var $app \Core\Lib\Amvc\App */
         $app = $this->creator->getAppInstance($app_name);
+
+        if (empty($app)) {
+            return $this->send404('app.object');
+        }
 
         if (method_exists($app, 'Access')) {
 
@@ -697,7 +701,7 @@ final class Core
         }
 
         /**
-         * Each app can have it's own start procedure.
+         * Each app can have it's own run procedure.
          * This procedure is used to init apps with more than the app creator does.
          * To use this feature the app needs a run() method in it's main file.
          */
@@ -707,36 +711,33 @@ final class Core
 
         $controller_name = $this->router->getController();
 
-        if (empty($controller_name) && $this->cfg->exists('Core', 'execute.default.controller')) {
-            $controller_name = $this->cfg->data['Core']['execute.default.controller'];
+        if (empty($controller_name)) {
+            return $this->send404('controller.name');
         }
 
         // Load controller object
         $controller = $app->getController($controller_name);
 
         if ($controller == false) {
-            return $this->send404();
+            return $this->send404('controller.object');
         }
 
         // Which controller action has to be run?
         $action = $this->router->getAction();
 
-        if (empty($action) && $this->cfg->exists('Core', 'execute.default.action')) {
-            $action = $this->cfg->data['Core']['execute.default.action'];
+        if (empty($action)) {
+            $action = 'Index';
         }
 
         if (! method_exists($controller, $action)) {
-            return $this->send404();
+            return $this->send404('controller.action');
         }
 
         if ($this->router->isAjax()) {
 
             $this->router->setFormat('json');
 
-            // send JSON header
             $this->http->header->contentType('application/json', 'utf-8');
-
-            // Send cache preventing headers
             $this->http->header->noCache();
 
             // Result will be processed as ajax command list
@@ -770,7 +771,7 @@ final class Core
         });
     }
 
-    private function send404()
+    private function send404($stage='not set')
     {
         $this->http->header->sendHttpError(404);
 
