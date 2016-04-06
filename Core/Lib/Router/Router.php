@@ -100,13 +100,27 @@ final class Router extends \AltoRouter
      */
     public function url($route_name, $params = [])
     {
+        array_walk_recursive($params, function(&$item, $key) {
+
+            $aca = [
+                'app',
+                'controller',
+                'action',
+            ];
+
+            if (in_array($key, $aca)) {
+                $item = $this->stringUncamelize($item);
+            }
+
+        });
+
         return $this->generate($route_name, $params);
     }
 
     public function mapAppRoutes($app_name, array $routes)
     {
         // Get uncamelized app name
-        $app_name = $this->stringUncamelize($app_name);
+        $app = $this->stringUncamelize($app_name);
 
         // Add always a missing index route!
         if (! array_key_exists('index', $routes)) {
@@ -114,6 +128,10 @@ final class Router extends \AltoRouter
         }
 
         foreach ($routes as $name => $route) {
+
+            if (empty($name)) {
+                Throw new RouterException(sprintf('App "%s" sent a nameles route to be mapped.', $app_name));
+            }
 
             $name = $this->stringUncamelize($name);
 
@@ -135,18 +153,18 @@ final class Router extends \AltoRouter
             }
 
             // Create route string
-            $route['route'] = $route['route'] == '/' ? '/' . $app_name : '/' . (strpos($route['route'], '../') === false ? $app_name . $route['route'] : str_replace('../', '', $route['route']));
+            $route['route'] = $route['route'] == '/' ? '/' . $app : '/' . (strpos($route['route'], '../') === false ? $app . $route['route'] : str_replace('../', '', $route['route']));
 
             if (empty($route['target']['app'])) {
-                $route['target']['app'] = $app_name;
+                $route['target']['app'] = $app;
             }
 
             if (empty($route['method'])) {
                 $route['method'] = 'GET';
             }
 
-            if (strpos($name, $app_name) === false) {
-                $name = $app_name . '.' . $name;
+            if (strpos($name, $app) === false) {
+                $name = $app . '.' . $name;
             }
 
             $this->map($route['method'], $route['route'], $route['target'], $name);
