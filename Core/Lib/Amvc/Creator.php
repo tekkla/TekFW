@@ -79,13 +79,10 @@ class Creator
         // New app instance Create app namespace and take care of secured apps.
         $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
 
-        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+        $filename = BASEDIR . str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
 
         if (! file_exists($filename)) {
-
-            \FB::log($filename);
-
-            $this->send404($filename);
+            Throw new AmvcException(sprintf('Creator could not find an app classfile "%s" for app "%s"', $name, $filename));
         }
 
         // Default arguments for each app instance
