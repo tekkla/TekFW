@@ -2,18 +2,16 @@
 namespace Core\Lib\Errors\Exceptions;
 
 /**
- * BasicException class
+ * BasicException.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015 by author
+ * @copyright 2016
  * @license MIT
- *
  */
 class BasicException extends \ErrorException
 {
 
     /**
-     * Flag that indicates the weight of the exception.
      *
      * @var boolean
      */
@@ -51,7 +49,6 @@ class BasicException extends \ErrorException
     protected $to_db = true;
 
     /**
-     * Is this a fatal exception?
      *
      * @return boolean
      */
