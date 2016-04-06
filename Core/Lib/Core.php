@@ -557,49 +557,35 @@ final class Core
         $this->router = $this->di->get('core.router');
 
         // Generic routes
-        $prefix = 'generic';
         $routes = [
-            [
-                'name' => 'app',
+            'app' => [
                 'route' => '/[mvc:app]/[mvc:controller]',
                 'target' => [
                     'action' => 'index'
                 ]
             ],
-            [
-                'name' => 'action',
+            'action' => [
                 'route' => '/[mvc:app]/[mvc:controller]/[mvc:action]'
             ],
-            [
-                'name' => 'ceneric.byid',
+            'byid' => [
                 'method' => 'GET|POST',
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]/[mvc:action]'
             ],
-            [
-                'name' => 'edit',
+            'edit' => [
                 'method' => 'POST|GET',
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit',
-                'target' => [
-                    'action' => 'edit'
-                ]
             ],
-            [
-                'name' => 'edit.child',
+            'edit.child' => [
                 'method' => 'POST|GET',
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit/of/[i:id_parent]',
                 'target' => [
                     'action' => 'edit'
                 ]
             ],
-            [
-                'name' => 'delete',
+            'delete' => [
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]/delete',
-                'target' => [
-                    'action' => 'delete'
-                ]
             ],
-            [
-                'name' => 'delete.child',
+            'delete.child' => [
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/delete/of/[i:id_parent]',
                 'target' => [
                     'action' => 'delete'
@@ -607,14 +593,7 @@ final class Core
             ]
         ];
 
-        foreach ($routes as $route) {
-
-            $method = empty($route['method']) ? 'GET' : $route['method'];
-            $target = ! empty($route['target']) ? $route['target'] : [];
-            $name = ! empty($route['name']) ? $prefix . '.' . $route['name'] : '';
-
-            $this->router->map($method, $route['route'], $target, $name);
-        }
+        $this->router->mapAppRoutes('generic', $routes);
 
         // Custom matchtype patterns
         $matchtypes = [
