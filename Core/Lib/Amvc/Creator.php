@@ -2,6 +2,7 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Cfg\Cfg;
+use Core\Lib\Traits\StringTrait;
 
 /**
  * Creator.php
@@ -12,6 +13,8 @@ use Core\Lib\Cfg\Cfg;
  */
 class Creator
 {
+
+    use StringTrait;
 
     /**
      *
@@ -63,8 +66,10 @@ class Creator
     public function &getAppInstance($name)
     {
         if (empty($name)) {
-            $this->send404();
+            Throw new AmvcException('Amvc creators getAppInstance() method needs an app name.');
         }
+
+        $name = $this->stringCamelize($name);
 
         // App instances are singletons!
         if (array_key_exists($name, $this->instances)) {
@@ -77,6 +82,9 @@ class Creator
         $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
 
         if (! file_exists($filename)) {
+
+            \FB::log($filename);
+
             $this->send404($filename);
         }
 
@@ -98,18 +106,6 @@ class Creator
         $this->instances[$name] = $instance;
 
         return $instance;
-    }
-
-    private function send404($filename)
-    {
-        error_log(sprintf('AMVC Creator Error: App class "%s" was not found.', $filename));
-
-        header("HTTP/1.0 404 Page not found.");
-        echo '<h1>404 - Not Found</h1><p>The requested page does not exists.</p><p><a href="/">Goto to Homepage?</a></p>';
-        echo '<hr>';
-        echo '<small>Missing: ', $filename, '</small>';
-
-        exit();
     }
 
     /**
