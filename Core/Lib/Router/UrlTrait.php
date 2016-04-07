@@ -47,6 +47,10 @@ trait UrlTrait
             else {
                 $app = $this->app_name;
             }
+
+            if (empty($params['app'])) {
+                $params['app'] = $app;
+            }
         }
 
         if (method_exists($this, 'stringUncamelize')) {
