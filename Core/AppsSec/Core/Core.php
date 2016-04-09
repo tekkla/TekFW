@@ -426,8 +426,7 @@ final class Core extends App
             'method' => 'GET|POST',
             'route' => '/admin/[mvc:app_name]/config/[a:group_name]'
         ]
-    ]
-    ;
+    ];
 
     public function Start()
     {

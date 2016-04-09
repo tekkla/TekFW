@@ -2,11 +2,11 @@
 namespace Core\AppsSec\Core\Controller;
 
 use Core\Lib\Amvc\Controller;
-use Core\Lib\Errors\Exceptions\RuntimeException;
 use Core\AppsSec\Core\Model\ConfigModel;
 use Core\Lib\Html\FormDesigner\FormGroup;
 use Core\Lib\Security\SecurityException;
 use Core\Lib\Amvc\ControllerException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * ConfigController.php
@@ -40,7 +40,7 @@ class ConfigController extends Controller
 
         foreach ($groups as $group_name) {
 
-            $forms[$group_name] = $this->getController()->run('ConfigGroup', [
+            $forms[$group_name] = $this->getController()->run('Group', [
                 'app_name' => $app_name,
                 'group_name' => $group_name
             ]);
@@ -61,7 +61,7 @@ class ConfigController extends Controller
         $this->setAjaxTarget('#core-admin');
     }
 
-    public function ConfigGroup($app_name, $group_name)
+    public function Group($app_name, $group_name)
     {
         // Camelize app name becaus this parameter comes uncamelized from request handler
         $app_name = $this->stringCamelize($app_name);
@@ -79,8 +79,9 @@ class ConfigController extends Controller
             $this->model->saveConfig($data);
 
             if (! $this->model->hasErrors()) {
-                // Reload config
-                $this->di->get('core.cfg')->load();
+
+                    // Reload config and force a cache refresh!
+                $this->di->get('core.cfg')->load(true);
                 unset($data);
             }
         }
@@ -227,7 +228,7 @@ class ConfigController extends Controller
             case 'multiselect':
 
                 if (! $settings['data']) {
-                    Throw new RuntimeException('No or not correct set data definition.');
+                    Throw new CoreException('No or not correct set data definition.');
                 }
 
                 // Load optiongroup datasource type
@@ -276,7 +277,7 @@ class ConfigController extends Controller
 
                     // Datasource has to be of type array or model. All other will result in an exception
                     default:
-                        Throw new RuntimeException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
+                        Throw new CoreException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
                 }
 
                 // Create the list of options
