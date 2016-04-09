@@ -13,7 +13,7 @@ use phpFastCache\CacheManager;
  * Cfg.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2016s
+ * @copyright 2016
  * @license MIT
  */
 final class Cfg
@@ -98,12 +98,14 @@ final class Cfg
     }
 
     /**
-     * Checks the state of a cfg setting.
+     * Checks the state of a cfg setting
      *
      * Returns true for set and false for not set.
      *
      * @param string $app_name
      * @param string $key
+     *
+     * @return boolean
      */
     public function exists($app_name, $key = null)
     {
@@ -127,7 +129,9 @@ final class Cfg
      *
      * @param array $cfg
      *
-     * @throws ConfigException
+     * @throws CfgException
+     *
+     * @return void
      */
     public function init($cfg = [])
     {
@@ -144,14 +148,20 @@ final class Cfg
 
     /**
      * Loads config from database
+     *
+     * @param boolean $refresh
+     *            Optional flag to force a refresh load of the config that updates the cached config too
+     *
+     * @return void
      */
-    public function load()
+    public function load($refresh = false)
     {
         $cache = CacheManager::getInstance();
 
         $config = $cache->get('Core.Config');
 
-        if (empty($config)) {
+        // Refresh config when there is no config in cache or a refresh has been requested
+        if (empty($config) || $refresh == true) {
 
             $this->db->qb([
                 'table' => 'core_configs',
@@ -172,7 +182,9 @@ final class Cfg
 
             $cache->set('Core.Config', $this->data);
         }
-
+        else {
+            $this->data = $config;
+        }
     }
 
     /**
@@ -275,6 +287,8 @@ final class Cfg
 
     /**
      * Cleans config table by deleting all config entries that do not exist in config definition anymore
+     *
+     * @return void
      */
     public function cleanConfig()
     {
@@ -283,7 +297,6 @@ final class Cfg
         $app_names = array_keys($this->data);
 
         // Cleanup each apps config values in db
-
         foreach ($app_names as $app_name) {
 
             // Get all obsolete config keys
