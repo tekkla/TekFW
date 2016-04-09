@@ -6,6 +6,7 @@ use Core\Lib\Errors\Exceptions\RuntimeException;
 use Core\AppsSec\Core\Model\ConfigModel;
 use Core\Lib\Html\FormDesigner\FormGroup;
 use Core\Lib\Security\SecurityException;
+use Core\Lib\Amvc\ControllerException;
 
 /**
  * ConfigController.php
@@ -30,15 +31,7 @@ class ConfigController extends Controller
      */
     public $model;
 
-    /**
-     *
-     * @param string $app_name
-     *
-     * @throws SecurityException
-     * @throws RuntimeException
-     *
-     * @return void|boolean
-     */
+
     public function Config($app_name)
     {
         $app_name = $this->stringCamelize($app_name);
@@ -152,8 +145,6 @@ class ConfigController extends Controller
 
                 $value['groupnames'] = $names;
 
-                \FB::log($value);
-
                 $this->createControl($app_name, $group, $value);
             }
             else {
@@ -240,19 +231,47 @@ class ConfigController extends Controller
                 }
 
                 // Load optiongroup datasource type
-                switch ($settings['data'][0]) {
+                switch ($settings['data']['type']) {
 
                     // DataType: model
                     case 'model':
-                        list ($model_app, $model_name, $model_action) = explode('::', $settings['data'][1]);
-                        $datasource = $this->di->get('core.amvc.creator')
-                            ->getAppInstance($model_app)
-                            ->getModel($model_name);
+
+                        // Check settings!
+                        $check = [
+                            'app',
+                            'model',
+                            'action'
+                        ];
+
+                        foreach ($check as $ama) {
+                            if (empty($settings['data']['source'][$ama])) {
+                                Throw new ControllerException(sprintf('Data driven controls with model as datasource needs settings about %s', $ama));
+                            }
+                        }
+
+                        /* @var $creator \Core\Lib\Amvc\Creator */
+                        $creator = $this->di->get('core.amvc.creator');
+                        $app = $creator->getAppInstance($settings['data']['source']['app']);
+                        $model = $app->getModel($settings['data']['source']['model']);
+                        $action =  $settings['data']['source']['action'];
+
+                        $model->checkMethodExists($action);
+
+                        $params = !empty($settings['data']['source']['params']) ? $settings['data']['source']['params'] : [];
+
+                        $datasource = call_user_func_array([
+                            $model,
+                            $action
+                        ], $params);
+
+
+                        array_unshift($datasource, 'none');
+
                         break;
 
                     // DataType: array
                     case 'array':
-                        $datasource = $settings['data'][1];
+                        $datasource = $settings['data']['source'];
                         break;
 
                     // Datasource has to be of type array or model. All other will result in an exception
@@ -260,15 +279,10 @@ class ConfigController extends Controller
                         Throw new RuntimeException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
                 }
 
-                // if no bound column number is set, set default to column 0
-                if (! isset($settings['data'][2])) {
-                    $settings['data'][2] = 0;
-                }
-
                 // Create the list of options
                 foreach ($datasource as $ds_key => $ds_val) {
 
-                    $option_value = $settings['data'][2] == 0 ? $ds_key : $ds_val;
+                    $option_value = $settings['data']['index'] == 0 ? $ds_key : $ds_val;
 
                     $option = $control->createOption();
                     $option->setInner($ds_val);
@@ -276,7 +290,7 @@ class ConfigController extends Controller
 
                     if (is_array($settings['value'])) {
                         foreach ($settings['value'] as $k => $v) {
-                            if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($settings['data'][2] == 0 && $k == $option_value) || ($settings['data'][2] == 1 && $v == $option_value))) {
+                            if (($control_type == 'multiselect' && $v == html_entity_decode($option_value)) || ($control_type == 'optiongroup' && ($settings['data']['index'] == 0 && $k == $option_value) || ($settings['data']['index'] == 1 && $v == $option_value))) {
                                 $option->isSelected(1);
                                 continue;
                             }
@@ -285,7 +299,7 @@ class ConfigController extends Controller
                     else {
 
                         // this is for simple select control
-                        if (($settings['data'][2] == 0 && $ds_key === $settings['value']) || ($settings['data'][2] == 1 && $ds_val == $settings['value'])) {
+                        if (($settings['data']['index'] == 0 && $ds_key === $settings['value']) || ($settings['data']['index'] == 1 && $ds_val == $settings['value'])) {
                             $option->isSelected(1);
                         }
                     }

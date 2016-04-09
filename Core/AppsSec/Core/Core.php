@@ -13,10 +13,10 @@ use Core\Lib\Amvc\App;
 final class Core extends App
 {
     // Flag as secured app
-    protected $secure = true;
-
-    // Uses language system
-    protected $language = true;
+    protected $flags = [
+        self::SECURE,
+        self::LANGUAGE
+    ];
 
     protected $permissions = [
         'admin.groups',
@@ -26,22 +26,14 @@ final class Core extends App
 
     // Apps default config
     protected $config = [
-
         'site' => [
             'general' => [
                 'name' => [
                     'name' => 'name',
                     'validate' => [
                         'empty'
-                    ]
-                ],
-                'url' => [
-                    'name' => 'url',
-                    'control' => 'url',
-                    'validate' => [
-                        'empty',
-                        'url'
-                    ]
+                    ],
+                    'default' => 'MySite'
                 ],
                 'webmaster_email' => [
                     'name' => 'webmaster_email',
@@ -57,18 +49,27 @@ final class Core extends App
                     'name' => 'default',
                     'control' => 'select',
                     'data' => [
-                        'array',
-                        [
+                        'type' => 'array',
+                        'source' => [
                             'en',
                             'de'
                         ],
-                        1
+                        'index' => 1
                     ],
                     'default' => 'en'
                 ]
             ]
         ],
         'security' => [
+            'encrypt' => [
+                'pepper' => [
+                    'name' => 'pepper',
+                    'default' => '@m@rschH@ngtDerH@mmer1234',
+                    'validate' => [
+                        'empty'
+                    ]
+                ]
+            ],
             'user' => [
                 'username' => [
                     'min_length' => [
@@ -85,7 +86,6 @@ final class Core extends App
                     ]
                 ],
                 'password' => [
-
                     'min_length' => [
                         'name' => 'min_length',
                         'control' => 'number',
@@ -140,23 +140,6 @@ final class Core extends App
                     'name' => 'name'
                 ]
             ],
-            'login' => [
-                'autologin' => [
-                    'name' => 'autologin',
-                    'control' => 'switch',
-                    'default' => 1
-                ],
-                'reset_password' => [
-                    'name' => 'reset_password',
-                    'control' => 'switch',
-                    'default' => 1
-                ],
-                'register' => [
-                    'name' => 'register',
-                    'control' => 'switch',
-                    'default' => 1
-                ]
-            ],
             'ban' => [
                 'tries' => [
                     'name' => 'tries',
@@ -185,28 +168,63 @@ final class Core extends App
             ]
         ],
 
-        // Group: Execute
-        'execute' => [
-            'default' => [
-                'app' => [
-                    'name' => 'app',
-                    'default' => 'Core'
+        'login' => [
+            'autologin' => [
+                'active' => [
+                    'name' => 'active',
+                    'control' => 'switch',
+                    'default' => 1
                 ],
-                'controller' => [
-                    'name' => 'controller',
-                    'default' => 'Index'
-                ],
-                'action' => [
-                    'name' => 'action',
-                    'default' => 'Index'
-                ]
-            ],
-            'content' => [
-                'handler' => [
-                    'name' => 'handler'
+                'expires_after' => [
+                    'name' => 'expires_after',
+                    'control' => 'number',
+                    'default' => 30
                 ]
             ]
         ],
+
+        // Group: Execute
+        'home' => [
+            'guest' => [
+                'route' => [
+                    'name' => 'route',
+                    'control' => 'select',
+                    'data' => [
+                        'type' => 'model',
+                        'source' => [
+                            'app' => 'core',
+                            'model' => 'config',
+                            'action' => 'getAllRoutes'
+                        ],
+                        'index' => 0,
+                    ],
+                ],
+                'params' => [
+                    'name' => 'params',
+                    'control' => 'textarea'
+                ]
+            ],
+            'user' => [
+                'route' => [
+                    'name' => 'route',
+                    'control' => 'select',
+                    'data' => [
+                        'type' => 'model',
+                        'source' => [
+                            'app' => 'core',
+                            'model' => 'config',
+                            'action' => 'getAllRoutes'
+                        ],
+                        'index' => 0
+                    ]
+                ],
+                'params' => [
+                    'name' => 'params',
+                    'control' => 'textarea'
+                ]
+            ]
+        ],
+
         // Group: JS
         'js' => [
             'general' => [
@@ -214,12 +232,12 @@ final class Core extends App
                     'name' => 'position',
                     'control' => 'select',
                     'data' => [
-                        'array',
-                        [
+                        'type' => 'array',
+                        'source' => [
                             't' => 'Top',
                             'b' => 'Bottom'
                         ],
-                        0
+                        'index' => 0
                     ],
                     'default' => 't'
                 ]
@@ -343,34 +361,15 @@ final class Core extends App
 
         // Caching
         'cache' => [
-            'file' => [
-                'ttl' => [
-                    'name' => 'ttl',
-                    'control' => 'number',
-                    'default' => '3600'
-                ],
-                'ttl_js' => [
-                    'name' => 'ttl_js',
-                    'control' => 'number',
-                    'default' => '3600'
-                ],
-                'ttl_css' => [
-                    'name' => 'ttl_css',
-                    'control' => 'number',
-                    'default' => '3600'
-                ]
+            'ttl_js' => [
+                'name' => 'ttl_js',
+                'control' => 'number',
+                'default' => '3600'
             ],
-            'memcache' => [
-                'use' => [
-                    'name' => 'use',
-                    'control' => 'switch'
-                ],
-                'server' => [
-                    'name' => 'server'
-                ],
-                'port' => [
-                    'name' => 'port'
-                ]
+            'ttl_css' => [
+                'name' => 'ttl_css',
+                'control' => 'number',
+                'default' => '3600'
             ]
         ],
 
@@ -392,181 +391,43 @@ final class Core extends App
                     'name' => 'smtpdebug',
                     'control' => 'switch'
                 ]
-            ],
-            'mta' => [
-                'default' => [
-                    'system' => [
-                        'name' => 'system',
-                        'control' => 'select',
-                        'data' => [
-                            'array',
-                            [
-                                0 => 'phpmail',
-                                1 => 'SMTP'
-                            ],
-                            0
-                        ],
-                        'default' => 1
-                    ],
-                    'host' => [
-                        'name' => 'host',
-                        'control' => 'mail'
-                    ],
-                    'port' => [
-                        'name' => 'port',
-                        'control' => 'number',
-                        'default' => 587
-                    ],
-                    'username' => [
-                        'name' => 'username'
-                    ],
-                    'password' => [
-                        'name' => 'password',
-                        'control' => 'password'
-                    ],
-                    'accept_selfsigned' => [
-                        'name' => 'accept_selfsigned',
-                        'control' => 'switch'
-                    ],
-                    'protocol' => [
-                        'name' => 'protocol',
-                        'control' => 'select',
-                        'data' => [
-                            'array',
-                            [
-                                'ssl',
-                                'tls'
-                            ],
-                            1
-                        ],
-                        'default' => 'tls'
-                    ]
-                ]
             ]
         ]
     ];
 
     // Apps routes
     protected $routes = [
-        [
-            'name' => 'index',
-            'route' => '../',
-            'controller' => 'Index',
-            'action' => 'Index'
+        'index' => [
+            'route' => '../'
         ],
-        [
-            'name' => 'login',
-            'method' => 'GET|POST',
-            'route' => '/login',
-            'controller' => 'login',
-            'action' => 'login'
+        'login' => [
+            'method' => 'GET|POST'
         ],
-        [
-            'name' => 'logout',
-            'method' => 'GET',
+        'login.logout' => [
             'route' => '/logout',
-            'controller' => 'login',
-            'action' => 'logout'
         ],
-        [
-            'name' => 'register',
-            'method' => 'POST|GET',
-            'route' => '/register',
-            'controller' => 'register',
-            'action' => 'register'
+        'register' => [
+            'method' => 'POST|GET'
         ],
-        [
-            'name' => 'register.activation',
-            'method' => 'GET',
-            'route' => '/register/activate/[:key]',
-            'controller' => 'register',
-            'action' => 'activate'
+        'register.activate' => [
+            'route' => '/register/activate/[:key]'
         ],
-        [
-            'name' => 'register.deny',
-            'method' => 'GET',
-            'route' => '/register/deny/[:key]',
-            'controller' => 'register',
-            'action' => 'deny'
+        'register.deny' => [
+            'route' => '/register/deny/[:key]'
         ],
-        [
-            'name' => 'register.done',
-            'method' => 'GET',
-            'route' => '/register/done/[i:state]',
-            'controller' => 'register',
-            'action' => 'done'
+        'register.done' => [
+            'route' => '/register/done/[i:state]'
         ],
-        [
-            'name' => 'admin',
-            'route' => '/admin',
-            'controller' => 'admin',
-            'action' => 'index'
+        'admin' => [],
+        'config' => [
+            'route' => '/admin/[mvc:app_name]/config'
         ],
-        [
-            'name' => 'config',
-            'method' => 'GET',
-            'route' => '/admin/[a:app_name]/config',
-            'controller' => 'config',
-            'action' => 'config'
-        ],
-        [
-            'name' => 'config.group',
+        'config.group' => [
             'method' => 'GET|POST',
-            'route' => '/admin/[a:app_name]/config/[a:group_name]',
-            'controller' => 'Config',
-            'action' => 'ConfigGroup'
-        ],
-
-        // Default generic routes
-        [
-            'name' => 'main',
-            'route' => '/',
-            'ctrl' => 'Index'
-        ],
-
-        // Generic
-
-        [
-            'name' => 'app',
-            'route' => '/[a:controller]'
-        ],
-        [
-            'name' => 'action',
-            'route' => '/[a:controller]/[a:action]'
-        ],
-        [
-            'name' => 'byid',
-            'method' => 'GET|POST',
-            'route' => '/[a:controller]/[i:id]/[a:action]'
-        ],
-        [
-            'name' => 'edit',
-            'method' => 'POST|GET',
-            'route' => '/[a:controller]/[i:id]?/edit',
-            'action' => 'Edit'
-        ],
-        [
-            'name' => 'edit_child',
-            'method' => 'POST|GET',
-            'route' => '/[a:controller]/[i:id]?/edit/of/[i:id_parent]',
-            'action' => 'Edit'
-        ],
-        [
-            'name' => 'delete',
-            'route' => '/[a:controller]/[i:id]/delete',
-            'action' => 'Delete'
-        ],
-        [
-            'name' => 'delete_child',
-            'route' => '/[a:controller]/[i:id]?/delete/of/[i:id_parent]',
-            'action' => 'Delete'
-        ],
-        [
-            'name' => 'list_by_letter',
-            'route' => '/[a:controller]/[a:letter]/list',
-            'action' => 'ListByLetter'
+            'route' => '/admin/[mvc:app_name]/config/[a:group_name]'
         ]
-    ];
+    ]
+    ;
 
     public function Start()
     {
@@ -580,11 +441,11 @@ final class Core extends App
                 $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
             }
 
-            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('logout'));
+            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login.logout'));
         }
 
         // or add login and register buttons. But not when current user is currently on banlist
-        elseif (!$this->security->users->checkBan()) {
+        elseif (! $this->security->users->checkBan()) {
 
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
             $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login'));

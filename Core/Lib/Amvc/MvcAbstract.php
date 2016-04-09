@@ -39,7 +39,7 @@ abstract class MvcAbstract
      *
      * @return \Core\Lib\Abstracts\MvcAbstract
      */
-    public function injectApp(App $app)
+    final public function injectApp(App $app)
     {
         $this->app = $app;
 
@@ -54,7 +54,7 @@ abstract class MvcAbstract
      *
      * @return \Core\Lib\Abstracts\MvcAbstract
      */
-    public function setName($name)
+    final public function setName($name)
     {
         $this->name = $name;
 
@@ -68,7 +68,7 @@ abstract class MvcAbstract
      *
      * @return string
      */
-    public function getName()
+    final public function getName()
     {
         if (isset($this->name)) {
             return $this->name;
@@ -84,12 +84,35 @@ abstract class MvcAbstract
      *
      * @return string
      */
-    public function getAppName()
+    final public function getAppName()
     {
         if (! isset($this->app)) {
             Throw new AmvcException('MVC component has no set app name.');
         }
 
         return $this->app->getName();
+    }
+
+    /**
+     * Checks for a method in this object
+     *
+     * @param string $method_name
+     *            Name of the method to check for
+     * @param boolean $throw_error
+     *            Optional flag for throwing an AmvcException when method does not exist.
+     *
+     * @throws AmvcException
+     *
+     * @return boolean
+     */
+    final public function checkMethodExists($method_name, $throw_error = true)
+    {
+        $return = method_exists($this, $method_name);
+
+        if ($return == false && $throw_error == true) {
+            Throw new AmvcException(sprintf('There is no method "%s" in %s-object "%s"', $method_name, $this->type, $this->getName()));
+        }
+
+        return $return;
     }
 }

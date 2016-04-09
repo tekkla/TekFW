@@ -2,6 +2,7 @@
 namespace Core\Lib\Amvc;
 
 use Core\Lib\Cfg\Cfg;
+use Core\Lib\Traits\StringTrait;
 
 /**
  * Creator.php
@@ -13,8 +14,9 @@ use Core\Lib\Cfg\Cfg;
 class Creator
 {
 
+    use StringTrait;
+
     /**
-     * List of secured app, which resides within the framework folder.
      *
      * @var array
      */
@@ -23,7 +25,6 @@ class Creator
     ];
 
     /**
-     * List of apps, which can get instances of secured apps.
      *
      * @var Array
      */
@@ -32,7 +33,6 @@ class Creator
     ];
 
     /**
-     * Storage for app instances
      *
      * @var array
      */
@@ -66,10 +66,12 @@ class Creator
     public function &getAppInstance($name)
     {
         if (empty($name)) {
-            $this->send404();
+            Throw new AmvcException('Amvc creators getAppInstance() method needs an app name.');
         }
 
-        // Check for already existing instance of app and return reference to app if is
+        $name = $this->stringCamelize($name);
+
+        // App instances are singletons!
         if (array_key_exists($name, $this->instances)) {
             return $this->instances[$name];
         }
@@ -77,10 +79,10 @@ class Creator
         // New app instance Create app namespace and take care of secured apps.
         $class = in_array($name, $this->secure_apps) ? '\Core\AppsSec\\' . $name . '\\' . $name : '\Apps\\' . $name . '\\' . $name;
 
-        $filename = BASEDIR . str_replace('\\', '/', $class) . '.php';
+        $filename = BASEDIR . str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
 
         if (! file_exists($filename)) {
-            $this->send404($filename);
+            Throw new AmvcException(sprintf('Creator could not find an app classfile "%s" for app "%s"', $name, $filename));
         }
 
         // Default arguments for each app instance
@@ -96,31 +98,20 @@ class Creator
             'core.di'
         ];
 
-        // Create an app instance
-        $this->instances[$name] = $this->di->instance($class, $args);
+        $instance = $this->di->instance($class, $args);
 
-        // Return app instance
-        return $this->instances[$name];
-    }
+        $this->instances[$name] = $instance;
 
-    private function send404($filename)
-    {
-        error_log(sprintf('AMVC Creator Error: App class "%s" was not found.', $filename));
-
-        header("HTTP/1.0 404 Page not found.");
-        echo '<h1>404 - Not Found</h1><p>The requested page does not exists.</p><p><a href="/">Goto to Homepage?</a></p>';
-        echo '<hr>';
-        echo '<small>Missing: ', $filename, '</small>';
-
-        exit();
+        return $instance;
     }
 
     /**
-     * Autodiscovers installed apps in the given path.
+     * Autodiscovers installed apps in the given path
+     *
      * When an app is found an instance of it will be created.
      *
      * @param string|array $path
-     *            Path to check for apps. Can be an array of paths.
+     *            Path to check for apps. Can be an array of paths
      */
     public function autodiscover($path)
     {
@@ -130,21 +121,15 @@ class Creator
 
         foreach ($path as $apps_dir) {
 
-            // Dir found?
             if (is_dir($apps_dir)) {
-
-                // Try to open apps dir
                 if (($dh = opendir($apps_dir)) !== false) {
 
-                    // Check each dir member for apps
                     while (($name = readdir($dh)) !== false) {
 
-                        // Skip Core app and parent names
-                        if ($name == '..' || $name == '.' || $name == 'Core' || substr($name, 0, 1) == '.') {
+                        if ($name{0} == '.' || $name == 'Core' || is_file($apps_dir . '/' . $name)) {
                             continue;
                         }
 
-                        // Create app by using the current dirs name as app name
                         $app = $this->getAppInstance($name);
                     }
 
@@ -152,7 +137,8 @@ class Creator
                 }
             }
         }
-        // Run possible Start() method in apps
+
+        // Call Start() event after all app instances have been loaded
         foreach ($this->instances as $app) {
             if (method_exists($app, 'Start')) {
                 $app->Start();

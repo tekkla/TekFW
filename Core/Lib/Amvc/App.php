@@ -173,7 +173,6 @@ class App
             ];
         }
 
-
         // Call possible load method
         if (method_exists($this, 'Load')) {
             $this->Load();
@@ -202,7 +201,6 @@ class App
 
         // Init page
         $this->page->init();
-
     }
 
     /**
@@ -353,6 +351,7 @@ class App
             $name = $this->getComponentsName();
         }
 
+        $name = $this->stringCamelize($name);
         $args = [
             'core.security'
         ];
@@ -374,6 +373,7 @@ class App
             $name = $this->getComponentsName();
         }
 
+        $name = $this->stringCamelize($name);
         $args = [
             'core.router',
             'core.http',
@@ -398,6 +398,8 @@ class App
         if (empty($name)) {
             $name = $this->getComponentsName();
         }
+
+        $name = $this->stringCamelize($name);
 
         return $this->MVCFactory($name, 'View');
     }
@@ -608,57 +610,7 @@ class App
             return;
         }
 
-        if (empty($this->routes)) {
-
-            // No routes set? Map at least index as default route
-            $target = [
-                'app' => $this->name,
-                'controller' => 'Index',
-                'action' => 'Index'
-            ];
-
-            $this->router->map('GET', '/', $target, $this->name . '_index');
-
-            self::$init_stages[$this->name]['routes'] = true;
-
-            return;
-        }
-
-        // Get uncamelized app name
-        $app_name = $this->stringUncamelize($this->name);
-
-        // Map routes to request handler router
-        foreach ($this->routes as $def) {
-
-            // Create route string
-            $route = $def['route'] == '/' ? '/' . $app_name : '/' . (strpos($def['route'], '../') === false ? $app_name . $def['route'] : str_replace('../', '', $def['route']));
-
-            // Create target
-            $target = [
-                // App not set means app will be set automatic.
-                'app' => ! isset($def['app']) ? $app_name : $def['app']
-            ];
-
-            // is there a defined controller?
-            if (! empty($def['controller'])) {
-                $target['controller'] = $def['controller'];
-            }
-
-            if (! empty($def['action'])) {
-                $target['action'] = $def['action'];
-            }
-
-            // The name of the route is set by the key in the routes array.
-            // Is the name of type string it will be extended by the current
-            // apps name.
-            if (isset($def['name'])) {
-                $name = (! isset($def['app']) ? $app_name : $def['app']) . '_' . $def['name'];
-            }
-
-            $method = isset($def['method']) ? $def['method'] : 'GET';
-
-            $this->router->map($method, $route, $target, isset($name) ? $name : null);
-        }
+        $this->router->mapAppRoutes($this->name, $this->routes);
 
         self::$init_stages[$this->name]['routes'] = true;
     }
@@ -678,9 +630,9 @@ class App
      *
      * @return string
      */
-    final public function getName()
+    final public function getName($uncamelize = false)
     {
-        return $this->name;
+        return $uncamelize == true ? $this->stringUncamelize($this->name) : $this->name;
     }
 
     /**

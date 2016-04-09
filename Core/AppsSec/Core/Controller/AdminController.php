@@ -13,7 +13,7 @@ use Core\Lib\Amvc\Controller;
 final class AdminController extends Controller
 {
 
-    public function Index()
+    public function Admin()
     {
         $this->setVar([
             'loaded_apps' => $this->model->getApplist(),
@@ -26,14 +26,16 @@ final class AdminController extends Controller
                     'title' => $this->text('admin.menu.users'),
                     'links' => [
                         'users' => [
-                            'url' => $this->url('action', [
-                                'controller' => 'User',
-                                'action' => 'Index'
+                            'url' => $this->url('generic.action', [
+                                'app' => 'core',
+                                'controller' => 'user',
+                                'action' => 'index'
                             ]),
                             'text' => $this->text('user.plural')
                         ],
                         'groups' => [
-                            'url' => $this->url('action', [
+                            'url' => $this->url('generic.action', [
+                                'app' => 'core',
                                 'controller' => 'Group',
                                 'action' => 'Index'
                             ]),

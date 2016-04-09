@@ -5,7 +5,7 @@ namespace Core\Lib\Data\Connectors\Db;
  * Connection.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Connection
@@ -62,30 +62,31 @@ class Connection
     /**
      * Constructor
      *
-     * @param string $db
-     *            Name of database to connet to
-     * @param string $driver
-     *            Optional Name of the PDO driver (Default: 'mysql')
-     * @param string $host
-     *            Optional host the database lies on (Default: 'localhost')
-     * @param number $port
-     *            Optional port of the database host (Default: 3306)
-     * @param string $user
-     *            Optional username to us for connection (Default: 'root')
-     * @param string $password
-     *            Optional passwort to use for connection (Default empty)
-     * @param array $options
-     *            Optional array of options to use for connection (Default: empty)
+     * @param array $properties
+     *            Connection properties
      */
-    function __construct($db, $driver = 'mysql', $host = 'localhost', $port = 3306, $user = 'root', $password = '', $options = [])
+    function __construct(array $properties)
     {
-        $this->db = $db;
-        $this->host = $host;
-        $this->user = $user;
-        $this->password = $password;
-        $this->options = $options;
 
-        $this->setDriver($driver);
+        $check = [
+            'name',
+            'host',
+           'user'
+        ];
+
+        foreach ($check as $key) {
+            if (empty($properties[$key])) {
+                Throw new DbException(sprintf('Missing DB connection property "%s"'), $key);
+            }
+        }
+
+        $this->db = $properties['name'];
+        $this->host = $properties['host'];
+        $this->user = $properties['user'];
+        $this->password = $properties['password'];
+        $this->options = $properties['options'];
+
+        $this->setDriver($properties['driver']);
     }
 
     /**

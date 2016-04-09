@@ -19,10 +19,18 @@ final class Session
      */
     private $db;
 
+    /**
+     *
+     * @var string
+     */
     private $table = 'core_sessions';
 
     /**
      * Constructor
+     *
+     * Sets session garbage collector lifetime to one hour.
+     * Sets run of garbage collector with a chance of 1%.
+     * Sets custom database driven session handler
      *
      * @param Db $db
      *            Db dependency
@@ -31,10 +39,7 @@ final class Session
     {
         $this->db = $db;
 
-        // Set sssion garbage collector lifetime to one hour
         ini_set('session.gc_maxlifetime', 3600);
-
-        // Run garbage collector with a chance of 1%
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
 
@@ -58,23 +63,6 @@ final class Session
             $this,
             "gc"
         ]);
-    }
-
-    /**
-     * Init session
-     */
-    public function init()
-    {
-        // Start the session
-        session_start();
-
-        if (! isset($_SESSION['id_user'])) {
-            $_SESSION['id_user'] = 0;
-            $_SESSION['logged_in'] = false;
-        }
-
-        // Create session id constant
-        define('SID', session_id());
     }
 
     /**

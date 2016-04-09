@@ -211,4 +211,22 @@ final class ConfigModel extends Model
         return $data;
 
     }
+
+    public function getAllRoutes() {
+
+        $out = [];
+
+        $router = $this->di->get('core.router');
+        $routes = $router->getRoutes();
+
+        foreach ($routes as $route) {
+            \FB::log($route);
+            $out[$route[1]] = $route[3] . ' (' . $route[0]. ': ' . $route[1] . ')';
+        }
+
+        \FB::log($out);
+
+        return $out;
+
+    }
 }

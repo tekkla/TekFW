@@ -307,9 +307,9 @@ class Page
      *
      * @return string
      */
-    public function getBaseUrl()
+    public function getHomeUrl()
     {
-        return $this->cfg->get('Core', 'site.general.url');
+        return BASEURL;
     }
 
     /**
