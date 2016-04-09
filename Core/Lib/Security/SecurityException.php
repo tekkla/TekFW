@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Security;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * SecurityException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class SecurityException extends BasicException
+class SecurityException extends CoreException
 {
 }

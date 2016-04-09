@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Validator;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * ValidatorException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class ValidatorException extends BasicException
+class ValidatorException extends CoreException
 {
 }

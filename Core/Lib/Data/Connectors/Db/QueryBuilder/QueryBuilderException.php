@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Connectors\Db\QueryBuilder;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * QueryBuilderException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class QueryBuilderException extends BasicException
+class QueryBuilderException extends CoreException
 {
 }

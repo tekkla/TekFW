@@ -12,7 +12,7 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
  * Router.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class Router extends \AltoRouter
@@ -267,6 +267,8 @@ final class Router extends \AltoRouter
             $this->params = $this->match['params'];
         }
 
+        \FB::log($this->getStatus());
+
         return $this->match;
     }
 
@@ -388,7 +390,7 @@ final class Router extends \AltoRouter
         ];
 
         if (! in_array(strtolower($format), $allowed)) {
-            Throw new InvalidArgumentException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
+            Throw new RouterException(sprintf('Your format "%s" is not an allowed format. Use one of these formats %s', $format, implode(', ', $allowed)));
         }
 
         $this->format = $format;
@@ -514,7 +516,7 @@ final class Router extends \AltoRouter
     public function setParam($param, $value = null)
     {
         if (! is_array($param) && $value === null) {
-            Throw new InvalidArgumentException('Setting router parameter with NULL value is not allowed');
+            Throw new RouterException('Setting router parameter with NULL value is not allowed');
         }
 
         if (! is_array($param)) {

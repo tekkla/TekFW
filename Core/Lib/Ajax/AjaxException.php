@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Ajax;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * ConfigException class
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @license MIT
  * @copyright 2015
  */
-class AjaxException extends BasicException
+class AjaxException extends CoreException
 {
 }

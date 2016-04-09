@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * DataException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class DataException extends BasicException
+class DataException extends CoreException
 {
 }

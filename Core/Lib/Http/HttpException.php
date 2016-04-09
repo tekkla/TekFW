@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Http;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * HttpException.php
@@ -10,7 +10,7 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class HttpException extends BasicException
+class HttpException extends CoreException
 {
 }
 

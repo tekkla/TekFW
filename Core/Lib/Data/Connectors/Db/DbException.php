@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Data\Connectors\Db;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * DbException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class DbException extends BasicException
+class DbException extends CoreException
 {
 }

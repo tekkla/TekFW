@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Html;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * HtmlException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class HtmlException extends BasicException
+class HtmlException extends CoreException
 {
 }

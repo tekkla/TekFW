@@ -1,14 +1,14 @@
 <?php
-namespace Core\Lib\Errors\Exceptions;
+namespace Core\Lib\Errors;
 
 /**
- * BasicException.php
+ * CoreException.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
  */
-class BasicException extends \ErrorException
+class CoreException extends \ErrorException
 {
 
     /**

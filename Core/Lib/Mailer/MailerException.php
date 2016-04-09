@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Mailer;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * MailerException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @license MIT
  * @copyright 2015
  */
-class MailerException extends BasicException
+class MailerException extends CoreException
 {
 }

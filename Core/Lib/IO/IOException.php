@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\IO;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * IOException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class IOException extends BasicException
+class IOException extends CoreException
 {
 }

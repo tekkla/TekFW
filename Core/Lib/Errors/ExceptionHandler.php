@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Errors;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 use Core\Lib\Router\Router;
 use Core\Lib\Security\User;
 use Core\Lib\Ajax\Ajax;
@@ -15,6 +15,9 @@ use Core\Lib\Page\Body\Message\Message;
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
+ *
+ * @todo REWRITE THIS MONSTER!
+ *
  */
 class ExceptionHandler
 {
@@ -125,7 +128,7 @@ class ExceptionHandler
         $trace = $this->exception->getTraceAsString();
 
         // Exception settings alway ovveride set methods parameter
-        if ($this->exception instanceof BasicException) {
+        if ($this->exception instanceof CoreException) {
             $fatal = $this->exception->getFatal();
             $clean_buffer = $this->exception->getCleanBuffer();
             $log_error = $this->exception->getErrorLog();
@@ -233,7 +236,7 @@ class ExceptionHandler
         switch (true) {
             case method_exists($this->exception, 'getPublic') && $this->exception->getPublic():
             case (bool) $this->user->isAdmin():
-            case (bool) $this->cfg->data['Core']['error.display.skip_security_check']:
+            case !empty($this->cfg->data['Core']['error.display.skip_security_check']):
                 $this->error_html .= '
                 <h3 class="no-v-margin">' . $this->exception->getMessage() . '<br>
                 <small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></h3>

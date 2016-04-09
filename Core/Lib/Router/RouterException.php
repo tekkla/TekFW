@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Router;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * RouterException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class RouterException extends BasicException
+class RouterException extends CoreException
 {
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Amvc;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * ModelException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class ModelException extends BasicException
+class ModelException extends CoreException
 {
 }

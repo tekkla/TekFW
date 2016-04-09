@@ -1,7 +1,7 @@
 <?php
 namespace Core\Lib\Page;
 
-use Core\Lib\Errors\Exceptions\BasicException;
+use Core\Lib\Errors\CoreException;
 
 /**
  * PageException.php
@@ -10,6 +10,6 @@ use Core\Lib\Errors\Exceptions\BasicException;
  * @copyright 2016
  * @license MIT
  */
-class PageException extends BasicException
+class PageException extends CoreException
 {
 }
