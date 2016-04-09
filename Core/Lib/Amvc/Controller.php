@@ -221,14 +221,14 @@ class Controller extends MvcAbstract
         }
 
         // Use givem params
-        if (! $action) {
+        if (empty($action)) {
             Throw new ControllerException(sprintf('The action name for %s::run() is empty.', $this->name));
         }
 
         $this->action = $action;
 
         // Use givem params
-        if ($params && ! $this->arrayIsAssoc($params)) {
+        if (!empty($params) && ! $this->arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
 
