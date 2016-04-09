@@ -558,7 +558,7 @@ final class Core
 
         // Generic routes
         $routes = [
-            'app' => [
+            'index' => [
                 'route' => '/[mvc:app]/[mvc:controller]',
                 'target' => [
                     'action' => 'index'
@@ -567,30 +567,14 @@ final class Core
             'action' => [
                 'route' => '/[mvc:app]/[mvc:controller]/[mvc:action]'
             ],
-            'byid' => [
+            'id' => [
                 'method' => 'GET|POST',
-                'route' => '/[mvc:app]/[mvc:controller]/[i:id]/[mvc:action]'
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/[mvc:action]'
             ],
-            'edit' => [
-                'method' => 'POST|GET',
-                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit',
+            'child' => [
+                'method' => 'GET|POST',
+                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/[mvc:action]/of/[i:id_parent]',
             ],
-            'edit.child' => [
-                'method' => 'POST|GET',
-                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/edit/of/[i:id_parent]',
-                'target' => [
-                    'action' => 'edit'
-                ]
-            ],
-            'delete' => [
-                'route' => '/[mvc:app]/[mvc:controller]/[i:id]/delete',
-            ],
-            'delete.child' => [
-                'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/delete/of/[i:id_parent]',
-                'target' => [
-                    'action' => 'delete'
-                ]
-            ]
         ];
 
         $this->router->mapAppRoutes('generic', $routes);
