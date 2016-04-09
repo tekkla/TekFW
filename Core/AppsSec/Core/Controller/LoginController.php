@@ -13,6 +13,11 @@ use Core\Lib\Amvc\Controller;
 class LoginController extends Controller
 {
 
+    public function Index()
+    {
+        $this->redirect('Login', $this->router->getParam());
+    }
+
     /**
      *
      * @throws \Core\Lib\Errors\Exceptions\InvalidArgumentException
@@ -52,15 +57,12 @@ class LoginController extends Controller
             }
 
             // Login failed?
-            if (! $logged_in) {
+            if (empty($logged_in)) {
 
                 // Store failed attempt as flag in session
                 $_SESSION['login_failed'] = true;
 
                 $this->model->addError('@', $this->text('login.failed'));
-
-                // Create error message
-                #$this->page->message->danger($this->text('login.failed'));
             }
         }
         else {
@@ -70,7 +72,7 @@ class LoginController extends Controller
         }
 
         // Autologin on or off by default?
-        $data['remember'] = $this->cfg('security.login.autologin');
+        $data['remember'] = $this->cfg('login.autologin.active');
 
         $fd = $this->getFormDesigner('core-login');
         $fd->setName('core-login');
@@ -158,7 +160,7 @@ class LoginController extends Controller
     {
         $this->security->login->doLogout();
 
-        $this->redirectExit($this->router->url('core_index'));
+        $this->redirectExit($this->router->url('core.index'));
     }
 
     public function AlreadyLoggedIn()
