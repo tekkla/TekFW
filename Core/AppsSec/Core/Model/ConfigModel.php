@@ -2,14 +2,13 @@
 namespace Core\AppsSec\Core\Model;
 
 use Core\Lib\Amvc\Model;
-use Core\Lib\Data\Container\Container;
 use Core\Lib\Data\Validator\Validator;
 
 /**
  * ConfigModel.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 final class ConfigModel extends Model
@@ -110,9 +109,7 @@ final class ConfigModel extends Model
             return $data;
         }
 
-        for ($i=0; $i<10000; $i++) {
-            $flat = $this->arrayFlatten($data);
-        }
+        $flat = $this->arrayFlatten($data);
 
         // Data validated successfully. Go on and store config
         $db = $this->getDbConnector();
@@ -194,8 +191,8 @@ final class ConfigModel extends Model
         }
     }
 
-    public function getData($app_name, $group_name) {
-
+    public function getData($app_name, $group_name)
+    {
         $data = [];
 
         $configs = $this->di->get('core.cfg')->data[$app_name];
@@ -204,29 +201,24 @@ final class ConfigModel extends Model
             $this->arrayAssignByPath($data, $path, $value);
         }
 
-        if (!empty($data[$group_name])) {
+        if (! empty($data[$group_name])) {
             $data = $data[$group_name];
         }
 
         return $data;
-
     }
 
-    public function getAllRoutes() {
-
+    public function getAllRoutes()
+    {
         $out = [];
 
         $router = $this->di->get('core.router');
         $routes = $router->getRoutes();
 
         foreach ($routes as $route) {
-            \FB::log($route);
-            $out[$route[1]] = $route[3] . ' (' . $route[0]. ': ' . $route[1] . ')';
+            $out[$route[1]] = $route[3] . ' (' . $route[0] . ': ' . $route[1] . ')';
         }
 
-        \FB::log($out);
-
         return $out;
-
     }
 }
