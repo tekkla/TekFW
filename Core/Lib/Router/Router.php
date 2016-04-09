@@ -100,18 +100,17 @@ final class Router extends \AltoRouter
      */
     public function url($route_name, $params = [])
     {
-        array_walk_recursive($params, function(&$item, $key) {
+        array_walk_recursive($params, function (&$item, $key) {
 
             $aca = [
                 'app',
                 'controller',
-                'action',
+                'action'
             ];
 
             if (in_array($key, $aca)) {
                 $item = $this->stringUncamelize($item);
             }
-
         });
 
         return $this->generate($route_name, $params);
@@ -153,9 +152,19 @@ final class Router extends \AltoRouter
             }
 
             // Create route string
-            $route['route'] = $route['route'] == '/' ? '/' . $app : '/' . (strpos($route['route'], '../') === false ? $app . $route['route'] : str_replace('../', '', $route['route']));
+            if ($route['route'] == '/') {
+                $route['route'] = '/' . $app;
+            }
+            else {
+                if (strpos($route['route'], '../') === false && $app != 'generic') {
+                    $route['route'] = '/' . $app . $route['route'];
+                }
+                else {
+                    $route['route'] = str_replace('../', '', $route['route']);
+                }
+            }
 
-            if (empty($route['target']['app'])) {
+            if (empty($route['target']['app']) && $app != 'generic') {
                 $route['target']['app'] = $app;
             }
 
@@ -168,7 +177,6 @@ final class Router extends \AltoRouter
             }
 
             $this->map($route['method'], $route['route'], $route['target'], $name);
-
         }
     }
 
@@ -228,7 +236,6 @@ final class Router extends \AltoRouter
             foreach ($overrides as $key) {
                 if (! empty($this->match['params'][$key])) {
                     $this->{$key} = $this->stringCamelize($this->match['params'][$key]);
-                    unset($this->match['params'][$key]);
                 }
             }
 
