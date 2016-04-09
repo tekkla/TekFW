@@ -7,25 +7,21 @@ use Core\Lib\Errors\Exceptions\InvalidArgumentException;
  * StringTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 trait StringTrait
 {
 
     /**
-     * Shortens a string to the given length and adds .
-     *
-     *
-     *
-     * .. at the end of string
+     * Shortens a string to the given length and adds '...' at the end of string
      *
      * @param string $string
      * @param int $length
      * @param string $addition
      * @return string
      */
-    function stringShorten($string, $length, $addition = ' [...]')
+    protected function stringShorten($string, $length, $addition = ' [...]', $wrap_url = '')
     {
         // Shorten only what is longer than the length
         if (strlen($string) < $length) {
@@ -37,6 +33,10 @@ trait StringTrait
 
         // Shorten further until last occurence of a ' '
         $string = substr($string, 0, strrpos($string, ' '));
+
+        if (! empty($wrap_url)) {
+            $addition = '<a href="' . $wrap_url . '">' . $addition . '</a>';
+        }
 
         // Add addition
         $string .= $addition;
@@ -61,12 +61,13 @@ trait StringTrait
      *           </code>
      *           Result: MyName
      */
-    public function stringCamelize($string, $upper_first = true)
+    protected function stringCamelize($string, $upper_first = true)
     {
         // even if there is no underscore in string, the first char will be converted to uppercase
         if (strpos($string, '_') == 0 && $upper_first == true) {
             $string = ucwords($string);
-        } else {
+        }
+        else {
             $string = str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($string))));
 
             if ($upper_first == false) {
@@ -91,7 +92,7 @@ trait StringTrait
      *         IN: MyName | OUT: my_name
      *         IN: ThisIsATest | OUT: this_is_a_test
      */
-    public function stringUncamelize($string)
+    protected function stringUncamelize($string)
     {
         if (empty($string)) {
             Throw new InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
@@ -122,7 +123,7 @@ trait StringTrait
      * @param string $string
      * @return string
      */
-    public function stringNormalize($string)
+    protected function stringNormalize($string)
     {
         $table = array(
             'Š' => 'S',
@@ -207,7 +208,7 @@ trait StringTrait
     }
 
     /**
-     * Tests if an input is valid PHP serialized string.
+     * Tests if an input is valid PHP serialized string
      *
      * Checks if a string is serialized using quick string manipulation
      * to throw out obviously incorrect strings. Unserialize is then run
@@ -231,7 +232,7 @@ trait StringTrait
      *
      * @return boolean if $value is serialized data, otherwise false
      */
-    function stringIsSerialized($value, &$result = null)
+    protected function stringIsSerialized($value, &$result = null)
     {
         // Bit of a give away this one
         if (! is_string($value)) {
@@ -262,8 +263,6 @@ trait StringTrait
             case 'b':
             case 'i':
             case 'd':
-
-                // This looks odd but it is quicker than isset()ing
                 $end .= ';';
             case 'a':
             case 'O':
