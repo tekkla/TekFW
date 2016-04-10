@@ -1,7 +1,7 @@
 <?php
 namespace Themes\Core;
 
-use Core\Lib\Page\Template;
+use Core\Page\Template;
 
 /**
  * IndexTemplate.php
