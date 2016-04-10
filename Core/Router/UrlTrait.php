@@ -101,7 +101,7 @@ trait UrlTrait
             'id' => $id
         ];
 
-        $this->url($route, $params, $app);
+        return $this->url($route, $params, $app);
     }
 
     /**
@@ -133,7 +133,7 @@ trait UrlTrait
             $params['id'] = $id;
         }
 
-        $this->url($route, $params, $app);
+        return $this->url($route, $params, $app);
     }
 
     /**
@@ -153,7 +153,7 @@ trait UrlTrait
             'controller' => 'controller'
         ];
 
-        $this->url($route, $params, $app);
+        return $this->url($route, $params, $app);
     }
 
     /**
@@ -176,6 +176,6 @@ trait UrlTrait
             'action' => $action
         ];
 
-        $this->url($route, $params, $app);
+        return $this->url($route, $params, $app);
     }
 }
