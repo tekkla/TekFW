@@ -11,7 +11,7 @@
 define('BASEDIR', __DIR__);
 
 // Include Core classfile
-require_once (BASEDIR . '/Core/Lib/Core.php');
+require_once (BASEDIR . '/Core/Core.php');
 
 // Create new Core instance
 $core = new Core();
