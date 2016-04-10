@@ -96,7 +96,7 @@ trait UrlTrait
     {
         $route = 'generic.id';
         $params = [
-            'controller' => 'controller',
+            'controller' => $controller,
             'action' => $action,
             'id' => $id
         ];
@@ -124,7 +124,7 @@ trait UrlTrait
     {
         $route = 'generic.child';
         $params = [
-            'controller' => 'controller',
+            'controller' => $controller,
             'action' => $action,
             'id_parent' => $id_parent
         ];
@@ -150,7 +150,7 @@ trait UrlTrait
     {
         $route = 'generic.index';
         $params = [
-            'controller' => 'controller'
+            'controller' => $controller
         ];
 
         return $this->url($route, $params, $app);
@@ -172,7 +172,7 @@ trait UrlTrait
     {
         $route = 'generic.action';
         $params = [
-            'controller' => 'controller',
+            'controller' => $controller,
             'action' => $action
         ];
 
