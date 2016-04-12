@@ -1,9 +1,7 @@
 <?php
 namespace Core\Language;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Traits\ArrayTrait;
-use Core\Errors\Exceptions\RuntimeException;
 
 /**
  * Language.php
@@ -64,7 +62,7 @@ class Language
      * @param string $app
      *            Optional app name the key belongs to. (Default: 'Core')
      *
-     * @throws RuntimeException
+     * @throws LanguageException
      *
      * @return string
      */
@@ -91,7 +89,7 @@ class Language
 
         // Prevent infinite loops
         if ($text == $key) {
-            Throw new RuntimeException(sprintf('There is an infinite loop recursion in language data of app "%s" on key "%s"', $app, $key));
+            Throw new LanguageException(sprintf('There is an infinite loop recursion in language data of app "%s" on key "%s"', $app, $key));
         }
 
         // Return requested text
