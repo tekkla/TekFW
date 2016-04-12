@@ -2,8 +2,6 @@
 namespace Core\Html;
 
 use Core\Traits\ArrayTrait;
-use Core\Errors\Exceptions\RuntimeException;
-use Core\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * HtmlFactory.php
@@ -18,14 +16,16 @@ class HtmlFactory
     use ArrayTrait;
 
     /**
-     * Creates an html control / element / form element by using DI container instance method.
+     * Creates an html control / element / form element by using DI container instance method
+     *
      * Injects an instance of the HtmlFactory so the created html object can use it to create.
      *
-     * @param string $class Short NS to used class like 'Controls\Button' or 'Elements\Div' or 'Form\Input'.
-     * @param array $args Optional assoc arguments array to be used as $html->$method($value) call.
+     * @param string $class
+     *            Short NS to used class like 'Controls\Button' or 'Elements\Div' or 'Form\Input'.
+     * @param array $args
+     *            Optional assoc arguments array to be used as $html->$method($value) call.
      *
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
+     * @throws HtmlException
      *
      * @return HtmlAbstract
      */
@@ -38,13 +38,13 @@ class HtmlFactory
         foreach ($args as $method => $arg) {
 
             if (! method_exists($html, $method)) {
-                Throw new RuntimeException('Html object has no "' . $method . '" method.');
+                Throw new HtmlException('Html object has no "' . $method . '" method.');
             }
 
             if (is_array($arg)) {
 
                 if (! $this->arrayIsAssoc($arg)) {
-                    Throw new InvalidArgumentException('Arrayed arguments for html objects created by HtmlFactory have to be associative.');
+                    Throw new HtmlException('Arrayed arguments for html objects created by HtmlFactory have to be associative.');
                 }
 
                 foreach ($arg as $attr => $val) {
