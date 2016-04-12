@@ -2,7 +2,6 @@
 namespace Core\Language;
 
 use Core\Amvc\App;
-use Core\Errors\Exceptions\RuntimeException;
 
 /**
  * TextTrait.php
@@ -29,8 +28,6 @@ trait TextTrait
      * @param string $app
      *            Optional app name the key belongs to. (Default: 'Core')
      *
-     * @throws RuntimeException
-     *
      * @return string
      */
     public function text($key, $app = '')
@@ -43,12 +40,15 @@ trait TextTrait
 
                 if ($this instanceof App) {
                     $app = $this->name;
-                } elseif (property_exists($this, 'app')) {
+                }
+                elseif (property_exists($this, 'app')) {
                     $app = $this->app->getName();
-                } else {
+                }
+                else {
                     $app = 'Core';
                 }
-            } else {
+            }
+            else {
                 $app = $this->app_name;
             }
         }
