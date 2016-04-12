@@ -134,7 +134,7 @@ final class Router extends \AltoRouter
 
             $name = $this->stringUncamelize($name);
 
-            if (empty($route['route']) || empty($route['target'])) {
+            if (empty($route['route']) || empty($route['target']['controller']) || empty($route['target']['action'])) {
 
                 // Try to get controller and action from route name
                 $ca = explode('.', $name);
@@ -143,11 +143,12 @@ final class Router extends \AltoRouter
                     $route['route'] = '/' . $ca[0];
                 }
 
-                if (empty($route['target'])) {
-                    $route['target'] = [
-                        'controller' => empty($ca[0]) ? $name : $ca[0],
-                        'action' => empty($ca[1]) ? $name : $ca[1]
-                    ];
+                if (empty($route['target']['controller'])) {
+                    $route['target']['controller'] = empty($ca[0]) ? $name : $ca[0];
+                }
+
+                if (empty($route['target']['action'])) {
+                    $route['target']['action'] = empty($ca[1]) ? $name : $ca[1];
                 }
             }
 
