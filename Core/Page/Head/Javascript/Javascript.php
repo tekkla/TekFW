@@ -206,7 +206,7 @@ class Javascript
      * @param bool $defer
      * @param bool $is_external
      *
-     * @throws RuntimeException
+     * @throws PageException
      *
      * @return JavascriptObject
      */
