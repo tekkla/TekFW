@@ -1,8 +1,7 @@
 <?php
 namespace Core;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
-use Core\Errors\Exceptions\RuntimeException;
+use Core\Errors\CoreException;
 
 /**
  * DI.php
@@ -116,9 +115,9 @@ class DI implements \ArrayAccess
             $obj = $reflection->newInstanceArgs($arguments);
         }
 
-        #if (! property_exists($obj, 'di')) {
-            $obj->di = $this;
-        #}
+        // if (! property_exists($obj, 'di')) {
+        $obj->di = $this;
+        // }
 
         // Inject and return the created instance
         return $obj;
@@ -192,20 +191,19 @@ class DI implements \ArrayAccess
      * @param $params (Optional)
      *            Array of parameters to inject into method
      *
-     * @throws InvalidArgumentException
-     * @throws RuntimeException
+     * @throws CoreException
      *
      * @return object
      */
     public function invokeMethod(&$obj, $method, array $params = [])
     {
         if (! is_array($params)) {
-            Throw new InvalidArgumentException('Parameter to invoke needs to be of type array.');
+            Throw new CoreException('Parameter to invoke needs to be of type array.');
         }
 
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
-            Throw new InvalidArgumentException(sprintf('Method "%s" not found.', $method), 5000);
+            Throw new CoreException(sprintf('Method "%s" not found.', $method), 5000);
         }
 
         // Get reflection method
@@ -225,7 +223,7 @@ class DI implements \ArrayAccess
 
             // Parameter is not optional and not set => throw error
             if (! $parameter->isOptional() && ! isset($params[$param_name])) {
-                Throw new RuntimeException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
+                Throw new CoreException(sprintf('Not optional parameter "%s" missing', $param_name), 2001);
             }
 
             // If parameter is optional and not set, set argument to null
@@ -242,14 +240,14 @@ class DI implements \ArrayAccess
      * @param string $name
      *            Name of the Service, Factory or Value to return
      *
-     * @throws InvalidArgumentException
+     * @throws CoreException
      *
      * @return unknown|Ambigous
      */
     private function getSFV($name)
     {
         if (! $this->offsetExists($name)) {
-            Throw new InvalidArgumentException(sprintf('Service, factory or value "%s" is not mapped.', $name));
+            Throw new CoreException(sprintf('Service, factory or value "%s" is not mapped.', $name));
         }
 
         $type = $this->map[$name]['type'];
@@ -320,12 +318,12 @@ class DI implements \ArrayAccess
      *
      * @see ArrayAccess::offsetSet()
      *
-     * @throws InvalidArgumentException
+     * @throws CoreException
      */
     public function offsetSet($name, $value)
     {
         // No mapping through this way.
-        Throw new InvalidArgumentException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
+        Throw new CoreException('It is not allowed to map services, factories or values this way. Use the specific map methods instead.');
     }
 
     /**

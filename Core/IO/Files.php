@@ -123,8 +123,6 @@ class Files
      * @param boolean $log_missing
      *            Flag to activate logging of non existant files
      *
-     * @throws \RuntimeException
-     *
      * @return boolean
      */
     public function exists($filename, $log_missing = false)
