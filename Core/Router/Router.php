@@ -161,7 +161,7 @@ final class Router extends \AltoRouter
                     $route['route'] = '/' . $app . $route['route'];
                 }
                 else {
-                    $route['route'] = str_replace('../', '', $route['route']);
+                    $route['route'] = str_replace('../', '/', $route['route']);
                 }
             }
 
