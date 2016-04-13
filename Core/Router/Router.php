@@ -182,6 +182,43 @@ final class Router extends \AltoRouter
     }
 
     /**
+     * Nearly the same as map() method of AltoRouter
+     *
+     * The only difference is in how app and generic routes are handled.
+     * App routes will be put in front of generic routes to prevent that similiar but from app to handle routes are
+     * treated as generic routes.
+     *
+     * {@inheritDoc}
+     *
+     * @see AltoRouter::map()
+     */
+    public function map($method, $route, $target, $name = null)
+    {
+        $map = [
+            $method,
+            $route,
+            $target,
+            $name
+        ];
+
+        if (! empty($name) && strpos($name, 'generic.') === false) {
+            array_unshift($this->routes, $map);
+        }
+        else {
+            $this->routes[] = $map;
+        }
+
+        if ($name) {
+
+            if (isset($this->namedRoutes[$name])) {
+                Throw new RouterException(sprintf('Can not redeclare route "%s"', $name));
+            }
+
+            $this->namedRoutes[$name] = $route;
+        }
+    }
+
+    /**
      * Match a given request url against stored routes
      *
      * @param string $request_url
