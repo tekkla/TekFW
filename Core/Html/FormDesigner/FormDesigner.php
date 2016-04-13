@@ -485,7 +485,7 @@ final class FormDesigner
                     if ($content->isBound()) {
 
                         if (empty($name)) {
-                            Throw new FormDesignerException('Bound controls without a name are not allowed.');
+                            Throw new FormDesignerException(sprintf('Bound controls without a name are not allowed. %s', print_r($content, true)));
                         }
 
                         // Create name parts based on current group names
