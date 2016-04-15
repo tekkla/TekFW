@@ -64,7 +64,7 @@ class Log
                 'client' => $_SERVER['HTTP_USER_AGENT'],
                 'ip' => $_SERVER['REMOTE_ADDR'],
                 'url' => $_SERVER['REQUEST_URI'],
-                'id_user' => $_SESSION['id_user'],
+                'id_user' => $_SESSION['Core']['user']['id'],
                 'code' => $code
             ]
         ]

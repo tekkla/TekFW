@@ -412,7 +412,7 @@ final class FormDesigner
         $html = '';
 
         // Create hidden field with unique session token
-        $html .= '<input type="hidden" name="token" value="' . $_SESSION['token'] . '">';
+        $html .= '<input type="hidden" name="token" value="' . $_SESSION['Core']['token'] . '">';
 
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group, [], $this->data, $this->errors);

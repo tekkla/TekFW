@@ -54,10 +54,10 @@ class Token
      */
     public function generateRandomSessionToken($size = 32, $force = false)
     {
-        if (! isset($_SESSION['token']) || $force == true) {
+        if (! isset($_SESSION['Core']['token']) || $force == true) {
 
             // Store random token in session
-            $_SESSION['token'] = hash('sha256', $this->generateRandomToken($size));
+            $_SESSION['Core']['token'] = hash('sha256', $this->generateRandomToken($size));
         }
 
         return $this;
@@ -86,7 +86,7 @@ class Token
      */
     public function validateRandomSessionToken($token)
     {
-        return $token == $_SESSION['token'];
+        return $token == $_SESSION['Core']['token'];
     }
 
     /**

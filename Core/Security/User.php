@@ -231,6 +231,15 @@ class User
             if (isset($this->perms['Core']) && in_array('admin', $this->perms['Core'])) {
                 $this->is_admin = true;
             }
+
+            $_SESSION['Core']['user'] = [
+                'id' => $id_user,
+                'username' => $this->username,
+                'display_name' => $this->display_name,
+                'is_admin' => $this->is_admin,
+                'groups' => $this->groups,
+                'permissions' => $this->perms
+            ];
         }
     }
 
