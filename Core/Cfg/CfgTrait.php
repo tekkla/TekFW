@@ -69,6 +69,6 @@ trait CfgTrait {
             return $cfg->data[$app];
         }
 
-        Throw new InvalidArgumentException('Values without keys cannot be used to access config service.');
+        Throw new CfgException('Values without keys cannot be used to access config service.');
     }
 }
