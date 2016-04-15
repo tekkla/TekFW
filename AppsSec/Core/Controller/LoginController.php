@@ -60,7 +60,7 @@ class LoginController extends Controller
             if (empty($logged_in)) {
 
                 // Store failed attempt as flag in session
-                $_SESSION['login_failed'] = true;
+                $_SESSION['Core']['login_failed'] = true;
 
                 $this->model->addError('@', $this->text('login.failed'));
             }
@@ -79,7 +79,7 @@ class LoginController extends Controller
         $fd->mapData($data);
         $fd->mapErrors($this->model->getErrors());
 
-        if (isset($_SESSION['display_activation_notice'])) {
+        if (isset($_SESSION['Core']['display_activation_notice'])) {
             $group = $fd->addGroup();
             $group->addCss('alert alert-info');
             $group->setRole('alert');

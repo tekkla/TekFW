@@ -78,7 +78,11 @@ final class Core extends App
                         'control' => 'number',
                         'default' => 8,
                         'validate' => [
-                            'empty'
+                            'empty',
+                            [
+                                'min',
+                                5
+                            ]
                         ]
                     ],
                     'regexp' => [
@@ -89,25 +93,42 @@ final class Core extends App
                     'min_length' => [
                         'name' => 'min_length',
                         'control' => 'number',
-                        'default' => 8
+                        'default' => 8,
+                        'validate' => [
+                            'empty',
+                            [
+                                'min',
+                                8
+                            ]
+                        ]
                     ],
                     'max_length' => [
                         'name' => 'max_length',
                         'control' => 'number',
-                        'default' => 4096,
+                        'default' => 1024,
                         'validate' => [
                             'empty',
                             [
                                 'max',
-                                [
-                                    8,
-                                    4096
-                                ]
+                                4096
                             ]
                         ]
                     ],
                     'regexp' => [
                         'name' => 'regexp'
+                    ],
+                    'reactivate_after_password_change' => [
+                        'name' => 'reactivate_after_password_change',
+                        'default' => 0,
+                        'control' => 'switch',
+                        'validate' => [
+                            [
+                                'enum',
+                                [
+                                    0,1
+                                ]
+                            ]
+                        ]
                     ]
                 ]
             ],
@@ -116,7 +137,7 @@ final class Core extends App
                     'name' => 'use_compare_password',
                     'control' => 'switch',
                     'default' => 1
-                ]
+                ],
             ],
             'activation' => [
                 'use' => [
@@ -131,7 +152,21 @@ final class Core extends App
                 ],
                 'mta' => [
                     'name' => 'mta',
-                    'default' => 'default'
+                    'control' => [
+                        'select',
+                        [
+                            'required' => false
+                        ]
+                    ],
+                    'data' => [
+                        'type' => 'model',
+                        'source' => [
+                            'app' => 'core',
+                            'model' => 'mta',
+                            'action' => 'getMtaIdTitleList'
+                        ],
+                        'index' => 0,
+                    ],
                 ],
                 'from' => [
                     'name' => 'from'
@@ -239,7 +274,16 @@ final class Core extends App
                         ],
                         'index' => 0
                     ],
-                    'default' => 't'
+                    'default' => 't',
+                    'validate' => [
+                        [
+                            'enum',
+                            [
+                                't',
+                                'b'
+                            ]
+                        ]
+                    ]
                 ]
             ],
 
@@ -335,7 +379,16 @@ final class Core extends App
                 ],
                 'mta' => [
                     'name' => 'mta',
-                    'default' => 'default'
+                    'control' => 'select',
+                    'data' => [
+                        'type' => 'model',
+                        'source' => [
+                            'app' => 'core',
+                            'model' => 'mta',
+                            'action' => 'getMtaIdTitleList'
+                        ],
+                        'index' => 0
+                    ]
                 ]
             ],
             'log' => [
@@ -398,25 +451,31 @@ final class Core extends App
     // Apps routes
     protected $routes = [
         'index' => [
-            'route' => '../'
+            'route' => '../',
+            'target' => [
+                'controller' => 'index',
+                'action' => 'index'
+            ]
         ],
         'login' => [
-            'method' => 'GET|POST'
-        ],
-        'login.logout' => [
-            'route' => '/logout',
+            'route' => '../[login|logout:action]',
+            'method' => 'POST|GET',
+            'target' => [
+                'controller' => 'login'
+            ]
         ],
         'register' => [
-            'method' => 'POST|GET'
+            'method' => 'POST|GET',
+            'route' => '../register',
+            'target' => [
+                'controller' => 'user'
+            ]
         ],
-        'register.activate' => [
-            'route' => '/register/activate/[:key]'
-        ],
-        'register.deny' => [
-            'route' => '/register/deny/[:key]'
-        ],
-        'register.done' => [
-            'route' => '/register/done/[i:state]'
+        'activate' => [
+            'route' => '../[activate|deny:action]/[:key]',
+            'target' => [
+                'controller' => 'user'
+            ]
         ],
         'admin' => [],
         'config' => [
@@ -440,14 +499,18 @@ final class Core extends App
                 $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
             }
 
-            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login.logout'));
+            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login', [
+                'action' => 'logout'
+            ]));
         }
 
         // or add login and register buttons. But not when current user is currently on banlist
         elseif (! $this->security->users->checkBan()) {
 
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
-            $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login'));
+            $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login', [
+                'action' => 'login'
+            ]));
         }
-    }
+   }
 }
