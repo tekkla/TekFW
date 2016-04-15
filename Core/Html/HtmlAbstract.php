@@ -3,13 +3,12 @@ namespace Core\Html;
 
 use Core\Traits\ArrayTrait;
 use Core\Language\TextTrait;
-use Core\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * HtmlAbstract.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class HtmlAbstract implements HtmlBuildableInterface
@@ -287,10 +286,12 @@ abstract class HtmlAbstract implements HtmlBuildableInterface
     }
 
     /**
-     * Checks for the existance of a css property in a html object or for a css class / array of css classes in the css property
+     * Checks for the existance of a css property in a html object or for a css class / array of css classes in the css
+     * property
      *
      * @param
-     *            string array $css Optional parameter can be a single css class as string or a list of classes in an array
+     *            string array $css Optional parameter can be a single css class as string or a list of classes in an
+     *            array
      *
      * @return boolean
      */
@@ -435,7 +436,7 @@ abstract class HtmlAbstract implements HtmlBuildableInterface
     public function getAttribute($attribute)
     {
         if (! isset($this->attribute[$attribute])) {
-            Throw new InvalidArgumentException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
+            Throw new HtmlException(sprintf('The requested attribute "%s" does not exits in this html element "%s".', $attribute, get_called_class()));
         }
         else {
             return $this->attribute[$attribute];
@@ -606,6 +607,36 @@ abstract class HtmlAbstract implements HtmlBuildableInterface
         else {
             $this->{$func}[$args[0]] = $args[1];
         }
+    }
+
+    /**
+     * Hidden attribute setter and checker
+     *
+     * Accepts parameter "null", "0" and "1".
+     * "null" means to check for a set disabled attribute
+     * "0" means to remove disabled attribute
+     * "1" means to set disabled attribute
+     *
+     * @param int $state
+     *
+     * @return \Core\Html\HtmlAbstract
+     */
+    public function isHidden($state = null)
+    {
+        $attrib = 'hidden';
+
+        if (! isset($state)) {
+            return $this->checkAttribute($attrib);
+        }
+
+        if ($state == 0) {
+            $this->removeAttribute($attrib);
+        }
+        else {
+            $this->addAttribute($attrib);
+        }
+
+        return $this;
     }
 
     /**
