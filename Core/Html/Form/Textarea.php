@@ -2,16 +2,16 @@
 namespace Core\Html\Form;
 
 use Core\Html\FormAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Html\Form\Traits\ValueTrait;
 use Core\Html\Form\Traits\MaxlengthTrait;
 use Core\Html\Form\Traits\PlaceholderTrait;
+use Core\Html\HtmlException;
 
 /**
  * Textarea.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Textarea extends FormAbstract
@@ -39,7 +39,7 @@ class Textarea extends FormAbstract
     public function setCols($cols)
     {
         if (empty((int) $cols)) {
-            Throw new InvalidArgumentException('A html form textareas cols attribute need to be of type integer');
+            Throw new HtmlException('A html form textareas cols attribute need to be of type integer');
         }
 
         $this->attribute['cols'] = $cols;
@@ -59,7 +59,7 @@ class Textarea extends FormAbstract
     public function setRows($rows)
     {
         if (empty((int) $rows)) {
-            Throw new InvalidArgumentException('A html form textareas rows attribute needs to be of type integer');
+            Throw new HtmlException('A html form textareas rows attribute needs to be of type integer');
         }
 
         $this->attribute['rows'] = $rows;

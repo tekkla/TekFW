@@ -2,14 +2,14 @@
 namespace Core\Html\Form;
 
 use Core\Html\FormAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Html\Form\Traits\ValueTrait;
+use Core\Html\HtmlException;
 
 /**
  * Button.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class Button extends FormAbstract
@@ -272,7 +272,7 @@ class Button extends FormAbstract
         ];
 
         if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('Wrong button type set.', 1000);
+            Throw new HtmlException('Wrong button type set.', 1000);
         }
 
         $this->type = $type;
@@ -330,7 +330,7 @@ class Button extends FormAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array($method, $methods)) {
-            Throw new InvalidArgumentException('Wrong method set.', 1000);
+            Throw new HtmlException('Wrong method set.', 1000);
         }
 
         $this->attribute['formmethod'] = $method;
@@ -359,7 +359,7 @@ class Button extends FormAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array($enctype, $enctypes)) {
-            Throw new InvalidArgumentException('Wrong method set.', 1000);
+            Throw new HtmlException('Wrong method set.', 1000);
         }
 
         $this->attribute['formenctype'] = $enctype;
