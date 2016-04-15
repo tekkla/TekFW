@@ -1,13 +1,13 @@
 <?php
 namespace Core\Html\Form\Traits;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * SizeTrait.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 trait SizeTrait
@@ -22,7 +22,7 @@ trait SizeTrait
     public function setSize($size)
     {
         if (empty((int) $size)) {
-            Throw new InvalidArgumentException('Html size attribute needs to be an integer.');
+            Throw new HtmlException('Html size attribute needs to be an integer.');
         }
 
         $this->attribute['size'] = $size;
