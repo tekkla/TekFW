@@ -462,8 +462,11 @@ final class Core
         /* @var $cfg \Core\Cfg\Cfg */
         $this->cfg = $this->di->get('core.cfg');
 
-        // Load the config
-        $this->cfg->load();
+        // Admin users can request to load config from db instead out of cache
+        $refresh_cache = !empty($_SESSION['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
+
+        // load the config
+        $this->cfg->load($refresh_cache);
 
         // Set baseurl to config
         if (empty($this->settings['protcol'])) {
