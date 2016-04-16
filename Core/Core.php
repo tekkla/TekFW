@@ -463,7 +463,7 @@ final class Core
         $this->cfg = $this->di->get('core.cfg');
 
         // Admin users can request to load config from db instead out of cache
-        $refresh_cache = !empty($_SESSION['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
+        $refresh_cache = !empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
 
         // load the config
         $this->cfg->load($refresh_cache);
