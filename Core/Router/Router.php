@@ -305,8 +305,6 @@ final class Router extends \AltoRouter
             $this->params = $this->match['params'];
         }
 
-        \FB::log($this->getStatus());
-
         return $this->match;
     }
 
