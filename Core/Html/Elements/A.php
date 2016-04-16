@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * A.php
@@ -100,7 +100,7 @@ class A extends HtmlAbstract
         ];
 
         if (! in_array($rel, $rels)) {
-            Throw new InvalidArgumentException('Not valid rel attribute', 1000);
+            Throw new HtmlException('Not valid rel attribute', 1000);
         }
 
         $this->attribute['rel'] = $rel;

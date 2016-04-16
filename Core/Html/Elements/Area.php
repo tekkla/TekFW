@@ -1,7 +1,7 @@
 <?php
 namespace Core\Html\Elements;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Area.php
@@ -48,7 +48,7 @@ class Abbr extends Link
         );
 
         if (! in_array($shape, $shapes)) {
-            Throw new InvalidArgumentException('Set shape is not valid.', 1000);
+            Throw new HtmlException('Set shape is not valid.', 1000);
         }
 
         $this->attribute['shape'] = $shape;

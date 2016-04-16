@@ -3,7 +3,7 @@ namespace Core\Html\Controls;
 
 use Core\Html\Elements\Icon;
 use Core\Html\Elements\A;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * UiButton.php
@@ -104,7 +104,7 @@ class UiButton extends A
         ];
 
         if (! in_array($mode, $modelist)) {
-            Throw new InvalidArgumentException('Wrong mode for UiButton.', 1000);
+            Throw new HtmlException('Wrong mode for UiButton.', 1000);
         }
 
         $this->mode = $mode;
@@ -137,7 +137,7 @@ class UiButton extends A
         ];
 
         if (! in_array($type, $typelist)) {
-            Throw new InvalidArgumentException('Wrong type for UiButton.', 1000);
+            Throw new HtmlException('Wrong type for UiButton.', 1000);
         }
 
         $this->type = $type;

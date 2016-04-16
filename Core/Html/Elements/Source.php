@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\UnexpectedValueException;
+use Core\Html\HtmlException;
 
 /**
  * Source.php
@@ -68,11 +68,11 @@ class Source extends HtmlAbstract
     public function build()
     {
         if (! isset($this->attribute['source'])) {
-            Throw new UnexpectedValueException('No mediasource set.', 1000);
+            Throw new HtmlException('No mediasource set.', 1000);
         }
 
         if (! isset($this->attribute['type'])) {
-            Throw new UnexpectedValueException('No media type set.', 1000);
+            Throw new HtmlException('No media type set.', 1000);
         }
 
         return parent::build();

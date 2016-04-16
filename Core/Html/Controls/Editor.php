@@ -96,15 +96,15 @@ class Editor extends FormAbstract
     public function __construct(HtmlFactory $factory)
     {
         parent::__construct($factory);
-        
+
         // our editor will be uesd as inline editor
         $this->edit_element = $this->div->addAttribute('contenteditable', 'true')->addData('url', $this->cfg->get('Core', 'url.tools'));
-        
+
         // we need an hidden form field for content to post
         $this->content_element = $this->input->setType('hidden');
-        
+
         $this->addData('control', 'editor');
-        
+
         // Add needed CKE js library
         $this->js->file($this->cfg->get('Core', 'url.tools') . '/ckeditor/ckeditor.js?' . time());
     }
@@ -131,13 +131,13 @@ class Editor extends FormAbstract
     {
         // the hidden field is the field with the form content
         $this->content_element->setName($name);
-        
+
         return $this;
     }
 
     public function setFormId($form_id)
     {
-        $this->form_id = $form->_id;
+        $this->form_id = $form_id;
         return $this;
     }
 
@@ -156,14 +156,14 @@ class Editor extends FormAbstract
     /**
      * Sets user role and grants access on filebrowser
      *
-     * @param string $role            
+     * @param string $role
      * @return \Core\Html\Controls\Editor
      */
     public function setUserRole($role)
     {
         $this->session->set('KCFinder_Role', $role);
         $this->session->set('KCFinder_Access', true);
-        
+
         return $this;
     }
 
@@ -214,12 +214,12 @@ class Editor extends FormAbstract
 				e.preventDefault();
 			});
 		}";
-        
+
         $this->js->script($script);
-        
+
         $html = $this->content_element->build();
         $html .= $this->edit_element->build();
-        
+
         return $html;
     }
 }

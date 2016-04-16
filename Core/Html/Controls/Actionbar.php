@@ -4,7 +4,7 @@ namespace Core\Html\Controls;
 use Core\Html\Elements\Div;
 use Core\Traits\ArrayTrait;
 use Core\Language\TextTrait;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Actionbar.php
@@ -75,18 +75,18 @@ class Actionbar extends Div
      *
      * @return \Core\Html\Controls\Actionbar
      *
-     * @throws InvalidArgumentException
+     * @throws HtmlException
      */
     public function addUiButtons(array $ui_buttons)
     {
         if (! $this->isAssoc($ui_buttons)) {
-            Throw new InvalidArgumentException('Your list of ui buttons needs to be an assoc array with name an UiButton object.');
+            Throw new HtmlException('Your list of ui buttons needs to be an assoc array with name an UiButton object.');
         }
 
         foreach ($ui_buttons as $name => $button) {
 
             if (! $button instanceof UiButton) {
-                Throw new InvalidArgumentException('One button to be inserted into actionbar is not of type UiButton');
+                Throw new HtmlException('One button to be inserted into actionbar is not of type UiButton');
             }
 
             $this->buttons[$name] = $button;
