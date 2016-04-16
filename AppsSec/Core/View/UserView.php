@@ -45,4 +45,24 @@ class UserView extends View
     {
         echo $this->form;
     }
+
+    public function Done()
+    {
+        echo '
+        <h1>', $this->headline, '</h1>
+        <p>', $this->text, '</p>';
+    }
+
+    public function Register()
+    {
+        echo '
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <h1>', $this->headline, '</h1>
+                <div class="well">
+                    ', $this->form, '
+                </div>
+            </div>
+        </div>';
+    }
 }

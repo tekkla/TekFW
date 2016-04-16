@@ -2,18 +2,18 @@
 namespace Core\Html\Form;
 
 use Core\Html\FormAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Html\Form\Traits\ValueTrait;
 use Core\Html\Form\Traits\MaxlengthTrait;
 use Core\Html\Form\Traits\PlaceholderTrait;
 use Core\Html\Form\Traits\IsCheckedTrait;
 use Core\Html\Form\Traits\IsMultipleTrait;
+use Core\Html\HtmlException;
 
 /**
- * Input Form Element
+ * Input.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2016
  * @license MIT
  */
 class Input extends FormAbstract
@@ -74,7 +74,7 @@ class Input extends FormAbstract
         ];
 
         if (! in_array($type, $types)) {
-            Throw new InvalidArgumentException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
+            Throw new HtmlException('Your type "' . $type . '" is no valid input control type. Allowed are ' . implode(', ', $types));
         }
 
         $this->type = $type;
@@ -104,7 +104,7 @@ class Input extends FormAbstract
     public function setSize($size)
     {
         if (empty((int) $size)) {
-            Throw new InvalidArgumentException('A html form inputs size needs to be an integer.');
+            Throw new HtmlException('A html form inputs size needs to be an integer.');
         }
 
         $this->attribute['size'] = $size;

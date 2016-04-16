@@ -412,7 +412,7 @@ final class FormDesigner
         $html = '';
 
         // Create hidden field with unique session token
-        $html .= '<input type="hidden" name="token" value="' . $_SESSION['token'] . '">';
+        $html .= '<input type="hidden" name="token" value="' . $_SESSION['Core']['token'] . '">';
 
         foreach ($this->groups as $group) {
             $html .= $this->buildGroup($group, [], $this->data, $this->errors);
@@ -485,7 +485,7 @@ final class FormDesigner
                     if ($content->isBound()) {
 
                         if (empty($name)) {
-                            Throw new FormDesignerException('Bound controls without a name are not allowed.');
+                            Throw new FormDesignerException(sprintf('Bound controls without a name are not allowed. %s', print_r($content, true)));
                         }
 
                         // Create name parts based on current group names

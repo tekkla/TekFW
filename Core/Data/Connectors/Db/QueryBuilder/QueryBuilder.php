@@ -780,8 +780,6 @@ class QueryBuilder
 
             // Set method to UPDATE when primary exists and has a value. Otherwise we INSERT a new record
             $this->method = ($primary !== false && ! empty($this->definition['data'][$primary])) ? 'UPDATE' : 'INSERT';
-
-            \FB::log($this->method);
         }
 
         // Check for allowed querymethods

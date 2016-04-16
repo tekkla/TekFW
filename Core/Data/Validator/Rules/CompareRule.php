@@ -1,13 +1,13 @@
 <?php
 namespace Core\Data\Validator\Rules;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Data\Validator\ValidatorException;
 
 /**
  * CompareRule.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class CompareRule extends RuleAbstract
@@ -34,7 +34,7 @@ class CompareRule extends RuleAbstract
         ];
 
         if (! in_array($mode, $modes)) {
-            Throw new InvalidArgumentException(sprintf('Parameter "%s" not allowed', $mode), 1001);
+            Throw new ValidatorException(sprintf('Parameter "%s" not allowed', $mode), 1001);
         }
 
         switch ($mode) {

@@ -52,8 +52,6 @@ class UserModel extends Model
         ]
     ];
 
-    private $table = 'users';
-
     public function getEdit(User $user, $id_user = null)
     {
         if ($id_user) {
@@ -131,5 +129,121 @@ class UserModel extends Model
         ]);
 
         return $db->all();
+    }
+
+    public function getRegister()
+    {
+        return [];
+    }
+
+    public function register($data, $activate)
+    {
+
+        $this->addUsernameAndPasswordChecksFromConfig();
+
+        if (! password_verify($data['password'], password_hash($data['password_compare'], PASSWORD_DEFAULT))) {
+            $data->addError('password', $this->text('user.error.password.mismatch'));
+            $data->addError('password_compare', $this->text('user.error.password.mismatch'));
+        }
+
+        $this->validate($data);
+
+        if ($this->hasErrors()) {
+            return;
+        }
+
+        $db = $this->getDbConnector();
+
+        // Check for already existing username
+        $exists = $db->count($this->table, 'username=:username', [
+            ':username' => $data['username']
+        ]);
+
+        if ($exists) {
+            $data->addError('username', $this->text('register.error.name_in_use'));
+            return;
+        }
+
+        return $this->di->get('core.security.users')->createUser($data['username'], $data['password'], $activate);
+    }
+
+    private function addUsernameAndPasswordChecksFromConfig()
+    {
+        // Minimum username length set in config?
+        $min_length = $this->cfg('security.user.username.min_length');
+        $this->scheme['fields']['username']['validate'][] = [
+            'min',
+            $min_length,
+            sprintf($this->text('user.error.username.length'), $min_length)
+        ];
+
+        // Regexp check für username set in config?
+        $regexp = $this->cfg('security.user.username.regexp');
+
+        if (! empty($regexp)) {
+            $this->scheme['fields']['username']['validate'][] = [
+                'CustomRegexp',
+                $regexp,
+                sprintf($this->text('user.error.username.regexp'), $regexp)
+            ];
+        }
+
+        // Password min and/or maxlength set in config?
+        $min_length = $this->cfg('security.user.password.min_length');
+        $max_length = $this->cfg('security.user.password.max_length');
+
+        if (!empty($max_length)) {
+            $this->scheme['fields']['password']['validate'][] = [
+                'range',
+                [
+                    $min_length,
+                    $max_length
+                ],
+                sprintf($this->text('user.error.password.range'), $min_length, $max_length)
+            ];
+        }
+        else {
+            $this->scheme['fields']['password']['validate'][] = [
+                'min',
+                $min_length,
+                sprintf($this->text('user.error.password.min_length'), $min_length)
+            ];
+        }
+
+        // Password regex check wanted by config?
+        $regexp = $this->cfg('security.user.password.regexp');
+
+        if (! empty($regexp)) {
+            $this->scheme['fields']['password']['validate'][] = [
+                'CustomRegexp',
+                $regexp,
+                sprintf($this->text('user.error.password.regexp'), $regexp)
+            ];
+        }
+    }
+
+    public function getActivationData($id_user)
+    {
+        $db = $this->getDbConnector();
+        $db->qb([
+            'table' => 'activation_tokens',
+            'fields' => [
+                'selector',
+                'token',
+                'expires'
+            ],
+            'filter' => 'id_user=:id_user',
+            'params' => [
+                ':id_user' => $id_user
+            ]
+        ]);
+
+        return $db->single();
+    }
+
+    private function updatePassword($id_user, $old_password, $new_password)
+    {
+        $this->addUsernameAndPasswordChecksFromConfig();
+
     }
 }

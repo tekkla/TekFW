@@ -2,13 +2,13 @@
 namespace Core\Html\Form;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
- * Form html object
+ * Form.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014 by author
+ * @copyright 2016
  * @license MIT
  */
 class Form extends HtmlAbstract
@@ -56,7 +56,7 @@ class Form extends HtmlAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array(strtolower($method), $methods)) {
-            Throw new InvalidArgumentException('Wrong html form method attribute set.', 1000);
+            Throw new HtmlException('Wrong html form method attribute set.', 1000);
         }
 
         $this->attribute['method'] = $method;
@@ -85,7 +85,7 @@ class Form extends HtmlAbstract
 
         // Safety first. Only allow 'post' or 'get' here.
         if (! in_array(strtolower($enctype), $enctypes)) {
-            Throw new InvalidArgumentException('Wrong html form enctype attribute set.', 1000);
+            Throw new HtmlException('Wrong html form enctype attribute set.', 1000);
         }
 
         $this->attribute['enctype'] = $enctype;
@@ -138,7 +138,7 @@ class Form extends HtmlAbstract
         ];
 
         if (! in_array(strtolower($state), $states))
-            Throw new InvalidArgumentException('Wrong html form autocomplete attribute state.', 1000);
+            Throw new HtmlException('Wrong html form autocomplete attribute state.', 1000);
 
         $this->attribute['autocomplete'] = $state;
 

@@ -20,7 +20,7 @@ class Message
     {
 
         // Init messages stack
-        $_SESSION['messages'] = [];
+        $_SESSION['Core']['messages'] = [];
     }
 
     /**
@@ -73,7 +73,7 @@ class Message
      */
     public function add(MessageObject &$msg)
     {
-        $_SESSION['messages'][] = $msg;
+        $_SESSION['Core']['messages'][] = $msg;
     }
 
     /**
@@ -143,7 +143,7 @@ class Message
      */
     public function getMessages()
     {
-        $messages = $_SESSION['messages'];
+        $messages = $_SESSION['Core']['messages'];
         $this->resetMessages();
 
         return $messages;
@@ -154,8 +154,6 @@ class Message
      */
     public function resetMessages()
     {
-        if ($_SESSION['messages']) {
-            $_SESSION['messages'] = [];
-        }
+        $_SESSION['Core']['messages'] = [];
     }
 }

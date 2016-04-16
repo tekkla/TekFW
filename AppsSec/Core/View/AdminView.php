@@ -13,7 +13,7 @@ use Core\Amvc\View;
 class AdminView extends View
 {
 
-    public function Index()
+    public function Admin()
     {
         echo '
         <h1>Admincenter</h1>

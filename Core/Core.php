@@ -99,8 +99,8 @@ final class Core
             // Run inits
             $this->initDatabase();
             $this->initDependencies();
-            $this->initConfig();
             $this->initSession();
+            $this->initConfig();
             $this->initRouter();
             $this->initCoreApp();
             $this->initSecurity();
@@ -461,7 +461,12 @@ final class Core
     {
         /* @var $cfg \Core\Cfg\Cfg */
         $this->cfg = $this->di->get('core.cfg');
-        $this->cfg->load();
+
+        // Admin users can request to load config from db instead out of cache
+        $refresh_cache = !empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
+
+        // load the config
+        $this->cfg->load($refresh_cache);
 
         // Set baseurl to config
         if (empty($this->settings['protcol'])) {
@@ -517,6 +522,7 @@ final class Core
         ];
 
         $this->cfg->addUrls('Core', $urls);
+
     }
 
     /**
@@ -533,9 +539,13 @@ final class Core
         // Start the session
         session_start();
 
-        if (! isset($_SESSION['id_user'])) {
-            $_SESSION['id_user'] = 0;
-            $_SESSION['logged_in'] = false;
+        if (empty($_SESSION['Core']['user'])) {
+            $_SESSION['Core'] = [
+                'logged_in' => false,
+                'user' => [
+                    'id' => 0,
+                ]
+            ];
         }
 
         // Create session id constant
@@ -618,7 +628,7 @@ final class Core
         $this->security->login->doAutoLogin();
 
         if ($this->security->login->loggedIn()) {
-            $this->security->user->load($_SESSION['id_user']);
+            $this->security->user->load($_SESSION['Core']['user']['id']);
         }
 
         $this->security->token->generateRandomSessionToken();

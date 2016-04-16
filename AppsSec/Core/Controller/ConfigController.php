@@ -31,7 +31,6 @@ class ConfigController extends Controller
      */
     public $model;
 
-
     public function Config($app_name)
     {
         $app_name = $this->stringCamelize($app_name);
@@ -80,7 +79,7 @@ class ConfigController extends Controller
 
             if (! $this->model->hasErrors()) {
 
-                    // Reload config and force a cache refresh!
+                // Reload config and force a cache refresh!
                 $this->di->get('core.cfg')->load(true);
                 unset($data);
             }
@@ -254,19 +253,16 @@ class ConfigController extends Controller
                         $creator = $this->di->get('core.amvc.creator');
                         $app = $creator->getAppInstance($settings['data']['source']['app']);
                         $model = $app->getModel($settings['data']['source']['model']);
-                        $action =  $settings['data']['source']['action'];
+                        $action = $settings['data']['source']['action'];
 
                         $model->checkMethodExists($action);
 
-                        $params = !empty($settings['data']['source']['params']) ? $settings['data']['source']['params'] : [];
+                        $params = ! empty($settings['data']['source']['params']) ? $settings['data']['source']['params'] : [];
 
                         $datasource = call_user_func_array([
                             $model,
                             $action
                         ], $params);
-
-
-                        array_unshift($datasource, 'none');
 
                         break;
 
@@ -278,6 +274,16 @@ class ConfigController extends Controller
                     // Datasource has to be of type array or model. All other will result in an exception
                     default:
                         Throw new CoreException(sprintf('Wrong or none datasource set for control "%s" of type "%s"', $settings['name'], $control_type));
+                }
+
+                // Add 'please select' option
+                if (empty($settings['value'])) {
+                    $option = $control->createOption();
+                    $option->setInner($this->text('please.select'));
+                    $option->setValue('');
+                    $option->isDisabled(1);
+                    $option->isHidden(1);
+                    $option->isSelected(1);
                 }
 
                 // Create the list of options

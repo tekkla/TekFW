@@ -31,6 +31,13 @@ return [
         '500' => 'Ein interner Fehler ist  aufgetreten.'
     ],
 
+    'default' => 'Standard',
+    'none' => 'Keine/r',
+    'please' => [
+        'select' => 'Bitte auswählen...',
+        'confirm' => 'Bitte bestätigen...',
+    ],
+
     // Basics
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
 
@@ -89,13 +96,12 @@ return [
 
     // USER
     'login' => [
-
+        'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
         'form' => [
             'username' => 'E-Mail',
             'password' => 'Password',
             'already_loggedin' => 'Sie sind bereits angemeldet',
             'remember_me' => 'Angemeldet bleiben',
-            'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
             'success' => 'Login war erfolgreich.'
         ]
     ],
@@ -103,13 +109,10 @@ return [
     'register' => [
         'form' => [
             'headline' => 'Registrierung',
-            'username' => 'user.login.username',
-            'password' => 'user.login.password',
+            'username' => 'login.form.username',
+            'password' => 'login.form.password',
             'compare' => 'Passwort erneut',
             'button' => 'Registrieren'
-        ],
-        'error' => [
-            'name_in_use' => 'Dieser Benutzname steht nicht zu Verfügung.'
         ],
         'mail' => [
             'subject' => 'Benutzerkontoaktivierung bei %s',
@@ -536,7 +539,20 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'display_name' => 'Anzeigename',
             'password' => 'Passwort',
             'groups' => 'Benutzergruppen'
-        ]
+        ],
+        'error' => [
+            'username' => [
+                'in_use' => 'Dieser Benutzname steht nicht zu Verfügung.',
+                'min_lenght' => 'Der Benutzname muss mindesten %s Zeichen haben.',
+                'regexp' => 'Benutzname enthält ungültige Zeichen.'
+            ],
+            'password' => [
+                'mismatch' => 'Die Passwörter stimmen nicht überein.',
+                'regexp' => 'Das Passwort enthält ungültihe Zeichen.',
+                'max_length' => 'Das Passwort darf maximal %s Zeichen lang sein.',
+                'range' => 'Das passwort muss zwischen %s und %s Zeichen lang sein.'
+            ]
+        ],
     ],
 
     /**

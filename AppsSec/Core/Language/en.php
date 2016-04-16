@@ -31,6 +31,14 @@ return [
         '500' => 'A server error occured.'
     ],
 
+    'default' => 'Default',
+    'none' => 'None',
+
+    'please' => [
+        'select' => 'Bitte auswählen...',
+        'confirm' => 'Bitte bestätigen...',
+    ],
+
     // Basics
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
 

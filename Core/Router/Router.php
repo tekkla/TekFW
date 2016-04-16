@@ -134,7 +134,7 @@ final class Router extends \AltoRouter
 
             $name = $this->stringUncamelize($name);
 
-            if (empty($route['route']) || empty($route['target'])) {
+            if (empty($route['route']) || empty($route['target']['controller']) || empty($route['target']['action'])) {
 
                 // Try to get controller and action from route name
                 $ca = explode('.', $name);
@@ -143,11 +143,12 @@ final class Router extends \AltoRouter
                     $route['route'] = '/' . $ca[0];
                 }
 
-                if (empty($route['target'])) {
-                    $route['target'] = [
-                        'controller' => empty($ca[0]) ? $name : $ca[0],
-                        'action' => empty($ca[1]) ? $name : $ca[1]
-                    ];
+                if (empty($route['target']['controller'])) {
+                    $route['target']['controller'] = empty($ca[0]) ? $name : $ca[0];
+                }
+
+                if (empty($route['target']['action'])) {
+                    $route['target']['action'] = empty($ca[1]) ? $name : $ca[1];
                 }
             }
 
@@ -160,7 +161,7 @@ final class Router extends \AltoRouter
                     $route['route'] = '/' . $app . $route['route'];
                 }
                 else {
-                    $route['route'] = str_replace('../', '', $route['route']);
+                    $route['route'] = str_replace('../', '/', $route['route']);
                 }
             }
 
@@ -177,6 +178,43 @@ final class Router extends \AltoRouter
             }
 
             $this->map($route['method'], $route['route'], $route['target'], $name);
+        }
+    }
+
+    /**
+     * Nearly the same as map() method of AltoRouter
+     *
+     * The only difference is in how app and generic routes are handled.
+     * App routes will be put in front of generic routes to prevent that similiar but from app to handle routes are
+     * treated as generic routes.
+     *
+     * {@inheritDoc}
+     *
+     * @see AltoRouter::map()
+     */
+    public function map($method, $route, $target, $name = null)
+    {
+        $map = [
+            $method,
+            $route,
+            $target,
+            $name
+        ];
+
+        if (! empty($name) && strpos($name, 'generic.') === false) {
+            array_unshift($this->routes, $map);
+        }
+        else {
+            $this->routes[] = $map;
+        }
+
+        if ($name) {
+
+            if (isset($this->namedRoutes[$name])) {
+                Throw new RouterException(sprintf('Can not redeclare route "%s"', $name));
+            }
+
+            $this->namedRoutes[$name] = $route;
         }
     }
 

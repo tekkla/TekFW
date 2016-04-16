@@ -13,7 +13,7 @@ use Core\Amvc\Controller;
 final class AdminController extends Controller
 {
 
-    public function Index()
+    public function Admin()
     {
         $this->setVar([
             'loaded_apps' => $this->model->getApplist(),

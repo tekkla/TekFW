@@ -118,7 +118,7 @@ class Login
 
         // User needs activation?
         if ($login['state'] == 0) {
-            $_SESSION['display_activation_notice'] = true;
+            $_SESSION['Core']['display_activation_notice'] = true;
             $this->log->suspicious(sprintf('User "%s" treid to login on not activated account.', $username));
             return false;
         }
@@ -146,8 +146,8 @@ class Login
             }
 
             // Store essential userdata in session
-            $_SESSION['logged_in'] = true;
-            $_SESSION['id_user'] = $login['id_user'];
+            $_SESSION['Core']['logged_in'] = true;
+            $_SESSION['Core']['user']['id'] = $login['id_user'];
 
             // Remember for autologin?
             if ($remember_me === true) {
@@ -155,7 +155,7 @@ class Login
             }
 
             // Remove possible login_failed flag from session
-            unset($_SESSION['login_failed']);
+            unset($_SESSION['Core']['login_failed']);
 
             // Log successfull login
             $this->logLogin($username);
@@ -173,21 +173,33 @@ class Login
     }
 
     /**
-     * Logout of the user and clean up autologin cookies.
+     * Logout
+     *
+     * Logs out the user, removes all it's data from session, creates a new session token, removes all autologin cookies
+     * and logs the logout to the log table.
+     *
+     * @return boolean
      */
     public function doLogout()
     {
-        $id_user = $_SESSION['id_user'];
+        $id_user = $_SESSION['Core']['user']['id'];
 
         // Clean up session
-        $_SESSION['autologin_failed'] = true;
-        $_SESSION['id_user'] = 0;
-        $_SESSION['logged_in'] = false;
+        $_SESSION['Core']['autologin_failed'] = true;
+        $_SESSION['Core']['user'] = [
+            'id' => 0
+        ];
+        $_SESSION['Core']['logged_in'] = false;
+
+        // Create a new session token
+        $this->token->generateRandomSessionToken(64);
 
         // Calling logout means to revoke autologin cookies
         $this->cookies->remove($this->getCookieName());
 
         $this->log->logout('User:' . $id_user);
+
+        return true;
     }
 
     /**
@@ -199,7 +211,7 @@ class Login
     public function doAutoLogin()
     {
         // User already logged in?
-        if (! empty($_SESSION['logged_in'])) {
+        if (! empty($_SESSION['Core']['logged_in'])) {
             return true;
         }
 
@@ -213,13 +225,13 @@ class Login
         }
 
         // No autologin when autologin already failed
-        if (! empty($_SESSION['autologin_failed'])) {
+        if (! empty($_SESSION['Core']['autologin_failed'])) {
 
             // Remove fragments/all of autologin cookies
             $this->cookies->remove($cookie_name);
 
             // Remove the flag which forces the log off
-            unset($_SESSION['autologin_failed']);
+            unset($_SESSION['Core']['autologin_failed']);
 
             return false;
         }
@@ -263,11 +275,11 @@ class Login
                 $this->setAutoLoginCookies($auth_token['id_user']);
 
                 // Login user, set session flags and return true
-                $_SESSION['logged_in'] = true;
-                $_SESSION['id_user'] = $auth_token['id_user'];
+                $_SESSION['Core']['logged_in'] = true;
+                $_SESSION['Core']['user']['id'] = $auth_token['id_user'];
 
                 // Remove possible autologin failed flag
-                unset($_SESSION['autologin_failed']);
+                unset($_SESSION['Core']['autologin_failed']);
 
                 return true;
             }
@@ -280,13 +292,13 @@ class Login
         $this->cookies->remove($cookie_name);
 
         // Set flag that autologin failed
-        $_SESSION['autologin_failed'] = true;
+        $_SESSION['Core']['autologin_failed'] = true;
 
         // Set logged in flag explicit to false
-        $_SESSION['logged_in'] = false;
+        $_SESSION['Core']['logged_in'] = false;
 
         // Set id of user explicit to 0 (guest)
-        $_SESSION['id_user'] = 0;
+        $_SESSION['Core']['user']['id'] = 0;
 
         // sorry, no autologin
         return false;
@@ -353,7 +365,7 @@ class Login
      */
     public function loggedIn()
     {
-        return $_SESSION['logged_in'] == true && $_SESSION['id_user'] > 0 ? true : false;
+        return $_SESSION['Core']['logged_in'] == true && ! empty($_SESSION['Core']['user']['id']) ? true : false;
     }
 
     /**
