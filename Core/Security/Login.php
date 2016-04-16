@@ -173,7 +173,12 @@ class Login
     }
 
     /**
-     * Logout of the user and clean up autologin cookies.
+     * Logout
+     *
+     * Logs out the user, removes all it's data from session, creates a new session token, removes all autologin cookies
+     * and logs the logout to the log table.
+     *
+     * @return boolean
      */
     public function doLogout()
     {
@@ -181,13 +186,20 @@ class Login
 
         // Clean up session
         $_SESSION['Core']['autologin_failed'] = true;
-        $_SESSION['Core']['user']['id'] = 0;
+        $_SESSION['Core']['user'] = [
+            'id' => 0
+        ];
         $_SESSION['Core']['logged_in'] = false;
+
+        // Create a new session token
+        $this->token->generateRandomSessionToken(64);
 
         // Calling logout means to revoke autologin cookies
         $this->cookies->remove($this->getCookieName());
 
         $this->log->logout('User:' . $id_user);
+
+        return true;
     }
 
     /**
@@ -264,7 +276,7 @@ class Login
 
                 // Login user, set session flags and return true
                 $_SESSION['Core']['logged_in'] = true;
-                $_SESSION['Core']['user']['id_user'] = $auth_token['id_user'];
+                $_SESSION['Core']['user']['id'] = $auth_token['id_user'];
 
                 // Remove possible autologin failed flag
                 unset($_SESSION['Core']['autologin_failed']);
@@ -353,7 +365,7 @@ class Login
      */
     public function loggedIn()
     {
-        return $_SESSION['Core']['logged_in'] == true && $_SESSION['Core']['user']['id'] > 0 ? true : false;
+        return $_SESSION['Core']['logged_in'] == true && ! empty($_SESSION['Core']['user']['id']) ? true : false;
     }
 
     /**
