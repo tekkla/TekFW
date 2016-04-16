@@ -64,10 +64,11 @@ class MtaModel extends Model
                     [
                         'enum',
                         [
-                            0,1
+                            0,
+                            1
                         ]
                     ]
-                ],
+                ]
             ],
             'type' => [
                 'type' => 'int',
@@ -90,19 +91,20 @@ class MtaModel extends Model
                     [
                         'enum',
                         [
-                            0,1
+                            0,
+                            1
                         ]
                     ]
                 ]
             ],
             'smtp_options' => [
-                'type' => 'string',
+                'type' => 'string'
             ]
         ]
     ];
 
-    public function getMtaIdTitleList() {
-
+    public function getMtaIdTitleList()
+    {
         $db = $this->getDbConnector();
         $db->qb([
             'scheme' => $this->scheme,
@@ -113,15 +115,15 @@ class MtaModel extends Model
             ],
             'order' => 'is_default DESC'
         ]);
-
+        
         $mtalist = $db->fetchAll();
-
+        
         $out = [];
-
+        
         foreach ($mtalist as $mta) {
             $out[$mta['id_mta']] = $mta['is_default'] == 1 ? $mta['title'] . ' (' . $this->text('default') . ')' : $mta['title'];
         }
-
+        
         return $out;
     }
 }

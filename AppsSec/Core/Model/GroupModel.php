@@ -19,7 +19,7 @@ class GroupModel extends Model
         'primary' => 'id_group',
         'fields' => [
             'id_group' => [
-                'type' => 'int',
+                'type' => 'int'
             ],
             'title' => [
                 'type' => 'string',
@@ -47,44 +47,41 @@ class GroupModel extends Model
             'title' => '',
             'display_name' => '',
             'User' => [],
-            'GroupPermissions' => [],
+            'GroupPermissions' => []
         ];
-
+        
         if ($id_group) {
             $group = $this->security->group->getGroupById($id_group);
             $group['User'] = $this->getModel('User')->loadUsersByGroupId($id_group);
         }
-
+        
         return $group;
     }
 
     public function getGroups($skip_guest = false)
     {
         $data = $this->security->group->getGroups(false, $skip_guest);
-
+        
         foreach ($data as &$app_groups) {
-
+            
             foreach ($app_groups as $id_group => &$group) {
-
+                
                 $group['link'] = $this->url('byid', [
                     'controller' => 'Group',
                     'action' => 'Detail',
                     'id' => $group['id_group']
                 ]);
-
+                
                 $group['User'] = $this->getModel('User')->loadUsersByGroupId($id_group);
             }
         }
-
+        
         return $data;
     }
 
-
-    public function save($data) {
-
-
-            var_dump($data);
-
+    public function save($data)
+    {
+        var_dump($data);
     }
 }
 

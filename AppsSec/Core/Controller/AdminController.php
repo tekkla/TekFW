@@ -13,13 +13,19 @@ use Core\Amvc\Controller;
 final class AdminController extends Controller
 {
 
+    protected $access = [
+        '*' => [
+            'admin'
+        ]
+    ];
+
     public function Admin()
     {
         $this->setVar([
             'loaded_apps' => $this->model->getApplist(),
             'logs' => $this->getController('Log')
                 ->run('Index'),
-
+            
             // Links to users and permissions
             'menu' => [
                 'users' => [

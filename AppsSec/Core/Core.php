@@ -23,7 +23,7 @@ final class Core extends App
         'admin.user',
         'admin.log'
     ];
-
+    
     // Apps default config
     protected $config = [
         'site' => [
@@ -125,7 +125,8 @@ final class Core extends App
                             [
                                 'enum',
                                 [
-                                    0,1
+                                    0,
+                                    1
                                 ]
                             ]
                         ]
@@ -137,7 +138,7 @@ final class Core extends App
                     'name' => 'use_compare_password',
                     'control' => 'switch',
                     'default' => 1
-                ],
+                ]
             ],
             'activation' => [
                 'use' => [
@@ -165,8 +166,8 @@ final class Core extends App
                             'model' => 'mta',
                             'action' => 'getMtaIdTitleList'
                         ],
-                        'index' => 0,
-                    ],
+                        'index' => 0
+                    ]
                 ],
                 'from' => [
                     'name' => 'from'
@@ -202,7 +203,7 @@ final class Core extends App
                 ]
             ]
         ],
-
+        
         'login' => [
             'autologin' => [
                 'active' => [
@@ -217,7 +218,7 @@ final class Core extends App
                 ]
             ]
         ],
-
+        
         // Group: Execute
         'home' => [
             'guest' => [
@@ -231,8 +232,8 @@ final class Core extends App
                             'model' => 'config',
                             'action' => 'getAllRoutes'
                         ],
-                        'index' => 0,
-                    ],
+                        'index' => 0
+                    ]
                 ],
                 'params' => [
                     'name' => 'params',
@@ -259,7 +260,7 @@ final class Core extends App
                 ]
             ]
         ],
-
+        
         // Group: JS
         'js' => [
             'general' => [
@@ -286,7 +287,7 @@ final class Core extends App
                     ]
                 ]
             ],
-
+            
             'jquery' => [
                 'version' => [
                     'name' => 'version',
@@ -411,7 +412,7 @@ final class Core extends App
                 ]
             ]
         ],
-
+        
         // Caching
         'cache' => [
             'ttl_js' => [
@@ -425,7 +426,7 @@ final class Core extends App
                 'default' => '3600'
             ]
         ],
-
+        
         // Loggingsystem
         'log' => [
             'display' => [
@@ -436,7 +437,7 @@ final class Core extends App
                 ]
             ]
         ],
-
+        
         // Mailsystem
         'mail' => [
             'general' => [
@@ -447,7 +448,7 @@ final class Core extends App
             ]
         ]
     ];
-
+    
     // Apps routes
     protected $routes = [
         'index' => [
@@ -491,26 +492,26 @@ final class Core extends App
     {
         // Add logoff button for logged in users
         if ($this->security->login->loggedIn()) {
-
+            
             $usermenu = $this->page->menu->createItem('login', $this->security->user->getDisplayname());
-
+            
             // Show admin menu?
             if ($this->security->user->isAdmin()) {
                 $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
             }
-
+            
             $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login', [
                 'action' => 'logout'
             ]));
         }
-
+        
         // or add login and register buttons. But not when current user is currently on banlist
         elseif (! $this->security->users->checkBan()) {
-
+            
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
             $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login', [
                 'action' => 'login'
             ]));
         }
-   }
+    }
 }

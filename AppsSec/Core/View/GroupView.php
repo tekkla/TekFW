@@ -25,7 +25,7 @@ class GroupView extends View
                     <th>', $this->members, '</th>
                 </tr>
             </thead>';
-
+        
         foreach ($this->grouplist as $app => $groups) {
             echo '
             <thead>
@@ -34,26 +34,26 @@ class GroupView extends View
                 </tr>
             </thead>
             <tbody>';
-
+            
             foreach ($groups as $id_group => $group) {
-
+                
                 echo '
-                <tr data-ajax data-url="', $group['link'] , '">
+                <tr data-ajax data-url="', $group['link'], '">
                     <td>', $id_group, '</td>
                     <td>', $group['display_name'], '</td>
                     <td>';
-
+                
                 echo $this->generateuserlist($group['users']);
-
+                
                 echo '
                     </td>
                 </tr>';
             }
-
+            
             echo '
             </tbody>';
         }
-
+        
         echo '
         </table>';
     }
@@ -61,45 +61,43 @@ class GroupView extends View
     private function generateuserlist($users)
     {
         $pieces = [];
-
+        
         foreach ($users as $user) {
             $pieces[] = '<a data-ajax href="' . $user['link'] . '">' . $this->html($user['display_name']) . '</a>';
         }
-
+        
         return implode(' ', $pieces);
     }
 
-    public function Detail() {
-
+    public function Detail()
+    {
         echo '<h2>', $this->headline, '</h2>';
-
+        
         echo '
         <div class="row">
             <div class="col-sm-4" data-ajax data-url="', $this->url, '">';
-
-            $fields = [
-                'title',
-                'display_name',
-                'description',
-                'deny',
-            ];
-
-            foreach ($fields as $field)  {
-
-                echo '
+        
+        $fields = [
+            'title',
+            'display_name',
+            'description',
+            'deny'
+        ];
+        
+        foreach ($fields as $field) {
+            
+            echo '
                 <div class="bottom-buffer">
                     <small>', $this->$field, '</small>
                     <br>
                     <strong>', $this->html($this->group[$field]), '</strong>
                 </div>';
-
-            }
-
-            echo '
+        }
+        
+        echo '
             </div>
             <div class="col-sm-8">', $this->permissions, '</div>
         </div>';
-
     }
 }
 
