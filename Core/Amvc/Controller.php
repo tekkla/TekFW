@@ -211,7 +211,8 @@ class Controller extends MvcAbstract
             $this->page->message->warning($this->text('access.missing_userrights'));
 
             // @TODO implement logging
-            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
+            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' .
+            // $this->getName() . '.' . $action . '()');
             return false;
         }
 
@@ -223,7 +224,7 @@ class Controller extends MvcAbstract
         $this->action = $action;
 
         // Use givem params
-        if (!empty($params) && ! $this->arrayIsAssoc($params)) {
+        if (! empty($params) && ! $this->arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
 
@@ -361,21 +362,6 @@ class Controller extends MvcAbstract
         if ($post) {
             $this->http->post->clean();
         }
-    }
-
-    /**
-     * Loads the associated viewobject
-     *
-     * @param string $app
-     *            Name of the views app
-     * @param string $view
-     *            Name of the view
-     */
-    final protected function loadView($view)
-    {
-        $this->view = View::factory($this->app, $view);
-
-        return $this;
     }
 
     /**
