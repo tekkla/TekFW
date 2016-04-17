@@ -30,8 +30,11 @@ class App
     use StringTrait;
 
     const LANGUAGE = 'language';
+
     const SECURE = 'secure';
+
     const CSS = 'css';
+
     const JS = 'js';
 
     /**
@@ -335,14 +338,16 @@ class App
     }
 
     /**
-     * Creates an app related model object
+     * Creates an app related model object form this or a different app
      *
      * @param string $name
      *            The models name
+     * @param string $app_name
+     *            Name of a different app to get the model from
      *
      * @return Model
      */
-    final public function getModel($name = '')
+    final public function getModel($name = '', $app_name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -353,18 +358,26 @@ class App
             'core.security'
         ];
 
-        return $this->MVCFactory($name, 'Model', $args);
+        // Create a model instance from a different app?
+        if (! empty($app_name) && $app_name != $this->name) {
+            return $this->creator->getAppInstance($app_name)->getModel($name);
+        }
+        else {
+            return $this->MVCFactory($name, 'Model', $args);
+        }
     }
 
     /**
      * Creates an app related controller object
      *
      * @param string $name
-     *            The controllers name
+     *            The controllers name.
+     * @param string $app_name
+     *            Name of a different app to get the controller from.
      *
      * @return Controller
      */
-    final public function getController($name = '')
+    final public function getController($name = '', $app_name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -381,17 +394,26 @@ class App
             'core.io'
         ];
 
-        return $this->MVCFactory($name, 'Controller', $args);
+        // Create a controller instance from a different app?
+        if (! empty($app_name) && $app_name != $this->name) {
+            return $this->creator->getAppInstance($app_name)->getController($name);
+        }
+        else {
+            return $this->MVCFactory($name, 'Controller', $args);
+        }
     }
 
     /**
-     * Creates an app related view object.
+     * Creates an app related view object
      *
      * @param string $name
-     *            The viewss name
+     *            The views name.
+     * @param string $app_name
+     *            Name of a different app to get the view from.
+     *
      * @return View
      */
-    final public function getView($name = '')
+    final public function getView($name = '', $app_name = '')
     {
         if (empty($name)) {
             $name = $this->getComponentsName();
@@ -399,7 +421,13 @@ class App
 
         $name = $this->stringCamelize($name);
 
-        return $this->MVCFactory($name, 'View');
+        // Create a view instance from a different app?
+        if (! empty($app_name) && $app_name != $this->name) {
+            return $this->creator->getAppInstance($app_name)->getView($name);
+        }
+        else {
+            return $this->MVCFactory($name, 'View');
+        }
     }
 
     /**

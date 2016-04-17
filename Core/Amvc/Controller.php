@@ -583,38 +583,6 @@ class Controller extends MvcAbstract
     }
 
     /**
-     * Wrapper method for $this->app->getController()
-     *
-     * @param string $control->ler_name
-     *
-     * @return Controller
-     */
-    final protected function getController($controller_name = null)
-    {
-        if (empty($controller_name)) {
-            $controller_name = $this->getName();
-        }
-
-        return $this->app->getController($controller_name);
-    }
-
-    /**
-     * Wrapper method for $this->app->getModel()
-     *
-     * @param string $model_name
-     *
-     * @return \Core\Amvc\Model
-     */
-    final protected function getModel($model_name = null)
-    {
-        if (empty($controller_name)) {
-            $controller_name = $this->getName();
-        }
-
-        return $this->app->getModel($model_name);
-    }
-
-    /**
      * Adds a paramter to the controllers parameter collection.
      *
      * Useful when redirecting to other controller action
