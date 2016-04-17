@@ -30,11 +30,8 @@ class App
     use StringTrait;
 
     const LANGUAGE = 'language';
-
     const SECURE = 'secure';
-
     const CSS = 'css';
-
     const JS = 'js';
 
     /**
@@ -380,7 +377,8 @@ class App
             'core.security',
             'core.page',
             'core.html.factory',
-            'core.ajax'
+            'core.ajax',
+            'core.io'
         ];
 
         return $this->MVCFactory($name, 'Controller', $args);
