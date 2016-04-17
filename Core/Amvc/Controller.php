@@ -370,22 +370,6 @@ class Controller extends MvcAbstract
     }
 
     /**
-     * Method to cleanup data in controllers model and the request handler
-     *
-     * @param bool $model
-     *            Flag to clean model data (default: true)
-     * @param string $post
-     *            Flag to clean post data (default: true)
-     */
-    final protected function cleanUp($post = true)
-    {
-        // Reset post data
-        if ($post) {
-            $this->http->post->clean();
-        }
-    }
-
-    /**
      * Does an urlredirect but cares about what kind (ajax?) of request was send.
      *
      * @param Url|string $url
@@ -398,19 +382,6 @@ class Controller extends MvcAbstract
         else {
             $this->redirectExit($url);
         }
-    }
-
-    /**
-     * Check userrights against one or mor permissions
-     *
-     * @param string|array $perm
-     *            One permission (string) or an indexed arry of permissions to check
-     *
-     * @return boolean
-     */
-    final protected function checkUserrights($perm)
-    {
-        return $this->security->user->checkAccess($perm);
     }
 
     /**
@@ -465,20 +436,6 @@ class Controller extends MvcAbstract
 
         // Not set ACL or falling through here grants access by default
         return true;
-    }
-
-    /**
-     * Set the name of the actiuon to rander
-     *
-     * By default this is the current controller action name and do not have to be set manually.
-     *
-     * @param string $action
-     */
-    final protected function setRenderAction($action)
-    {
-        $this->action = $action;
-
-        return $this;
     }
 
     /**
@@ -580,26 +537,6 @@ class Controller extends MvcAbstract
         $fd->html->setAction($action);
 
         return $fd;
-    }
-
-    /**
-     * Adds a paramter to the controllers parameter collection.
-     *
-     * Useful when redirecting to other controller action
-     * which need additional parameters to function.
-     *
-     * @param string $params
-     *            Paramertername
-     * @param mixed $value
-     *            Parametervalue
-     *
-     * @return \Core\Amvc\Controller
-     */
-    final protected function addParam($param, $value)
-    {
-        $this->params[$param] = $value;
-
-        return $this;
     }
 
     /**
