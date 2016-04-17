@@ -234,14 +234,8 @@ class Controller extends MvcAbstract
         // action is stopped manually by using return.
         $return = false;
 
-        // run possible before event handler
-        $this->runEvent('before');
-
         // a little bit of reflection magic to pass request param into controller func
         $return = $this->di->invokeMethod($this, $this->action, $this->params);
-
-        // run possible after event handler
-        $this->runEvent('after');
 
         // Do we have a result?
         if (isset($return)) {
@@ -367,35 +361,6 @@ class Controller extends MvcAbstract
         if ($post) {
             $this->http->post->clean();
         }
-    }
-
-    /**
-     * Event handler
-     *
-     * @param string $event
-     *            Name of event to call
-     *
-     * @return \Core\Amvc\Controller
-     */
-    private function runEvent($event)
-    {
-        // Are there any events for this action?
-        if (! empty($this->events[$this->action][$event])) {
-
-            $func = $this->events[$this->action][$event];
-
-            // Transform
-            if (is_array($func)) {
-                foreach ($func as $function) {
-                    $this->di->invokeMethod($this, $function, $this->router->getAllParams());
-                }
-            }
-            else {
-                $this->di->invokeMethod($this, $func, $this->router->getAllParams());
-            }
-        }
-
-        return $this;
     }
 
     /**
