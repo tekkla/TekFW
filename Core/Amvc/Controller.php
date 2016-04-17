@@ -13,6 +13,7 @@ use Core\Router\UrlTrait;
 use Core\Traits\ArrayTrait;
 use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
+use Core\IO\IO;
 
 /**
  * Controller.php
@@ -44,13 +45,6 @@ class Controller extends MvcAbstract
     protected $render = true;
 
     /**
-     * Action to render
-     *
-     * @var String
-     */
-    private $action = 'Index';
-
-    /**
      * Storage for access rights
      *
      * @var array
@@ -58,16 +52,15 @@ class Controller extends MvcAbstract
     protected $access = [];
 
     /**
-     * Storage for events
      *
-     * @var array
+     * @var string
      */
-    protected $events = [];
+    private $action = 'Index';
 
     /**
      * Storage for parameter
      *
-     * @var Data
+     * @var array
      */
     private $params = [];
 
@@ -120,16 +113,18 @@ class Controller extends MvcAbstract
     protected $html;
 
     /**
-     *
-     * @var Cache
-     */
-    protected $cache;
-
-    /**
+     * Ajax service
      *
      * @var Ajax
      */
     protected $ajax;
+
+    /**
+     * IO service
+     *
+     * @var IO
+     */
+    protected $io;
 
     /**
      * Flag to signal that this controller is in ajax mode
@@ -164,8 +159,10 @@ class Controller extends MvcAbstract
      *            HtmlFactory dependency
      * @param Ajax $ajax
      *            Ajax dependency
+     * @param IO $io
+     *            IO dependency
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax, IO $io)
     {
         // Store name
         $this->name = $name;
@@ -176,18 +173,16 @@ class Controller extends MvcAbstract
         $this->page = $page;
         $this->html = $html;
         $this->ajax = $ajax;
+        $this->io = $io;
 
         // Model to bind?
-        $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
+        $this->model = $this->app->getModel($name);
 
         // Controller of an ajax request?
         if ($this->router->isAjax()) {
             $this->ajax_flag = true;
             $this->ajax_command = $this->ajax->createCommand('Dom\Html');
         }
-
-        // Run onload event
-        $this->runEvent('load');
     }
 
     /**
