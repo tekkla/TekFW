@@ -326,26 +326,47 @@ class Controller extends MvcAbstract
     /**
      * Redirects from one action to another
      *
-     * When redirecting is used the post data will be cleared by default.
-     *
-     * @param string $action
-     *            Name of redirect action within this controller
-     * @param array $param
-     *            Optional parametername => value array of params to pass into redirect action (Default: empty array)
+     * @param string|array $target
+     *            Name of redirectaction to call within this controller or an array aof app, controller and action name
+     *            which will be called as redirect.
+     * @param array $params
+     *            Optional key => value array of params to pass into redirect action (Default: empty array)
      * @param bool $clear_post
      *            Optional flag to control emptying posted data (Default: true)
      *
      * @return mixed
      */
-    final protected function redirect($action, $params = [], $clear_post = true)
+    final protected function redirect($target, $params = [], $clear_post = true)
     {
+
         // Clean data
         if ($clear_post) {
             $this->http->post->clean();
         }
 
-        // Run redirect method
-        return $this->run($action, $params);
+        // Target is a string and is treated like an action name
+        if (is_array($target)) {
+
+            $require = [
+                'app',
+                'controller',
+                'action'
+            ];
+
+            foreach ($require as $check) {
+                if (empty($target[$check])) {
+                    Throw new ControllerException(sprintf('Redirects by arrayed $target need a set "%s" element.', $check));
+                }
+            }
+
+            $app = $this->app->creator->getAppInstance($target['app']);
+            $controller = $app->getController($target['controller']);
+
+            return $controller->run($target['action'], $params);
+        }
+        else {
+            return $this->run($target, $params);
+        }
     }
 
     /**
