@@ -4,7 +4,7 @@ namespace Core\Html\Bootstrap\Buttongroups;
 use Core\Html\Elements\Div;
 use Core\Html\Form\Button;
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 class ButtonGroup extends Div
 {
@@ -46,7 +46,7 @@ class ButtonGroup extends Div
     public function &addButton(HtmlAbstract $button)
     {
         if (! $button->checkCss('btn')) {
-            Throw new InvalidArgumentException('Buttons for Bootstrap\ButtonGroups must have a set "btn" css class');
+            Throw new HtmlException('Buttons for Bootstrap\ButtonGroups must have a set "btn" css class');
         }
 
         $uniqeid = uniqid('btngrp_btn');

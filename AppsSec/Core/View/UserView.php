@@ -25,18 +25,17 @@ class UserView extends View
                 <tr>
             </thead>
             <tbody>';
-
-            foreach($this->userlist as $user) {
-
-                echo '
+        
+        foreach ($this->userlist as $user) {
+            
+            echo '
                 <tr data-ajax data-url="', $user['link'], '">
                     <td>', $user['username'], '<td>
                     <td>', $user['display_name'], '<td>
                 </tr>';
-
-            }
-
-            echo '
+        }
+        
+        echo '
             </tbody>
         <table>';
     }

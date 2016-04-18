@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Icon.php
@@ -134,7 +134,7 @@ class Icon extends HtmlAbstract
         ];
 
         if (! in_array($size, $sizes)) {
-            Throw new InvalidArgumentException('Wrong size set.');
+            Throw new HtmlException('Wrong size set.');
         }
 
         $this->size = $size;
@@ -222,7 +222,7 @@ class Icon extends HtmlAbstract
         ];
 
         if (! in_array($rotation, $rotas)) {
-            Throw new InvalidArgumentException('Wrong rotation degree set.');
+            Throw new HtmlException('Wrong rotation degree set.');
         }
 
         if ($rotation == 0) {

@@ -13,6 +13,7 @@ use Core\Router\UrlTrait;
 use Core\Traits\ArrayTrait;
 use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
+use Core\IO\IO;
 
 /**
  * Controller.php
@@ -44,13 +45,6 @@ class Controller extends MvcAbstract
     protected $render = true;
 
     /**
-     * Action to render
-     *
-     * @var String
-     */
-    private $action = 'Index';
-
-    /**
      * Storage for access rights
      *
      * @var array
@@ -58,18 +52,24 @@ class Controller extends MvcAbstract
     protected $access = [];
 
     /**
-     * Storage for events
      *
-     * @var array
+     * @var string
      */
-    protected $events = [];
+    private $action = 'Index';
 
     /**
      * Storage for parameter
      *
-     * @var Data
+     * @var array
      */
     private $params = [];
+
+    /**
+     * Redirection definition
+     *
+     * @var array
+     */
+    private $redirect = [];
 
     /**
      * Stores the controller bound Model object.
@@ -120,16 +120,18 @@ class Controller extends MvcAbstract
     protected $html;
 
     /**
-     *
-     * @var Cache
-     */
-    protected $cache;
-
-    /**
+     * Ajax service
      *
      * @var Ajax
      */
     protected $ajax;
+
+    /**
+     * IO service
+     *
+     * @var IO
+     */
+    protected $io;
 
     /**
      * Flag to signal that this controller is in ajax mode
@@ -164,8 +166,10 @@ class Controller extends MvcAbstract
      *            HtmlFactory dependency
      * @param Ajax $ajax
      *            Ajax dependency
+     * @param IO $io
+     *            IO dependency
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax, IO $io)
     {
         // Store name
         $this->name = $name;
@@ -176,18 +180,16 @@ class Controller extends MvcAbstract
         $this->page = $page;
         $this->html = $html;
         $this->ajax = $ajax;
+        $this->io = $io;
 
         // Model to bind?
-        $this->model = property_exists($this, 'has_no_model') ? false : $this->app->getModel($name);
+        $this->model = $this->app->getModel($name);
 
         // Controller of an ajax request?
         if ($this->router->isAjax()) {
             $this->ajax_flag = true;
             $this->ajax_command = $this->ajax->createCommand('Dom\Html');
         }
-
-        // Run onload event
-        $this->runEvent('load');
     }
 
     /**
@@ -216,7 +218,8 @@ class Controller extends MvcAbstract
             $this->page->message->warning($this->text('access.missing_userrights'));
 
             // @TODO implement logging
-            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' . $this->getName() . '.' . $action . '()');
+            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' .
+            // $this->getName() . '.' . $action . '()');
             return false;
         }
 
@@ -228,7 +231,7 @@ class Controller extends MvcAbstract
         $this->action = $action;
 
         // Use givem params
-        if (!empty($params) && ! $this->arrayIsAssoc($params)) {
+        if (! empty($params) && ! $this->arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
 
@@ -239,14 +242,59 @@ class Controller extends MvcAbstract
         // action is stopped manually by using return.
         $return = false;
 
-        // run possible before event handler
-        $this->runEvent('before');
-
         // a little bit of reflection magic to pass request param into controller func
         $return = $this->di->invokeMethod($this, $this->action, $this->params);
 
-        // run possible after event handler
-        $this->runEvent('after');
+        // Redirect initiated from within the called action?
+        if (! empty($this->redirect)) {
+
+            // Clean post data wanted?
+            if ($this->redirect[2] == true) {
+                $this->http->post->clean();
+            }
+
+            // Target is an array and will be analyzed and used as app, controller and actionnames
+            if (is_array($this->redirect[0])) {
+
+                // Make sure we have all essential data before calling ACA
+                $require = [
+                    'app',
+                    'controller',
+                    'action'
+                ];
+
+                foreach ($require as $check) {
+                    if (empty($this->redirect[0][$check])) {
+                        Throw new ControllerException(sprintf('Redirects by arrayed $target need a set "%s" element.', $check));
+                    }
+                }
+
+                $app = $this->app->creator->getAppInstance($this->redirect[0]['app']);
+                $controller = $app->getController($this->redirect[0]['controller']);
+
+                $return = $controller->run($this->redirect[0]['action'], $this->redirect[1]);
+
+                // Prevent rendering of this controllers view because rendering results
+                // are coming from the redirected ACA
+                $this->render = false;
+
+                // Reset redirection settings
+                $this->redirect = [];
+            }
+
+            // Target is a string and is treated as action name
+            else {
+
+                // It is important to clean the redirection property before calling the redirection action in this
+                // controller. Without cleaning it an endless redirect recursion occurs.
+                $action = $this->redirect[0];
+                $params = $this->redirect[1];
+
+                $this->redirect = [];
+
+                $return = $this->run($action, $params);
+            }
+        }
 
         // Do we have a result?
         if (isset($return)) {
@@ -336,84 +384,21 @@ class Controller extends MvcAbstract
     /**
      * Redirects from one action to another
      *
-     * When redirecting is used the post data will be cleared by default.
-     *
-     * @param string $action
-     *            Name of redirect action within this controller
-     * @param array $param
-     *            Optional parametername => value array of params to pass into redirect action (Default: empty array)
+     * @param string|array $target
+     *            Name of redirectaction to call within this controller or an array aof app, controller and action name
+     *            which will be called as redirect.
+     * @param array $params
+     *            Optional key => value array of params to pass into redirect action (Default: empty array)
      * @param bool $clear_post
      *            Optional flag to control emptying posted data (Default: true)
-     *
-     * @return mixed
      */
-    final protected function redirect($action, $params = [], $clear_post = true)
+    final protected function redirect($target, $params = [], $clear_post = true)
     {
-        // Clean data
-        if ($clear_post) {
-            $this->http->post->clean();
-        }
-
-        // Run redirect method
-        return $this->run($action, $params);
-    }
-
-    /**
-     * Method to cleanup data in controllers model and the request handler
-     *
-     * @param bool $model
-     *            Flag to clean model data (default: true)
-     * @param string $post
-     *            Flag to clean post data (default: true)
-     */
-    final protected function cleanUp($post = true)
-    {
-        // Reset post data
-        if ($post) {
-            $this->http->post->clean();
-        }
-    }
-
-    /**
-     * Event handler
-     *
-     * @param string $event
-     *            Name of event to call
-     *
-     * @return \Core\Amvc\Controller
-     */
-    private function runEvent($event)
-    {
-        // Are there any events for this action?
-        if (! empty($this->events[$this->action][$event])) {
-
-            $func = $this->events[$this->action][$event];
-
-            // Transform
-            if (is_array($func)) {
-                foreach ($func as $function) {
-                    $this->di->invokeMethod($this, $function, $this->router->getAllParams());
-                }
-            }
-            else {
-                $this->di->invokeMethod($this, $func, $this->router->getAllParams());
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Loads the associated viewobject
-     *
-     * @param string $app
-     *            Name of the views app
-     * @param string $view
-     *            Name of the view
-     */
-    final protected function loadView($view)
-    {
-        $this->view = View::factory($this->app, $view);
+        $this->redirect = [
+            $target,
+            $params,
+            $clear_post
+        ];
 
         return $this;
     }
@@ -431,19 +416,6 @@ class Controller extends MvcAbstract
         else {
             $this->redirectExit($url);
         }
-    }
-
-    /**
-     * Check userrights against one or mor permissions
-     *
-     * @param string|array $perm
-     *            One permission (string) or an indexed arry of permissions to check
-     *
-     * @return boolean
-     */
-    final protected function checkUserrights($perm)
-    {
-        return $this->security->user->checkAccess($perm);
     }
 
     /**
@@ -498,20 +470,6 @@ class Controller extends MvcAbstract
 
         // Not set ACL or falling through here grants access by default
         return true;
-    }
-
-    /**
-     * Set the name of the actiuon to rander
-     *
-     * By default this is the current controller action name and do not have to be set manually.
-     *
-     * @param string $action
-     */
-    final protected function setRenderAction($action)
-    {
-        $this->action = $action;
-
-        return $this;
     }
 
     /**
@@ -613,58 +571,6 @@ class Controller extends MvcAbstract
         $fd->html->setAction($action);
 
         return $fd;
-    }
-
-    /**
-     * Wrapper method for $this->app->getController()
-     *
-     * @param string $control->ler_name
-     *
-     * @return Controller
-     */
-    final protected function getController($controller_name = null)
-    {
-        if (empty($controller_name)) {
-            $controller_name = $this->getName();
-        }
-
-        return $this->app->getController($controller_name);
-    }
-
-    /**
-     * Wrapper method for $this->app->getModel()
-     *
-     * @param string $model_name
-     *
-     * @return \Core\Amvc\Model
-     */
-    final protected function getModel($model_name = null)
-    {
-        if (empty($controller_name)) {
-            $controller_name = $this->getName();
-        }
-
-        return $this->app->getModel($model_name);
-    }
-
-    /**
-     * Adds a paramter to the controllers parameter collection.
-     *
-     * Useful when redirecting to other controller action
-     * which need additional parameters to function.
-     *
-     * @param string $params
-     *            Paramertername
-     * @param mixed $value
-     *            Parametervalue
-     *
-     * @return \Core\Amvc\Controller
-     */
-    final protected function addParam($param, $value)
-    {
-        $this->params[$param] = $value;
-
-        return $this;
     }
 
     /**

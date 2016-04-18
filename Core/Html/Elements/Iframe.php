@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Iframe.php
@@ -82,7 +82,7 @@ class Iframe extends HtmlAbstract
         ];
 
         if (! in_array($mode, $modes)) {
-            Throw new InvalidArgumentException('Wrong sanbox mode for iFrame element.', 1000);
+            Throw new HtmlException('Wrong sanbox mode for iFrame element.', 1000);
         }
 
         if (! in_array($mode, $this->sandbox)) {

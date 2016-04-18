@@ -22,16 +22,16 @@ class AdminView extends View
             <li role="presentation" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Applications <span class="caret"></span> </a>
                 <ul class="dropdown-menu">';
-
+        
         foreach ($this->loaded_apps as $app_name => $link) {
-
+            
             if (! $link) {
                 continue;
             }
-
+            
             echo '<li><a data-ajax href="', $link, '">', $app_name, '</a></li>';
         }
-
+        
         echo '
                 </ul>
             </li>
@@ -45,9 +45,9 @@ class AdminView extends View
             <li role="presentation"><a href="#">Log</a></li>
         </ul>
         <div id="core-admin">';
-
+        
         $this->Admincenter();
-
+        
         echo '
         </div>';
     }

@@ -223,8 +223,6 @@ final class Css
             // End of combined file TTL reached?
             if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
 
-                \FB::log('TTL or not existing');
-
                 if (! empty($local_files)) {
                     foreach ($local_files as $css_file) {
                         $combined .= file_get_contents($css_file);

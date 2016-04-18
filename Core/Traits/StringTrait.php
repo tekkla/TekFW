@@ -1,7 +1,7 @@
 <?php
 namespace Core\Traits;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Errors\CoreException;
 
 /**
  * StringTrait.php
@@ -95,11 +95,10 @@ trait StringTrait
     protected function stringUncamelize($string)
     {
         if (empty($string)) {
-            Throw new InvalidArgumentException('The string set to be uncamelized is empty.', 1000);
+            Throw new CoreException('The string set to be uncamelized is empty.', 1000);
         }
 
         if (! is_string($string)) {
-            Throw new InvalidArgumentException('Only strings can be used to be uncamelized.', 1000);
         }
 
         // set first letter to lowercase

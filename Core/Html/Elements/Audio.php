@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Audio.php
@@ -99,7 +99,7 @@ class Audio extends HtmlAbstract
         ];
 
         if (! in_array($preload, $preloads)) {
-            Throw new InvalidArgumentException('Prelaod type not supported', 1000);
+            Throw new HtmlException('Prelaod type not supported', 1000);
         }
 
         $this->attribute['preload'] = $preload;

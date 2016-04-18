@@ -3,8 +3,7 @@ namespace Core\Html\Controls;
 
 use Core\Html\Form\Input;
 use Core\Language\TextTrait;
-use Core\Errors\Exceptions\InvalidArgumentException;
-use Core\Errors\Exceptions\UnexpectedValueException;
+use Core\Html\HtmlException;
 
 /**
  * DateTimePicker.php
@@ -388,11 +387,11 @@ class DateTimePicker extends Input
         $minute_step = (int) $minute_step;
 
         if (empty($minute_step)) {
-            Throw new InvalidArgumentException('Datepicker minute step has to be of type integer');
+            Throw new HtmlException('Datepicker minute step has to be of type integer');
         }
 
         if ($minute_step < 1 || $minute_step > 59) {
-            Throw new InvalidArgumentException('Datepicker minute step has to be between 1 and 59.');
+            Throw new HtmlException('Datepicker minute step has to be between 1 and 59.');
         }
 
         $this->option_minute_stepping = $minute_step;
@@ -547,8 +546,6 @@ class DateTimePicker extends Input
         // Prepare options object
         $options = new \stdClass();
 
-        \FB::log($this->set_options);
-
         // Set options which are set active
         foreach ($this->set_options as $property => $option) {
 
@@ -563,7 +560,7 @@ class DateTimePicker extends Input
                     foreach ($this->{$property} as $date) {
 
                         if (! is_int($date) || ! $date instanceof \DateTime || ! is_string($date)) {
-                            Throw new UnexpectedValueException('Datepicker controls ' . $option . ' date must by of type integer (timestamp), string or DateTime object.', 1000);
+                            Throw new HtmlException('Datepicker controls ' . $option . ' date must by of type integer (timestamp), string or DateTime object.', 1000);
                         }
 
                         if (is_string($date)) {

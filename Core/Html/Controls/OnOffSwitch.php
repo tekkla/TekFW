@@ -3,7 +3,7 @@ namespace Core\Html\Controls;
 
 use Core\Html\Form\Select;
 use Core\Language\TextTrait;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * OnOffSwitch.php
@@ -91,7 +91,7 @@ class OnOffSwitch extends Select
         ];
 
         if (! in_array($state, $states)) {
-            Throw new InvalidArgumentException('Wrong state for on/off switch.');
+            Throw new HtmlException('Wrong state for on/off switch.');
         }
 
         $this->createSwitches();

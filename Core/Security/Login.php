@@ -382,7 +382,7 @@ class Login
         /* @var $router \Core\Http\Router */
         $router = $this->di->get('core.router');
         $router->setApp('Core');
-        $router->setController('Security');
+        $router->setController('Login');
         $router->setAction('Login');
 
         return false;

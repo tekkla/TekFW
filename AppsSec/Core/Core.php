@@ -125,7 +125,8 @@ final class Core extends App
                             [
                                 'enum',
                                 [
-                                    0,1
+                                    0,
+                                    1
                                 ]
                             ]
                         ]
@@ -137,7 +138,7 @@ final class Core extends App
                     'name' => 'use_compare_password',
                     'control' => 'switch',
                     'default' => 1
-                ],
+                ]
             ],
             'activation' => [
                 'use' => [
@@ -165,8 +166,8 @@ final class Core extends App
                             'model' => 'mta',
                             'action' => 'getMtaIdTitleList'
                         ],
-                        'index' => 0,
-                    ],
+                        'index' => 0
+                    ]
                 ],
                 'from' => [
                     'name' => 'from'
@@ -231,8 +232,8 @@ final class Core extends App
                             'model' => 'config',
                             'action' => 'getAllRoutes'
                         ],
-                        'index' => 0,
-                    ],
+                        'index' => 0
+                    ]
                 ],
                 'params' => [
                     'name' => 'params',
@@ -492,6 +493,9 @@ final class Core extends App
         // Add logoff button for logged in users
         if ($this->security->login->loggedIn()) {
 
+            // Set home url
+            $type = 'user';
+
             $usermenu = $this->page->menu->createItem('login', $this->security->user->getDisplayname());
 
             // Show admin menu?
@@ -507,10 +511,21 @@ final class Core extends App
         // or add login and register buttons. But not when current user is currently on banlist
         elseif (! $this->security->users->checkBan()) {
 
+            $type = 'guest';
+
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
             $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login', [
                 'action' => 'login'
             ]));
         }
-   }
+
+        $route = 'home.' . $type . '.route';
+        $params = 'home.' . $type . '.params';
+
+        $url = $this->url($this->cfg($route), parse_ini_string($this->cfg($params)));
+
+        $this->page->setHome($url);
+        $this->cfg('home.url', $url);
+
+    }
 }

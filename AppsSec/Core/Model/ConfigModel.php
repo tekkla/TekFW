@@ -216,10 +216,9 @@ final class ConfigModel extends Model
         $routes = $router->getRoutes();
 
         foreach ($routes as $route) {
-            $out[$route[1]] = $route[3] . ' (' . $route[0] . ': ' . $route[1] . ')';
+            $out[$route[3]] = $route[3] . ' (' . $route[0] . ': ' . $route[1] . ')';
         }
 
         return $out;
     }
-
 }

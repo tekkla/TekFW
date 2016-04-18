@@ -2,7 +2,6 @@
 namespace Core\Data;
 
 use Core\Traits\ArrayTrait;
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Data\Connectors\ConnectorAbstract;
 
 /**
@@ -251,7 +250,7 @@ class DataAdapter implements \IteratorAggregate
 
             // Check for closure or object. If none is found, throw exception
             if (! is_callable($cb[0]) || (is_array($cb[0]) && ! is_object($cb[0][0]))) {
-                Throw new InvalidArgumentException('DataAdapter callbacks MUST be either a closure or a valid object.');
+                Throw new DataException('DataAdapter callbacks MUST be either a closure or a valid object.');
             }
 
             // Any callback arguments?
@@ -290,7 +289,7 @@ class DataAdapter implements \IteratorAggregate
     {
         // Check for closure or object. If none is found, throw exception
         if (! is_callable($call) || (is_array($call) && ! is_object($call[0]))) {
-            Throw new InvalidArgumentException('DataAdapter callbacks MUST be either a closure or a valid object.');
+            Throw new DataException('DataAdapter callbacks MUST be either a closure or a valid object.');
         }
 
         if ($clear_callbacks_stack) {

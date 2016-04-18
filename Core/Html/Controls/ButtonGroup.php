@@ -5,6 +5,7 @@ use Core\Html\Elements\Div;
 use Core\Html\Form\Button;
 use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Errors\Exceptions\UnexpectedValueException;
+use Core\Html\HtmlException;
 
 /**
  * ButtonGroup.php
@@ -35,7 +36,7 @@ class ButtonGroup extends Div
     public function addButton($button)
     {
         if (! $button instanceof Button && ! $button instanceof UiButton) {
-            Throw new InvalidArgumentException('Buttons for a buttongroup must be an instance of Button or UiButton');
+            Throw new HtmlException('Buttons for a buttongroup must be an instance of Button or UiButton');
         }
 
         if (! $button->checkCss('btn')) {
@@ -59,7 +60,7 @@ class ButtonGroup extends Div
     public function build()
     {
         if (empty($this->buttons)) {
-            Throw new UnexpectedValueException('No buttons for buttongroup set.');
+            Throw new HtmlException('No buttons for buttongroup set.');
         }
 
         /* @var $button Button */

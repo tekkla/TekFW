@@ -2,7 +2,7 @@
 namespace Core\Html\Elements;
 
 use Core\Html\HtmlAbstract;
-use Core\Errors\Exceptions\InvalidArgumentException;
+use Core\Html\HtmlException;
 
 /**
  * Heading.php
@@ -49,7 +49,7 @@ class Heading extends HtmlAbstract
         ];
 
         if (! in_array((int) $size, $sizes)) {
-            Throw new InvalidArgumentException('Size "' . $size . '" is not an allowed size for heading html elements');
+            Throw new HtmlException('Size "' . $size . '" is not an allowed size for heading html elements');
         }
 
         $this->element = 'h' . $size;

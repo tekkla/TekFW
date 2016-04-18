@@ -5,6 +5,11 @@ use Core\Amvc\Controller;
 
 class UserController extends Controller
 {
+    protected $access = [
+        'Index' => 'admin',
+        'Userlist' => 'admin',
+        'Edit' => 'admin',
+    ];
 
     /**
      *
@@ -322,6 +327,5 @@ class UserController extends Controller
 
     Public function Deny($key)
     {}
-
 }
 

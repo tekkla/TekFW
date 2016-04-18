@@ -13,6 +13,8 @@ use Core\Amvc\Controller;
 class LoginController extends Controller
 {
 
+    protected $access = [];
+
     public function Index()
     {
         $this->redirect('Login', $this->router->getParam());
@@ -140,13 +142,9 @@ class LoginController extends Controller
 
         // Create links for 'Forgot Password?' and 'New user?'
 
-        if ($this->cfg('security.login.reset_password')) {
+        if ($this->cfg('security.login.reset_password')) {}
 
-        }
-
-        if ($this->cfg('security.login.register')) {
-
-        }
+        if ($this->cfg('security.login.register')) {}
 
         $this->setVar([
             'headline' => $this->text('login.text'),
