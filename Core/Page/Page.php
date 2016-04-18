@@ -57,6 +57,12 @@ class Page
 
     /**
      *
+     * @var string
+     */
+    private $url = '/';
+
+    /**
+     *
      * @var Meta
      */
     public $meta;
@@ -307,9 +313,14 @@ class Page
      *
      * @return string
      */
-    public function getHomeUrl()
+    public function getHome()
     {
-        return BASEURL;
+        return $this->url;
+    }
+
+    public function setHome($url)
+    {
+        $this->url = $url;
     }
 
     /**
