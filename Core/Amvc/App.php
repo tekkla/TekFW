@@ -333,8 +333,14 @@ class App
     final private function getComponentsName()
     {
         $dt = debug_backtrace();
-        $parts = array_reverse(explode('\\', $dt[1]['class']));
-        return $parts[0];
+        $parts = array_reverse(explode('\\', $dt[2]['class']));
+        $strip = [
+            'Controller',
+            'Model',
+            'View'
+        ];
+
+        return str_replace($strip, '', $parts[0]);
     }
 
     /**
