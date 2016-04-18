@@ -65,6 +65,13 @@ class Controller extends MvcAbstract
     private $params = [];
 
     /**
+     * Redirection definition
+     *
+     * @var array
+     */
+    private $redirect = [];
+
+    /**
      * Stores the controller bound Model object.
      * Is false when controller has no model.
      *
@@ -238,6 +245,57 @@ class Controller extends MvcAbstract
         // a little bit of reflection magic to pass request param into controller func
         $return = $this->di->invokeMethod($this, $this->action, $this->params);
 
+        // Redirect initiated from within the called action?
+        if (! empty($this->redirect)) {
+
+            // Clean post data wanted?
+            if ($this->redirect[2] == true) {
+                $this->http->post->clean();
+            }
+
+            // Target is an array and will be analyzed and used as app, controller and actionnames
+            if (is_array($this->redirect[0])) {
+
+                // Make sure we have all essential data before calling ACA
+                $require = [
+                    'app',
+                    'controller',
+                    'action'
+                ];
+
+                foreach ($require as $check) {
+                    if (empty($this->redirect[0][$check])) {
+                        Throw new ControllerException(sprintf('Redirects by arrayed $target need a set "%s" element.', $check));
+                    }
+                }
+
+                $app = $this->app->creator->getAppInstance($this->redirect[0]['app']);
+                $controller = $app->getController($this->redirect[0]['controller']);
+
+                $return = $controller->run($this->redirect[0]['action'], $this->redirect[1]);
+
+                // Prevent rendering of this controllers view because rendering results
+                // are coming from the redirected ACA
+                $this->render = false;
+
+                // Reset redirection settings
+                $this->redirect = [];
+            }
+
+            // Target is a string and is treated as action name
+            else {
+
+                // It is important to clean the redirection property before calling the redirection action in this
+                // controller. Without cleaning it an endless redirect recursion occurs.
+                $action = $this->redirect[0];
+                $params = $this->redirect[1];
+
+                $this->redirect = [];
+
+                $return = $this->run($action, $params);
+            }
+        }
+
         // Do we have a result?
         if (isset($return)) {
 
@@ -333,40 +391,16 @@ class Controller extends MvcAbstract
      *            Optional key => value array of params to pass into redirect action (Default: empty array)
      * @param bool $clear_post
      *            Optional flag to control emptying posted data (Default: true)
-     *
-     * @return mixed
      */
     final protected function redirect($target, $params = [], $clear_post = true)
     {
+        $this->redirect = [
+            $target,
+            $params,
+            $clear_post
+        ];
 
-        // Clean data
-        if ($clear_post) {
-            $this->http->post->clean();
-        }
-
-        // Target is a string and is treated like an action name
-        if (is_array($target)) {
-
-            $require = [
-                'app',
-                'controller',
-                'action'
-            ];
-
-            foreach ($require as $check) {
-                if (empty($target[$check])) {
-                    Throw new ControllerException(sprintf('Redirects by arrayed $target need a set "%s" element.', $check));
-                }
-            }
-
-            $app = $this->app->creator->getAppInstance($target['app']);
-            $controller = $app->getController($target['controller']);
-
-            return $controller->run($target['action'], $params);
-        }
-        else {
-            return $this->run($target, $params);
-        }
+        return $this;
     }
 
     /**
