@@ -324,6 +324,11 @@ class Controller extends MvcAbstract
                 $this->view = $this->app->getView($this->name);
             }
 
+            // Check if there still no view object
+            if (empty($view)) {
+                Throw new ViewException(sprintf('A result has to be rendered but there is no "%sView" found.', $this->name));
+            }
+
             // Render into own outputbuffer
             ob_start();
 
