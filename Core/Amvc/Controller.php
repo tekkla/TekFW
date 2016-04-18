@@ -52,6 +52,7 @@ class Controller extends MvcAbstract
     protected $access = [];
 
     /**
+     * Action to call. Default: Index
      *
      * @var string
      */
@@ -84,6 +85,13 @@ class Controller extends MvcAbstract
      * @var View
      */
     private $view;
+
+    /**
+     * Storage for vars to be sent to view renderer
+     *
+     * @var array
+     */
+    protected $vars = [];
 
     /**
      * Security Service
@@ -326,11 +334,11 @@ class Controller extends MvcAbstract
 
             // Check if there still no view object
             if (empty($this->view)) {
-                Throw new ViewException(sprintf('A result has to be rendered but there is no "%sView" found.', $this->name));
+                Throw new ViewException(sprintf('A result has to be rendered but "%sView" does not exist.', $this->name));
             }
 
             // Render
-            $content = $this->view->render($this->action, $this->params);
+            $content = $this->view->render($this->action, $this->params, $this->vars);
 
             // Run possible onEmpty event of app on no render result
             if (empty($content) && method_exists($this->app, 'onEmpty')) {
@@ -485,33 +493,14 @@ class Controller extends MvcAbstract
      */
     final protected function setVar($arg1, $arg2 = null)
     {
-        // On non existing view we do not have to set anything
-        if (property_exists($this, 'has_no_view')) {
-            return;
-        }
-
-        if ($this->view === false || ! $this->view instanceof View) {
-            $this->view = $this->app->getView($this->name);
-        }
-
-        // Some vars are protected and not allowed to be used outside the framework
-        $protected_var_names = [
-            'app',
-            'controller',
-            'action',
-            'view',
-            'model',
-            'cfg'
-        ];
-
         // One argument has to be an assoc array
         if (! isset($arg2) && is_array($arg1)) {
             foreach ($arg1 as $var => $value) {
-                $this->view->setVar($var, $value);
+                $this->vars[$var] = $this->varHandleObject($value);
             }
         }
         elseif (isset($arg2)) {
-            $this->view->setVar($arg1, $arg2);
+            $this->vars[$arg1] = $this->varHandleObject($arg2);
         }
         else {
             Throw new ControllerException('The vars to set are not correct.', 1001);
@@ -520,19 +509,26 @@ class Controller extends MvcAbstract
         return $this;
     }
 
-    /**
-     * Returns value of a set var in view
-     *
-     * When var is not found an ControllerException is thrown by the view.
-     *
-     * @param sting $name
-     *            Name of the var to get value from
-     *
-     * @return mixed
-     */
-    final protected function getVar($name)
-    {
-        return $this->view->getVar($name);
+    private function varHandleObject($val) {
+
+        // Handle objects
+        if (is_object($val)) {
+
+            switch (true) {
+
+                // Handle buildable objects
+                case method_exists($val, 'build'):
+                    $val = $val->build();
+                    break;
+
+                    // Handle all other objects
+                default:
+                    $val = get_object_vars($val);
+                    break;
+            }
+        }
+
+        return $val;
     }
 
     /**

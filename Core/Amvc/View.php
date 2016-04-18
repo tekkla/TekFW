@@ -19,7 +19,7 @@ class View extends MvcAbstract
     private $__magic_vars = [];
 
     /**
-     * Making the contructor private to only allow object creation by Factory method
+     * Constructor
      *
      * @param string $name
      *            Objects name
@@ -33,97 +33,33 @@ class View extends MvcAbstract
     }
 
     /**
-     * Renders the view and returns the result
+     * Renders the template and returns the result
      *
-     * @param string $func
-     *            Name of render method
+     * @param string $template
+     *            Name of the template to call/render
      * @param array $params
-     *            Optional: Parameterlist to pass to render function
+     *            Parameters to add to the template
+     * @param array $vars
+     *            The key/value based vars array to be used in template
+     *
+     * @throws ViewException
+     *
+     * @return string The result of the template call/rendering
      */
-    public final function render($action, $params = array())
+    public final function render($template = 'Index', $params = [], array $vars = [])
     {
-        if (! method_exists($this, $action)) {
-            return false;
+        if (! method_exists($this, $template)) {
+            Throw new ViewException('No template to render.');
         }
+
+        $this->__magic_vars = $vars;
 
         // Render into own outputbuffer
         ob_start();
 
-        $this->di->invokeMethod($this, $action, $params);
+        $this->di->invokeMethod($this, $template, $params);
 
         return ob_get_clean();
-    }
-
-    /**
-     * Passes a value by name to the view
-     *
-     * If $val is an obect, it will be checked for a build() and a getArray() method.
-     * Does is exist, it will be called and the return value stored as value for the views var.
-     *
-     * @param string $key
-     *            The name of the var
-     * @param mixed $val
-     *            The vars value
-     *
-     * @return \Core\Amvc\View
-     */
-    public final function setVar($key, $val)
-    {
-        // Handle objects
-        if (is_object($val)) {
-
-            switch (true) {
-
-                // Handle buildable objects
-                case method_exists($val, 'build'):
-                    $val = $val->build();
-                    break;
-
-                // Handle all other objects
-                default:
-                    $val = get_object_vars($val);
-                    break;
-            }
-        }
-
-        // Another lazy thing. It's for accessing vars in the view by ->var_name
-        $this->__magic_vars[$key] = $val;
-
-        return $this;
-    }
-
-    /**
-     * Returns the value of a set var
-     *
-     * Nearly the same as magic method __get() but in this method will throw an
-     * ViewException when var does not exist.
-     *
-     * @param string $key
-     *
-     * @throws ViewException
-     *
-     * @return mixed
-     */
-    final public function getVar($key)
-    {
-        if (! array_key_exists($key, $this->__magic_vars)) {
-            Throw new ViewException(sprintf('The requested var "%s" does not exist in current view.', $key));
-        }
-
-        return $this->__magic_vars[$key];
-    }
-
-    /**
-     * Checks if the $key exists in the view
-     *
-     * @param string $key
-     *            The vars name
-     *
-     * @return boolean
-     */
-    public final function isVar($key)
-    {
-        return array_key_exists($key, $this->__magic_vars);
     }
 
     /**
@@ -142,7 +78,7 @@ class View extends MvcAbstract
             return;
         }
 
-        $this->setVar($key, $val);
+        $this->__magic_vars[$key] = $val;
     }
 
     /**
