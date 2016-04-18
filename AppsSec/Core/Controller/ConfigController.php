@@ -38,7 +38,7 @@ class ConfigController extends Controller
         
         foreach ($groups as $group_name) {
             
-            $forms[$group_name] = $this->getController()->run('Group', [
+            $forms[$group_name] = $this->app->getController()->run('Group', [
                 'app_name' => $app_name,
                 'group_name' => $group_name
             ]);

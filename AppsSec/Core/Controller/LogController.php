@@ -16,7 +16,7 @@ class LogController extends Controller
     {
         $this->setVar([
             'headline' => $this->text('logs.headline'),
-            'logs' => $this->getController()
+            'logs' => $this->app->getController()
                 ->run('Logs')
         ]);
         

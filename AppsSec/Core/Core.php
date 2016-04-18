@@ -23,7 +23,7 @@ final class Core extends App
         'admin.user',
         'admin.log'
     ];
-    
+
     // Apps default config
     protected $config = [
         'site' => [
@@ -203,7 +203,7 @@ final class Core extends App
                 ]
             ]
         ],
-        
+
         'login' => [
             'autologin' => [
                 'active' => [
@@ -218,7 +218,7 @@ final class Core extends App
                 ]
             ]
         ],
-        
+
         // Group: Execute
         'home' => [
             'guest' => [
@@ -260,7 +260,7 @@ final class Core extends App
                 ]
             ]
         ],
-        
+
         // Group: JS
         'js' => [
             'general' => [
@@ -287,7 +287,7 @@ final class Core extends App
                     ]
                 ]
             ],
-            
+
             'jquery' => [
                 'version' => [
                     'name' => 'version',
@@ -412,7 +412,7 @@ final class Core extends App
                 ]
             ]
         ],
-        
+
         // Caching
         'cache' => [
             'ttl_js' => [
@@ -426,7 +426,7 @@ final class Core extends App
                 'default' => '3600'
             ]
         ],
-        
+
         // Loggingsystem
         'log' => [
             'display' => [
@@ -437,7 +437,7 @@ final class Core extends App
                 ]
             ]
         ],
-        
+
         // Mailsystem
         'mail' => [
             'general' => [
@@ -448,7 +448,7 @@ final class Core extends App
             ]
         ]
     ];
-    
+
     // Apps routes
     protected $routes = [
         'index' => [
@@ -492,26 +492,40 @@ final class Core extends App
     {
         // Add logoff button for logged in users
         if ($this->security->login->loggedIn()) {
-            
+
+            // Set home url
+            $type = 'user';
+
             $usermenu = $this->page->menu->createItem('login', $this->security->user->getDisplayname());
-            
+
             // Show admin menu?
             if ($this->security->user->isAdmin()) {
                 $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
             }
-            
+
             $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login', [
                 'action' => 'logout'
             ]));
         }
-        
+
         // or add login and register buttons. But not when current user is currently on banlist
         elseif (! $this->security->users->checkBan()) {
-            
+
+            $type = 'guest';
+
             $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
             $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login', [
                 'action' => 'login'
             ]));
         }
+
+        $route = 'home.' . $type . '.route';
+        $params = 'home.' . $type . '.params';
+
+        $url = $this->url($this->cfg($route), parse_ini_string($this->cfg($params)));
+
+        $this->page->setHome($url);
+        $this->cfg('home.url', $url);
+
     }
 }

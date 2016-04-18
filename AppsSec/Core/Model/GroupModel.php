@@ -52,7 +52,7 @@ class GroupModel extends Model
         
         if ($id_group) {
             $group = $this->security->group->getGroupById($id_group);
-            $group['User'] = $this->getModel('User')->loadUsersByGroupId($id_group);
+            $group['User'] = $this->app->getModel('User')->loadUsersByGroupId($id_group);
         }
         
         return $group;
@@ -72,7 +72,7 @@ class GroupModel extends Model
                     'id' => $group['id_group']
                 ]);
                 
-                $group['User'] = $this->getModel('User')->loadUsersByGroupId($id_group);
+                $group['User'] = $this->app->getModel('User')->loadUsersByGroupId($id_group);
             }
         }
         

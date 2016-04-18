@@ -50,7 +50,7 @@ class GroupController extends Controller
                 'controller' => 'Group',
                 'id' => $id
             ]),
-            'permissions' => $this->getController('GroupPermission')
+            'permissions' => $this->app->getController('GroupPermission')
                 ->run('Index', [
                 'id' => $id
             ])

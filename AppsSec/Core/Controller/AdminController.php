@@ -23,7 +23,7 @@ final class AdminController extends Controller
     {
         $this->setVar([
             'loaded_apps' => $this->model->getApplist(),
-            'logs' => $this->getController('Log')
+            'logs' => $this->app->getController('Log')
                 ->run('Index'),
             
             // Links to users and permissions
