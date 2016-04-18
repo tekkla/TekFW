@@ -325,18 +325,12 @@ class Controller extends MvcAbstract
             }
 
             // Check if there still no view object
-            if (empty($view)) {
+            if (empty($this->view)) {
                 Throw new ViewException(sprintf('A result has to be rendered but there is no "%sView" found.', $this->name));
             }
 
-            // Render into own outputbuffer
-            ob_start();
-
             // Render
-            $this->view->render($this->action, $this->params);
-
-            // Get content from buffer
-            $content = ob_get_clean();
+            $content = $this->view->render($this->action, $this->params);
 
             // Run possible onEmpty event of app on no render result
             if (empty($content) && method_exists($this->app, 'onEmpty')) {

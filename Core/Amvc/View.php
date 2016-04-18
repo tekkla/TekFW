@@ -30,7 +30,6 @@ class View extends MvcAbstract
     {
         $this->name = $name;
         $this->app = $app;
-
     }
 
     /**
@@ -47,7 +46,12 @@ class View extends MvcAbstract
             return false;
         }
 
-        return $this->di->invokeMethod($this, $action, $params);
+        // Render into own outputbuffer
+        ob_start();
+
+        $this->di->invokeMethod($this, $action, $params);
+
+        return ob_get_clean();
     }
 
     /**
