@@ -223,7 +223,7 @@ abstract class AjaxCommandAbstract
             ];
 
             if (! in_array($definition['type'], $types)) {
-                Throw new UnexpectedValueException('Your AjaxCommand type "' . $definition['type'] . '"is not allowed.');
+                Throw new AjaxException('Your AjaxCommand type "' . $definition['type'] . '"is not allowed.');
             }
         }
 
