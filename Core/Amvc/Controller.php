@@ -319,6 +319,10 @@ class Controller extends MvcAbstract
                 'xml',
                 'css',
                 'js',
+                'jpg',
+                'png',
+                'gif',
+                'svg',
                 'file'
             ];
 
