@@ -52,7 +52,8 @@ class Controller extends MvcAbstract
     protected $access = [];
 
     /**
-     * Action to call. Default: Index
+     * Action to call.
+     * Default: Index
      *
      * @var string
      */
@@ -313,14 +314,16 @@ class Controller extends MvcAbstract
             }
 
             // Control rendering by requested output format
-            switch ($this->router->getFormat()) {
+            $no_render_format = [
+                'json',
+                'xml',
+                'css',
+                'js',
+                'file'
+            ];
 
-                // Turn rendering off on json and xml format
-                case 'json':
-                case 'xml':
-                case 'file':
-                    $this->render = false;
-                    break;
+            if (in_array($this->router->getFormat(), $no_render_format)) {
+                $this->render = false;
             }
         }
 
@@ -509,7 +512,8 @@ class Controller extends MvcAbstract
         return $this;
     }
 
-    private function varHandleObject($val) {
+    private function varHandleObject($val)
+    {
 
         // Handle objects
         if (is_object($val)) {
@@ -521,7 +525,7 @@ class Controller extends MvcAbstract
                     $val = $val->build();
                     break;
 
-                    // Handle all other objects
+                // Handle all other objects
                 default:
                     $val = get_object_vars($val);
                     break;
