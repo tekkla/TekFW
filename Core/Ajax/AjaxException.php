@@ -1,7 +1,7 @@
 <?php
 namespace Core\Ajax;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ConfigException class

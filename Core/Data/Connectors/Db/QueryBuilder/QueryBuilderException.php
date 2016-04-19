@@ -1,7 +1,7 @@
 <?php
 namespace Core\Data\Connectors\Db\QueryBuilder;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * QueryBuilderException.php

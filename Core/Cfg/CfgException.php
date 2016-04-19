@@ -1,7 +1,7 @@
 <?php
 namespace Core\Cfg;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ConfigException.php

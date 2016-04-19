@@ -1,7 +1,6 @@
 <?php
 namespace Core\Cfg;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Amvc\App;
 use Core\Cfg\Cfg;
 

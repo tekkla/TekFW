@@ -1,7 +1,6 @@
 <?php
-namespace Core\Errors;
+namespace Core\Error;
 
-use Core\Errors\CoreException;
 use Core\Router\Router;
 use Core\Security\User;
 use Core\Ajax\Ajax;

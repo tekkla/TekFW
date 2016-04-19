@@ -1,7 +1,7 @@
 <?php
 namespace Core\Amvc;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * AmvcException.php

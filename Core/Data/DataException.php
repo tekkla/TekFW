@@ -1,7 +1,7 @@
 <?php
 namespace Core\Data;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * DataException.php

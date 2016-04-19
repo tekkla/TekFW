@@ -6,7 +6,7 @@ use AppsSec\Core\Model\ConfigModel;
 use Core\Html\FormDesigner\FormGroup;
 use Core\Security\SecurityException;
 use Core\Amvc\ControllerException;
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ConfigController.php

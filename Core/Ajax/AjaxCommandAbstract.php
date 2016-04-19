@@ -1,13 +1,11 @@
 <?php
 namespace Core\Ajax;
 
-use Core\Errors\Exceptions\UnexpectedValueException;
-
 /**
  * AjaxCommand.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 abstract class AjaxCommandAbstract

@@ -1,7 +1,7 @@
 <?php
 namespace Core\Traits;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ArrayTrait.php

@@ -1,7 +1,7 @@
 <?php
 namespace Core\Data\Validator;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ValidatorException.php

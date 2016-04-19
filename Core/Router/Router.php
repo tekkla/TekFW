@@ -1,12 +1,8 @@
 <?php
 namespace Core\Router;
 
-// Commoln Traits
 use Core\Traits\StringTrait;
 use Core\Traits\ConvertTrait;
-
-// Exceptions
-use Core\Errors\Exceptions\InvalidArgumentException;
 
 /**
  * Router.php

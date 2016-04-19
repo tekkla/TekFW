@@ -1,5 +1,5 @@
 <?php
-namespace Core\Errors;
+namespace Core\Error;
 
 /**
  * CoreException.php

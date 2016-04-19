@@ -3,15 +3,13 @@ namespace Core\Html\Controls;
 
 use Core\Html\Elements\Div;
 use Core\Html\Form\Button;
-use Core\Errors\Exceptions\InvalidArgumentException;
-use Core\Errors\Exceptions\UnexpectedValueException;
 use Core\Html\HtmlException;
 
 /**
  * ButtonGroup.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
 class ButtonGroup extends Div

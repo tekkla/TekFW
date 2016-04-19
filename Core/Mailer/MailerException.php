@@ -1,7 +1,7 @@
 <?php
 namespace Core\Mailer;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * MailerException.php
