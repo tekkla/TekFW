@@ -15,7 +15,7 @@ class CoreException extends \ErrorException
      *
      * @var boolean
      */
-    protected $fatal = true;
+    protected $fatal = false;
 
     /**
      * Flag to set the

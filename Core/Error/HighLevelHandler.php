@@ -1,143 +1,100 @@
 <?php
 namespace Core\Error;
 
-use Core\Router\Router;
-use Core\Security\User;
-use Core\Ajax\Ajax;
-use Core\Cfg\Cfg;
-use Core\Data\Connectors\Db\Db;
-use Core\Page\Body\Message\Message;
-
 /**
- * ExceptionHandler.php
+ * HighLevelHandler.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
- *
- * @todo REWRITE THIS MONSTER!
- *
  */
-class ExceptionHandler
+class HighLevelHandler extends HandlerAbstract
 {
 
-    /**
+    /***
      *
-     * @var Router
+     * @var \Throwable
      */
-    private $router;
+    private $t;
+
+    protected $dependencies = [
+        'router' => 'core.router',
+        'user' => 'core.security.user.current',
+        'ajax' => 'core.ajax',
+        'message' => 'core.message',
+        'db' => 'db.default',
+        'cfg' => 'core.cfg'
+    ];
 
     /**
      *
-     * @var User;
+     * @var Core\Router\Router
      */
-    private $user;
+    protected $router;
 
     /**
      *
-     * @var Ajax
+     * @var Core\Security\User
      */
-    private $ajax;
+    protected $user;
 
     /**
      *
-     * @var string
+     * @var Core\Ajax\Ajax
      */
-    private $error_html = '';
+    protected $ajax;
 
     /**
      *
-     * @var Database
+     * @var Core\Data\Connectors\Db\Db
      */
-    private $db;
+    protected $db;
 
     /**
      *
-     * @var \Exception
+     * @var Core\Page\Body\Message\Message
      */
-    private $exception;
+    protected $message;
 
     /**
      *
-     * @var string
+     * @var Core\Cfg\Cfg
      */
-    private $error_id;
+    protected $cfg;
 
-    /**
-     *
-     * @var Message
-     */
-    private $message;
-
-    /**
-     *
-     * @var Cfg
-     */
-    private $cfg;
-
-    /**
-     * Constructor
-     *
-     * @param Router $router
-     * @param User $user
-     * @param Ajax $ajax
-     * @param Db $db
-     * @param Cfg $cfg
-     */
-    public function __construct(Router $router, User $user, Ajax $ajax, Message $message, Db $db, Cfg $cfg)
-    {
-        $this->router = $router;
-        $this->user = $user;
-        $this->ajax = $ajax;
-        $this->message = $message;
-        $this->db = $db;
-        $this->cfg = $cfg;
-
-        $this->error_id = uniqid('#error_');
-    }
-
-    /**
-     * Exceptionhandler
-     *
-     * @param \Exception $e
-     *            The exception or the error (PHP7)
-     * @param boolean $fatal
-     *            Optional flags exception to be a fatal error (Default: false)
-     * @param boolean $clean_buffer
-     *            Optional flag to switch buffer clean on/off. (Default: false)
-     * @param boolean $error_log
-     *            Optional flag to switch error logging on/off. (Default: true)
-     * @param boolean $send_mail
-     *            Optional flag to send error message to admins. (Default: false)
-     * @param boolean $to_db
-     *            Optional flag to switch error logging to db driven errorlog on/off. (Default: true)
-     *
-     * @return boolean|string
-     */
-    public function handleException($e, $fatal = false, $clean_buffer = false, $error_log = true, $send_mail = false, $to_db = true, $public = false)
+    public function run(\Throwable $t)
     {
 
-        // Store exception
-        $this->exception = $e;
+
+
+        // Store error
+        $this->t = $t;
 
         // The basic data of exception
-        $message = $this->exception->getMessage();
-        $file = $this->exception->getFile();
-        $line = $this->exception->getLine();
-        $trace = $this->exception->getTraceAsString();
+        $message = $this->t->getMessage();
+        $file = $this->t->getFile();
+        $line = $this->t->getLine();
+        $trace = $this->t->getTraceAsString();
+
+        $fatal = true;
+        $clean_buffer = true;
+        $log_error = true;
+        $send_mail = true;
+        $to_db = true;
+        $public = ini_get('display_errors') ? true : false;
 
         // Exception settings alway ovveride set methods parameter
-        if ($this->exception instanceof CoreException) {
-            $fatal = $this->exception->getFatal();
-            $clean_buffer = $this->exception->getCleanBuffer();
-            $log_error = $this->exception->getErrorLog();
-            $send_mail = $this->exception->getSendMail();
-            $to_db = $this->exception->getToDb();
-            $public = $this->exception->getPublic();
+        if ($this->t instanceof CoreException) {
+            $fatal = $this->t->getFatal();
+            $clean_buffer = $this->t->getCleanBuffer();
+            $log_error = $this->t->getErrorLog();
+            $send_mail = $this->t->getSendMail();
+            $to_db = $this->t->getToDb();
+            $public = $this->t->getPublic();
         }
 
         // Override db logging on PDO exceptions
-        if ($this->exception instanceof \PDOException) {
+        if ($this->t instanceof \PDOException) {
 
             $error_log = true;
             $send_mail = true;
@@ -146,16 +103,20 @@ class ExceptionHandler
             $to_db = false;
         }
 
+        if ($this->t instanceof \Core\Mailer\MailerException) {
+            $send_mail = false;
+        }
+
         // Log error
-        if (isset($this->cfg->data['Core']['error.log.use'])) {
+        if (!empty($this->cfg->data['Core']['error.log.use'])) {
 
             // Write to error log?
-            if ($error_log == true || $this->cfg->data['Core']['error.log.modes.php'] == true) {
+            if (!empty($error_log) || !empty($this->cfg->data['Core']['error.log.modes.php'])) {
                 error_log($message . ' (' . $file . ':' . $line . ')');
             }
 
             // Write to db error log? Take care of avoid flag (-1) due to PDOExceptions
-            if ($to_db == true || $this->cfg->data['Core']['error.log.modes.db'] == true) {
+            if (!empty($to_db) || !empty($this->cfg->data['Core']['error.log.modes.db'])) {
 
                 try {
 
@@ -226,26 +187,23 @@ class ExceptionHandler
     private function createErrorHtml($dismissable = false)
     {
         $this->error_html = '
-        <div class="alert alert-danger' . ($dismissable == true ? ' alert-dismissible' : '') . '" role="alert" id="' . $this->error_id . '">';
+        <div class="alert alert-danger' . ($dismissable == true ? ' alert-dismissible' : '') . '" role="alert" id="' . $this->id . '">';
 
         if ($dismissable == true) {
             $this->error_html .= '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
         }
 
         switch (true) {
-            case method_exists($this->exception, 'getPublic') && $this->exception->getPublic():
+            case method_exists($this->t, 'getPublic') && $this->t->getPublic():
             case (bool) $this->user->isAdmin():
-            case !empty($this->cfg->data['Core']['error.display.skip_security_check']):
+            case ! empty($this->cfg->data['Core']['error.display.skip_security_check']):
                 $this->error_html .= '
-                <h3 class="no-v-margin">' . $this->exception->getMessage() . '<br>
-                <small><strong>File:</strong> ' . $this->exception->getFile() . ' (Line: ' . $this->exception->getLine() . ')</small></h3>
-                <strong>Details</strong>
-                <div style="max-height: 200px; overflow-y: scroll; border: 1px solid #333; padding: 5px; margin: 5px 0;">
-                    <strong>Trace</strong>
-                    <pre>' . $this->exception->getTraceAsString() . '</pre>
-                    <strong>Router</strong>
-                    <pre>' . print_r($this->router->getStatus(), true) . '</pre>
-                </div>';
+                <h3 class="no-v-margin">' . $this->t->getMessage() . '<br>
+                <small><strong>File:</strong> ' . $this->t->getFile() . ' (Line: ' . $this->t->getLine() . ')</small></h3>
+                <strong>Trace</strong>
+                <pre>' . $this->t->getTraceAsString() . '</pre>
+                <strong>Router</strong>
+                <pre>' . print_r($this->router->getStatus(), true) . '</pre>';
 
                 break;
 
@@ -272,7 +230,7 @@ class ExceptionHandler
         // Send 500 http status
         http_response_code(500);
 
-        die('
+        return '
         <html>
             <head>
                 <title>Error</title>
@@ -292,6 +250,6 @@ class ExceptionHandler
                     </div>
                 </div>
             </body>
-        </html>');
+        </html>';
     }
 }

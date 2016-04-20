@@ -80,8 +80,16 @@ final class Core
      */
     private $creator;
 
+    /**
+     *
+     * @var \Core\Error\ErrorHandler
+     */
+    private $error;
+
     public function run()
     {
+
+        // Start the rudimental system
         try {
 
             // Load settingsfile
@@ -96,6 +104,22 @@ final class Core
             // Create core DI container instance!
             $this->di = \Core\DI::getInstance();
 
+            // Init error handling system
+            $this->initErrorHandler();
+
+        }
+        catch (Throwable $t) {
+            error_log($t->getMessage() . ' (File: ' . $t->getFile() . ':' . $t->getLine());
+            http_response_code(500);
+            die('An error occured. The admin is informed. Sorry for this. :/');
+        }
+
+        // Init result var
+        $result = '';
+
+        // Run lowlevel system
+        try {
+
             // Run inits
             $this->initDatabase();
             $this->initDependencies();
@@ -105,6 +129,7 @@ final class Core
             $this->initCoreApp();
             $this->initSecurity();
 
+            // Run highlevel system
             try {
 
                 // Create references to Router and Http service
@@ -119,15 +144,12 @@ final class Core
                 $result = $this->dispatch();
             }
             catch (Throwable $t) {
-
-                // Get result from exception handler
-                $result = $this->di->get('core.error')->handleException($t, true);
+                $result = $this->error->handle('Core', 1, $t);
             }
             finally {
 
                 // Send mails
-                $mailer = $this->di->get('core.mailer');
-                $mailer->send();
+                $this->di->get('core.mailer')->send();
 
                 // Send cookies
                 $this->http->cookies->send();
@@ -155,25 +177,15 @@ final class Core
 
                 // Send headers so far
                 $this->http->header->send();
-
-                if (! empty($result)) {
-                    echo $result;
-                }
-
-                ob_end_flush();
             }
         }
         catch (Throwable $t) {
-
-            if (ini_get('display_errors') == 1) {
-                echo '
-                <h1>Error</h1>
-                <p><strong>' . $t->getMessage() . '</strong></p>
-                <p>in ', $t->getFile() . ' (Line: ', $t->getLine(), ')</p>';
-            }
-
-            error_log($t->getMessage() . ' >> ' . $t->getFile() . ':' . $t->getLine());
+            $result = $this->error->handle('Core', 0, $t);
         }
+
+        echo $result;
+
+        ob_end_flush();
     }
 
     private function loadSettings()
@@ -350,16 +362,6 @@ final class Core
         $this->di->mapService('core.ajax', '\Core\Ajax\Ajax', [
             'core.page.body.message',
             'core.io.files',
-            'core.cfg'
-        ]);
-
-        // == ERROR =========================================================
-        $this->di->mapService('core.error', '\Core\Errors\ExceptionHandler', [
-            'core.router',
-            'core.security.user.current',
-            'core.ajax',
-            'core.page.body.message',
-            'db.default',
             'core.cfg'
         ]);
     }
@@ -592,6 +594,28 @@ final class Core
         ];
 
         $this->router->addMatchTypes($matchtypes);
+    }
+
+    private function initErrorHandler()
+    {
+        $this->di->mapService('core.error', '\Core\Error\ErrorHandler');
+
+        $this->error = $this->di->get('core.error');
+
+        $core_handler = [
+            0 => [
+                'ns' => '\Core\Error',
+                'class' => 'LowLevelHandler'
+            ],
+            1 => [
+                'ns' => '\Core\Error',
+                'class' => 'HighLevelHandler'
+            ]
+        ];
+
+        foreach ($core_handler as $id => $handler) {
+            $this->error->registerHandler('Core', $id, $handler['ns'], $handler['class']);
+        }
     }
 
     /**
