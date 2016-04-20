@@ -222,6 +222,13 @@ class Controller extends MvcAbstract
      */
     final public function run($action, array $params = [])
     {
+        // Use givem params
+        if (empty($action)) {
+            Throw new ControllerException(sprintf('The action name for %s::run() is empty.', $this->name));
+        }
+        
+        $this->action = $action;
+        
         // If accesscheck failed => stop here and return false!
         if ($this->checkControllerAccess() == false) {
             $this->page->message->warning($this->text('access.missing_userrights'));
@@ -231,13 +238,6 @@ class Controller extends MvcAbstract
             // $this->getName() . '.' . $action . '()');
             return false;
         }
-
-        // Use givem params
-        if (empty($action)) {
-            Throw new ControllerException(sprintf('The action name for %s::run() is empty.', $this->name));
-        }
-
-        $this->action = $action;
 
         // Use givem params
         if (! empty($params) && ! $this->arrayIsAssoc($params)) {
@@ -448,29 +448,33 @@ class Controller extends MvcAbstract
         }
 
         // ACL set?
-        if (isset($this->access)) {
+        if (!empty($this->access)) {
 
             $perm = [];
 
             // Global access for all actions?
-            if (isset($this->access['*'])) {
+            if (array_key_exists('*', $this->access)) {
                 if (! is_array($this->access['*'])) {
-                    $perm[] = $this->access['*'];
+                    $this->access['*'] = (array) $this->access['*'];
                 }
-                else {
-                    $perm += $this->access['*'];
-                }
+
+                $perm += $this->access['*'];
+
             }
 
             // Actions access set?
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
-                    $perm[] = $this->access[$this->action];
+                    $this->access[$this->action] = (array) $this->access[$this->action];
                 }
-                else {
-                    $perm += $this->access[$this->action];
-                }
+
+                $perm += $this->access[$this->action];
             }
+
+            \FB::log(sprintf('Checking following permissions for action: %s', $this->action));
+            \FB::log($perm);
+            \FB::log($this->router->getStatus());
+
 
             // Check the permissions against the current user
             if ($perm) {
@@ -616,7 +620,7 @@ class Controller extends MvcAbstract
     {
         return $this->ajax->createCommand($command_name);
     }
-
+    
     /**
      * Redirect function to make sure the browser doesn't come back and repost the form data
      *
@@ -629,21 +633,21 @@ class Controller extends MvcAbstract
     {
         // No view rendering!
         $this->render = false;
-
+    
         if (empty($location)) {
             $location = BASEURL;
         }
-
+    
         if (preg_match('~^(ftp|http)[s]?://~', $location) == 0 && substr($location, 0, 6) != 'about:') {
             $location = BASEURL . $location;
         }
-
+    
         // Append session id
         // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL
         // . '?' . SID . ';', $location);
-
+    
         $this->http->header->location($location, $permanent);
-    }
+    }    
 
     /**
      * Sets the output format.
