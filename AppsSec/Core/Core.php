@@ -170,11 +170,16 @@ final class Core extends App
                     ]
                 ],
                 'from' => [
-                    'name' => 'from'
+                    'name' => 'from',
+                    'control' => 'mail',
+                    'validate' => [
+                        'email'
+                    ]
                 ],
-                'sender' => [
-                    'name' => 'name'
-                ]
+                'name' => [
+                    'name' => 'name',
+                ],
+
             ],
             'ban' => [
                 'tries' => [
@@ -443,7 +448,20 @@ final class Core extends App
             'general' => [
                 'smtpdebug' => [
                     'name' => 'smtpdebug',
-                    'control' => 'switch'
+                    'control' => 'select',
+                    'data' => [
+                        'type' => 'array',
+                        'source' => [
+                            0 => 'off',
+                            1 => 1,
+                            2 => 2,
+                            3 => 3,
+                            4 => 4,
+                            5 => 5,
+                            6 => 6
+                        ],
+                        'index' => 0
+                    ]
                 ]
             ]
         ]
@@ -469,7 +487,8 @@ final class Core extends App
             'method' => 'POST|GET',
             'route' => '../register',
             'target' => [
-                'controller' => 'user'
+                'controller' => 'user',
+                'action' => 'register'
             ]
         ],
         'activate' => [

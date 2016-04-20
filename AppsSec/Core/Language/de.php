@@ -7,7 +7,7 @@
  * @license MIT
  */
 return [
-    
+
     'name' => 'Core Framework',
 
     /*
@@ -30,17 +30,17 @@ return [
         '403' => 'Sie haben keine Rechte auf diese Seite zuzugreifen.',
         '500' => 'Ein interner Fehler ist  aufgetreten.'
     ],
-    
+
     'default' => 'Standard',
     'none' => 'Keine/r',
     'please' => [
         'select' => 'Bitte auswählen...',
         'confirm' => 'Bitte bestätigen...'
     ],
-    
+
     // Basics
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
-    
+
     'action' => [
         'next' => [
             'text' => 'Weiter',
@@ -85,7 +85,7 @@ return [
             'icon' => 'pencil-square-o'
         ]
     ],
-    
+
     'menu' => [
         'login' => 'Login',
         'logout' => 'Logout',
@@ -93,7 +93,7 @@ return [
         'reset' => 'Passwort zurücksetzen',
         'admin' => 'Administration'
     ],
-    
+
     // USER
     'login' => [
         'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
@@ -105,7 +105,7 @@ return [
             'success' => 'Login war erfolgreich.'
         ]
     ],
-    
+
     'register' => [
         'form' => [
             'headline' => 'Registrierung',
@@ -115,20 +115,29 @@ return [
             'button' => 'Registrieren'
         ],
         'mail' => [
-            'subject' => 'Benutzerkontoaktivierung bei %s',
-            'body' => 'Hallo und willkommen bei %s!
+            'subject' => 'Benutzerkontoaktivierung bei {brand}',
+            'body' => [
+                'html' => '<h2>Hallo und willkommen bei {brand}!</h2>
+<p>Bevor das Benutzerkonto verwendet werden kann, bedarf es einer Aktivierung. Klicken Sie hierzu bitte auf den nachfolgenden Link.</p>
+<p><a href="{url.activate}">{url.activate}</a></p>
+<p>Vielen Dank und auf Wiedersehen</p><p>Das Team von {brand}</p>
+<hr>
+<p><small><strong>Hinweis:</strong> Wenn sie diese Mail ohne ihr zutun bekommen haben, dann hat sich jemand unter angabe ihrer Mailadresse bei uns auf der Seite registriert.
+Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der Eintrag spätestens nach einigen Tagen ohne Aktivierung autmonatisch gelöscht. Falls sie dies sofort veranlassen möchten, so steht ihnen dies über den nachfolgenden Link zur Verfügung
+<a href="{url.deny}">{url.deny}</a></small></p>',
+                'plain' => 'Hallo und willkommen bei {brand}!
 
 Bevor das Benutzerkonto verwendet werden kann, bedarf es einer Aktivierung. Klicken Sie hierzu bitte auf den nachfolgenden Link.
 
-%s
+{url.activate}
 
 Vielen Dank und auf Wiedersehen
-Das Team von %s
+Das Team von {brand}
 
 Hinweis: Wenn Sie diese Mail ohne ihr zutun bekommen haben, dann hat sich jemand unter angabe ihrer Mailadresse bei uns auf der Seite registriert.
-
 Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der Eintrag spätestens nach einigen Tagen ohne Aktivierung autmonatisch gelöscht werden. Falls Sie dies sofort veranlassen möchten, so steht Ihnen dies über den nachfolgenden Link zur Verfügung
-            %s'
+{url.deny}'
+            ]
         ],
         'activation' => [
             'notice' => 'Dieses Benutzerkonnte muss noch aktiviert werden. Bitte klicken Sie den Aktivierungslink in der an ihre Mailadresse versendeten Aktivierungsmail.',
@@ -142,7 +151,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Admin
@@ -153,7 +162,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'users' => 'Benutzer & Rechte'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * CONFIG
@@ -162,7 +171,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
     'config' => [
         'headline' => 'Core Framework Einstellungen',
         'desc' => '',
-        
+
         'site' => [
             'head' => 'Seite',
             'desc' => '',
@@ -189,9 +198,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-        
+
         // Execute
-        
+
         'execute' => [
             'head' => 'Runtime Execute',
             'desc' => '',
@@ -379,9 +388,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-        
+
         // Error
-        
+
         'error' => [
             'head' => 'Error Handling',
             'desc' => '',
@@ -515,7 +524,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * USER
@@ -554,7 +563,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * GROUP
@@ -580,7 +589,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'display_name' => 'Anzeigename'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Group Permissions
@@ -600,7 +609,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'notes' => 'Notizen'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Permissions
@@ -618,7 +627,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'desc' => 'Gewährt Zugriff auf alle (!) Konfigurationsbereiche der Seite. Das Betrifft auch alle Apps.'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * VALIDATORS
@@ -645,14 +654,14 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         'email' => 'This is not a valid mailadress.',
         'email_dnscheck' => 'The email host "%s" is unknown eg does not exist.'
     ],
-    
+
     /**
      * **************************************************************************
      * Models
      * ****************************************************************************
      */
     'model_error_field_not_exist' => 'Column [%s does not exist in model [%s].',
-    
+
     /**
      * **************************************************************************
      * TIMESTRINGS

@@ -78,11 +78,11 @@ class Users
      */
     public function createUser($username, $password, $activate)
     {
-        if (! $username) {
+        if (empty($username)) {
             Throw new SecurityException('Cannot create user without username.');
         }
 
-        if (! $password) {
+        if (empty($password)) {
             Throw new SecurityException('Cannot create user without password.');
         }
 
@@ -91,7 +91,7 @@ class Users
         ];
 
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.pepper'];
+        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
 
         // Create password hash
         $password = password_hash($password, PASSWORD_DEFAULT);
@@ -105,7 +105,7 @@ class Users
         $this->db->beginTransaction();
 
         $this->db->qb([
-            'table' => 'users',
+            'table' => 'core_users',
             'data' => $data
         ], true);
 
@@ -134,7 +134,7 @@ class Users
     public function createActivationToken($id_user)
     {
         // Delete all existing tokens of this user
-        $this->db->delete('activation_tokens', 'id_user=:id_user', [
+        $this->db->delete('core_activation_tokens', 'id_user=:id_user', [
             'id_user' => $id_user
         ]);
 
@@ -219,7 +219,7 @@ class Users
             ], true);
 
             // Delete activation token
-            $this->db->delete('activation_tokens', 'id_user=:id_user', [
+            $this->db->delete('core_activation_tokens', 'id_user=:id_user', [
                 ':id_user' => $activation['id_user']
             ]);
 
@@ -244,7 +244,7 @@ class Users
     public function changePassword($id_user, $password)
     {
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.pepper'];
+        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
 
         // Check the old password
         $this->db->qb([
@@ -262,7 +262,7 @@ class Users
     public function deleteUser($id_user)
     {
         // Check the old password
-        $this->db->delete('users', 'id_user=:id_user', [
+        $this->db->delete('core_users', 'id_user=:id_user', [
             ':id_user' => $id_user
         ]);
     }
@@ -313,5 +313,24 @@ class Users
 
         return true;
     }
+
+    public function getActivationData($id_user)
+    {
+        $this->db->qb([
+            'table' => 'core_activation_tokens',
+            'fields' => [
+                'selector',
+                'token',
+                'expires'
+            ],
+            'filter' => 'id_user=:id_user',
+            'params' => [
+                ':id_user' => $id_user
+            ]
+        ]);
+
+        return $this->db->single();
+    }
+
 }
 
