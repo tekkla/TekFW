@@ -188,7 +188,7 @@ class View extends MvcAbstract
      */
     public function Edit()
     {
-        if ($this->isVar('form')) {
+        if (!empty($this->__magic_vars['form'])) {
             echo $this->form;
         }
     }
