@@ -9,7 +9,7 @@ class LogView extends View
     public function Index()
     {
         echo '<h2>Logentries</h2>';
-        
+
         echo $this->logs;
     }
 
@@ -27,21 +27,21 @@ class LogView extends View
                 <th>', $this->code, '</th>
             </thead>
             <tbody>';
-        
+
         foreach ($this->logs as $entry) {
-            
+
             echo '
                 <tr>
                     <td>', $entry['logdate'], '</td>
                     <td>', $entry['type'], '</td>
                     <td>', $entry['id_user'], '</td>
-                    <td><div class="scroll col-sm-3">', nl2br($this->html($entry['text'])), '</div></td>
+                    <td><div class="scroll">', nl2br($this->html($entry['text'])), '</div></td>
                     <td>', $entry['ip'], '</td>
                     <td>', $entry['url'], '</td>
                     <td>', $entry['code'], '</td>
                 </tr>';
         }
-        
+
         echo '
             </tbody>
         </table>';
