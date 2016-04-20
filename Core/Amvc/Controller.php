@@ -24,7 +24,7 @@ use Core\IO\IO;
  */
 class Controller extends MvcAbstract
 {
-
+    
     use UrlTrait;
     use TextTrait;
     use CfgTrait;
@@ -160,7 +160,7 @@ class Controller extends MvcAbstract
      *
      * @param string $name
      *            The Name of our controller
-     *
+     *            
      * @param App $app
      *            App dependency
      * @param Router $router
@@ -190,10 +190,10 @@ class Controller extends MvcAbstract
         $this->html = $html;
         $this->ajax = $ajax;
         $this->io = $io;
-
+        
         // Model to bind?
         $this->model = $this->app->getModel($name);
-
+        
         // Controller of an ajax request?
         if ($this->router->isAjax()) {
             $this->ajax_flag = true;
@@ -215,7 +215,7 @@ class Controller extends MvcAbstract
      *            Action method to call
      * @param array $params
      *            Optional parametername => $value based array to be used as action method parameter
-     *
+     *            
      * @throws ControllerException
      *
      * @return boolean bool|string
@@ -232,87 +232,87 @@ class Controller extends MvcAbstract
         // If accesscheck failed => stop here and return false!
         if ($this->checkControllerAccess() == false) {
             $this->page->message->warning($this->text('access.missing_userrights'));
-
+            
             // @TODO implement logging
             // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' .
             // $this->getName() . '.' . $action . '()');
             return false;
         }
-
+        
         // Use givem params
         if (! empty($params) && ! $this->arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
-
+        
         $this->params = $params;
-
+        
         // Init return var with boolean false as default value. This default
         // prevents from running the views render() method when the controller
         // action is stopped manually by using return.
         $return = false;
-
+        
         // a little bit of reflection magic to pass request param into controller func
         $return = $this->di->invokeMethod($this, $this->action, $this->params);
-
+        
         // Redirect initiated from within the called action?
         if (! empty($this->redirect)) {
-
+            
             // Clean post data wanted?
             if ($this->redirect[2] == true) {
                 $this->http->post->clean();
             }
-
+            
             // Target is an array and will be analyzed and used as app, controller and actionnames
             if (is_array($this->redirect[0])) {
-
+                
                 // Make sure we have all essential data before calling ACA
                 $require = [
                     'app',
                     'controller',
                     'action'
                 ];
-
+                
                 foreach ($require as $check) {
                     if (empty($this->redirect[0][$check])) {
                         Throw new ControllerException(sprintf('Redirects by arrayed $target need a set "%s" element.', $check));
                     }
                 }
-
+                
                 $app = $this->app->creator->getAppInstance($this->redirect[0]['app']);
                 $controller = $app->getController($this->redirect[0]['controller']);
-
+                
                 $return = $controller->run($this->redirect[0]['action'], $this->redirect[1]);
-
+                
                 // Prevent rendering of this controllers view because rendering results
                 // are coming from the redirected ACA
                 $this->render = false;
-
+                
                 // Reset redirection settings
                 $this->redirect = [];
             }
-
+            
             // Target is a string and is treated as action name
             else {
-
+                
                 // It is important to clean the redirection property before calling the redirection action in this
                 // controller. Without cleaning it an endless redirect recursion occurs.
                 $action = $this->redirect[0];
                 $params = $this->redirect[1];
-
+                
                 $this->redirect = [];
-
+                
                 $return = $this->run($action, $params);
             }
         }
-
+        
         // Do we have a result?
         if (isset($return)) {
-
+            
             // Boolean false result means to stop work for controller
             if ($return == false) {
                 return false;
             }
-
+            
             // Control rendering by requested output format
             $no_render_format = [
                 'json',
@@ -321,37 +321,37 @@ class Controller extends MvcAbstract
                 'js',
                 'file'
             ];
-
+            
             if (in_array($this->router->getFormat(), $no_render_format)) {
                 $this->render = false;
             }
         }
-
+        
         // Render the view and return the result
         if ($this->render === true) {
-
+            
             // Create view instance if not alredy done
             if (! $this->view instanceof View) {
                 $this->view = $this->app->getView($this->name);
             }
-
+            
             // Check if there still no view object
             if (empty($this->view)) {
                 Throw new ViewException(sprintf('A result has to be rendered but "%sView" does not exist.', $this->name));
             }
-
+            
             // Render
             $content = $this->view->render($this->action, $this->params, $this->vars);
-
+            
             // Run possible onEmpty event of app on no render result
             if (empty($content) && method_exists($this->app, 'onEmpty')) {
                 $content = $this->app->onEmpty();
             }
-
+            
             return $content;
         }
         else {
-
+            
             // Without view rendering we return the return value send from called controller action
             return $return;
         }
@@ -375,19 +375,19 @@ class Controller extends MvcAbstract
     final public function ajax($action = 'Index', $params = [], $selector = '#content')
     {
         $content = $this->run($action, $params);
-
+        
         if ($content !== false) {
-
+            
             $this->ajax_command->setArgs($content);
             $this->ajax_command->setId(get_called_class() . '::' . $action);
-
+            
             if (! $this->ajax_command->getSelector() && $selector) {
                 $this->ajax_command->setSelector($selector);
             }
-
+            
             $this->ajax_command->send();
         }
-
+        
         return $this;
     }
 
@@ -409,14 +409,14 @@ class Controller extends MvcAbstract
             $params,
             $clear_post
         ];
-
+        
         return $this;
     }
 
     /**
      * Does an urlredirect but cares about what kind (ajax?) of request was send.
      *
-     * @param Url|string $url
+     * @param Url|string $url            
      */
     final protected function doRefresh($url)
     {
@@ -437,7 +437,7 @@ class Controller extends MvcAbstract
      *
      * @param bool $force
      *            Set this to true if you want to force a brutal stop
-     *
+     *            
      * @return boolean
      */
     final protected function checkControllerAccess($force = false)
@@ -446,42 +446,40 @@ class Controller extends MvcAbstract
         if (method_exists($this->app, 'Access') && $this->app->Access() === false) {
             return false;
         }
-
+        
         // ACL set?
-        if (!empty($this->access)) {
-
+        if (! empty($this->access)) {
+            
             $perm = [];
-
+            
             // Global access for all actions?
             if (array_key_exists('*', $this->access)) {
                 if (! is_array($this->access['*'])) {
                     $this->access['*'] = (array) $this->access['*'];
                 }
-
+                
                 $perm += $this->access['*'];
-
             }
-
+            
             // Actions access set?
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
                     $this->access[$this->action] = (array) $this->access[$this->action];
                 }
-
+                
                 $perm += $this->access[$this->action];
             }
-
+            
             \FB::log(sprintf('Checking following permissions for action: %s', $this->action));
             \FB::log($perm);
             \FB::log($this->router->getStatus());
-
-
+            
             // Check the permissions against the current user
             if ($perm) {
                 return $this->checkAccess($perm, $force);
             }
         }
-
+        
         // Not set ACL or falling through here grants access by default
         return true;
     }
@@ -493,7 +491,7 @@ class Controller extends MvcAbstract
      *            Name of var or list of vars in an array
      * @param mixed $arg2
      *            Optional value to be ste when $arg1 is the name of a var
-     *
+     *            
      * @throws ControllerException
      *
      * @return Controller
@@ -512,30 +510,30 @@ class Controller extends MvcAbstract
         else {
             Throw new ControllerException('The vars to set are not correct.', 1001);
         }
-
+        
         return $this;
     }
 
     private function varHandleObject($val)
     {
-
+        
         // Handle objects
         if (is_object($val)) {
-
+            
             switch (true) {
-
+                
                 // Handle buildable objects
                 case method_exists($val, 'build'):
                     $val = $val->build();
                     break;
-
+                
                 // Handle all other objects
                 default:
                     $val = get_object_vars($val);
                     break;
             }
         }
-
+        
         return $val;
     }
 
@@ -548,38 +546,38 @@ class Controller extends MvcAbstract
     {
         /* @var $fd \Core\Html\FormDesigner\FormDesigner */
         $fd = $this->html->create('FormDesigner\FormDesigner');
-
+        
         // Generate form id when id is not provided
         if (! $id) {
-
+            
             // get calling method name
             $dbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-
+            
             $pieces = [
                 $this->stringUncamelize($this->app->getName()),
                 $this->stringUncamelize($this->name),
                 isset($dbt[1]['function']) ? $this->stringUncamelize($dbt[1]['function']) : null
             ];
-
+            
             $id = implode('-', $pieces);
         }
-
+        
         if ($id) {
             $fd->setId($id);
         }
-
+        
         // Create forms eaction url
         $action = $this->url($this->router->getCurrentRoute(), $this->router->getParam());
-
+        
         $fd->html->setAction($action);
-
+        
         return $fd;
     }
 
     /**
      * Sets the selector name to where the result is ajaxed.
      *
-     * @param string $target
+     * @param string $target            
      *
      * @return \Core\Amvc\Controller
      */
@@ -588,14 +586,14 @@ class Controller extends MvcAbstract
         if ($this->ajax_flag) {
             $this->ajax_command->setSelector($target);
         }
-
+        
         return $this;
     }
 
     /**
      * Sets the function to use when result is returned.
      *
-     * @param string $function
+     * @param string $function            
      *
      * @return \Core\Amvc\Controller
      */
@@ -604,7 +602,7 @@ class Controller extends MvcAbstract
         if ($this->ajax_flag) {
             $this->ajax_command->setFunction($function);
         }
-
+        
         return $this;
     }
 
@@ -613,14 +611,14 @@ class Controller extends MvcAbstract
      *
      * @param string $command_name
      *            Name of command to get. Default: Dom\Html
-     *
+     *            
      * @return \Core\Ajax\AjaxCommand
      */
     final public function getAjaxCommand($command_name = 'Dom\Html')
     {
         return $this->ajax->createCommand($command_name);
     }
-    
+
     /**
      * Redirect function to make sure the browser doesn't come back and repost the form data
      *
@@ -633,18 +631,18 @@ class Controller extends MvcAbstract
     {
         // No view rendering!
         $this->render = false;
-
+        
         if (empty($location)) {
             $location = BASEURL;
         }
-
+        
         if (preg_match('~^(ftp|http)[s]?://~', $location) == 0 && substr($location, 0, 6) != 'about:') {
             $location = BASEURL . $location;
         }
-
+        
         $_SESSION['Core']['redirect'] = [
             'location' => $location,
-            'permanent' => $permanent,
+            'permanent' => $permanent
         ];
     }
 
@@ -662,13 +660,13 @@ class Controller extends MvcAbstract
             'xml',
             'html'
         ];
-
+        
         if (! in_array($format, $formats)) {
             throw new ControllerException(sprintf('Format "%s" is not allowed. Please use one of the following formats: %s'), $format, implode(', ', $formats));
         }
-
+        
         $this->router->setFormat($format);
-
+        
         return $this;
     }
 
