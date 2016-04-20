@@ -132,6 +132,18 @@ final class Core
                 // Send cookies
                 $this->http->cookies->send();
 
+                // Redirect requested?
+                if (!empty($_SESSION['Core']['redirect'])) {
+
+                    $this->http->header->location($_SESSION['Core']['redirect']['location'], $_SESSION['Core']['redirect']['permanent']);
+                    $this->http->header->send();
+
+                    // Important: Clear redirect from session!
+                    unset($_SESSION['Core']['redirect']);
+
+                    return;
+                }
+
                 switch ($this->router->getFormat()) {
 
                     case 'file':

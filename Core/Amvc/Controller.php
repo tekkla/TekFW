@@ -633,21 +633,20 @@ class Controller extends MvcAbstract
     {
         // No view rendering!
         $this->render = false;
-    
+
         if (empty($location)) {
             $location = BASEURL;
         }
-    
+
         if (preg_match('~^(ftp|http)[s]?://~', $location) == 0 && substr($location, 0, 6) != 'about:') {
             $location = BASEURL . $location;
         }
-    
-        // Append session id
-        // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL
-        // . '?' . SID . ';', $location);
-    
-        $this->http->header->location($location, $permanent);
-    }    
+
+        $_SESSION['Core']['redirect'] = [
+            'location' => $location,
+            'permanent' => $permanent,
+        ];
+    }
 
     /**
      * Sets the output format.
