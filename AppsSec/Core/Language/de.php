@@ -7,7 +7,7 @@
  * @license MIT
  */
 return [
-
+    
     'name' => 'Core Framework',
 
     /*
@@ -30,17 +30,16 @@ return [
         '403' => 'Sie haben keine Rechte auf diese Seite zuzugreifen.',
         '500' => 'Ein interner Fehler ist  aufgetreten.'
     ],
-
+    
     'default' => 'Standard',
     'none' => 'Keine/r',
     'please' => [
         'select' => 'Bitte auswählen...',
         'confirm' => 'Bitte bestätigen...'
     ],
-
-    // Basics
+    
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
-
+    
     'action' => [
         'next' => [
             'text' => 'Weiter',
@@ -85,7 +84,7 @@ return [
             'icon' => 'pencil-square-o'
         ]
     ],
-
+    
     'menu' => [
         'login' => 'Login',
         'logout' => 'Logout',
@@ -93,7 +92,7 @@ return [
         'reset' => 'Passwort zurücksetzen',
         'admin' => 'Administration'
     ],
-
+    
     // USER
     'login' => [
         'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
@@ -105,7 +104,7 @@ return [
             'success' => 'Login war erfolgreich.'
         ]
     ],
-
+    
     'register' => [
         'form' => [
             'headline' => 'Registrierung',
@@ -151,7 +150,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * Admin
@@ -162,7 +161,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'users' => 'Benutzer & Rechte'
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * CONFIG
@@ -171,7 +170,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
     'config' => [
         'headline' => 'Core Framework Einstellungen',
         'desc' => '',
-
+        
         'site' => [
             'head' => 'Seite',
             'desc' => '',
@@ -198,9 +197,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-
+        
         // Execute
-
+        
         'execute' => [
             'head' => 'Runtime Execute',
             'desc' => '',
@@ -388,9 +387,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-
+        
         // Error
-
+        
         'error' => [
             'head' => 'Error Handling',
             'desc' => '',
@@ -524,7 +523,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * USER
@@ -563,7 +562,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * GROUP
@@ -589,7 +588,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'display_name' => 'Anzeigename'
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * Group Permissions
@@ -609,7 +608,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'notes' => 'Notizen'
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * Permissions
@@ -627,41 +626,34 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'desc' => 'Gewährt Zugriff auf alle (!) Konfigurationsbereiche der Seite. Das Betrifft auch alle Apps.'
         ]
     ],
-
+    
     /**
      * **************************************************************************
      * VALIDATORS
      * ****************************************************************************
      */
     'validator' => [
-        'required' => 'This field has to be set.',
-        'empty' => 'This field is not allowed to be empty.',
+        'required' => 'Dieses Feld muss existieren.',
+        'empty' => 'Dieses Feld darf nicht leer sein',
         // Strings
-        'textrange' => 'The number of chars has to be between %d and %d. The checked string contains %d chars.',
-        'textminlength' => 'The number of chars has to be %d at minimum.',
-        'textmaxlength' => 'The number of chars has to be %d at maximum.',
+        'textrange' => 'Der Inhalt muss zwischen %d und %d Zeichen lang sein. Der aktuelle Inhalt hat %d Zeichen.',
+        'textminlength' => 'Der Inhalt muss mindestens %d Zeichen lang sein.',
+        'textmaxlength' => 'Der Inhalt darf maximal %d Zeichen lang sein.',
         // Dates
-        'date_iso' => 'Date in ISO Format (YYYY-MM-DD) expected.',
-        'date' => 'Please provide proper date.',
+        'date_iso' => 'Datum im ISO Format (YYYY-MM-DD) erforderlich.',
+        'date' => 'Bitte ein gültiges Datum eingeben.',
         // Time
-        'time24' => 'Time in 24h format (HH:II:ss) expected',
+        'time24' => 'Zeitangabe im 24 Stunden Format (HH:II:ss) erwartet.',
         // Number
         'compare' => 'Comparecheck failed. Checked: $1 $3 $2',
-        'numbermin' => 'The value is not allowed to be smaller then %d.',
-        'numbermax' => 'The value exeeds the set maximum of $1',
-        'numberrange' => 'The value has to be between %d and %d.',
+        'numbermin' => 'Die Zahl darf nicht kleiner als %d sein.',
+        'numbermax' => 'Die Zahl darf nicht größer als %d sein.',
+        'numberrange' => 'Die Zahl muss zwischen %d und %d liegen.',
         // Email
-        'email' => 'This is not a valid mailadress.',
-        'email_dnscheck' => 'The email host "%s" is unknown eg does not exist.'
+        'email' => 'Dies ist keine gültige E-Mailadresse.',
+        'email_dnscheck' => 'Der  E-MailHost "%s" ist unbekannt bzw existiert nicht.'
     ],
-
-    /**
-     * **************************************************************************
-     * Models
-     * ****************************************************************************
-     */
-    'model_error_field_not_exist' => 'Column [%s does not exist in model [%s].',
-
+    
     /**
      * **************************************************************************
      * TIMESTRINGS
@@ -673,46 +665,45 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         ],
         'strings' => [
             '__preserve' => true,
-            'year' => 'year',
-            'years' => 'years',
-            'month' => 'month',
-            'months' => 'months',
-            'week' => 'week',
-            'weeks' => 'weeks',
-            'day' => 'day',
-            'days' => 'days',
-            'hour' => 'hour',
-            'hours' => 'hours',
-            'minute' => 'minute',
-            'minutes' => 'minutes',
-            'second' => 'second',
-            'seconds' => 'seconds'
+            'year' => 'Jahr',
+            'years' => 'Jahre',
+            'month' => 'Monat',
+            'months' => 'Monate',
+            'week' => 'Woche',
+            'weeks' => 'Wochen',
+            'day' => 'Tag',
+            'days' => 'Tage',
+            'hour' => 'Stunde',
+            'hours' => 'Stunden',
+            'minute' => 'Minute',
+            'minutes' => 'Minuten',
+            'second' => 'Sekunde',
+            'seconds' => 'Sekunden'
         ],
         'months' => [
             '__preserve' => true,
-            1 => 'January',
-            2 => 'February',
-            3 => 'March',
+            1 => 'Januar',
+            2 => 'Februar',
+            3 => 'März',
             4 => 'April',
-            5 => 'May',
-            6 => 'June',
-            7 => 'July',
+            5 => 'Mai',
+            6 => 'Juni',
+            7 => 'Juli',
             8 => 'August',
             9 => 'September',
-            10 => 'October',
+            10 => 'Oktober',
             11 => 'November',
-            12 => 'December'
+            12 => 'Dezember'
         ],
         'days' => [
             '__preserve' => true,
-            0 => 'Sunday',
-            1 => 'Monday',
-            2 => 'Tuesday',
-            3 => 'Wednesday',
-            4 => 'Thursday',
-            5 => 'Friday',
-            6 => 'Saturday'
+            0 => 'Sontag',
+            1 => 'Montag',
+            2 => 'Dienstag',
+            3 => 'Mittwoch',
+            4 => 'Donnerstag',
+            5 => 'Freitag',
+            6 => 'Samstag'
         ]
     ]
 ];
-
