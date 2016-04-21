@@ -11,6 +11,11 @@ namespace Core\Error;
 class ErrorHandler
 {
 
+    /**
+     * Storage for registered handler
+     *
+     * @var array
+     */
     private $handler = [];
 
     /**
@@ -20,7 +25,7 @@ class ErrorHandler
     public $di;
 
     /**
-     * Registers a custom app based arror handler.
+     * Registers a custom app based arror handler
      *
      * @param string $app
      *            Name of app this handler is from
@@ -48,27 +53,26 @@ class ErrorHandler
      *            Handler id
      * @param \Throwable $t
      *            The error to handle
-     *
+     * @param boolean $verbose
+     *            Optional control of returning the handler result or not (Default: true)
+     *            
      * @return string|boolean
      */
     public function handle($app, $id, \Throwable $t, $verbose = true)
     {
         if (empty($this->handler[$app][$id])) {
-            error_log(sprintf('There is no "%s" of app "%s" registered. Falling back to Core::LowLevelHandler', $app, $id));
+            error_log(sprintf('There is no "%s" handler of app "%s" registered. Falling back to Core::LowLevelHandler', $app, $id));
             $app = 'Core';
             $id = 0;
         }
-
+        
         $class = $this->handler[$app][$id]['ns'] . '\\' . $this->handler[$app][$id]['class'];
-
         $handler = $this->di->instance($class, 'core.di');
-
-        $args = [
-            't' => $t,
-        ];
-
-        $result = $this->di->invokeMethod($handler, 'run', $args);
-
+        
+        $result = $this->di->invokeMethod($handler, 'run', [
+            't' => $t
+        ]);
+        
         if ($verbose == true) {
             return $result;
         }
