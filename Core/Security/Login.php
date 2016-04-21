@@ -145,6 +145,9 @@ class Login
                 ], true);
             }
 
+            // Refresh session id and delete old session
+            session_regenerate_id(true);
+
             // Store essential userdata in session
             $_SESSION['Core']['logged_in'] = true;
             $_SESSION['Core']['user']['id'] = $login['id_user'];
@@ -183,6 +186,9 @@ class Login
     public function doLogout()
     {
         $id_user = $_SESSION['Core']['user']['id'];
+
+        // Refresh session id and delete old session
+        session_regenerate_id(true);
 
         // Clean up session
         $_SESSION['Core']['autologin_failed'] = true;
@@ -269,6 +275,9 @@ class Login
 
             // Matches the hash in db with the provided token?
             if (hash_equals($auth_token['token'], $token)) {
+
+                // Refresh session id and delete old session
+                session_regenerate_id(true);
 
                 // Refresh autologin cookie so the user stays logged in
                 // as long as he comes back before his cookie has been expired.

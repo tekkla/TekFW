@@ -2,6 +2,7 @@
 namespace AppsSec\Core\Controller;
 
 use Core\Amvc\Controller;
+use Core\Security\Users;
 
 class UserController extends Controller
 {
@@ -166,7 +167,6 @@ class UserController extends Controller
         if ($data) {
 
             $activate = $this->cfg('security.activation.use');
-
             $id_user = $this->model->register($data, $activate);
 
             if (! $this->model->hasErrors()) {
@@ -174,7 +174,7 @@ class UserController extends Controller
                 if ($activate) {
 
                     // Create combined key from activation data of user
-                    $activation = $this->model->getActivationData($id_user);
+                    $activation = $this->security->users->getActivationData($id_user);
                     $key = $activation['selector'] . ':' . $activation['token'];
 
                     /* @var $mailer \Core\Mailer\Mailer */
@@ -195,11 +195,13 @@ class UserController extends Controller
 
                     // Define strings to replace placeholder in mailtexts
                     $strings = [
-                        'brand' => $this->page->getBrand(),
-                        'url.activate' => $this->url('register.activation', [
+                        'brand' => $this->cfg('site.general.name'),
+                        'url.activate' => $this->url('activate', [
+                            'action' => 'activate',
                             'key' => $key
                         ]),
-                        'url.deny' => $this->url('register.deny', [
+                        'url.deny' => $this->url('activate', [
+                            'action' => 'deny',
                             'key' => $key
                         ])
                     ];
@@ -223,7 +225,7 @@ class UserController extends Controller
 
 </html>';
 
-                    $alt_body = $this->text('register.mail.body.alt');
+                    $alt_body = $this->text('register.mail.body.plain');
 
                     // Replace placeholder
                     foreach ($strings as $key => $val) {
@@ -240,12 +242,13 @@ class UserController extends Controller
                 else {
                     $state = 1;
                 }
-            }
 
-            $this->redirectExit($this->url('register.done', [
-                'state' => $state
-            ]));
-            return;
+                $this->redirect('done', [
+                    'state' => $state
+                ]);
+
+                return;
+            }
         }
 
         if (empty($data)) {

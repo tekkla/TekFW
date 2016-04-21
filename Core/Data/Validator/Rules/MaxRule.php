@@ -19,7 +19,7 @@ class MaxRule extends RuleAbstract
     public function execute()
     {
         // Which rule object shoud be used? Number or text?
-        $rule_name = is_numeric($this->value) && func_get_arg(1) === false ? 'NumberMax' : 'TxtMaxLength';
+        $rule_name = is_numeric($this->value) ? 'NumberMax' : 'TxtMaxLength';
 
         $rule = $this->createRule($rule_name);
         $rule->setValue($this->value);

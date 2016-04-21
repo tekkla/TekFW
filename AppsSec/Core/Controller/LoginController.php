@@ -54,7 +54,7 @@ class LoginController extends Controller
 
                 // Login successful? Redirect to index page
                 if ($logged_in == true) {
-                    $this->redirectExit($this->url('index'));
+                    return $this->redirectExit($this->url('index'));
                 }
             }
 
@@ -158,7 +158,7 @@ class LoginController extends Controller
     {
         $this->security->login->doLogout();
 
-        $this->redirectExit($this->router->url('core.index'));
+        return $this->redirectExit($this->url('index'));
     }
 
     public function AlreadyLoggedIn()
