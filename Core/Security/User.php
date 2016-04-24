@@ -283,24 +283,6 @@ class User
     }
 
     /**
-     * Security method to log suspisious actions and start banning process.
-     *
-     * @param string $msg
-     *            Message to log
-     * @param boolean|int $ban
-     *            Set this to the number of tries the user is allowed to do other suspicious things until he gets
-     *            banned.
-     *
-     * @return Security
-     */
-    public function logSuspicious($msg, $ban = false)
-    {
-        $this->logging->suspicious($msg);
-
-        return $this;
-    }
-
-    /**
      * Loads permissions for a given list of group ids
      *
      * @param array $groups
