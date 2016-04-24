@@ -203,7 +203,7 @@ class DI implements \ArrayAccess
 
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
-            Throw new CoreException(sprintf('Method "%s" not found.', $method), 5000);
+            Throw new CoreException(sprintf('Method "%s" not found in "%s".', $method, get_class($obj)), 5000);
         }
 
         // Get reflection method
