@@ -6,10 +6,11 @@ use Core\Security\Users;
 
 class UserController extends Controller
 {
+
     protected $access = [
         'Index' => 'admin',
         'Userlist' => 'admin',
-        'Edit' => 'admin',
+        'Edit' => 'admin'
     ];
 
     /**
@@ -29,8 +30,9 @@ class UserController extends Controller
             'userlist' => $this->model->getList('display_name', '%', 100, [
                 [
                     function ($data) {
-                        $data['link'] = $this->url('edit', [
-                            'controller' => 'User',
+                        $data['link'] = $this->url('generic.id', [
+                            'controller' => 'user',
+                            'action' => 'edit',
                             'id' => $data['id_user']
                         ]);
                         return $data;
@@ -40,8 +42,9 @@ class UserController extends Controller
             'links' => [
                 'new' => [
                     'text' => $this->text('user.action.new.text'),
-                    'url' => $this->url('edit', [
-                        'controller' => 'user'
+                    'url' => $this->url('generic.action', [
+                        'controller' => 'user',
+                        'action' => 'edit'
                     ])
                 ]
             ],
@@ -67,7 +70,7 @@ class UserController extends Controller
 
             $this->model->save($data);
 
-            if (! $data->hasErrors()) {
+            if (! $this->model->hasErrors()) {
                 $this->redirect('Detail', [
                     'id' => $id
                 ]);
@@ -82,7 +85,8 @@ class UserController extends Controller
         // Get FormDesigner object
         $fd = $this->getFormDesigner('core-user-edit');
 
-        $fd->addData($data);
+        $fd->mapData($data);
+        $fd->mapErrors($this->model->getErrors());
 
         // Flag form to be ajax
         $fd->isAjax();
@@ -146,7 +150,7 @@ class UserController extends Controller
         $editbox->setCaption($this->text('user.action.edit.text'));
 
         // Cancel action only when requested
-        $editbox->setCancelAction($this->url('byid', [
+        $editbox->setCancelAction($this->url('generic.id', [
             'controller' => 'User',
             'action' => 'Detail',
             'id' => $id
@@ -166,16 +170,19 @@ class UserController extends Controller
 
         if ($data) {
 
+            // Get activation mode
             $activate = $this->cfg('security.activation.use');
-            $id_user = $this->model->register($data, $activate);
+
+            // Usercreationprocess which returns the id of the new user
+            $id_user = $this->model->createUser($data, $activate);
 
             if (! $this->model->hasErrors()) {
 
-                if ($activate) {
+                // Activation by mail?
+                if ($activate===1) {
 
                     // Create combined key from activation data of user
-                    $activation = $this->security->users->getActivationData($id_user);
-                    $key = $activation['selector'] . ':' . $activation['token'];
+                    $key = $this->token->createActivationToken($id_user, $this->cfg->data['Core']['security.activation.ttl']);
 
                     /* @var $mailer \Core\Mailer\Mailer */
                     $mailer = $this->di->get('core.mailer');
@@ -237,13 +244,13 @@ class UserController extends Controller
                     $mail->setBody($body);
                     $mail->setAltbody($alt_body);
 
-                    $state = 0;
+                    $state = 'wait';
                 }
                 else {
-                    $state = 1;
+                    $state = 'done';
                 }
 
-                $this->redirect('done', [
+                $this->redirect('AccountState', [
                     'state' => $state
                 ]);
 
@@ -302,7 +309,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function Done($state)
+    public function AccountState($state = 'wait')
     {
         $this->setVar([
             'headline' => $this->text('register.activation.' . $state . '.headline'),
@@ -313,22 +320,27 @@ class UserController extends Controller
     public function Activate($key)
     {
         // $key = $this->router->getParam('key');
-        $id_user = $this->di->get('core.security.users')->activateUser($key);
+        $id_user = $this->security->users->activateUser($key);
 
         // Redirect to RegisterDone on successfull activation
-        if ($id_user) {
-            $this->redirectExit($this->url('register.done', [
-                'state' => 1
+        if (! empty($id_user)) {
+            $this->redirectExit($this->url('generic.action', [
+                'controller' => 'user',
+                'action' => 'done'
             ]));
             return;
         }
 
-        $this->setVar([
-            'headline' => $this->text($key)
+        $this->redirect('AccountState', [
+            'state' => 'fail'
         ]);
     }
 
     Public function Deny($key)
-    {}
+    {
+        $this->redirect('AccountState', [
+            'state' => $this->security->users->denyActivation($key) ? 'deny.ok' : 'deny.nouser'
+        ]);
+    }
 }
 

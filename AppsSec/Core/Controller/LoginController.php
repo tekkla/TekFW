@@ -54,7 +54,12 @@ class LoginController extends Controller
 
                 // Login successful? Redirect to index page
                 if ($logged_in == true) {
-                    return $this->redirectExit($this->url('index'));
+
+                    $route = $this->cfg('home.user.route');
+                    $params = parse_ini_string($this->cfg('home.user.params'));
+                    $url = $this->url($route, $params);
+
+                    return $this->redirectExit($url);
                 }
             }
 
@@ -158,7 +163,7 @@ class LoginController extends Controller
     {
         $this->security->login->doLogout();
 
-        return $this->redirectExit($this->url('index'));
+        return $this->redirectExit($this->cfg('url.home'));
     }
 
     public function AlreadyLoggedIn()

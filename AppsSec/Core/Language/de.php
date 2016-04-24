@@ -7,7 +7,7 @@
  * @license MIT
  */
 return [
-    
+
     'name' => 'Core Framework',
 
     /*
@@ -30,16 +30,16 @@ return [
         '403' => 'Sie haben keine Rechte auf diese Seite zuzugreifen.',
         '500' => 'Ein interner Fehler ist  aufgetreten.'
     ],
-    
+
     'default' => 'Standard',
     'none' => 'Keine/r',
     'please' => [
         'select' => 'Bitte auswählen...',
         'confirm' => 'Bitte bestätigen...'
     ],
-    
+
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
-    
+
     'action' => [
         'next' => [
             'text' => 'Weiter',
@@ -84,7 +84,7 @@ return [
             'icon' => 'pencil-square-o'
         ]
     ],
-    
+
     'menu' => [
         'login' => 'Login',
         'logout' => 'Logout',
@@ -92,7 +92,7 @@ return [
         'reset' => 'Passwort zurücksetzen',
         'admin' => 'Administration'
     ],
-    
+
     // USER
     'login' => [
         'failed' => 'Login fehlgeschlagen! Bitte Überprüfen sie den Benutzernamen und das Passwort.',
@@ -104,7 +104,7 @@ return [
             'success' => 'Login war erfolgreich.'
         ]
     ],
-    
+
     'register' => [
         'form' => [
             'headline' => 'Registrierung',
@@ -140,17 +140,31 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         ],
         'activation' => [
             'notice' => 'Dieses Benutzerkonnte muss noch aktiviert werden. Bitte klicken Sie den Aktivierungslink in der an ihre Mailadresse versendeten Aktivierungsmail.',
-            0 => [
+            'wait' => [
                 'headline' => 'Es fehlt noch ein kleiner Schritt...',
                 'text' => 'Wir haben eine Aktivierungsmail an die von Ihnen angegebene E-Mailadresse versendet. Bitte überprüfen Sie den Posteingang Ihres E-Mailpostfaches und klicken zum Abschluss der Benutzerregistrierung auf den in der Aktivierungsmail enthaltenen Link.'
             ],
-            1 => [
+            'done' => [
                 'headline' => 'Ihr Benutzerkonto ist nun aktiv!',
-                'text' => 'Vielen Dank für ihrer Registierung. Wir heissen Sie als neuen Benutzer willkommen. Sie können sich nun %s.'
-            ]
+                'text' => 'Vielen Dank für ihrer Registierung. Wir heissen Sie als neuen Benutzer willkommen. Sie können sich nun einloggen.'
+            ],
+            'fail' => [
+                'headline' => 'Da ist etwas scheifgelaufen.',
+                'text' => 'Leider konnte die aktivierung nicht erfolgreich abgeschlossen werden. Falls der Link in der Aktivierungsmail geklickt wurde, so kann es sein, dass der Link nicht richtig übergeben wurde. Um dies auszuschließen, sollte der Link aus der E-Mail kopiert und in die Adresszeile des Browser eingefügt werden.<br><br>Sollte der Fehler immernoch auftreten, dann steht eine Kontaktaufnahme unter %s zur Verfügung.'
+            ],
+            'deny' => [
+                'ok' => [
+                    'headline' => 'Ihr Eintrag wurde gelöscht.',
+                    'text' => 'Ihre eingetragene E-Mailadresse wurde nun aus dem System gelöscht.'
+                ],
+                'nouser' => [
+                    'headline' => 'Kein Eintrag zu diesem Schlüssel gefunden.',
+                    'text' => 'Entweder wurde der Eintrag bereits gelöscht oder der der Schlüssel ist nicht korrekt.'
+                ],
+            ],
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Admin
@@ -161,7 +175,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'users' => 'Benutzer & Rechte'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * CONFIG
@@ -170,7 +184,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
     'config' => [
         'headline' => 'Core Framework Einstellungen',
         'desc' => '',
-        
+
         'site' => [
             'head' => 'Seite',
             'desc' => '',
@@ -197,9 +211,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-        
+
         // Execute
-        
+
         'execute' => [
             'head' => 'Runtime Execute',
             'desc' => '',
@@ -271,7 +285,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'activation' => [
                 'head' => 'Activation Settings',
                 'use' => [
-                    'label' => 'Activate by mail?',
+                    'label' => 'Activate via',
                     'desc' => 'Switch to de-/activate activation by clicking on activationling send by mail to the user. Turn to off to activte users directly after registration.'
                 ],
                 'ttl' => [
@@ -387,9 +401,9 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
-        
+
         // Error
-        
+
         'error' => [
             'head' => 'Error Handling',
             'desc' => '',
@@ -523,7 +537,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * USER
@@ -562,7 +576,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * GROUP
@@ -588,7 +602,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'display_name' => 'Anzeigename'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Group Permissions
@@ -608,7 +622,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'notes' => 'Notizen'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Permissions
@@ -626,7 +640,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             'desc' => 'Gewährt Zugriff auf alle (!) Konfigurationsbereiche der Seite. Das Betrifft auch alle Apps.'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * VALIDATORS
@@ -653,7 +667,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         'email' => 'Dies ist keine gültige E-Mailadresse.',
         'email_dnscheck' => 'Der  E-MailHost "%s" ist unbekannt bzw existiert nicht.'
     ],
-    
+
     /**
      * **************************************************************************
      * TIMESTRINGS

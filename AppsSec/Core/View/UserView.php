@@ -25,16 +25,16 @@ class UserView extends View
                 <tr>
             </thead>
             <tbody>';
-        
+
         foreach ($this->userlist as $user) {
-            
+
             echo '
                 <tr data-ajax data-url="', $user['link'], '">
                     <td>', $user['username'], '<td>
                     <td>', $user['display_name'], '<td>
                 </tr>';
         }
-        
+
         echo '
             </tbody>
         <table>';
@@ -45,7 +45,7 @@ class UserView extends View
         echo $this->form;
     }
 
-    public function Done()
+    public function AccountState()
     {
         echo '
         <h1>', $this->headline, '</h1>

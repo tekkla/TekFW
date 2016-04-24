@@ -143,43 +143,53 @@ final class Core extends App
             'activation' => [
                 'use' => [
                     'name' => 'use',
-                    'control' => 'switch',
-                    'default' => 1
-                ],
-                'ttl' => [
-                    'name' => 'ttl',
-                    'control' => 'number',
-                    'default' => 3600
-                ],
-                'mta' => [
-                    'name' => 'mta',
-                    'control' => [
-                        'select',
-                        [
-                            'required' => false
-                        ]
-                    ],
+                    'control' => 'select',
                     'data' => [
-                        'type' => 'model',
+                        'type' => 'array',
                         'source' => [
-                            'app' => 'core',
-                            'model' => 'mta',
-                            'action' => 'getMtaIdTitleList'
+                            0 => 'instant',
+                            1 => 'mail',
+                            2 => 'useradmin'
                         ],
                         'index' => 0
+                    ],
+                    'default' => 0
+                ],
+                'mail' => [
+                    'ttl' => [
+                        'name' => 'ttl',
+                        'control' => 'number',
+                        'default' => 3600
+                    ],
+                    'mta' => [
+                        'name' => 'mta',
+                        'control' => [
+                            'select',
+                            [
+                                'required' => false
+                            ]
+                        ],
+                        'data' => [
+                            'type' => 'model',
+                            'source' => [
+                                'app' => 'core',
+                                'model' => 'mta',
+                                'action' => 'getMtaIdTitleList'
+                            ],
+                            'index' => 0
+                        ]
+                    ],
+                    'from' => [
+                        'name' => 'from',
+                        'control' => 'mail',
+                        'validate' => [
+                            'email'
+                        ]
+                    ],
+                    'name' => [
+                        'name' => 'name'
                     ]
-                ],
-                'from' => [
-                    'name' => 'from',
-                    'control' => 'mail',
-                    'validate' => [
-                        'email'
-                    ]
-                ],
-                'name' => [
-                    'name' => 'name',
-                ],
-
+                ]
             ],
             'ban' => [
                 'tries' => [
@@ -477,7 +487,7 @@ final class Core extends App
             ]
         ],
         'login' => [
-            'route' => '../[login|logout:action]',
+            'route' => '/[login|logout:action]',
             'method' => 'POST|GET',
             'target' => [
                 'controller' => 'login'
@@ -485,19 +495,26 @@ final class Core extends App
         ],
         'register' => [
             'method' => 'POST|GET',
-            'route' => '../register',
+            'route' => '/register',
             'target' => [
                 'controller' => 'user',
                 'action' => 'register'
             ]
         ],
         'activate' => [
-            'route' => '../[activate|deny:action]/[:key]',
+            'route' => '/[activate|deny:action]/[:key]',
             'target' => [
                 'controller' => 'user'
             ]
         ],
-        'admin' => [],
+        'admin' => [
+            'method' => 'GET',
+            'route' => '/admin',
+            'target' => [
+                'controller' => 'admin',
+                'action' => 'admin'
+            ]
+        ],
         'config' => [
             'route' => '/admin/[mvc:app_name]/config'
         ],
@@ -538,13 +555,11 @@ final class Core extends App
             ]));
         }
 
-        $route = 'home.' . $type . '.route';
-        $params = 'home.' . $type . '.params';
-
-        $url = $this->url($this->cfg($route), parse_ini_string($this->cfg($params)));
+        $route = $this->cfg('home.' . $type . '.route');
+        $params = parse_ini_string($this->cfg('home.' . $type . '.params'));
+        $url = $this->url($route, $params);
 
         $this->page->setHome($url);
-        $this->cfg('home.url', $url);
-
+        $this->cfg('url.home', $url);
     }
 }

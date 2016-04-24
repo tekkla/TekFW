@@ -115,7 +115,7 @@ class UserModel extends Model
             ],
             'join' => [
                 [
-                    'users_groups',
+                    'core_users_groups',
                     'ug',
                     'INNER',
                     'u.id_user=ug.id_user'
@@ -136,7 +136,7 @@ class UserModel extends Model
         return [];
     }
 
-    public function register($data, $activate)
+    public function createUser($data, $activate)
     {
         $this->addUsernameAndPasswordChecksFromConfig();
 
@@ -153,17 +153,17 @@ class UserModel extends Model
 
         $db = $this->getDbConnector();
 
-        // Check for already existing username
-        $exists = $db->count($this->scheme['table'], 'username=:username', [
-            ':username' => $data['username']
-        ]);
-
-        if ($exists) {
-            $this->addError('username', $this->text('register.error.name_in_use'));
-            return;
+        try {
+             return $this->security->users->createUser($data['username'], $data['password'], $activate);
         }
+        catch (\Throwable $t) {
 
-        return $this->di->get('core.security.users')->createUser($data['username'], $data['password'], $activate);
+            switch ($t->getCode()) {
+                case 'user.username.exists':
+                    $this->addError('username', $this->text('register.error.name_in_use'));
+                    return;
+            }
+        }
     }
 
     private function addUsernameAndPasswordChecksFromConfig()
