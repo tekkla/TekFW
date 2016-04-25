@@ -221,7 +221,7 @@ final class Css
             $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
 
             // End of combined file TTL reached?
-            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl.' . $extension] < time()) {
 
                 if (! empty($local_files)) {
                     foreach ($local_files as $css_file) {
