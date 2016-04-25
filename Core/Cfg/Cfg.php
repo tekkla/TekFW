@@ -22,21 +22,25 @@ final class Cfg
     use ArrayTrait;
 
     /**
-     * Storage array for config values grouped by app names
+     * Storage array for config values grouped by app name
      *
      * @var array
      */
     public $data = [];
 
     /**
+     * Flattened version of config definition grouped by app name
+     *
+     * @var array
+     */
+    public $structure = [];
+
+    /**
      * Storage array for config definitions grouped by app names
      *
      * @var array
      */
-    public $definitions = [
-        'flat' => [],
-        'raw' => []
-    ];
+    public $definitions = [];
 
     /**
      *
@@ -176,8 +180,7 @@ final class Cfg
             $results = $this->db->all();
 
             foreach ($results as $row) {
-                $val = $this->stringIsSerialized($row['val']) ? unserialize($row['val']) : $row['val'];
-                $this->data[$row['app']][$row['cfg']] = $val;
+                $this->data[$row['app']][$row['cfg']] = $row['val'];
             }
 
             $cache->set('Core.Config', $this->data);
@@ -245,44 +248,49 @@ final class Cfg
     }
 
     /**
-     * Flattens a multidimensional array
+     * Sets config default values
      *
+     * This method works recursive and checks the app given configstructure against the configdata loaded from db.
+     * It checks for serialize flags in config definition and deserializes the config value if needed.
+     * Fills the class structure property using the combined key as index and the controldefinition as data.
+     *
+     * @param string $app_name
+     *            Name of the app this config belongs to.
      * @param array $array
-     *            The array to flatten
+     *            Array with groups and/or controls to check for cfg values and default value and serialize state.
+     * @param string $prefix
+     *            Prefix used to build config key. Will be the current prefix + glue + current key.
      * @param string $glue
-     *            Optional glue to get flattened array with this glue as return value
-     * @param boolean $preserve_flagged_arrays
-     *            With this optional flag and a set __preserve key in the array the array will be still flattended but
-     *            also be stored as array with an ending .array key. Those arrays will not be flattened further more.
-     *            This means any nesting array will stay arrays in this array.
-     *
-     * @return string|array
+     *            The glue which combines prefix and key.
      */
-    private function checkDefaults($app_name, array $array, $prefix = '', $glue = '.')
+    private function checkDefaults($app_name, array $definition, $prefix = '', $glue = '.')
     {
-        $result = [];
+        // First step, check for controls
+        if (!empty($definition['controls'])) {
+            
+            foreach ($definition['controls'] as $name => $control) {
 
-        foreach ($array as $key => $value) {
+                // Create the config key using the prefix passed as argument and the name used as index
+                $cfg = (!empty($prefix) ? $prefix . $glue : '') . $name;
 
-            if (array_key_exists('name', $value) && is_string($value['name'])) {
-
-                $cfg = $prefix . $key;
-
-                if (empty($this->data[$app_name][$cfg]) && ! empty($value['default'])) {
-                    $this->data[$app_name][$cfg] = $value['default'];
+                if (empty($this->data[$app_name][$cfg]) && ! empty($control['default'])) {
+                    $this->data[$app_name][$cfg] = $control['default'];
                 }
 
-                if (! empty($value['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
+                if (! empty($control['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
                     $this->data[$app_name][$cfg] = unserialize($this->data[$app_name][$cfg]);
                 }
-            }
-            else {
-                // Subarrray handling needed?
-                $result = $result + $this->checkDefaults($app_name, $value, $prefix . $key . $glue, $glue);
+
+                $this->structure[$app_name][$cfg] = $control;
             }
         }
 
-        return $result;
+        // Do we have subgroups in this definition?
+        if (!empty($definition['groups'])) {
+            foreach ($definition['groups'] as $name => $group) {
+                $this->checkDefaults($app_name, $group, (!empty($prefix) ? $prefix . $glue : '') . $name);
+            }
+        }
     }
 
     /**
