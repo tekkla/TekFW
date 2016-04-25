@@ -105,11 +105,14 @@ class Javascript
         // Add local jQeury file or the one from CDN
         $file = '/' . $theme . '/js/jquery-' . $version . '.js';
 
+        // Files to bottom or to top?
+        $defer = $this->cfg->data['Core']['js.general.position'] == 'top' ? false : true;
+
         if ($this->cfg->data['Core']['js.jquery.local'] && file_exists(THEMESDIR . $file)) {
-            $this->file(THEMESURL . $file);
+            $this->file(THEMESURL . $file, $defer);
         }
         else {
-            $this->file('https://code.jquery.com/jquery-' . $version . '.min.js', false, true);
+            $this->file('https://code.jquery.com/jquery-' . $version . '.min.js', $defer, true);
         }
 
         // Bootstrap Version
@@ -119,20 +122,20 @@ class Javascript
         $file = '/' . $theme . '/js/bootstrap-' . $version . '.js';
 
         if ($this->cfg->data['Core']['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
-            $this->file(THEMESURL . $file);
+            $this->file(THEMESURL . $file, $defer);
         }
         else {
-            $this->file('https://maxcdn.bootstrapcdn.com/bootstrap/' . $version . '/js/bootstrap.min.js', false, true);
+            $this->file('https://maxcdn.bootstrapcdn.com/bootstrap/' . $version . '/js/bootstrap.min.js', $defer, true);
         }
 
         // Add plugins file
-        $this->file($this->js_url . '/plugins.js');
+        $this->file($this->js_url . '/plugins.js', $defer);
 
         // Add global fadeout time var set in config
-        $this->variable('fadeout_time', $this->cfg->data['Core']['js.style.fadeout_time']);
+        $this->variable('fadeout_time', $this->cfg->data['Core']['js.style.fadeout_time'], $defer);
 
         // Add framework js
-        $this->file($this->js_url . '/framework.js');
+        $this->file($this->js_url . '/framework.js', $defer);
 
         $this->mode = 'apps';
     }
@@ -307,7 +310,7 @@ class Javascript
      *
      * @return JavascriptObject
      */
-    public function &variable($name, $value, $is_string = false)
+    public function &variable($name, $value, $defer=false, $is_string = false)
     {
         if ($is_string == true) {
             $value = '"' . $value . '"';
@@ -320,6 +323,7 @@ class Javascript
             $name,
             $value
         ]);
+        $script->setDefer($defer);
 
         $this->add($script);
 
@@ -368,6 +372,8 @@ class Javascript
     {
         // Get scripts of this area
         $script_stack = $this->getScriptObjects($area);
+
+        \FB::log($area, $script_stack);
 
         if (empty($script_stack)) {
             return $script_stack;
@@ -428,7 +434,7 @@ class Javascript
             $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
 
             // End of combined file TTL reached?
-            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl_' . $extension] < time()) {
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl.' . $extension] < time()) {
 
                 // Strat combining all parts
                 $combined = '';

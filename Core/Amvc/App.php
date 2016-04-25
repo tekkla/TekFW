@@ -618,7 +618,9 @@ class App
                 Throw new AppException(sprintf('App "%s" js file does not exist. Either create the js file or remove the js flag in your app mainclass.', $this->name));
             }
 
-            $this->page->js->file($this->cfg->data[$this->name]['url.js'] . '/' . $this->name . '.js');
+            $defer = $this->cfg->data['Core']['js.general.position'] == 'top' ? false : true;
+
+            $this->page->js->file($this->cfg->data[$this->name]['url.js'] . '/' . $this->name . '.js', $defer);
         }
 
         // Js method in app to run?
