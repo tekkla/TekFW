@@ -467,10 +467,6 @@ class Controller extends MvcAbstract
                 $perm += $this->access[$this->action];
             }
 
-            \FB::log(sprintf('Checking following permissions for action: %s', $this->action));
-            \FB::log($perm);
-            \FB::log($this->router->getStatus());
-
             // Check the permissions against the current user
             if ($perm) {
                 return $this->checkAccess($perm, $force);
