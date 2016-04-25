@@ -416,19 +416,22 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ],
             'mail' => [
-                'head' => 'Mail Settings',
+                'head' => 'Fehlerbenachrichtigung per Mail',
                 'desc' => '',
                 'use' => [
-                    'label' => 'Send errormail',
-                    'desc' => 'Sends an email to the set mailadress when an error occurs. Be careful with this option when activated on sites with high traffic.<br><strong>If no mail address is set below the webmaster adress from basic config will be used.</strong>'
-                ],
-                'address' => [
-                    'label' => 'Errormail Reciepient(s)',
-                    'desc' => 'Sends an email to the set mailadress when an error occurs. Be careful with this option when activated on sites with high traffic. Multiple recipients need to be seperated by ";"'
+                    'label' => 'E-Mail senden?',
                 ],
                 'mta' => [
-                    'label' => 'MTA to use',
-                    'desc' => 'Defines which MTA should be used to send the errormail. Systemwide MTAs can be registred in Mailer settings. Default: "default"'
+                    'head' => 'Empfänger & MTA',
+                    'desc' => '',
+                    'recipient' => [
+                        'label' => 'Empfänger',
+                        'desc' => 'An diese/n Empfäger wird die Fehlerbenachrichtigung gesendet. Es ist möglich mehrer Empfänger durch ; getrennt anzugeben. Wenn kein Empfänger angegeben wird, dann wird der Fehlerbericht an den Webmaster versendet.'
+                    ],
+                    'use' => [
+                        'label' => 'Senden über MTA',
+                        'desc' => 'Der MTA über die eine Fehlerbenachrichtigung gesendet werden soll.'
+                    ]
                 ]
             ],
             'log' => [
@@ -454,39 +457,18 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         ],
         'cache' => [
             'head' => 'Caching',
-            'desc' => '',
-            'file' => [
-                'head' => 'File Settings',
-                'desc' => '',
-                'ttl' => [
-                    'label' => 'General TTL (in seconds)',
-                    'desc' => 'TTL for alle cachefiles other than CCS or JS (Default: %s)'
-                ],
-                'ttl_js' => [
-                    'label' => 'TTL Js files (in seconds)',
+            'ttl' => [
+                'head' => 'TTL Settings (in seconds)',
+                'desc' => 'time-to-live in seconds for cached files.',
+                'js' => [
+                    'label' => 'Js files (in seconds)',
                     'desc' => 'TTL for all javacript (.js) files. Default: %s'
                 ],
-                'ttl_css' => [
-                    'label' => 'TTL Css files (in seconds)',
-                    'desc' => 'TTL for all stylesheet (.css) files. Default: %s'
-                ]
+                'css' => [
+                   'label' => 'Css files (in seconds)',
+                   'desc' => 'TTL for all stylesheet (.css) files. Default: %s'
+                ],
             ],
-            'memcache' => [
-                'head' => 'Memcache Settings',
-                'desc' => '',
-                'use' => [
-                    'label' => 'Use memchache',
-                    'desc' => 'Switch to enable or disable use of Memcache'
-                ],
-                'server' => [
-                    'label' => 'Server',
-                    'desc' => 'IP of memchache server to use. Default: %s'
-                ],
-                'port' => [
-                    'label' => 'Port',
-                    'desc' => 'Port of memchache server to use. Default: %s'
-                ]
-            ]
         ],
         'mail' => [
             'head' => 'Mail',
