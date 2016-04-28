@@ -225,7 +225,7 @@ class Login
         $cookie_name = $this->getCookieName();
 
         // Remove all autologin cookies when autlogin is off in config
-        if (empty($this->cfg->data['Core']['login.autologin.active'])) {
+        if (empty($this->cfg->data['Core']['security.login.autologin.active'])) {
             $this->cookies->remove($cookie_name);
             return false;
         }
@@ -323,7 +323,7 @@ class Login
     private function setAutoLoginCookies($id_user)
     {
         // Create expire date
-        $expires = time() + 3600 * 24 * $this->cfg->data['Core']['login.autologin.expires_after'];
+        $expires = time() + 3600 * 24 * $this->cfg->data['Core']['security.login.autologin.expires_after'];
 
         // Create selector
         $selector = bin2hex($this->token->generateRandomToken(6));
