@@ -177,6 +177,8 @@ var coreFw = {
     // ----------------------------------------------------------------------------
     parseJSON : function(json) {
         
+    	console.log(json);
+    	
         $.each(json, function(type, stack) {
 
             // DOM manipulations
@@ -207,35 +209,21 @@ var coreFw = {
                 $.each(stack, function(i, cmd) {
 
                     switch (cmd.f) {
-                        case "alert":
-                            bootbox.alert(cmd.a[0]);
-                            break;
                         case "error":
-                            $('#core-message').addClass('fade in').append(cmd.a[0]);
-                            $('#core-message').bind('closed.bs.alert', function() {
+                            $(cmd.a[0]).addClass('fade in').append('<p>' + cmd.a[1] + '</p>');
+                            $(cmd.a[0]).bind('closed.bs.alert', function() {
                                 $(this).removeClass().html('').unbind('closed.bs.alert');
                             });
                             break;
-                        case "dump":
-                        case "log":
-                        case "console":
-                            console.log(cmd.a);
-                            break;
-                        case "modal":
-
-                            // fill dialog with content
-                            $('#core-modal').html(cmd.a).modal({
-                                keyboard : false
-                            });
-                            break;
-
-                        case 'load_script':
+                        case 'getScript':
                             $.getScript(cmd.a);
                             break;
-
                         case 'href':
                             window.location.href = cmd.a;
                             return;
+                        default:
+                        	[cmd.f](cmd.a);
+                        	break;
                     }
                 });
             }

@@ -28,31 +28,31 @@ class HighLevelHandler extends HandlerAbstract
 
     /**
      *
-     * @var Core\Router\Router
+     * @var \Core\Router\Router
      */
     protected $router;
 
     /**
      *
-     * @var Core\Security\User
+     * @var \Core\Security\User
      */
     protected $user;
 
     /**
      *
-     * @var Core\Ajax\Ajax
+     * @var \Core\Ajax\Ajax
      */
     protected $ajax;
 
     /**
      *
-     * @var Core\Data\Connectors\Db\Db
+     * @var \Core\Data\Connectors\Db\Db
      */
     protected $db;
 
     /**
      *
-     * @var Core\Page\Body\Message\Message
+     * @var \Core\Page\Body\Message\Message
      */
     protected $message;
 
@@ -64,9 +64,6 @@ class HighLevelHandler extends HandlerAbstract
 
     public function run(\Throwable $t)
     {
-
-
-
         // Store error
         $this->t = $t;
 
@@ -157,9 +154,8 @@ class HighLevelHandler extends HandlerAbstract
             // Clean current command stack
             $this->ajax->cleanCommandStack();
 
-            $command = $this->ajax->createCommand('Act\Error');
-            $command->error($this->createErrorHtml(true));
-            $command->send();
+            $cmd = $this->ajax->createActCommand();
+            $cmd->error($this->createErrorHtml(true));
 
             // We have to send a 200 response code or jQueries ajax handler
             // recognizes the error and cancels result processing

@@ -156,9 +156,8 @@ class Javascript
 
             switch ($js->getType()) {
                 case 'file':
-                    $cmd = $ajax->createCommand('Act\LoadScript');
-                    $cmd->loadScript($js->getScript());
-                    $ajax->add($cmd);
+                    $cmd = $ajax->createActCommand();
+                    $cmd->getScript($js->getScript());
                     break;
             }
 

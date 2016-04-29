@@ -8,12 +8,12 @@ use Core\Page\Page;
 use Core\Html\HtmlFactory;
 use Core\Html\FormDesigner\FormDesigner;
 use Core\Ajax\Ajax;
-use Core\Ajax\AjaxCommandAbstract;
 use Core\Router\UrlTrait;
 use Core\Traits\ArrayTrait;
 use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
 use Core\IO\IO;
+use Core\Ajax\Dom;
 
 /**
  * Controller.php
@@ -143,17 +143,10 @@ class Controller extends MvcAbstract
     protected $io;
 
     /**
-     * Flag to signal that this controller is in ajax mode
      *
-     * @var bool
+     * @var Dom
      */
-    private $ajax_flag = false;
-
-    /**
-     *
-     * @var AjaxCommandAbstract
-     */
-    private $ajax_command;
+    private $ajax_cmd;
 
     /**
      * Constructor
@@ -193,12 +186,6 @@ class Controller extends MvcAbstract
 
         // Model to bind?
         $this->model = $this->app->getModel($name);
-
-        // Controller of an ajax request?
-        if ($this->router->isAjax()) {
-            $this->ajax_flag = true;
-            $this->ajax_command = $this->ajax->createCommand('Dom\Html');
-        }
     }
 
     /**
@@ -371,18 +358,63 @@ class Controller extends MvcAbstract
      */
     final public function ajax($action = 'Index', $params = [], $selector = '#content')
     {
+        // Prepare a fresh ajax command object
+        $this->ajax_cmd = $this->ajax->createDomCommand();
+
+        // Get content from Controller::run()
         $content = $this->run($action, $params);
 
         if ($content !== false) {
 
-            $this->ajax_command->setArgs($content);
-            $this->ajax_command->setId(get_called_class() . '::' . $action);
+            $this->ajax_cmd->setArgs($content);
+            $this->ajax_cmd->setId(get_called_class() . '::' . $action);
 
-            if (! $this->ajax_command->getSelector() && $selector) {
-                $this->ajax_command->setSelector($selector);
+            if (empty($this->ajax_cmd->getSelector()) && ! empty($selector)) {
+                $this->ajax_cmd->setSelector($selector);
             }
 
-            $this->ajax_command->send();
+            $this->ajax->addCommand($this->ajax_cmd);
+        }
+
+        // Add messages
+        $messages = $this->page->message->getMessages();
+
+        if ($messages) {
+
+            foreach ($messages as $msg) {
+
+                /* @var $cmd \Core\Ajax\Dom */
+                $cmd = $this->ajax->createDomCommand();
+
+                $msg_selector = '#core-message';
+
+                if ($msg->getType() == 'clear') {
+                    $cmd->clear($msg_selector);
+                    continue;
+                }
+
+                $html = '
+                <div class="alert alert-' . $msg->getType();
+
+                // Message dismissable?
+                if ($msg->getDismissable()) {
+                    $html .= ' alert-dismissable';
+                }
+
+                // Fadeout message?
+                if ($this->cfg('js.style.fadeout_time', 'Core') > 0 && $msg->getFadeout()) {
+                    $html .= ' fadeout';
+                }
+
+                $html .= '">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    ' . $msg->getMessage() . '
+                    </div>';
+
+                $cmd->append($msg_selector, $html);
+
+                $this->ajax->addCommand($cmd);
+            }
         }
 
         return $this;
@@ -418,6 +450,8 @@ class Controller extends MvcAbstract
     final protected function doRefresh($url)
     {
         if ($this->router->isAjax()) {
+            $cmd = $this->ajax->createActCommand();
+
             $this->ajax->refresh($url);
         }
         else {
@@ -429,6 +463,7 @@ class Controller extends MvcAbstract
      * Checks the controller access of the user
      *
      * This accesscheck works on serveral levels.
+     *
      * Level 0 - App: Tries to check access on possible app wide access function.
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
@@ -576,8 +611,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxTarget($target)
     {
-        if ($this->ajax_flag) {
-            $this->ajax_command->setSelector($target);
+        if (!empty($this->ajax_cmd)) {
+            $this->ajax_cmd->setSelector($target);
         }
 
         return $this;
@@ -592,8 +627,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxFunction($function)
     {
-        if ($this->ajax_flag) {
-            $this->ajax_command->setFunction($function);
+        if (!empty($this->ajax_cmd)) {
+            $this->ajax_cmd->setFunction($function);
         }
 
         return $this;
