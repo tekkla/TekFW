@@ -21,7 +21,7 @@ ini_set('display_errors', 0);
 
 // Define path constants to the common framwork dirs
 define('COREDIR', BASEDIR . '/Core');
-define('LOGDIR', BASEDIR . '/logs');
+define('LOGDIR', BASEDIR . '/Logs');
 define('APPSDIR', BASEDIR . '/Apps');
 define('THEMESDIR', BASEDIR . '/Themes');
 define('CACHEDIR', BASEDIR . '/Cache');
@@ -104,9 +104,10 @@ final class Core
             // Create core DI container instance!
             $this->di = \Core\DI::getInstance();
 
+            $this->initLogger('core');
+
             // Init error handling system
             $this->initErrorHandler();
-
         }
         catch (Throwable $t) {
             error_log($t->getMessage() . ' (File: ' . $t->getFile() . ':' . $t->getLine());
@@ -155,7 +156,7 @@ final class Core
                 $this->http->cookies->send();
 
                 // Redirect requested?
-                if (!empty($_SESSION['Core']['redirect'])) {
+                if (! empty($_SESSION['Core']['redirect'])) {
 
                     $this->http->header->location($_SESSION['Core']['redirect']['location'], $_SESSION['Core']['redirect']['permanent']);
                     $this->http->header->send();
@@ -237,6 +238,21 @@ final class Core
 
         // Register composer classloader
         require_once (BASEDIR . '/vendor/autoload.php');
+    }
+
+    private function initLogger($type)
+    {
+        $this->di->mapFactory('core.logger', '\Core\Logger\Logger');
+
+        /* @var $logger \Core\Logger\Logger */
+        $logger = $this->di->get('core.logger');
+
+        $logger->createStream('File', [
+            'filename' => LOGDIR . DIRECTORY_SEPARATOR . 'core.log'
+        ]);
+        $logger->createStream('FirePhp');
+
+        $this->di->mapValue('core.logger.default', $logger);
     }
 
     /**
@@ -371,11 +387,7 @@ final class Core
         $this->di->mapService('core.html.factory', '\Core\Html\HtmlFactory');
 
         // == AJAX ==========================================================
-        $this->di->mapService('core.ajax', '\Core\Ajax\Ajax', [
-            'core.page.body.message',
-            'core.io.files',
-            'core.cfg'
-        ]);
+        $this->di->mapService('core.ajax', '\Core\Ajax\Ajax');
     }
 
     /**
