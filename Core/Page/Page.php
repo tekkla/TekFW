@@ -7,17 +7,13 @@ use Core\Html\HtmlFactory;
 use Core\Amvc\Creator;
 use Core\Language\TextTrait;
 use Core\Amvc\Controller;
-
-// Page Head Libs
 use Core\Page\Head\Meta;
 use Core\Page\Head\OpenGraph;
 use Core\Page\Head\Link;
 use Core\Page\Head\Css\Css;
-
-// Page Body Libs
 use Core\Page\Head\Javascript\Javascript;
 use Core\Page\Body\Menu\Menu;
-use Core\Page\Body\Message\Message;
+use Core\Message\MessageHandler;
 
 /**
  * Page.php
@@ -118,7 +114,7 @@ class Page
     /**
      * Message Sservice
      *
-     * @var Message
+     * @var MessageHandler
      */
     public $message;
 
@@ -148,7 +144,7 @@ class Page
      * @param Javascript $js
      * @param Message $message
      */
-    public function __construct(Router $router, Cfg $cfg, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, Message $message)
+    public function __construct(Router $router, Cfg $cfg, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, MessageHandler $message)
     {
         $this->router = $router;
         $this->cfg = $cfg;

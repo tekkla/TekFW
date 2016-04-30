@@ -377,7 +377,7 @@ class Controller extends MvcAbstract
         }
 
         // Add messages
-        $messages = $this->page->message->getMessages();
+        $messages = $this->page->message->getAll();
 
         if ($messages) {
 

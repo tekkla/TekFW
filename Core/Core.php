@@ -123,6 +123,7 @@ final class Core
 
             // Run inits
             $this->initDatabase();
+            $this->initMessageHandler();
             $this->initDependencies();
             $this->initSession();
             $this->initConfig();
@@ -370,7 +371,7 @@ final class Core
             'core.page.body.nav',
             'core.page.head.css',
             'core.page.head.js',
-            'core.page.body.message'
+            'core.message.default'
         ]);
         $this->di->mapFactory('core.page.head.css', '\Core\Page\Head\Css\Css', [
             'core.cfg'
@@ -379,7 +380,6 @@ final class Core
             'core.cfg',
             'core.router'
         ]);
-        $this->di->mapService('core.page.body.message', '\Core\Page\Body\Message\Message');
         $this->di->mapService('core.page.body.nav', '\Core\Page\Body\Menu\Menu');
         $this->di->mapFactory('core.page.body.menu', '\Core\Page\Body\Menu\Menu');
 
@@ -640,6 +640,31 @@ final class Core
         foreach ($core_handler as $id => $handler) {
             $this->error->registerHandler('Core', $id, $handler['ns'], $handler['class']);
         }
+    }
+
+    private function initMessageHandler()
+    {
+        $this->di->mapFactory('core.message.message_handler', '\Core\Message\MessageHandler');
+        $this->di->mapFactory('core.message.message_storage', '\Core\Message\MessageStorage');
+        $this->di->mapFactory('core.message.message', '\Core\Message\Message');
+
+        /* @var $message_handler \Core\Message\MessageHandler */
+        $message_handler = $this->di->get('core.message.message_handler');
+
+        // Map the handler as frameworks default messagehandler
+        $this->di->mapValue('core.message.default', $message_handler);
+
+        // Init a message session array if not exists until now
+        if (empty($_SESSION['Core']['messages'])) {
+            $_SESSION['Core']['messages'] = [];
+        }
+
+        // Create the message storage
+        /* @var $message_storage \Core\Message\MessageStorage */
+        $message_storage = $this->di->get('core.message.message_storage');
+        $message_storage->setStorage($_SESSION['Core']['messages']);
+
+        $message_handler->setStorage($message_storage);
     }
 
     /**

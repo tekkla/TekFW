@@ -1,17 +1,27 @@
 <?php
-namespace Core\Page\Body\Message;
-
-use Core\Page\PageException;
+namespace Core\Message;
 
 /**
- * MessageObject.php
+ * Message.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
  */
-class MessageObject
+class Message
 {
+
+    const PRIMARY = 'primary';
+
+    const SUCCESS = 'success';
+
+    const INFO = 'info';
+
+    const WARNING = 'warning';
+
+    const DANGER = 'danger';
+
+    const CLEAR = 'clear';
 
     /**
      *
@@ -23,7 +33,7 @@ class MessageObject
      *
      * @var string
      */
-    private $type = 'default';
+    private $type = 'info';
 
     /**
      *
@@ -66,7 +76,7 @@ class MessageObject
      *
      * @param string $type
      *
-     * @throws InvalidArgumentException
+     * @throws MessageException
      *
      * @return \Core\Message
      */
@@ -78,12 +88,11 @@ class MessageObject
             'info',
             'warning',
             'danger',
-            'default',
             'clear'
         ];
 
         if (! in_array($type, $types)) {
-            Throw new PageException('Wrong type set for message.');
+            Throw new MessageException(sprintf('Type "%s" is a not valid messagetype.', $type));
         }
 
         $this->type = $type;

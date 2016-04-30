@@ -274,7 +274,7 @@ class Template
      */
     final protected function getMessages($data_only = false, $container = 'container')
     {
-        $messages = $this->page->message->getMessages();
+        $messages = $this->page->message->getAll();
 
         if ($data_only) {
             return $messages;
