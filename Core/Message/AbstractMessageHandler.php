@@ -8,7 +8,7 @@ namespace Core\Message;
  * @copyright 2016
  * @license MIT
  */
-class AbstractMessageHandler
+class AbstractMessageHandler implements \IteratorAggregate
 {
 
     /**
@@ -16,6 +16,15 @@ class AbstractMessageHandler
      * @var StorageInterface
      */
     private $storage;
+
+    /**
+     * {@inheritDoc}
+     * @see IteratorAggregate::getIterator()
+     */
+    public function getIterator()
+    {
+        return new \IteratorIterator($this->storage);
+    }
 
     /**
      *
@@ -34,9 +43,9 @@ class AbstractMessageHandler
      * @param mixed $value
      *            The value to store
      */
-    final public function add($key, $value)
+    final public function add(MessageInterface $msg)
     {
-        $this->storage->add($key, $value);
+        $this->storage->add($msg);
     }
 
     /**
@@ -49,7 +58,6 @@ class AbstractMessageHandler
     {
         return $this->storage->get($key);
     }
-
 
     /**
      * Returns all elements in stored as array
@@ -69,9 +77,13 @@ class AbstractMessageHandler
         $this->storage->clear();
     }
 
-    public function createMessage()
+    /**
+     * Creates and returns a message object
+     *
+     * @return \Core\Message\Message
+     */
+    final public function factory()
     {
         return new Message();
     }
-
 }

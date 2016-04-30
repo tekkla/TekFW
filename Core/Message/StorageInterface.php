@@ -8,7 +8,7 @@ namespace Core\Message;
  * @copyright 2016
  * @license MIT
  */
-interface StorageInterface
+interface StorageInterface extends \IteratorAggregate
 {
 
     /**
@@ -27,15 +27,7 @@ interface StorageInterface
      * @param mixed $value
      *            The value to store
      */
-    public function add($key, $value);
-
-    /**
-     * Returns a value from storage searched by it' key
-     *
-     * @param string $key
-     *            Id of element in storage
-     */
-    public function get($key);
+    public function add(MessageInterface $value);
 
     /**
      * Returns all elements in stored as array

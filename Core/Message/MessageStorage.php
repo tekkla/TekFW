@@ -17,15 +17,26 @@ class MessageStorage implements StorageInterface
      *
      * {@inheritDoc}
      *
+     * @see IteratorAggregate::getIterator()
+     */
+    public function getIterator()
+    {
+        return new StorageIterator($this->storage);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
      * @see \Core\Message\StorageInterface::add()
      */
-    public function add($key, $value)
+    public function add(MessageInterface $value)
     {
         if (empty($this->storage)) {
             $this->storage = [];
         }
-
-        $this->storage[$key] = $value;
+        
+        $this->storage[] = $value;
     }
 
     /**
@@ -37,19 +48,6 @@ class MessageStorage implements StorageInterface
     public function clear()
     {
         $this->storage = [];
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     *
-     * @see \Core\Message\StorageInterface::get()
-     */
-    public function get($key)
-    {
-        if (array_key_exists($key, $this->storage)) {
-            return $this->storage[$key];
-        }
     }
 
     /**

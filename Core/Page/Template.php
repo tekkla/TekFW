@@ -274,17 +274,16 @@ class Template
      */
     final protected function getMessages($data_only = false, $container = 'container')
     {
-        $messages = $this->page->message->getAll();
-
         if ($data_only) {
-            return $messages;
+            return $this->page->message->getAll();
         }
 
         ob_start();
 
         echo '<div id="core-message"', ($container ? ' class="' . $container . '"' : ''), '>';
 
-        foreach ($messages as $msg) {
+        /* @var $msg \Core\Message\Message */
+        foreach ($this->page->message as $msg) {
 
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';

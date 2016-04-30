@@ -10,5 +10,4 @@ namespace Core\Message;
  */
 class MessageHandler extends AbstractMessageHandler
 {
-
 }
