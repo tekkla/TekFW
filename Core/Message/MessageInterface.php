@@ -33,7 +33,7 @@ interface MessageInterface
     /**
      * Sets message type
      *
-     * @param string $type            
+     * @param string $type
      */
     public function setType($type);
 
@@ -47,7 +47,7 @@ interface MessageInterface
     /**
      * Switches fadeout on or off
      *
-     * @param bool $fadeout            
+     * @param bool $fadeout
      */
     public function setFadeout($fadeout);
 
@@ -61,14 +61,52 @@ interface MessageInterface
     /**
      * Switches dismissable button on/off
      *
-     * @param bool $dismissable            
+     * @param bool $dismissable
      */
     public function setDismissable($dismissable);
 
     /**
-     * Returns set dismissable flag.
+     * Returns set dismissable flag
      *
      * @return boolean
      */
     public function getDismissable();
+
+    /**
+     * Set the DOM target where the message should be showed.
+     *
+     * This only applies to ajax requests.
+     * On full requests a message will always be shown in the default messagearea.
+     *
+     * @param string $target
+     */
+    public function setTarget($target = '#core-message');
+
+    /**
+     * Returns the DOM target of the message
+     *
+     * @return string
+     */
+    public function getTarget();
+
+    /**
+     * Sets the function to use when the message should be displayed
+     *
+     * You can use all common functions like append, prepend,html etc.
+     * This only applies to ajax requests.
+     *
+     * You can use the common function
+     *
+     * @param string $function
+     */
+    public function setDisplayFunction($function='append');
+
+    /**
+     * Returns the set display function
+     *
+     * This only applies to ajax requests.
+     *
+     * @return string
+     */
+    public function getDisplayFunction();
 }

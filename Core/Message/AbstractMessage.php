@@ -36,23 +36,31 @@ abstract class AbstractMessage implements MessageInterface
     private $dismissable = true;
 
     /**
-     * Sets message content
      *
-     * @param string $message            
+     * @var string
+     */
+    private $target = '#core-message';
+
+    /**
      *
-     * @return \Core\AbstractMessage
+     * @var string
+     */
+    private $function = 'append';
+
+    /**
+     *
+     * @param unknown $message
      */
     public function setMessage($message)
     {
         $this->message = $message;
-        
-        return $this;
     }
 
     /**
-     * Returns message text
      *
-     * @return string
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getMessage()
      */
     public function getMessage()
     {
@@ -60,13 +68,10 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
-     * Sets message type
      *
-     * @param string $type            
+     * {@inheritDoc}
      *
-     * @throws MessageException
-     *
-     * @return \Core\AbstractMessage
+     * @see \Core\Message\MessageInterface::setType()
      */
     public function setType($type)
     {
@@ -78,20 +83,19 @@ abstract class AbstractMessage implements MessageInterface
             'danger',
             'clear'
         ];
-        
+
         if (! in_array($type, $types)) {
             Throw new MessageException(sprintf('Type "%s" is a not valid messagetype.', $type));
         }
-        
+
         $this->type = $type;
-        
-        return $this;
     }
 
     /**
-     * Returns set message type
      *
-     * @return string
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getType()
      */
     public function getType()
     {
@@ -99,23 +103,21 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
-     * Switches fadeout on or off
      *
-     * @param bool $fadeout            
+     * {@inheritDoc}
      *
-     * @return \Core\AbstractMessage
+     * @see \Core\Message\MessageInterface::setFadeout()
      */
     public function setFadeout($fadeout)
     {
         $this->fadeout = (bool) $fadeout;
-        
-        return $this;
     }
 
     /**
-     * Returns set fadeout time
      *
-     * @return boolean
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getFadeout()
      */
     public function getFadeout()
     {
@@ -123,26 +125,68 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
-     * Switches dismissable button on/off
      *
-     * @param bool $dismissable            
+     * {@inheritDoc}
      *
-     * @return \Core\AbstractMessage
+     * @see \Core\Message\MessageInterface::setDismissable()
      */
     public function setDismissable($dismissable)
     {
         $this->dismissable = (bool) $dismissable;
-        
-        return $this;
     }
 
     /**
-     * Returns set dismissable flag.
      *
-     * @return boolean
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getDismissable()
      */
     public function getDismissable()
     {
         return $this->dismissable;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getTarget()
+     */
+    public function getTarget()
+    {
+        return $this->target;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::setTarget()
+     */
+    public function setTarget($target = '#core-message')
+    {
+        $this->target = $target;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getDisplayFunction()
+     */
+    public function getDisplayFunction()
+    {
+        return $this->function;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::setDisplayFunction()
+     */
+    public function setDisplayFunction($function = 'append')
+    {
+        $this->function = $function;
     }
 }
