@@ -18,7 +18,9 @@ class AbstractMessageHandler implements \IteratorAggregate
     private $storage;
 
     /**
+     *
      * {@inheritDoc}
+     *
      * @see IteratorAggregate::getIterator()
      */
     public function getIterator()
@@ -80,10 +82,19 @@ class AbstractMessageHandler implements \IteratorAggregate
     /**
      * Creates and returns a message object
      *
+     * @param boolean $autoadd
+     *            Optional flag to dis-/enable autoadd of message to the message storage. (Default: true)
+     *
      * @return \Core\Message\Message
      */
-    final public function factory()
+    final public function &factory($autoadd = true)
     {
-        return new Message();
+        $msg = new Message();
+
+        if ($autoadd == true) {
+            $this->storage->add($msg);
+        }
+
+        return $msg;
     }
 }
