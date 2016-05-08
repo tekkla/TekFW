@@ -24,7 +24,18 @@ interface MessageInterface
     const CLEAR = 'clear';
 
     /**
-     * Returns message text
+     * Sets message content
+     *
+     * This can be any type of text or html code to be displayed as message text.
+     *
+     * @param string $message
+     */
+    public function setMessage($message);
+
+    /**
+     * Returns message content
+     *
+     * Will be an empty string when no messagecontent is set.
      *
      * @return string
      */
@@ -99,7 +110,7 @@ interface MessageInterface
      *
      * @param string $function
      */
-    public function setDisplayFunction($function='append');
+    public function setDisplayFunction($function = 'append');
 
     /**
      * Returns the set display function
@@ -109,4 +120,20 @@ interface MessageInterface
      * @return string
      */
     public function getDisplayFunction();
+
+    /**
+     * Sets a message id which will be used as dom id on display
+     *
+     * @param string $id
+     */
+    public function setId($id);
+
+    /**
+     * Returns the set message id
+     *
+     * Returns empty string when no id is set
+     *
+     * @return string
+     */
+    public function getId();
 }

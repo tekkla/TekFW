@@ -15,7 +15,7 @@ abstract class AbstractMessage implements MessageInterface
      *
      * @var string
      */
-    private $message;
+    private $message = '';
 
     /**
      *
@@ -49,7 +49,15 @@ abstract class AbstractMessage implements MessageInterface
 
     /**
      *
-     * @param unknown $message
+     * @var string
+     */
+    private $id = '';
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::setMessage()
      */
     public function setMessage($message)
     {
@@ -188,5 +196,27 @@ abstract class AbstractMessage implements MessageInterface
     public function setDisplayFunction($function = 'append')
     {
         $this->function = $function;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::getId()
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \Core\Message\MessageInterface::setId()
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 }
