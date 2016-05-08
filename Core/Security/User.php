@@ -4,13 +4,11 @@ namespace Core\Security;
 use Core\Data\Connectors\Db\Db;
 
 /**
- * Wrapper class to access SMF user information from one point
+ * User.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2016
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class User
 {
