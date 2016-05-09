@@ -10,6 +10,7 @@ namespace Core\Error;
  */
 class LowLevelHandler extends HandlerAbstract
 {
+
     /**
      *
      * @var \Throwable
@@ -21,11 +22,14 @@ class LowLevelHandler extends HandlerAbstract
         $this->t = $t;
 
         if (ini_get('display_errors') == 1) {
-            return '
+            $error = '
             <h1>Error</h1>
             <p><strong>' . $this->t->getMessage() . '</strong></p>
             <p>in ' . $this->t->getFile() . ' (Line: ' . $this->t->getLine() . ')</p>
-            <p><small>Handler: ' . __CLASS__ . '</small></p>';
+            <p><small>Handler: ' . __CLASS__ . '</small></p><small>' . nl2br($t->getTraceAsString()) . '</small>';
+        }
+        else {
+            $error = 'An error occured.';
         }
 
         // Store error in errlolog!
@@ -33,5 +37,7 @@ class LowLevelHandler extends HandlerAbstract
 
         // Set error http statuscode
         http_response_code(500);
+
+        die($error);
     }
 }
