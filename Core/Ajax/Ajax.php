@@ -76,7 +76,7 @@ class Ajax
         }
 
         // Return JSON encoded ajax command stack
-        return !empty($ajax) ? json_encode($ajax) : '';
+        return ! empty($ajax) ? json_encode($ajax) : '';
     }
 
     /**
@@ -102,9 +102,15 @@ class Ajax
      *
      * @return \Core\Ajax\DomCommand
      */
-    public function createDomCommand()
+    public function &createDomCommand($autoadd = true)
     {
-        return new DomCommand();
+        $cmd = new DomCommand();
+
+        if ($autoadd) {
+            $this->addCommand($cmd);
+        }
+
+        return $cmd;
     }
 
     /**
@@ -112,8 +118,14 @@ class Ajax
      *
      * @return \Core\Ajax\ActCommand
      */
-    public function createActCommand()
+    public function &createActCommand($autoadd = true)
     {
-        return new ActCommand();
+        $cmd = new ActCommand();
+
+        if ($autoadd) {
+            $this->addCommand($cmd);
+        }
+
+        return $cmd;
     }
 }
