@@ -331,7 +331,7 @@ class Files
         // https://bugs.php.net/bug.php?id=53035
         // so the following is used, instead
         // src: http://www.freeformatter.com/mime-types-list.html#mime-types-list
-        $mime_type = include ('../Lib/IO/mime_types.php');
+        $mime_type = include (__DIR__ . '/mime_types.php');
 
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
