@@ -9,6 +9,7 @@ use Core\Html\Form\Select;
 use Core\Html\Form\Button;
 use Core\Router\UrlTrait;
 use Core\Html\FormAbstract;
+use Core\Html\HtmlBuildableInterface;
 
 /**
  * FormDesigner.php
@@ -17,7 +18,7 @@ use Core\Html\FormAbstract;
  * @copyright 2016
  * @license MIT
  */
-final class FormDesigner
+final class FormDesigner implements HtmlBuildableInterface
 {
     use TextTrait;
     use UrlTrait;
