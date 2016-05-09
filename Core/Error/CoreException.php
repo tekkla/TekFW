@@ -8,7 +8,7 @@ namespace Core\Error;
  * @copyright 2016
  * @license MIT
  */
-class CoreException extends \ErrorException
+class CoreException extends \ErrorException implements CoreExceptionInterface
 {
 
     /**
