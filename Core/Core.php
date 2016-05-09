@@ -410,7 +410,7 @@ final class Core
             'password' => '',
             'prefix' => '',
             'options' => [
-                \PDO::ATTR_PERSISTENT => false,
+                \PDO::ATTR_PERSISTENT => true,
                 \PDO::ATTR_ERRMODE => 2,
                 \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
                 \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1,
@@ -433,11 +433,9 @@ final class Core
             $prefix = 'db.' . $name;
 
             // Check for databasename
-            if (empty($settings['name'])) {
-                Throw new Exception(sprintf('Name key of DB setting "%s" is missing.'), $name);
+            if (empty($settings['dbname'])) {
+                Throw new Exception('Name key of DB setting "dbname" is missing.');
             }
-
-            $this->di->mapValue($prefix . '.name', $settings['name']);
 
             // Check for DB defaults and map values
             foreach ($defaults as $key => $default) {
