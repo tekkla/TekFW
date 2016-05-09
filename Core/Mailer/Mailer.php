@@ -130,7 +130,7 @@ class Mailer
                 $mailer = new \PHPMailer();
 
                 // Get smtp debug level from config
-                $mailer->SMTPDebug = $this->cfg->data['Core']['mail.general.smtpdebug'];
+                $mailer->SMTPDebug = $this->cfg->Core['mail.general.smtpdebug'];
 
                 if (!empty($mailer->SMTPDebug)) {
 

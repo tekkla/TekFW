@@ -512,7 +512,7 @@ class DateTimePicker extends Input
 
         // Set the controls locale option to the value set as sites default language
         // TODO Change this when system works with user selected languages
-        $this->option_locale = $cfg->data['Core']['site.language.default'];
+        $this->option_locale = $cfg->Core['site.language.default'];
 
         // $this->option_language = $this->txt('lang_dictionary');
         $this->set_options['locale'] = 'locale';
@@ -522,7 +522,7 @@ class DateTimePicker extends Input
 
             // Say to Js service to load the needed locale file
             $js = $this->di->get('core.page.head.js');
-            $js->file($cfg->data['Core']['url.js'] . '/locale/moment/' . $this->option_locale . '.js');
+            $js->file($cfg->Core['url.js'] . '/locale/moment/' . $this->option_locale . '.js');
         }
 
         // Set flag for loaded translation

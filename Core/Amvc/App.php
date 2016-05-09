@@ -12,7 +12,6 @@ use Core\Language\Language;
 use Core\Router\UrlTrait;
 use Core\Traits\StringTrait;
 use Core\Language\TextTrait;
-use Core\Cfg\CfgTrait;
 
 /**
  * App.php
@@ -25,7 +24,6 @@ class App
 {
 
     use TextTrait;
-    use CfgTrait;
     use UrlTrait;
     use StringTrait;
 
@@ -252,20 +250,19 @@ class App
         if (in_array(self::LANGUAGE, $this->flags)) {
 
             // Check
-            if (empty($this->cfg->data[$this->name]['dir.language'])) {
+            if (empty($this->cfg->{$this->name}['dir.language'])) {
                 Throw new AppException(sprintf('Languagefile of app "%s" has to be loaded but no Language folder was found.', $this->name));
             }
 
             // Always load english language files.
-            $language_file = $this->cfg->data[$this->name]['dir.language'] . '/en.php';
+            $language_file = $this->cfg->{$this->name}['dir.language'] . '/en.php';
             $this->language->loadLanguageFile($this->name, $language_file);
 
             // After that load set languenage file which can override the loaded english string.
-            $default_language = $this->cfg->data['Core']['site.language.default'];
+            $default_language = $this->cfg->Core['site.language.default'];
 
             if ($default_language != 'en') {
-
-                $language_file = $this->cfg->data[$this->name]['dir.language'] . '/' . $default_language . '.php';
+                $language_file = $this->cfg->{$this->name}['dir.language'] . '/' . $default_language . '.php';
                 $this->language->loadLanguageFile($this->name, $language_file);
             }
         }
@@ -361,7 +358,8 @@ class App
 
         $name = $this->stringCamelize($name);
         $args = [
-            'core.security'
+            'core.security',
+            $this->cfg->{$this->name}
         ];
 
         // Create a model instance from a different app?
@@ -398,7 +396,8 @@ class App
             'core.message.default',
             'core.html.factory',
             'core.ajax',
-            'core.io'
+            'core.io',
+            $this->cfg->{$this->name}
         ];
 
         // Create a controller instance from a different app?
@@ -427,13 +426,15 @@ class App
         }
 
         $name = $this->stringCamelize($name);
-
+        $args = [
+            $this->cfg->{$this->name}
+        ];
         // Create a view instance from a different app?
         if (! empty($app_name) && $app_name != $this->name) {
             return $this->creator->getAppInstance($app_name)->getView($name);
         }
         else {
-            return $this->MVCFactory($name, 'View');
+            return $this->MVCFactory($name, 'View', $args);
         }
     }
 
@@ -531,14 +532,14 @@ class App
                 // Add dir and url to app config
                 $key = $this->stringUncamelize($file);
 
-                $this->cfg->data[$this->name]['dir.' . $key] = $dir . '/' . $file;
-                $this->cfg->data[$this->name]['url.' . $key] = $this->cfg->data['Core']['url.' . $this->getAppType()] . '/' . $this->name . '/' . $file;
+                $this->cfg->{$this->name}['dir.' . $key] = $dir . '/' . $file;
+                $this->cfg->{$this->name}['url.' . $key] = $this->cfg->Core['url.' . $this->getAppType()] . '/' . $this->name . '/' . $file;
             }
         }
 
         // Add apps base dir and url to app config
-        $this->cfg->data[$this->name]['dir.app'] = $this->cfg->data['Core']['dir.' . $this->getAppType()] . '/' . $this->name;
-        $this->cfg->data[$this->name]['url.app'] = $this->cfg->data['Core']['url.' . $this->getAppType()] . '/' . $this->name;
+        $this->cfg->{$this->name}['dir.app'] = $this->cfg->Core['dir.' . $this->getAppType()] . '/' . $this->name;
+        $this->cfg->{$this->name}['url.app'] = $this->cfg->Core['url.' . $this->getAppType()] . '/' . $this->name;
 
         // Cleanup
         closedir($handle);
@@ -574,12 +575,12 @@ class App
         if (in_array(self::CSS, $this->flags)) {
 
             // Check for existance of apps css file
-            if (! file_exists($this->cfg->data[$this->name]['dir.css'] . '/' . $this->name . '.css')) {
+            if (! file_exists($this->cfg->{$this->name}['dir.css'] . '/' . $this->name . '.css')) {
                 Throw new AppException(sprintf('App "%s" css file does not exist. Either create the js file or remove the css flag in your app settings.', $this->name));
             }
 
             // Create css file link
-            $this->page->css->link($this->cfg->data[$this->name]['url.css'] . '/' . $this->name . '.css');
+            $this->page->css->link($this->cfg->{$this->name}['url.css'] . '/' . $this->name . '.css');
         }
 
         // Set flag for initiated css
@@ -615,13 +616,13 @@ class App
         // the apps js file is stored within the app folder structure in an directory named "js".
         if (in_array(self::JS, $this->flags)) {
 
-            if (! file_exists($this->cfg->data[$this->name]['dir.js'] . '/' . $this->name . '.js')) {
+            if (! file_exists($this->cfg->{$this->name}['dir.js'] . '/' . $this->name . '.js')) {
                 Throw new AppException(sprintf('App "%s" js file does not exist. Either create the js file or remove the js flag in your app mainclass.', $this->name));
             }
 
-            $defer = $this->cfg->data['Core']['js.general.position'] == 'top' ? false : true;
+            $defer = $this->cfg->Core['js.general.position'] == 'top' ? false : true;
 
-            $this->page->js->file($this->cfg->data[$this->name]['url.js'] . '/' . $this->name . '.js', $defer);
+            $this->page->js->file($this->cfg->{$this->name}['url.js'] . '/' . $this->name . '.js', $defer);
         }
 
         // Js method in app to run?

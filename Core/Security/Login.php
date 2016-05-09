@@ -124,7 +124,7 @@ class Login
         }
 
         // Append pepper to password
-        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
+        $password .= $this->cfg->Core['security.encrypt.pepper'];
 
         // Password ok?
         if (password_verify($password, $login['password'])) {
@@ -225,7 +225,7 @@ class Login
         $cookie_name = $this->getCookieName();
 
         // Remove all autologin cookies when autlogin is off in config
-        if (empty($this->cfg->data['Core']['security.login.autologin.active'])) {
+        if (empty($this->cfg->Core['security.login.autologin.active'])) {
             $this->cookies->remove($cookie_name);
             return false;
         }
@@ -323,7 +323,7 @@ class Login
     private function setAutoLoginCookies($id_user)
     {
         // Create expire date
-        $expires = time() + 3600 * 24 * $this->cfg->data['Core']['security.login.autologin.expires_after'];
+        $expires = time() + 3600 * 24 * $this->cfg->Core['security.login.autologin.expires_after'];
 
         // Create selector
         $selector = bin2hex($this->token->generateRandomToken(6));
@@ -453,6 +453,6 @@ class Login
      */
     private function getCookieName()
     {
-        return $this->cfg->data['Core']['cookie.name'] . 'Token';
+        return $this->cfg->Core['cookie.name'] . 'Token';
     }
 }

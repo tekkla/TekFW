@@ -85,8 +85,8 @@ class Javascript
         $this->cfg = $cfg;
         $this->router = $router;
 
-        $this->js_url = $cfg->data['Core']['url.js'];
-        $this->js_dir = $cfg->data['Core']['dir.js'];
+        $this->js_url = $cfg->Core['url.js'];
+        $this->js_dir = $cfg->Core['dir.js'];
     }
 
     /**
@@ -97,18 +97,18 @@ class Javascript
         $this->mode = 'core';
 
         // Theme name
-        $theme = $this->cfg->data['Core']['style.theme.name'];
+        $theme = $this->cfg->Core['style.theme.name'];
 
         // jQuery version
-        $version = $this->cfg->data['Core']['js.jquery.version'];
+        $version = $this->cfg->Core['js.jquery.version'];
 
         // Add local jQeury file or the one from CDN
         $file = '/' . $theme . '/js/jquery-' . $version . '.js';
 
         // Files to bottom or to top?
-        $defer = $this->cfg->data['Core']['js.general.position'] == 'top' ? false : true;
+        $defer = $this->cfg->Core['js.general.position'] == 'top' ? false : true;
 
-        if ($this->cfg->data['Core']['js.jquery.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->cfg->Core['js.jquery.local'] && file_exists(THEMESDIR . $file)) {
             $this->file(THEMESURL . $file, $defer);
         }
         else {
@@ -116,12 +116,12 @@ class Javascript
         }
 
         // Bootstrap Version
-        $version = $this->cfg->data['Core']['style.bootstrap.version'];
+        $version = $this->cfg->Core['style.bootstrap.version'];
 
         // Add Bootstrap javascript from local or cdn
         $file = '/' . $theme . '/js/bootstrap-' . $version . '.js';
 
-        if ($this->cfg->data['Core']['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->cfg->Core['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
             $this->file(THEMESURL . $file, $defer);
         }
         else {
@@ -132,7 +132,7 @@ class Javascript
         $this->file($this->js_url . '/plugins.js', $defer);
 
         // Add global fadeout time var set in config
-        $this->variable('fadeout_time', $this->cfg->data['Core']['js.style.fadeout_time'], $defer);
+        $this->variable('fadeout_time', $this->cfg->Core['js.style.fadeout_time'], $defer);
 
         // Add framework js
         $this->file($this->js_url . '/framework.js', $defer);
@@ -372,8 +372,6 @@ class Javascript
         // Get scripts of this area
         $script_stack = $this->getScriptObjects($area);
 
-        \FB::log($area, $script_stack);
-
         if (empty($script_stack)) {
             return $script_stack;
         }
@@ -430,10 +428,10 @@ class Javascript
             $key = 'combined_' . $area;
             $extension = 'js';
 
-            $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
+            $filename = $this->cfg->Core['dir.cache'] . '/' . $key . '.' . $extension;
 
             // End of combined file TTL reached?
-            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl.' . $extension] < time()) {
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->Core['cache.ttl.' . $extension] < time()) {
 
                 // Strat combining all parts
                 $combined = '';
@@ -465,14 +463,14 @@ class Javascript
                 $combined = \JSMin::minify($combined);
 
                 // Make sure we write files only into to cache folder!
-                if (strpos($filename, $this->cfg->data['Core']['dir.cache']) === false) {
+                if (strpos($filename, $this->cfg->Core['dir.cache']) === false) {
                     Throw new PageException('Writing files outside the cachefolder from Javascript::getFiles() is not permitted.');
                 }
 
                 file_put_contents($filename, $combined);
             }
 
-            $files[] = $this->cfg->data['Core']['url.cache'] . '/' . $key . '.' . $extension;
+            $files[] = $this->cfg->Core['url.cache'] . '/' . $key . '.' . $extension;
         }
 
         return $files;

@@ -32,6 +32,12 @@ abstract class MvcAbstract
     public $app;
 
     /**
+     *
+     * @var \Core\Cfg\AppCfg
+     */
+    protected $cfg;
+
+    /**
      * MVC objects need an app instance
      *
      * @param App $app

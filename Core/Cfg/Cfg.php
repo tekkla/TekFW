@@ -24,9 +24,9 @@ final class Cfg
     /**
      * Storage array for config values grouped by app name
      *
-     * @var array
+     * @var AppCfg
      */
-    public $data = [];
+    public $data;
 
     /**
      * Flattened version of config definition grouped by app name
@@ -57,6 +57,7 @@ final class Cfg
     public function __construct(Db $db)
     {
         $this->db = $db;
+        $this->data = new AppCfg();
     }
 
     /**
@@ -72,17 +73,18 @@ final class Cfg
     public function get($app_name, $key = null)
     {
         // Calls only with app name indicates, that the complete app config is requested
-        if (empty($key) && ! empty($this->data[$app_name])) {
-            return $this->data[$app_name];
+        if (empty($key) && ! empty($this->data->{$app_name})) {
+            return $this->data->{$app_name};
         }
 
         // Calls with app and key are normal cfg requests
         if (! empty($key)) {
-            if (! array_key_exists($key, $this->data[$app_name])) {
+
+            if (! isset($this->data->{$app_name}->{$key})) {
                 Throw new CfgException(sprintf('Config "%s" of app "%s" does not exist.', $key, $app_name));
             }
 
-            return $this->data[$app_name][$key];
+            return $this->data->{$app_name}->{$key};
         }
 
         // All other will result in an error exception
@@ -98,7 +100,7 @@ final class Cfg
      */
     public function set($app_name, $key, $val)
     {
-        $this->data[$app_name][$key] = $val;
+        $this->data->{$app_name}->{$key} = $val;
     }
 
     /**
@@ -114,7 +116,7 @@ final class Cfg
     public function exists($app_name, $key = null)
     {
         // No app found = false
-        if (! isset($this->data[$app_name])) {
+        if (! isset($this->data->{$app_name})) {
             return false;
         }
 
@@ -124,7 +126,7 @@ final class Cfg
         }
 
         // key requested and found? true
-        return isset($this->data[$app_name][$key]) && ! empty($this->data[$app_name][$key]);
+        return isset($this->data->{$app_name}->{$key}) && ! empty($this->data->{$app_name}->{$key});
     }
 
     /**
@@ -137,16 +139,15 @@ final class Cfg
      *
      * @return void
      */
-    public function init($cfg = [])
+    public function init(array $cfg = [])
     {
-        if (! is_array($cfg)) {
-            Throw new CfgException('Initial config needs to be an array', 0);
-        }
+        $this->data->Core = new AppCfg();
 
-        $this->data['Core'] = [];
+        if (! empty($cfg)) {
 
-        if ($cfg) {
-            $this->data['Core'] = $cfg;
+            foreach ($cfg as $key => $value) {
+                $this->data->Core->{$key} = $cfg;
+            }
         }
     }
 
@@ -180,7 +181,12 @@ final class Cfg
             $results = $this->db->all();
 
             foreach ($results as $row) {
-                $this->data[$row['app']][$row['cfg']] = $row['val'];
+
+                if (! isset($this->data->{$row['app']})) {
+                    $this->data->{$row['app']} = new AppCfg();
+                }
+
+                $this->data->{$row['app']}->{$row['cfg']} = $row['val'];
             }
 
             $cache->set('Core.Config', $this->data);
@@ -202,7 +208,7 @@ final class Cfg
     {
         // Write dirs to config storage
         foreach ($dirs as $key => $val) {
-            $this->data[$app_name]['dir.' . $key] = BASEDIR . $val;
+            $this->data->{$app_name}->{'dir.' . $key} = BASEDIR . $val;
         }
 
         return $this;
@@ -220,7 +226,7 @@ final class Cfg
     {
         // Write urls to config storage
         foreach ($urls as $key => $val) {
-            $this->data[$app_name]['url.' . $key] = BASEURL . $val;
+            $this->data->{$app_name}->{'url.' . $key} = BASEURL . $val;
         }
 
         return $this;
@@ -266,19 +272,19 @@ final class Cfg
     private function checkDefaults($app_name, array $definition, $prefix = '', $glue = '.')
     {
         // First step, check for controls
-        if (!empty($definition['controls'])) {
-            
+        if (! empty($definition['controls'])) {
+
             foreach ($definition['controls'] as $name => $control) {
 
                 // Create the config key using the prefix passed as argument and the name used as index
-                $cfg = (!empty($prefix) ? $prefix . $glue : '') . $name;
+                $cfg = (! empty($prefix) ? $prefix . $glue : '') . $name;
 
-                if (empty($this->data[$app_name][$cfg]) && ! empty($control['default'])) {
-                    $this->data[$app_name][$cfg] = $control['default'];
+                if (! isset($this->data->{$app_name}->{$cfg}) && ! empty($control['default'])) {
+                    $this->data->{$app_name}->{$cfg} = $control['default'];
                 }
 
-                if (! empty($control['serialize']) && $this->stringIsSerialized($this->data[$app_name][$cfg])) {
-                    $this->data[$app_name][$cfg] = unserialize($this->data[$app_name][$cfg]);
+                if (! empty($control['serialize']) && $this->stringIsSerialized($this->data->{$app_name}->{$cfg})) {
+                    $this->data->{$app_name}->{$cfg} = unserialize($this->data->{$app_name}->{$cfg});
                 }
 
                 $this->structure[$app_name][$cfg] = $control;
@@ -286,9 +292,9 @@ final class Cfg
         }
 
         // Do we have subgroups in this definition?
-        if (!empty($definition['groups'])) {
+        if (! empty($definition['groups'])) {
             foreach ($definition['groups'] as $name => $group) {
-                $this->checkDefaults($app_name, $group, (!empty($prefix) ? $prefix . $glue : '') . $name);
+                $this->checkDefaults($app_name, $group, (! empty($prefix) ? $prefix . $glue : '') . $name);
             }
         }
     }
@@ -308,7 +314,7 @@ final class Cfg
         foreach ($app_names as $app_name) {
 
             // Get all obsolete config keys
-            $obsolete = array_diff(array_keys($this->data[$app_name]), array_keys($this->definitions[$app_name]));
+            $obsolete = array_diff(array_keys($this->data->{$app_name}), array_keys($this->definitions[$app_name]));
 
             // Create prepared IN statemen and
             $prepared = $this->db->prepareArrayQuery('c', $obsolete);
@@ -327,5 +333,10 @@ final class Cfg
 
             $this->db->qb($qb, true);
         }
+    }
+
+    public function __get($offset)
+    {
+        return $this->data->{$offset};
     }
 }

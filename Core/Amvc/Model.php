@@ -7,8 +7,8 @@ use Core\Data\Validator\Validator;
 use Core\Amvc\ModelException;
 use Core\Traits\ArrayTrait;
 use Core\Router\UrlTrait;
-use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
+use Core\Cfg\AppCfg;
 
 /**
  * Model.php
@@ -22,7 +22,6 @@ class Model extends MvcAbstract
 
     use UrlTrait;
     use TextTrait;
-    use CfgTrait;
     use ArrayTrait;
 
     /**
@@ -56,12 +55,13 @@ class Model extends MvcAbstract
      * @param App $app
      * @param Security $security
      */
-    final public function __construct($name, App $app, Security $security)
+    final public function __construct($name, App $app, Security $security, AppCfg $cfg)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
         $this->security = $security;
+        $this->cfg = $cfg;
     }
 
     /**

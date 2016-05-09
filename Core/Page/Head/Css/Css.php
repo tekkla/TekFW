@@ -70,16 +70,16 @@ final class Css
         $this->mode = 'core';
 
         // Theme name
-        $theme = $this->cfg->data['Core']['style.theme.name'];
+        $theme = $this->cfg->Core['style.theme.name'];
 
         // Bootstrap version from config
-        $version = $this->cfg->data['Core']['style.bootstrap.version'];
+        $version = $this->cfg->Core['style.bootstrap.version'];
 
         // Core and theme file
         $file = '/' . $theme . '/css/bootstrap-' . $version . '.css';
 
         // Add existing local user/theme related bootstrap file or load it from cdn
-        if ($this->cfg->data['Core']['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->cfg->Core['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
             $this->link(THEMESURL . $file);
         }
         else {
@@ -88,13 +88,13 @@ final class Css
         }
 
         // Fontawesome version
-        $version = $this->cfg->data['Core']['style.fontawesome.version'];
+        $version = $this->cfg->Core['style.fontawesome.version'];
 
         // Fontawesome file
         $file = '/' . $theme . '/css/font-awesome-' . $version . '.css';
 
         // Add existing font-awesome font icon css file or load it from cdn
-        if ($this->cfg->data['Core']['style.fontawesome.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->cfg->Core['style.fontawesome.local'] && file_exists(THEMESDIR . $file)) {
             $this->link(THEMESURL . $file);
         }
         else {
@@ -218,10 +218,10 @@ final class Css
             $key = 'combined';
             $extension = 'css';
 
-            $filename = $this->cfg->data['Core']['dir.cache'] . '/' . $key . '.' . $extension;
+            $filename = $this->cfg->Core['dir.cache'] . '/' . $key . '.' . $extension;
 
             // End of combined file TTL reached?
-            if (!file_exists($filename) || filemtime($filename) + $this->cfg->data['Core']['cache.ttl.' . $extension] < time()) {
+            if (!file_exists($filename) || filemtime($filename) + $this->cfg->Core['cache.ttl.' . $extension] < time()) {
 
                 if (! empty($local_files)) {
                     foreach ($local_files as $css_file) {
@@ -237,7 +237,7 @@ final class Css
                 $css_min = new \CSSmin();
                 $combined = $css_min->run($combined);
 
-                $theme = $this->cfg->data['Core']['style.theme.name'];
+                $theme = $this->cfg->Core['style.theme.name'];
 
                 // Rewrite fonts paths
                 $combined = str_replace('../fonts/', '../Themes/' . $theme . '/fonts/', $combined);
@@ -248,7 +248,7 @@ final class Css
                 file_put_contents($filename, $combined);
             }
 
-            $files[] = $this->cfg->data['Core']['url.cache'] . '/' . $key . '.' . $extension;
+            $files[] = $this->cfg->Core['url.cache'] . '/' . $key . '.' . $extension;
         }
 
         return $files;

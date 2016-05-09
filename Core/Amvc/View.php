@@ -1,6 +1,8 @@
 <?php
 namespace Core\Amvc;
 
+use Core\Cfg\AppCfg;
+
 /**
  * View.php
  *
@@ -26,10 +28,11 @@ class View extends MvcAbstract
      * @param string $app
      *            Related App object
      */
-    public final function __construct($name, App $app)
+    public final function __construct($name, App $app, AppCfg $cfg)
     {
         $this->name = $name;
         $this->app = $app;
+        $this->cfg = $cfg;
     }
 
     /**

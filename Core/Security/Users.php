@@ -100,7 +100,7 @@ class Users
         ];
 
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
+        $password .= $this->cfg->Core['security.encrypt.pepper'];
 
         // Create password hash
         $password = password_hash($password, PASSWORD_DEFAULT);
@@ -225,7 +225,7 @@ class Users
     public function changePassword($id_user, $password)
     {
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
+        $password .= $this->cfg->Core['security.encrypt.pepper'];
 
         // Check the old password
         $this->db->qb([
@@ -250,7 +250,7 @@ class Users
 
     public function checkBan()
     {
-        $ban_duration = $this->cfg->data['Core']['security.ban.ttl.ban'];
+        $ban_duration = $this->cfg->Core['security.ban.ttl.ban'];
 
         // No ban without ban time
         if ($ban_duration == 0) {
@@ -266,7 +266,7 @@ class Users
         }
 
         // Get max tries until get banned from config
-        $max_tries = $this->cfg->data['Core']['security.ban.tries'];
+        $max_tries = $this->cfg->Core['security.ban.tries'];
 
         // Max tries of 0 means no ban check at all
         if ($max_tries == 0) {
@@ -274,7 +274,7 @@ class Users
         }
 
         // Get seconds for how long the ban log entries are relevant for ban check
-        $ban_log_relevance_duration = $this->cfg->data['Core']['security.ban.ttl.log'];
+        $ban_log_relevance_duration = $this->cfg->Core['security.ban.ttl.log'];
 
         // Zero sconds means that this check is not needed.
         if ($ban_log_relevance_duration == 0) {

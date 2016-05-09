@@ -10,12 +10,12 @@ use Core\Html\FormDesigner\FormDesigner;
 use Core\Ajax\Ajax;
 use Core\Router\UrlTrait;
 use Core\Traits\ArrayTrait;
-use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
 use Core\IO\IO;
 use Core\Ajax\Dom;
 use Core\Message\Message;
 use Core\Message\MessageHandler;
+use Core\Cfg\AppCfg;
 
 /**
  * Controller.php
@@ -29,7 +29,6 @@ class Controller extends MvcAbstract
 
     use UrlTrait;
     use TextTrait;
-    use CfgTrait;
     use ArrayTrait;
 
     /**
@@ -179,8 +178,9 @@ class Controller extends MvcAbstract
      *            Ajax dependency
      * @param IO $io
      *            IO dependency
+     * @param AppCfg $cfg
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, AppCfg $cfg)
     {
         // Store name
         $this->name = $name;
@@ -193,6 +193,7 @@ class Controller extends MvcAbstract
         $this->html = $html;
         $this->ajax = $ajax;
         $this->io = $io;
+        $this->cfg = $cfg;
 
         // Model to bind?
         $this->model = $this->app->getModel($name);
@@ -382,51 +383,7 @@ class Controller extends MvcAbstract
             if (empty($this->ajax_cmd->getSelector()) && ! empty($selector)) {
                 $this->ajax_cmd->setSelector($selector);
             }
-
-            $this->ajax->addCommand($this->ajax_cmd);
         }
-
-        // Add messages
-        $messages = $this->page->message->getAll();
-
-        if ($messages) {
-
-            /* @var $msg \Core\Message\Message */
-            foreach ($messages as $msg) {
-
-                /* @var $cmd \Core\Ajax\DomCommand */
-                $cmd = $this->ajax->createDomCommand();
-
-                $cmd->setSelector($msg->getTarget());
-
-                // Each message gets its own alert
-
-                /* @var $alert \Core\Html\Bootstrap\Alert\Alert */
-                $alert = $this->html->create('Bootstrap\Alert\Alert');
-                $alert->setContext($msg->getType());
-                $alert->setDismissable($msg->getDismissable());
-
-                // Fadeout message?
-                if ($this->cfg('js.style.fadeout_time', null, 'Core') > 0 && $msg->getFadeout()) {
-                    $alert->html->addCss('fadeout');
-                }
-
-                // Has this message an id which we can use as id for the alerts html element?
-                if (! empty($msg->getId())) {
-                    $alert->html->setId($msg->getId());
-                }
-
-                // At least append the message content
-                $alert->setContent($msg->getMessage());
-
-                $cmd->setArgs($alert->build());
-                $cmd->setFunction($msg->getDisplayFunction());
-
-                $this->ajax->addCommand($cmd);
-            }
-        }
-
-        return $this;
     }
 
     /**

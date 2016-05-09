@@ -505,15 +505,15 @@ final class Core
         define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
         define('THEMESURL', BASEURL . '/Themes');
 
-        $this->cfg->data['Core']['site.protocol'] = $this->settings['protocol'];
-        $this->cfg->data['Core']['site.baseurl'] = $this->settings['baseurl'];
+        $this->cfg->Core->set('site.protocol', $this->settings['protocol']);
+        $this->cfg->Core->set('site.baseurl', $this->settings['baseurl']);
 
         // Check and set basic cookiename to config
         if (empty($this->settings['cookie'])) {
             Throw new Exception('Cookiename not set in Settings.php');
         }
 
-        $this->cfg->data['Core']['cookie.name'] = $this->settings['cookie'];
+        $this->cfg->Core['cookie.name'] = $this->settings['cookie'];
 
         // Add dirs to config
         $dirs = [
@@ -799,8 +799,47 @@ final class Core
             // Result will be processed as ajax command list
             $controller->ajax($action, $this->router->getParam());
 
+            /* @var $ajax \Core\Ajax\Ajax */
+            $ajax = $this->di->get('core.ajax');
+
+            // Handle messages
+            $messages = $this->di->get('core.message.default')->getAll();
+
+            if ($messages) {
+
+                /* @var $msg \Core\Message\Message */
+                foreach ($messages as $msg) {
+
+                    // Each message gets its own alert
+
+                    /* @var $alert \Core\Html\Bootstrap\Alert\Alert */
+                    $alert = $this->di->get('core.html.factory')->create('Bootstrap\Alert\Alert');
+                    $alert->setContext($msg->getType());
+                    $alert->setDismissable($msg->getDismissable());
+
+                    // Fadeout message?
+                    if ($this->cfg->Core->get('js.style.fadeout_time') > 0 && $msg->getFadeout()) {
+                        $alert->html->addCss('fadeout');
+                    }
+
+                    // Has this message an id which we can use as id for the alerts html element?
+                    if (! empty($msg->getId())) {
+                        $alert->html->setId($msg->getId());
+                    }
+
+                    // At least append the message content
+                    $alert->setContent($msg->getMessage());
+
+                    /* @var $cmd \Core\Ajax\DomCommand */
+                    $cmd = $ajax->createDomCommand();
+                    $cmd->setSelector($msg->getTarget());
+                    $cmd->setArgs($alert->build());
+                    $cmd->setFunction($msg->getDisplayFunction());
+                }
+            }
+
             // Run ajax processor
-            $result = $this->di->get('core.ajax')->process();
+            $result = $ajax->process();
         }
         else {
             $result = $controller->run($action, $this->router->getParam());

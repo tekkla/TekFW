@@ -105,15 +105,15 @@ class HighLevelHandler extends HandlerAbstract
         }
 
         // Log error
-        if (!empty($this->cfg->data['Core']['error.log.use'])) {
+        if (!empty($this->cfg->Core['error.log.use'])) {
 
             // Write to error log?
-            if (!empty($error_log) || !empty($this->cfg->data['Core']['error.log.modes.php'])) {
+            if (!empty($error_log) || !empty($this->cfg->Core['error.log.modes.php'])) {
                 error_log($message . ' (' . $file . ':' . $line . ')');
             }
 
             // Write to db error log? Take care of avoid flag (-1) due to PDOExceptions
-            if (!empty($to_db) || !empty($this->cfg->data['Core']['error.log.modes.db'])) {
+            if (!empty($to_db) || !empty($this->cfg->Core['error.log.modes.db'])) {
 
                 try {
 
@@ -192,7 +192,7 @@ class HighLevelHandler extends HandlerAbstract
         switch (true) {
             case method_exists($this->t, 'getPublic') && $this->t->getPublic():
             case (bool) $this->user->isAdmin():
-            case ! empty($this->cfg->data['Core']['error.display.skip_security_check']):
+            case ! empty($this->cfg->Core['error.display.skip_security_check']):
                 $this->error_html .= '
                 <h3 class="no-v-margin">' . $this->t->getMessage() . '<br>
                 <small><strong>File:</strong> ' . $this->t->getFile() . ' (Line: ' . $this->t->getLine() . ')</small></h3>
