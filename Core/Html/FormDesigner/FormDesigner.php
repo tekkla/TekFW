@@ -93,7 +93,7 @@ final class FormDesigner
         $this->html = new Form();
     }
 
-    public function mapData($data)
+    public function mapData(array $data)
     {
         $this->data = $data;
 
@@ -105,7 +105,7 @@ final class FormDesigner
         return $this->data;
     }
 
-    public function mapErrors($errors)
+    public function mapErrors(array $errors)
     {
         $this->errors = $errors;
 
