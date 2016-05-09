@@ -171,7 +171,7 @@ class UserController extends Controller
         if ($data) {
 
             // Get activation mode
-            $activate = $this->cfg('security.activation.use');
+            $activate = $this->cfg->get('user.activation.use');
 
             // Usercreationprocess which returns the id of the new user
             $id_user = $this->model->createUser($data, $activate);
@@ -182,27 +182,27 @@ class UserController extends Controller
                 if ($activate===1) {
 
                     // Create combined key from activation data of user
-                    $key = $this->token->createActivationToken($id_user, $this->cfg->data['Core']['security.activation.ttl']);
+                    $key = $this->token->createActivationToken($id_user, $this->cfg->Core->get('user.mail.activation.ttl'));
 
                     /* @var $mailer \Core\Mailer\Mailer */
                     $mailer = $this->di->get('core.mailer');
 
                     $mail = $mailer->createMail();
                     $mail->isHtml(true);
-                    $mail->setMTA($this->cfg('security.activation.mta'));
+                    $mail->setMTA($this->cfg->get('user.mail.activation.mta'));
 
                     // Add user as recipient
                     $mail->addRecipient('to', $data['username']);
 
                     // Get from address and name from config as sender informations
-                    $from = $this->cfg('security.activation.from');
-                    $name = $this->cfg('security.activation.name');
+                    $from = $this->cfg->get('user.mail.activation.from');
+                    $name = $this->cfg->get('user.mailactivation.name');
 
                     $mail->setFrom($from, $name);
 
                     // Define strings to replace placeholder in mailtexts
                     $strings = [
-                        'brand' => $this->cfg('site.general.name'),
+                        'brand' => $this->cfg->get('site.general.name'),
                         'url.activate' => $this->url('activate', [
                             'action' => 'activate',
                             'key' => $key
@@ -280,7 +280,7 @@ class UserController extends Controller
         $password->setPlaceholder($text);
         $password->noLabel();
 
-        if ($this->cfg('security.register.use_compare_password')) {
+        if ($this->cfg->get('user.register.use_compare_password')) {
             $password_compare = $group->addControl('Password', 'password_compare');
 
             $text = $this->text('register.form.compare');

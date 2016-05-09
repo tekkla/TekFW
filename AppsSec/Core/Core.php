@@ -79,170 +79,6 @@ final class Core extends App
                             ]
                         ]
                     ],
-                    'user' => [
-                        'groups' => [
-                            'username' => [
-                                'controls' => [
-                                    'min_length' => [
-                                        'type' => 'int',
-                                        'control' => 'number',
-                                        'default' => 8,
-                                        'validate' => [
-                                            'empty',
-                                            [
-                                                'min',
-                                                5
-                                            ]
-                                        ]
-                                    ],
-                                    'regexp' => [
-                                        'control' => [
-                                            'textarea',
-                                            [
-                                                'rows' => 3
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'password' => [
-                                'controls' => [
-                                    'min_length' => [
-                                        'control' => 'number',
-                                        'default' => 8,
-                                        'validate' => [
-                                            'empty',
-                                            [
-                                                'min',
-                                                8
-                                            ]
-                                        ]
-                                    ],
-                                    'max_length' => [
-                                        'control' => 'number',
-                                        'default' => 1024,
-                                        'validate' => [
-                                            'empty',
-                                            [
-                                                'max',
-                                                4096
-                                            ]
-                                        ]
-                                    ],
-                                    'regexp' => [],
-                                    'reactivate_after_password_change' => [
-                                        'default' => 0,
-                                        'control' => 'switch',
-                                        'validate' => [
-                                            [
-                                                'enum',
-                                                [
-                                                    0,
-                                                    1
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'register' => [
-                                'controls' => [
-                                    'use_compare_password' => [
-                                        'control' => 'switch',
-                                        'default' => 1
-                                    ]
-                                ]
-                            ],
-                            'activation' => [
-                                'controls' => [
-                                    'use' => [
-                                        'control' => 'select',
-                                        'data' => [
-                                            'type' => 'array',
-                                            'source' => [
-                                                0 => 'instant',
-                                                1 => 'mail',
-                                                2 => 'useradmin'
-                                            ],
-                                            'index' => 0
-                                        ],
-                                        'default' => 0
-                                    ]
-                                ],
-                                'groups' => [
-                                    'mail' => [
-                                        'settings' => [
-                                            'require' => [
-                                                'config' => [
-                                                    [
-                                                        'core',
-                                                        'security.user.activation.use',
-                                                        1
-                                                    ]
-                                                ]
-                                            ]
-                                        ],
-                                        'controls' => [
-                                            'ttl' => [
-                                                'control' => 'number',
-                                                'default' => 3600
-                                            ],
-                                            'mta' => [
-                                                'control' => [
-                                                    'select',
-                                                    [
-                                                        'required' => false
-                                                    ]
-                                                ],
-                                                'data' => [
-                                                    'type' => 'model',
-                                                    'source' => [
-                                                        'app' => 'core',
-                                                        'model' => 'mta',
-                                                        'action' => 'getMtaIdTitleList'
-                                                    ],
-                                                    'index' => 0
-                                                ]
-                                            ],
-                                            'from' => [
-                                                'control' => 'mail',
-                                                'validate' => [
-                                                    'email'
-                                                ]
-                                            ],
-                                            'name' => []
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'ban' => [
-                                'controls' => [
-                                    'tries' => [
-                                        'control' => 'number',
-                                        'default' => 5
-                                    ],
-                                    'ttl' => [
-                                        'log' => [
-                                            'control' => 'number',
-                                            'default' => 300
-                                        ],
-                                        'ban' => [
-                                            'control' => 'number',
-                                            'default' => 600
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'input' => [
-                                'controls' => [
-                                    'always_sanitize' => [
-                                        'control' => 'switch',
-                                        'default' => 1
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ],
                     'login' => [
                         'groups' => [
                             'autologin' => [
@@ -258,10 +94,176 @@ final class Core extends App
                                 ]
                             ]
                         ]
+                    ],
+                    'ban' => [
+                        'controls' => [
+                            'tries' => [
+                                'control' => 'number',
+                                'default' => 5
+                            ]
+                        ],
+                        'groups' => [
+                            'ttl' => [
+                                'controls' => [
+                                    'log' => [
+                                        'control' => 'number',
+                                        'default' => 300
+                                    ],
+                                    'ban' => [
+                                        'control' => 'number',
+                                        'default' => 600
+                                    ]
+                                ]
+                            ]
+                        ]
                     ]
                 ]
             ],
-
+            'user' => [
+                'groups' => [
+                    'username' => [
+                        'controls' => [
+                            'min_length' => [
+                                'type' => 'int',
+                                'control' => 'number',
+                                'default' => 8,
+                                'validate' => [
+                                    'empty',
+                                    [
+                                        'min',
+                                        5
+                                    ]
+                                ]
+                            ],
+                            'regexp' => [
+                                'control' => [
+                                    'textarea',
+                                    [
+                                        'rows' => 2
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'password' => [
+                        'controls' => [
+                            'min_length' => [
+                                'control' => 'number',
+                                'default' => 8,
+                                'validate' => [
+                                    'empty',
+                                    [
+                                        'min',
+                                        8
+                                    ]
+                                ]
+                            ],
+                            'max_length' => [
+                                'control' => 'number',
+                                'default' => 1024,
+                                'validate' => [
+                                    'empty',
+                                    [
+                                        'max',
+                                        4096
+                                    ]
+                                ]
+                            ],
+                            'regexp' => [
+                                'control' => [
+                                    'textarea',
+                                    [
+                                        'rows' => 2
+                                    ]
+                                ]
+                            ],
+                            'reactivate_after_password_change' => [
+                                'default' => 0,
+                                'control' => 'switch',
+                                'validate' => [
+                                    [
+                                        'enum',
+                                        [
+                                            0,
+                                            1
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'register' => [
+                        'controls' => [
+                            'use_compare_password' => [
+                                'control' => 'switch',
+                                'default' => 1
+                            ]
+                        ]
+                    ],
+                    'activation' => [
+                        'controls' => [
+                            'use' => [
+                                'control' => 'select',
+                                'data' => [
+                                    'type' => 'array',
+                                    'source' => [
+                                        0 => 'instant',
+                                        1 => 'mail',
+                                        2 => 'useradmin'
+                                    ],
+                                    'index' => 0
+                                ],
+                                'default' => 0
+                            ],
+                        ],
+                        'groups' => [
+                            'mail' => [
+                                'settings' => [
+                                    'require' => [
+                                        'config' => [
+                                            [
+                                                'core',
+                                                'user.activation.use',
+                                                1
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'controls' => [
+                                    'ttl' => [
+                                        'control' => 'number',
+                                        'default' => 3600
+                                    ],
+                                    'mta' => [
+                                        'control' => [
+                                            'select',
+                                            [
+                                                'required' => false
+                                            ]
+                                        ],
+                                        'data' => [
+                                            'type' => 'model',
+                                            'source' => [
+                                                'app' => 'core',
+                                                'model' => 'mta',
+                                                'action' => 'getMtaIdTitleList'
+                                            ],
+                                            'index' => 0
+                                        ]
+                                    ],
+                                    'from' => [
+                                        'control' => 'mail',
+                                        'validate' => [
+                                            'email'
+                                        ]
+                                    ],
+                                    'name' => []
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
             // Group: Execute
             'home' => [
                 'groups' => [
@@ -433,7 +435,7 @@ final class Core extends App
                             'use' => [
                                 'control' => 'switch',
                                 'default' => 1
-                            ],
+                            ]
                         ],
                         'groups' => [
                             'mta' => [
@@ -619,11 +621,11 @@ final class Core extends App
             ]));
         }
 
-        $route = $this->cfg('home.' . $type . '.route');
-        $params = parse_ini_string($this->cfg('home.' . $type . '.params'));
+        $route = $this->cfg->Core->get('home.' . $type . '.route');
+        $params = parse_ini_string($this->cfg->Core->get('home.' . $type . '.params'));
         $url = $this->url($route, $params);
 
         $this->page->setHome($url);
-        $this->cfg('url.home', $url);
+        $this->cfg->Core->set('url.home', $url);
     }
 }

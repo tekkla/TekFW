@@ -160,8 +160,8 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 'nouser' => [
                     'headline' => 'Kein Eintrag zu diesem Schlüssel gefunden.',
                     'text' => 'Entweder wurde der Eintrag bereits gelöscht oder der der Schlüssel ist nicht korrekt.'
-                ],
-            ],
+                ]
+            ]
         ]
     ],
 
@@ -246,70 +246,17 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
         'security' => [
             'head' => 'Security',
             'desc' => '',
-            'user' => [
-                'head' => 'User Settings',
-                'username' => [
-                    'head' => 'Username rules',
-                    'min_length' => [
-                        'label' => 'Minimum lenght (chars)',
-                        'desc' => 'The minimum number of chars the username has to contain.'
-                    ],
-                    'regexp' => [
-                        'label' => 'Username regexpcheck',
-                        'desc' => 'RegEx to check a username against on user creation.'
-                    ]
-                ],
-                'password' => [
-                    'head' => 'Password rules',
-                    'min_length' => [
-                        'label' => 'Minimum password length',
-                        'desc' => 'The minimum number of chars needed to create a password.'
-                    ],
-                    'max_length' => [
-                        'label' => 'Maximum password length',
-                        'desc' => 'The maximum number of chars allowed to create a password.'
-                    ],
-                    'regexp' => [
-                        'label' => 'Password regex check',
-                        'desc' => 'RegEx to check a password against on user creation.'
-                    ]
-                ]
-            ],
-            'register' => [
-                'head' => 'Registration Settings',
-                'use_compare_password' => [
-                    'label' => 'Password compare field',
-                    'desc' => 'Switch to control the display and use of a senconde password field to compare passwords before sending it to DB.'
-                ]
-            ],
-            'activation' => [
-                'head' => 'Activation Settings',
-                'use' => [
-                    'label' => 'Activate via',
-                    'desc' => 'Switch to de-/activate activation by clicking on activationling send by mail to the user. Turn to off to activte users directly after registration.'
-                ],
-                'ttl' => [
-                    'label' => 'TTL of activation token',
-                    'desc' => 'Time (in seconds) how long the activation token sent bei activationmal stays valid until a new token needs to be requested.'
-                ],
-                'mta' => [
-                    'label' => 'MTA to use',
-                    'desc' => 'Name of the Mail Transfer Agent to send the activation mail. <strong>Important:</strong> MTA must be registered!'
-                ],
-                'sender' => [
-                    'label' => 'Sender address',
-                    'desc' => 'The emailaddress to use when sending activationmail to the user'
-                ],
-                'from' => [
-                    'label' => 'From name',
-                    'desc' => 'Optional FromName to use when sending activationmail toi the user'
-                ]
-            ],
             'login' => [
                 'head' => 'Login Settings',
                 'autologin' => [
-                    'label' => 'Use autologin',
-                    'desc' => 'Switch to set autologin on login form to be preselected. (Default: On)'
+                    'active' => [
+                        'label' => 'Automatische Anmeldung aktiv',
+                        'desc' => 'Aktiviert die automatische Anmeldung von Benutzern. Dazu wird im Loginformular ein entsprechendes feld angeboten und innerhalb des Anmeldeprozesses ein Autologin Cookie gesetzt, der bei einer Wiederkehr des Benutzers zur automatischen Anmeldung ausgewertet wird. (Standard: An)'
+                    ],
+                    'expires_after' => [
+                        'label' => 'TTL autom. Anmeldung (in Tagen)',
+                        'desc' => 'Alle für eine automatische Anmeldung erforderlichen Daten haben eine Gültigkeit von x Tagen. Nach Ablauf dieser Gültigkeit wird der Benutzer aufgefordert sich erneut anzumelden. Mit jeder automatischen Anmeldung wird diese Frist auf den hier festgelegten Wert zurückgesetzt. (Standard: 30)'
+                    ],
                 ]
             ],
             'ban' => [
@@ -331,6 +278,74 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
+
+        // User
+        'user' => [
+            'head' => 'User Settings',
+            'username' => [
+                'head' => 'Username rules',
+                'min_length' => [
+                    'label' => 'Minimum lenght (chars)',
+                    'desc' => 'The minimum number of chars the username has to contain.'
+                ],
+                'regexp' => [
+                    'label' => 'Username regexpcheck',
+                    'desc' => 'Regex to check a username against on user creation.'
+                ]
+            ],
+            'password' => [
+                'head' => 'Password rules',
+                'min_length' => [
+                    'label' => 'Minimum password length',
+                    'desc' => 'The minimum number of chars needed to create a password.'
+                ],
+                'max_length' => [
+                    'label' => 'Maximum password length',
+                    'desc' => 'The maximum number of chars allowed to create a password.'
+                ],
+                'regexp' => [
+                    'label' => 'Password regex check',
+                    'desc' => 'Regex to check a password against on user creation.'
+                ],
+                'reactivate_after_password_change' => [
+                    'label' => 'Kontoreaktivierung nach Passworwechsel',
+                    'desc' => 'Erzwing eine erneute Aktivierung des Benutzkontois nachdem das Passwort vom Benutzer geändert wurde. Dazu wird dem Benutzer an die hinterlegte E-mailadresse eine Aktivierungsmail geschickt.'
+                ]
+            ],
+            'register' => [
+                'head' => 'Registration Settings',
+                'use_compare_password' => [
+                    'label' => 'Password compare field',
+                    'desc' => 'Switch to control the display and use of a senconde password field to compare passwords before sending it to DB.'
+                ]
+            ],
+            'activation' => [
+                'head' => 'Activation Settings',
+                'use' => [
+                    'label' => 'Activate via',
+                    'desc' => 'Switch to de-/activate activation by clicking on activationling send by mail to the user. Turn to off to activte users directly after registration.'
+                ],
+                'mail' => [
+                    'ttl' => [
+                        'label' => 'TTL of activation token',
+                        'desc' => 'Time (in seconds) how long the activation token sent bei activationmal stays valid until a new token needs to be requested.'
+                    ],
+                    'mta' => [
+                        'label' => 'MTA to use',
+                        'desc' => 'Name of the Mail Transfer Agent to send the activation mail. <strong>Important:</strong> MTA must be registered!'
+                    ],
+                    'name' => [
+                        'label' => 'Sender address',
+                        'desc' => 'The emailaddress to use when sending activationmail to the user'
+                    ],
+                    'from' => [
+                        'label' => 'From name',
+                        'desc' => 'Optional FromName to use when sending activationmail toi the user'
+                    ]
+                ]
+            ]
+        ],
+
         // Javascript
         'js' => [
             'head' => 'Javascript',
@@ -419,7 +434,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 'head' => 'Fehlerbenachrichtigung per Mail',
                 'desc' => '',
                 'use' => [
-                    'label' => 'E-Mail senden?',
+                    'label' => 'E-Mail senden?'
                 ],
                 'mta' => [
                     'head' => 'Empfänger & MTA',
@@ -465,10 +480,10 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                     'desc' => 'TTL for all javacript (.js) files. Default: %s'
                 ],
                 'css' => [
-                   'label' => 'Css files (in seconds)',
-                   'desc' => 'TTL for all stylesheet (.css) files. Default: %s'
-                ],
-            ],
+                    'label' => 'Css files (in seconds)',
+                    'desc' => 'TTL for all stylesheet (.css) files. Default: %s'
+                ]
+            ]
         ],
         'mail' => [
             'head' => 'Mail',

@@ -163,16 +163,25 @@ class ConfigController extends Controller
                 $subgroup->html->addCss('bottom-buffer');
 
                 if ($level == 1) {
-                    $subgroup->html->addCss([
-                        'well',
-                        'well-sm'
-                    ]);
+                    $css = [
+                        'panel',
+                        'panel-primary',
+                        'panel-body'
+                    ];
+
+                    $subgroup->html->addCss($css);
+
+                    $heading_size = 3;
+                }
+                else {
+                    $heading_size = 3 + $level;
+                }
+
+                if ($heading_size > 6) {
+                    $heading_size = 6;
                 }
 
                 $cfg = (! empty($prefix) ? $prefix . $glue : '') . $group_name;
-
-                $heading = $subgroup->addElement('Elements\Heading');
-                $heading->setSize($level+2);
 
                 $textkey = 'config.' . $cfg . '.head';
                 $text = $this->text($textkey, $app_name);
@@ -181,10 +190,12 @@ class ConfigController extends Controller
                     $text = ucfirst($group_name);
                 }
 
+                $heading = $subgroup->addElement('Elements\Heading');
+                $heading->setSize($heading_size);
                 $heading->setInner($text);
                 $heading->addCss([
                     'no-top-margin',
-                    'text-uppercase'
+                    'text-uppercase',
                 ]);
 
                 $textkey = 'config.' . $cfg . '.desc';
@@ -218,8 +229,8 @@ class ConfigController extends Controller
 
         $cfg = $this->di->get('core.cfg');
 
-        if (! empty($cfg->data[$app_name][$flat_name])) {
-            $settings['value'] = $cfg->data[$app_name][$flat_name];
+        if (! empty($cfg->{$app_name}->{$flat_name})) {
+            $settings['value'] = $cfg->{$app_name}->{$flat_name};
         }
 
         // Is this a control with more settings or only the controltype

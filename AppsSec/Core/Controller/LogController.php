@@ -26,7 +26,7 @@ class LogController extends Controller
     public function Logs($entries = null)
     {
         if (! $entries) {
-            $entries = $this->cfg('log.display.entries');
+            $entries = $this->cfg->get('log.display.entries');
             $entries = 20;
         }
         

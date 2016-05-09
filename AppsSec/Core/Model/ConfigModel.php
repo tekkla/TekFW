@@ -111,10 +111,6 @@ final class ConfigModel extends Model
             return $data;
         }
 
-        \FB::log($flat);
-
-        return;
-
         // Data validated successfully. Go on and store config
         $db = $this->getDbConnector();
 
@@ -189,7 +185,7 @@ final class ConfigModel extends Model
     {
         $data = [];
 
-        $configs = $this->di->get('core.cfg')->data[$app_name];
+        $configs = $this->di->get('core.cfg')->{$app_name};
 
         foreach ($configs as $path => $value) {
             $this->arrayAssignByPath($data, $path, $value);

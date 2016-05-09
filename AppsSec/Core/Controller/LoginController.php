@@ -55,8 +55,8 @@ class LoginController extends Controller
                 // Login successful? Redirect to index page
                 if ($logged_in == true) {
 
-                    $route = $this->cfg('home.user.route');
-                    $params = parse_ini_string($this->cfg('home.user.params'));
+                    $route = $this->cfg->get('home.user.route');
+                    $params = parse_ini_string($this->cfg->get('home.user.params'));
                     $url = $this->url($route, $params);
 
                     return $this->redirectExit($url);
@@ -79,7 +79,7 @@ class LoginController extends Controller
         }
 
         // Autologin on or off by default?
-        $data['remember'] = $this->cfg('login.autologin.active');
+        $data['remember'] = $this->cfg->get('security.login.autologin.active');
 
         $fd = $this->getFormDesigner('core-login');
         $fd->setName('core-login');
@@ -101,7 +101,7 @@ class LoginController extends Controller
             'password' => 'password'
         ];
 
-        if ($this->cfg('security.login.autologin')) {
+        if ($data['remember']) {
             $controls['remember'] = 'checkbox';
         }
 
@@ -145,11 +145,11 @@ class LoginController extends Controller
 
         $control->setInner($icon->build() . ' ' . $this->text('login.form.login'));
 
-        // Create links for 'Forgot Password?' and 'New user?'
+        // @TODO Create links for 'Forgot Password?' and 'New user?'
 
-        if ($this->cfg('security.login.reset_password')) {}
+        #if ($this->cfg->get('security.login.reset_password')) {}
 
-        if ($this->cfg('security.login.register')) {}
+        #if ($this->cfg->get('security.login.register')) {}
 
         $this->setVar([
             'headline' => $this->text('login.text'),
@@ -163,7 +163,7 @@ class LoginController extends Controller
     {
         $this->security->login->doLogout();
 
-        return $this->redirectExit($this->cfg('url.home'));
+        return $this->redirectExit($this->cfg->get('url.home'));
     }
 
     public function AlreadyLoggedIn()

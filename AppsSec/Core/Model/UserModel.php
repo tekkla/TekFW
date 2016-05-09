@@ -169,7 +169,7 @@ class UserModel extends Model
     private function addUsernameAndPasswordChecksFromConfig()
     {
         // Minimum username length set in config?
-        $min_length = $this->cfg('security.user.username.min_length');
+        $min_length = $this->cfg->get('user.username.min_length');
         $this->scheme['fields']['username']['validate'][] = [
             'min',
             $min_length,
@@ -177,7 +177,7 @@ class UserModel extends Model
         ];
 
         // Regexp check für username set in config?
-        $regexp = $this->cfg('security.user.username.regexp');
+        $regexp = $this->cfg->get('user.username.regexp');
 
         if (! empty($regexp)) {
             $this->scheme['fields']['username']['validate'][] = [
@@ -188,8 +188,8 @@ class UserModel extends Model
         }
 
         // Password min and/or maxlength set in config?
-        $min_length = $this->cfg('security.user.password.min_length');
-        $max_length = $this->cfg('security.user.password.max_length');
+        $min_length = $this->cfg->get('user.password.min_length');
+        $max_length = $this->cfg->get('user.password.max_length');
 
         if (! empty($max_length)) {
             $this->scheme['fields']['password']['validate'][] = [
@@ -210,7 +210,7 @@ class UserModel extends Model
         }
 
         // Password regex check wanted by config?
-        $regexp = $this->cfg('security.user.password.regexp');
+        $regexp = $this->cfg->get('user.password.regexp');
 
         if (! empty($regexp)) {
             $this->scheme['fields']['password']['validate'][] = [
