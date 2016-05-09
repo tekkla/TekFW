@@ -27,7 +27,7 @@ class Alert implements HtmlBuildableInterface, BootstrapContextInterface
      *
      * @var string
      */
-    private $type = 'primary';
+    private $context = 'primary';
 
     /**
      *
@@ -80,14 +80,12 @@ class Alert implements HtmlBuildableInterface, BootstrapContextInterface
     }
 
     /**
-     * Sets Bootstrap contextual alert type
      *
-     * @param string $type
-     *            One of Bootstrap contextual types like primary, info, succes, warning or danger.
+     * {@inheritDoc}
      *
-     * @throws HtmlException
+     * @see \Core\Html\Bootstrap\BootstrapContextInterface::setContext()
      */
-    public function setType($type)
+    public function setContext($context)
     {
         $allowed = [
             self::SUCCESS,
@@ -97,21 +95,22 @@ class Alert implements HtmlBuildableInterface, BootstrapContextInterface
             self::DANGER
         ];
 
-        if (! in_array($type, $allowed)) {
-            Throw new HtmlException('Given "%s" is no valid Bootstrap::Alert type. Allowed types are: %s', $type, implode(', ', $allowed));
+        if (! in_array($context, $allowed)) {
+            Throw new HtmlException('Given "%s" is no valid Bootstrap::Alert type. Allowed types are: %s', $context, implode(', ', $allowed));
         }
 
-        $this->type = $type;
+        $this->context = $context;
     }
 
     /**
-     * Returns set Bootstrap contextual alert type
      *
-     * @return string
+     * {@inheritDoc}
+     *
+     * @see \Core\Html\Bootstrap\BootstrapContextInterface::getContext()
      */
-    public function getType()
+    public function getContext()
     {
-        return $this->type;
+        return $this->context;
     }
 
     /**
@@ -148,7 +147,7 @@ class Alert implements HtmlBuildableInterface, BootstrapContextInterface
 
         $this->html->addCss([
             'alert',
-            'alert-' . $this->type
+            'alert-' . $this->context
         ]);
 
         if ($this->dismissable) {
