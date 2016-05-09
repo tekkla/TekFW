@@ -395,6 +395,7 @@ class App
             'core.http',
             'core.security',
             'core.page',
+            'core.message.default',
             'core.html.factory',
             'core.ajax',
             'core.io'

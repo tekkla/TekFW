@@ -14,6 +14,8 @@ use Core\Cfg\CfgTrait;
 use Core\Language\TextTrait;
 use Core\IO\IO;
 use Core\Ajax\Dom;
+use Core\Message\Message;
+use Core\Message\MessageHandler;
 
 /**
  * Controller.php
@@ -123,6 +125,13 @@ class Controller extends MvcAbstract
     protected $page;
 
     /**
+     * MessageHandler service
+     *
+     * @var MessageHandler
+     */
+    protected $message;
+
+    /**
      *
      * @var HtmlFactory
      */
@@ -171,7 +180,7 @@ class Controller extends MvcAbstract
      * @param IO $io
      *            IO dependency
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax, IO $io)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io)
     {
         // Store name
         $this->name = $name;
@@ -180,6 +189,7 @@ class Controller extends MvcAbstract
         $this->http = $http;
         $this->security = $security;
         $this->page = $page;
+        $this->message = $message;
         $this->html = $html;
         $this->ajax = $ajax;
         $this->io = $io;
@@ -381,37 +391,36 @@ class Controller extends MvcAbstract
 
         if ($messages) {
 
+            /* @var $msg \Core\Message\Message */
             foreach ($messages as $msg) {
 
-                /* @var $cmd \Core\Ajax\Dom */
+                /* @var $cmd \Core\Ajax\DomCommand */
                 $cmd = $this->ajax->createDomCommand();
 
-                $msg_selector = '#core-message';
+                $cmd->setSelector($msg->getTarget());
 
-                if ($msg->getType() == 'clear') {
-                    $cmd->clear($msg_selector);
-                    continue;
-                }
+                // Each message gets its own alert
 
-                $html = '
-                <div class="alert alert-' . $msg->getType();
-
-                // Message dismissable?
-                if ($msg->getDismissable()) {
-                    $html .= ' alert-dismissable';
-                }
+                /* @var $alert \Core\Html\Bootstrap\Alert\Alert */
+                $alert = $this->html->create('Bootstrap\Alert\Alert');
+                $alert->setType($msg->getType());
+                $alert->setDismissable($msg->getDismissable());
 
                 // Fadeout message?
-                if ($this->cfg('js.style.fadeout_time', 'Core') > 0 && $msg->getFadeout()) {
-                    $html .= ' fadeout';
+                if ($this->cfg('js.style.fadeout_time', null, 'Core') > 0 && $msg->getFadeout()) {
+                    $alert->html->addCss('fadeout');
                 }
 
-                $html .= '">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                    ' . $msg->getMessage() . '
-                    </div>';
+                // Has this message an id which we can use as div id?
+                if (! empty($msg->getId())) {
+                    $alert->html->setId($msg->getId());
+                }
 
-                $cmd->append($msg_selector, $html);
+                // At least append the message content
+                $alert->setContent($msg->getMessage());
+
+                $cmd->setArgs($alert->build());
+                $cmd->setFunction($msg->getDisplayFunction());
 
                 $this->ajax->addCommand($cmd);
             }
@@ -452,7 +461,10 @@ class Controller extends MvcAbstract
         if ($this->router->isAjax()) {
             $cmd = $this->ajax->createActCommand();
 
-            $this->ajax->refresh($url);
+            $cmd->setFunction('refresh');
+            $cmd->setArgs($url);
+
+            $this->ajax->addCommand($cmd);
         }
         else {
             $this->redirectExit($url);
@@ -611,7 +623,7 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxTarget($target)
     {
-        if (!empty($this->ajax_cmd)) {
+        if (! empty($this->ajax_cmd)) {
             $this->ajax_cmd->setSelector($target);
         }
 
@@ -627,7 +639,7 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxFunction($function)
     {
-        if (!empty($this->ajax_cmd)) {
+        if (! empty($this->ajax_cmd)) {
             $this->ajax_cmd->setFunction($function);
         }
 
