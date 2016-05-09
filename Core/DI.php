@@ -105,7 +105,7 @@ class DI implements \ArrayAccess
                 }
 
                 // Skip strings without di container typical dot
-                if (($arg instanceof \Core\Amvc\App) || strpos($arg, '.') === false) {
+                if (is_object($arg) || strpos($arg, '.') === false) {
                     continue;
                 }
 
