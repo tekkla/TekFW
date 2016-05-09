@@ -3,7 +3,14 @@ namespace Core\Html\Bootstrap\Panel;
 
 use Core\Html\Elements\Div;
 
-class PanelBody extends PanelElementAbstract
+/**
+ * PanelBody.php
+ *
+ * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
+ * @copyright 2016
+ * @license MIT
+ */
+class PanelBody extends AbstractPanelElement
 {
 
     public function __construct()
