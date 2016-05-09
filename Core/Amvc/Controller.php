@@ -403,7 +403,7 @@ class Controller extends MvcAbstract
 
                 /* @var $alert \Core\Html\Bootstrap\Alert\Alert */
                 $alert = $this->html->create('Bootstrap\Alert\Alert');
-                $alert->setType($msg->getType());
+                $alert->setContext($msg->getType());
                 $alert->setDismissable($msg->getDismissable());
 
                 // Fadeout message?
@@ -411,7 +411,7 @@ class Controller extends MvcAbstract
                     $alert->html->addCss('fadeout');
                 }
 
-                // Has this message an id which we can use as div id?
+                // Has this message an id which we can use as id for the alerts html element?
                 if (! empty($msg->getId())) {
                     $alert->html->setId($msg->getId());
                 }
