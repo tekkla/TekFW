@@ -4,6 +4,7 @@ namespace Core\Html\Controls;
 use Core\Html\Form\Select;
 use Core\Html\HtmlException;
 use Core\Html\HtmlBuildableInterface;
+use Core\Html\FormAbstract;
 
 /**
  * OnOffSwitch.php
@@ -12,8 +13,9 @@ use Core\Html\HtmlBuildableInterface;
  * @copyright 2016
  * @license MIT
  */
-class OnOffSwitch implements HtmlBuildableInterface
+class OnOffSwitch extends FormAbstract implements HtmlBuildableInterface
 {
+
     /**
      *
      * @var Select
@@ -161,9 +163,10 @@ class OnOffSwitch implements HtmlBuildableInterface
         return $this->getValue();
     }
 
-
     /**
+     *
      * {@inheritDoc}
+     *
      * @see \Core\Html\Form\Select::build()
      */
     public function build()
@@ -187,5 +190,16 @@ class OnOffSwitch implements HtmlBuildableInterface
         }
 
         return $this->html->build();
+    }
+
+    /**
+     * Send all html object related method calls directly to the internal html object
+     *
+     * @param string $method
+     * @param unknown $arguments
+     */
+    public function __call($method, $arguments)
+    {
+        return $this->html->{$method}($arguments);
     }
 }
