@@ -1,8 +1,9 @@
 <?php
 namespace Core\Router;
 
-use Core\Traits\StringTrait;
-use Core\Traits\ConvertTrait;
+use function Core\convertObjectToArray;
+use function Core\stringCamelize;
+use function Core\stringUncamelize;
 
 /**
  * Router.php
@@ -13,8 +14,6 @@ use Core\Traits\ConvertTrait;
  */
 final class Router extends \AltoRouter
 {
-    use StringTrait;
-    use ConvertTrait;
 
     /**
      * Status flag ajax
@@ -105,7 +104,7 @@ final class Router extends \AltoRouter
             ];
 
             if (in_array($key, $aca)) {
-                $item = $this->stringUncamelize($item);
+                $item = stringUncamelize($item);
             }
         });
 
@@ -115,7 +114,7 @@ final class Router extends \AltoRouter
     public function mapAppRoutes($app_name, array $routes)
     {
         // Get uncamelized app name
-        $app = $this->stringUncamelize($app_name);
+        $app = stringUncamelize($app_name);
 
         // Add always a missing index route!
         if (! array_key_exists('index', $routes)) {
@@ -128,7 +127,7 @@ final class Router extends \AltoRouter
                 Throw new RouterException(sprintf('App "%s" sent a nameles route to be mapped.', $app_name));
             }
 
-            $name = $this->stringUncamelize($name);
+            $name = stringUncamelize($name);
 
             if (empty($route['route']) || empty($route['target']['controller']) || empty($route['target']['action'])) {
 
@@ -256,7 +255,7 @@ final class Router extends \AltoRouter
             // Map target results to request properties
             foreach ($this->match['target'] as $key => $val) {
                 if (property_exists($this, $key)) {
-                    $this->{$key} = $this->stringCamelize($val);
+                    $this->{$key} = stringCamelize($val);
                 }
             }
 
@@ -269,7 +268,7 @@ final class Router extends \AltoRouter
 
             foreach ($overrides as $key) {
                 if (! empty($this->match['params'][$key])) {
-                    $this->{$key} = $this->stringCamelize($this->match['params'][$key]);
+                    $this->{$key} = stringCamelize($this->match['params'][$key]);
                 }
             }
 
@@ -506,7 +505,7 @@ final class Router extends \AltoRouter
     {
         if ($arg2 === null && is_array($arg1)) {
 
-            $arg1 = $this->convertObjectToArray($arg1);
+            $arg1 = convertObjectToArray($arg1);
 
             foreach ($arg1 as $key => $val) {
                 $this->params[$key] = $val;
@@ -514,7 +513,7 @@ final class Router extends \AltoRouter
         }
 
         if ($arg2 !== null) {
-            $this->params[$arg1] = $this->convertObjectToArray($arg2);
+            $this->params[$arg1] = convertObjectToArray($arg2);
         }
 
         return $this;

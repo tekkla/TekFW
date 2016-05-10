@@ -1,9 +1,7 @@
 <?php
 namespace Core\Data\Connectors\Db\QueryBuilder;
 
-use Core\Data\Container\Container;
-use Core\Traits\ArrayTrait;
-use Core\Traits\ConvertTrait;
+use function Core\arrayIsAssoc;
 
 /**
  * QueryBuilder.php
@@ -14,10 +12,6 @@ use Core\Traits\ConvertTrait;
  */
 class QueryBuilder
 {
-
-    use ArrayTrait;
-    use ConvertTrait;
-
     /**
      *
      * @var string
@@ -844,7 +838,7 @@ class QueryBuilder
 
             foreach ($this->definition['join'] as $join) {
 
-                if ($this->arrayIsAssoc($join)) {
+                if (arrayIsAssoc($join)) {
                     $this->join[] = [
                         'table' => $join['table'],
                         'as' => $join['as'],
@@ -900,7 +894,7 @@ class QueryBuilder
                     Throw new QueryBuilderException('Querybuilder needs two elements when filter is set as array. The first element has to be the filter statement. The second one an assoc array with filter parameters');
                 }
 
-                if (! $this->arrayIsAssoc($this->definition['filter'][1])) {
+                if (! arrayIsAssoc($this->definition['filter'][1])) {
                     Throw new QueryBuilderException('Querybuilder needs an assoc array as filter parameter list.');
                 }
 
@@ -985,7 +979,7 @@ class QueryBuilder
     {
         if ($arg2 === null) {
 
-            if (! is_array($arg1) || ! $this->arrayIsAssoc($arg1)) {
+            if (! is_array($arg1) || ! arrayIsAssoc($arg1)) {
                 Throw new QueryBuilderException('Setting one QueryBuilder argument means you have to set an assoc array as argument.');
             }
 

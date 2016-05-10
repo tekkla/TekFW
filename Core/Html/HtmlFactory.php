@@ -1,7 +1,7 @@
 <?php
 namespace Core\Html;
 
-use Core\Traits\ArrayTrait;
+use function Core\arrayIsAssoc;
 
 /**
  * HtmlFactory.php
@@ -12,8 +12,6 @@ use Core\Traits\ArrayTrait;
  */
 class HtmlFactory
 {
-
-    use ArrayTrait;
 
     /**
      * Creates an html control / element / form element by using DI container instance method
@@ -43,7 +41,7 @@ class HtmlFactory
 
             if (is_array($arg)) {
 
-                if (! $this->arrayIsAssoc($arg)) {
+                if (! arrayIsAssoc($arg)) {
                     Throw new HtmlException('Arrayed arguments for html objects created by HtmlFactory have to be associative.');
                 }
 

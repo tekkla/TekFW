@@ -3,7 +3,6 @@ namespace Core\Amvc;
 
 // Traits
 use Core\Security\AccessTrait;
-use Core\Traits\StringTrait;
 
 /**
  * MvcAbstract.php
@@ -14,7 +13,6 @@ use Core\Traits\StringTrait;
  */
 abstract class MvcAbstract
 {
-    use StringTrait;
     use AccessTrait;
 
     /**

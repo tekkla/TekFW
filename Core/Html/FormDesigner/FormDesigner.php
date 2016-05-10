@@ -2,7 +2,7 @@
 namespace Core\Html\FormDesigner;
 
 use Core\Data\Container\Container;
-use Core\Language\TextTrait;
+
 use Core\Html\Form\Form;
 use Core\Html\Form\Checkbox;
 use Core\Html\Form\Select;
@@ -20,7 +20,7 @@ use Core\Html\HtmlBuildableInterface;
  */
 final class FormDesigner implements HtmlBuildableInterface
 {
-    use TextTrait;
+    
     use UrlTrait;
 
     /**

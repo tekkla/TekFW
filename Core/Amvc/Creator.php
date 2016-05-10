@@ -2,7 +2,7 @@
 namespace Core\Amvc;
 
 use Core\Cfg\Cfg;
-use Core\Traits\StringTrait;
+use function Core\stringCamelize;
 
 /**
  * Creator.php
@@ -13,8 +13,6 @@ use Core\Traits\StringTrait;
  */
 class Creator
 {
-
-    use StringTrait;
 
     /**
      *
@@ -69,7 +67,7 @@ class Creator
             Throw new AmvcException('Amvc creators getAppInstance() method needs an app name.');
         }
 
-        $name = $this->stringCamelize($name);
+        $name = stringCamelize($name);
 
         // App instances are singletons!
         if (array_key_exists($name, $this->instances)) {

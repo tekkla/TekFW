@@ -2,7 +2,7 @@
 namespace Core\Html\Controls;
 
 use Core\Html\Form\Input;
-use Core\Language\TextTrait;
+
 use Core\Html\HtmlException;
 
 /**
@@ -14,7 +14,7 @@ use Core\Html\HtmlException;
  */
 class DateTimePicker extends Input
 {
-    use TextTrait;
+    
 
     protected $css = [
         'form-datepicker'

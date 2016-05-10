@@ -9,13 +9,14 @@ use Core\Html\HtmlFactory;
 use Core\Html\FormDesigner\FormDesigner;
 use Core\Ajax\Ajax;
 use Core\Router\UrlTrait;
-use Core\Traits\ArrayTrait;
-use Core\Language\TextTrait;
 use Core\IO\IO;
 use Core\Ajax\Dom;
 use Core\Message\Message;
 use Core\Message\MessageHandler;
 use Core\Cfg\AppCfg;
+use Core\Language\Text;
+use function Core\stringUncamelize;
+use function Core\arrayIsAssoc;
 
 /**
  * Controller.php
@@ -28,8 +29,6 @@ class Controller extends MvcAbstract
 {
 
     use UrlTrait;
-    use TextTrait;
-    use ArrayTrait;
 
     /**
      * Type of class
@@ -152,6 +151,12 @@ class Controller extends MvcAbstract
 
     /**
      *
+     * @var Text
+     */
+    protected $text;
+
+    /**
+     *
      * @var Dom
      */
     private $ajax_cmd;
@@ -180,7 +185,7 @@ class Controller extends MvcAbstract
      *            IO dependency
      * @param AppCfg $cfg
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, AppCfg $cfg)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, AppCfg $cfg, Text $text)
     {
         // Store name
         $this->name = $name;
@@ -194,6 +199,7 @@ class Controller extends MvcAbstract
         $this->ajax = $ajax;
         $this->io = $io;
         $this->cfg = $cfg;
+        $this->text = $text;
 
         // Model to bind?
         $this->model = $this->app->getModel($name);
@@ -229,13 +235,13 @@ class Controller extends MvcAbstract
 
         // If accesscheck failed => stop here and return false!
         if ($this->checkControllerAccess() == false) {
-            $this->page->message->warning($this->text('access.missing_userrights'));
+            $this->page->message->warning($this->text->get('access.missing_userrights'));
             $this->log->suspicious(sprintf('Missing permission for ressource %s.%s.%s', $this->app->getName(), $this->getName(), $action));
             return false;
         }
 
         // Use givem params
-        if (! empty($params) && ! $this->arrayIsAssoc($params)) {
+        if (! empty($params) && ! arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
 
@@ -551,9 +557,9 @@ class Controller extends MvcAbstract
             $dbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
 
             $pieces = [
-                $this->stringUncamelize($this->app->getName()),
-                $this->stringUncamelize($this->name),
-                isset($dbt[1]['function']) ? $this->stringUncamelize($dbt[1]['function']) : null
+                stringUncamelize($this->app->getName()),
+                stringUncamelize($this->name),
+                isset($dbt[1]['function']) ? stringUncamelize($dbt[1]['function']) : null
             ];
 
             $id = implode('-', $pieces);

@@ -2,7 +2,7 @@
 namespace Core\IO;
 
 use Core\Log\Log;
-use Core\Traits\StringTrait;
+use function Core\stringNormalize;
 
 /**
  * File.php
@@ -13,8 +13,6 @@ use Core\Traits\StringTrait;
  */
 class Files
 {
-    use StringTrait;
-
     /**
      *
      * @var Log
@@ -186,7 +184,7 @@ class Files
             list ($name, $extension) = explode('.', $name);
         }
 
-        $name = $this->normalizeString($name);
+        $name = stringNormalize($name);
         $name = preg_replace('/[^[:alnum:]\-]+/', $delimiter, $name);
         $name = preg_replace('/' . $delimiter . '+/', $delimiter, $name);
         $name = rtrim($name, $delimiter);

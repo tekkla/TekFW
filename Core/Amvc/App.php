@@ -10,8 +10,9 @@ use Core\Router\Router;
 use Core\IO\IO;
 use Core\Language\Language;
 use Core\Router\UrlTrait;
-use Core\Traits\StringTrait;
-use Core\Language\TextTrait;
+use Core\Language\Text;
+use function Core\stringUncamelize;
+use function Core\stringCamelize;
 
 /**
  * App.php
@@ -23,9 +24,7 @@ use Core\Language\TextTrait;
 class App
 {
 
-    use TextTrait;
     use UrlTrait;
-    use StringTrait;
 
     const LANGUAGE = 'language';
 
@@ -131,6 +130,12 @@ class App
 
     /**
      *
+     * @var Text
+     */
+    protected $text;
+
+    /**
+     *
      * @var DI
      */
     public $di;
@@ -153,6 +158,8 @@ class App
         $this->language = $language;
         $this->creator = $creator;
         $this->di = $di;
+
+        $this->text = $this->language->createTextAdapter($this->name);
 
         // Set path property which is used on including additional app files like settings, routes, config etc
         $this->path = BASEDIR . '/' . str_replace('\\', '/', $this->getNamespace());
@@ -356,10 +363,11 @@ class App
             $name = $this->getComponentsName();
         }
 
-        $name = $this->stringCamelize($name);
+        $name = stringCamelize($name);
         $args = [
             'core.security',
-            $this->cfg->{$this->name}
+            $this->cfg->{$this->name},
+            $this->language->createTextAdapter($this->name)
         ];
 
         // Create a model instance from a different app?
@@ -387,7 +395,7 @@ class App
             $name = $this->getComponentsName();
         }
 
-        $name = $this->stringCamelize($name);
+        $name = stringCamelize($name);
         $args = [
             'core.router',
             'core.http',
@@ -397,7 +405,8 @@ class App
             'core.html.factory',
             'core.ajax',
             'core.io',
-            $this->cfg->{$this->name}
+            $this->cfg->{$this->name},
+            $this->language->createTextAdapter($this->name)
         ];
 
         // Create a controller instance from a different app?
@@ -425,7 +434,7 @@ class App
             $name = $this->getComponentsName();
         }
 
-        $name = $this->stringCamelize($name);
+        $name = stringCamelize($name);
         $args = [
             $this->cfg->{$this->name}
         ];
@@ -530,7 +539,7 @@ class App
                 }
 
                 // Add dir and url to app config
-                $key = $this->stringUncamelize($file);
+                $key = stringUncamelize($file);
 
                 $this->cfg->{$this->name}['dir.' . $key] = $dir . '/' . $file;
                 $this->cfg->{$this->name}['url.' . $key] = $this->cfg->Core['url.' . $this->getAppType()] . '/' . $this->name . '/' . $file;
@@ -668,7 +677,7 @@ class App
      */
     final public function getName($uncamelize = false)
     {
-        return $uncamelize == true ? $this->stringUncamelize($this->name) : $this->name;
+        return $uncamelize == true ? stringUncamelize($this->name) : $this->name;
     }
 
     /**

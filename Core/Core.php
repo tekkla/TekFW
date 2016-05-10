@@ -1,8 +1,6 @@
 <?php
 // Include StringTrait file
-require_once (BASEDIR . '/Core/Traits/StringTrait.php');
-
-use Core\Traits\StringTrait;
+require_once (BASEDIR . '/Core/Functions.php');
 
 /**
  * Core.php
@@ -29,9 +27,6 @@ define('APPSSECDIR', BASEDIR . '/AppsSec');
 
 final class Core
 {
-
-    use StringTrait;
-
     /**
      *
      * @var array

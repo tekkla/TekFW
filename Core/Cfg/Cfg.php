@@ -1,13 +1,9 @@
 <?php
 namespace Core\Cfg;
 
-// Data Libs
 use Core\Data\Connectors\Db\Db;
-
-// Traits
-use Core\Traits\StringTrait;
-use Core\Traits\ArrayTrait;
 use phpFastCache\CacheManager;
+use function Core\stringIsSerialized;
 
 /**
  * Cfg.php
@@ -18,9 +14,6 @@ use phpFastCache\CacheManager;
  */
 final class Cfg
 {
-    use StringTrait;
-    use ArrayTrait;
-
     /**
      * Storage array for config values grouped by app name
      *
@@ -283,7 +276,7 @@ final class Cfg
                     $this->data->{$app_name}->{$cfg} = $control['default'];
                 }
 
-                if (! empty($control['serialize']) && $this->stringIsSerialized($this->data->{$app_name}->{$cfg})) {
+                if (! empty($control['serialize']) && stringIsSerialized($this->data->{$app_name}->{$cfg})) {
                     $this->data->{$app_name}->{$cfg} = unserialize($this->data->{$app_name}->{$cfg});
                 }
 

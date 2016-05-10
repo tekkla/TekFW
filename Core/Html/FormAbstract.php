@@ -3,7 +3,6 @@ namespace Core\Html;
 
 use Core\Html\HtmlAbstract;
 use Core\Html\Form\Label;
-use Core\Traits\StringTrait;
 
 /**
  * FormAbstract.php
@@ -14,7 +13,6 @@ use Core\Traits\StringTrait;
  */
 class FormAbstract extends HtmlAbstract
 {
-    use StringTrait;
 
     /**
      * Description for the help block
@@ -176,7 +174,7 @@ class FormAbstract extends HtmlAbstract
      */
     public function hasDescription()
     {
-        return !empty($this->description);
+        return ! empty($this->description);
     }
 
     /**
@@ -276,7 +274,7 @@ class FormAbstract extends HtmlAbstract
      */
     public function hasElementWidth()
     {
-        return !empty($this->element_width);
+        return ! empty($this->element_width);
     }
 
     /**

@@ -53,8 +53,8 @@ trait UrlTrait
         }
 
         // Make appstring lowercase
-        if (method_exists($this, 'stringUncamelize')) {
-            $app = $this->stringUncamelize($app);
+        if (function_exists('\Core\stringUncamelize')) {
+            $app = \Core\stringUncamelize($app);
         }
 
         // Use appsstring as parameter when there is no appstring present

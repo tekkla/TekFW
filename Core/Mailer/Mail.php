@@ -1,7 +1,7 @@
 <?php
 namespace Core\Mailer;
 
-use Core\Traits\ArrayTrait;
+use function Core\arrayIsAssoc;
 
 /**
  * Mail.php
@@ -12,9 +12,6 @@ use Core\Traits\ArrayTrait;
  */
 class Mail
 {
-
-    use ArrayTrait;
-
     /**
      *
      * @var string
@@ -402,7 +399,7 @@ class Mail
      */
     public function addReplytos(array $reply_tos)
     {
-        if ($this->arrayIsAssoc($reply_tos)) {
+        if (arrayIsAssoc($reply_tos)) {
             foreach ($reply_tos as $mailaddress => $name) {
                 $this->addReplyto($mailaddress, $name);
             }
@@ -482,7 +479,7 @@ class Mail
             Throw new MailerException(sprintf('The recipienttype "%" is not allowed. Please select from "to", "cc" or "bcc"'), $type);
         }
 
-        if ($this->arrayIsAssoc($recipients)) {
+        if (arrayIsAssoc($recipients)) {
             foreach ($recipients as $recipient => $name) {
                 $this->addRecipient($type, $recipients, $name);
             }
