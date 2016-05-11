@@ -602,10 +602,10 @@ final class Core extends App
 
             // Show admin menu?
             if ($this->security->user->isAdmin()) {
-                $usermenu->createItem('admin', $this->text('menu.admin'), $this->url('admin'));
+                $usermenu->createItem('admin', $this->text->get('menu.admin'), $this->url('admin'));
             }
 
-            $usermenu->createItem('logout', $this->text('menu.logout'), $this->url('login', [
+            $usermenu->createItem('logout', $this->text->get('menu.logout'), $this->url('login', [
                 'action' => 'logout'
             ]));
         }
@@ -615,8 +615,8 @@ final class Core extends App
 
             $type = 'guest';
 
-            $this->page->menu->createItem('register', $this->text('menu.register'), $this->url('register'));
-            $this->page->menu->createItem('login', $this->text('menu.login'), $this->url('login', [
+            $this->page->menu->createItem('register', $this->text->get('menu.register'), $this->url('register'));
+            $this->page->menu->createItem('login', $this->text->get('menu.login'), $this->url('login', [
                 'action' => 'login'
             ]));
         }

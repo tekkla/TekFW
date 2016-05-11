@@ -29,10 +29,10 @@ class GroupController extends Controller
         $data = $this->model->getGroups();
 
         $this->setVar([
-            'headline' => $this->text('group.list'),
-            'id_group' => $this->text('group.field.id_group'),
-            'group' => $this->text('group.singular'),
-            'members' => $this->text('group.members'),
+            'headline' => $this->text->get('group.list'),
+            'id_group' => $this->text->get('group.field.id_group'),
+            'group' => $this->text->get('group.singular'),
+            'members' => $this->text->get('group.members'),
             'grouplist' => $data
         ]);
 
@@ -42,9 +42,9 @@ class GroupController extends Controller
     public function Detail($id)
     {
         $this->setVar([
-            'title' => $this->text('group.field.title'),
-            'display_name' => $this->text('group.field.display_name'),
-            'description' => $this->text('group.field.description'),
+            'title' => $this->text->get('group.field.title'),
+            'display_name' => $this->text->get('group.field.display_name'),
+            'description' => $this->text->get('group.field.description'),
             'group' => $this->model->getGroup($id),
             'url' => $this->url('generic.id', [
                 'controller' => 'group',
@@ -96,7 +96,7 @@ class GroupController extends Controller
 
             if (method_exists($control, 'setLabel')) {
 
-                $text = $this->text('group.field.' . str_replace('id_', '', $name));
+                $text = $this->text->get('group.field.' . str_replace('id_', '', $name));
                 $control->setLabel($text);
 
                 if ($control instanceof Input) {
@@ -110,14 +110,14 @@ class GroupController extends Controller
         $editbox->setForm($fd);
 
         // Editbox caption and texts
-        $editbox->setCaption($this->text('group.action.edit.text'));
-        $editbox->setSaveText($this->text('action.save.text', 'Core'));
-        $editbox->setCancelText($this->text('action.cancel.text', 'Core'));
+        $editbox->setCaption($this->text->get('group.action.edit.text'));
+        $editbox->setSaveText($this->text->get('action.save.text', 'Core'));
+        $editbox->setCancelText($this->text->get('action.cancel.text', 'Core'));
 
         // Publish to view
         $this->setVar([
             'form' => $editbox,
-            'project_headline' => $this->text('group.action.edit.text')
+            'project_headline' => $this->text->get('group.action.edit.text')
         ]);
     }
 }

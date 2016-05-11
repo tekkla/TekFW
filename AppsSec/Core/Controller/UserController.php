@@ -41,7 +41,7 @@ class UserController extends Controller
             ]),
             'links' => [
                 'new' => [
-                    'text' => $this->text('user.action.new.text'),
+                    'text' => $this->text->get('user.action.new.text'),
                     'url' => $this->url('generic.action', [
                         'controller' => 'user',
                         'action' => 'edit'
@@ -49,9 +49,9 @@ class UserController extends Controller
                 ]
             ],
             'text' => [
-                'headline' => $this->text('user.list'),
-                'username' => $this->text('user.field.username'),
-                'display_name' => $this->text('user.field.display_name')
+                'headline' => $this->text->get('user.list'),
+                'username' => $this->text->get('user.field.username'),
+                'display_name' => $this->text->get('user.field.display_name')
             ]
         ]);
 
@@ -106,7 +106,7 @@ class UserController extends Controller
         // Usergroups
         $heading = $group->addElement('Elements\Heading');
         $heading->setSize(3);
-        $heading->setInner($this->text('user.field.groups'));
+        $heading->setInner($this->text->get('user.field.groups'));
 
         $groups = $this->security->group->getGroups();
 
@@ -147,7 +147,7 @@ class UserController extends Controller
         $editbox->setForm($fd);
 
         // Editbox caption
-        $editbox->setCaption($this->text('user.action.edit.text'));
+        $editbox->setCaption($this->text->get('user.action.edit.text'));
 
         // Cancel action only when requested
         $editbox->setCancelAction($this->url('generic.id', [
@@ -214,7 +214,7 @@ class UserController extends Controller
                     ];
 
                     // Create subject by replacing {brand} placeholder strings
-                    $subject = str_replace('{brand}', $strings['brand'], $this->text('register.mail.subject'));
+                    $subject = str_replace('{brand}', $strings['brand'], $this->text->get('register.mail.subject'));
 
                     // Add subject as title string to replace a placeholder+
                     $strings['title'] = $subject;
@@ -228,11 +228,11 @@ class UserController extends Controller
     <title>{title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
-<body>' . $this->text('register.mail.body.html') . '</body>
+<body>' . $this->text->get('register.mail.body.html') . '</body>
 
 </html>';
 
-                    $alt_body = $this->text('register.mail.body.plain');
+                    $alt_body = $this->text->get('register.mail.body.plain');
 
                     // Replace placeholder
                     foreach ($strings as $key => $val) {
@@ -270,20 +270,20 @@ class UserController extends Controller
 
         $username = $group->addControl('Text', 'username');
 
-        $text = $this->text('register.form.username');
+        $text = $this->text->get('register.form.username');
         $username->setPlaceholder($text);
         $username->noLabel();
 
         $password = $group->addControl('Password', 'password');
 
-        $text = $this->text('register.form.password');
+        $text = $this->text->get('register.form.password');
         $password->setPlaceholder($text);
         $password->noLabel();
 
         if ($this->cfg->get('user.register.use_compare_password')) {
             $password_compare = $group->addControl('Password', 'password_compare');
 
-            $text = $this->text('register.form.compare');
+            $text = $this->text->get('register.form.compare');
             $password_compare->setPlaceholder($text);
             $password_compare->noLabel();
         }
@@ -300,10 +300,10 @@ class UserController extends Controller
         $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
-        $control->setInner($icon->build() . ' ' . $this->text('register.form.button'));
+        $control->setInner($icon->build() . ' ' . $this->text->get('register.form.button'));
 
         $this->setVar([
-            'headline' => $this->text('register.form.headline'),
+            'headline' => $this->text->get('register.form.headline'),
             'form' => $fd,
             'state' => 0
         ]);
@@ -312,8 +312,8 @@ class UserController extends Controller
     public function AccountState($state = 'wait')
     {
         $this->setVar([
-            'headline' => $this->text('register.activation.' . $state . '.headline'),
-            'text' => $this->text('register.activation.' . $state . '.text')
+            'headline' => $this->text->get('register.activation.' . $state . '.headline'),
+            'text' => $this->text->get('register.activation.' . $state . '.text')
         ]);
     }
 

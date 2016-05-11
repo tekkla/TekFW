@@ -141,8 +141,8 @@ class UserModel extends Model
         $this->addUsernameAndPasswordChecksFromConfig();
 
         if (! password_verify($data['password'], password_hash($data['password_compare'], PASSWORD_DEFAULT))) {
-            $this->addError('password', $this->text('user.error.password.mismatch'));
-            $this->addError('password_compare', $this->text('user.error.password.mismatch'));
+            $this->addError('password', $this->text->get('user.error.password.mismatch'));
+            $this->addError('password_compare', $this->text->get('user.error.password.mismatch'));
         }
 
         $this->validate($data);
@@ -160,7 +160,7 @@ class UserModel extends Model
 
             switch ($t->getCode()) {
                 case 'user.username.exists':
-                    $this->addError('username', $this->text('register.error.name_in_use'));
+                    $this->addError('username', $this->text->get('register.error.name_in_use'));
                     return;
             }
         }
@@ -173,7 +173,7 @@ class UserModel extends Model
         $this->scheme['fields']['username']['validate'][] = [
             'min',
             $min_length,
-            sprintf($this->text('user.error.username.length'), $min_length)
+            sprintf($this->text->get('user.error.username.length'), $min_length)
         ];
 
         // Regexp check für username set in config?
@@ -183,7 +183,7 @@ class UserModel extends Model
             $this->scheme['fields']['username']['validate'][] = [
                 'CustomRegexp',
                 $regexp,
-                sprintf($this->text('user.error.username.regexp'), $regexp)
+                sprintf($this->text->get('user.error.username.regexp'), $regexp)
             ];
         }
 
@@ -198,14 +198,14 @@ class UserModel extends Model
                     $min_length,
                     $max_length
                 ],
-                sprintf($this->text('user.error.password.range'), $min_length, $max_length)
+                sprintf($this->text->get('user.error.password.range'), $min_length, $max_length)
             ];
         }
         else {
             $this->scheme['fields']['password']['validate'][] = [
                 'min',
                 $min_length,
-                sprintf($this->text('user.error.password.min_length'), $min_length)
+                sprintf($this->text->get('user.error.password.min_length'), $min_length)
             ];
         }
 
@@ -216,7 +216,7 @@ class UserModel extends Model
             $this->scheme['fields']['password']['validate'][] = [
                 'CustomRegexp',
                 $regexp,
-                sprintf($this->text('user.error.password.regexp'), $regexp)
+                sprintf($this->text->get('user.error.password.regexp'), $regexp)
             ];
         }
     }

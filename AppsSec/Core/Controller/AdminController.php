@@ -29,7 +29,7 @@ final class AdminController extends Controller
             // Links to users and permissions
             'menu' => [
                 'users' => [
-                    'title' => $this->text('admin.menu.users'),
+                    'title' => $this->text->get('admin.menu.users'),
                     'links' => [
                         'users' => [
                             'url' => $this->url('generic.action', [
@@ -37,7 +37,7 @@ final class AdminController extends Controller
                                 'controller' => 'user',
                                 'action' => 'index'
                             ]),
-                            'text' => $this->text('user.plural')
+                            'text' => $this->text->get('user.plural')
                         ],
                         'groups' => [
                             'url' => $this->url('generic.action', [
@@ -45,7 +45,7 @@ final class AdminController extends Controller
                                 'controller' => 'Group',
                                 'action' => 'Index'
                             ]),
-                            'text' => $this->text('group.plural')
+                            'text' => $this->text->get('group.plural')
                         ]
                     ]
                 ]

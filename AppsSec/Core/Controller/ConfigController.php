@@ -7,6 +7,7 @@ use Core\Html\FormDesigner\FormGroup;
 use Core\Security\SecurityException;
 use Core\Amvc\ControllerException;
 use Core\Error\CoreException;
+use function Core\stringCamelize;
 
 /**
  * ConfigController.php
@@ -32,7 +33,7 @@ class ConfigController extends Controller
 
     public function Config($app_name)
     {
-        $app_name = $this->stringCamelize($app_name);
+        $app_name = stringCamelize($app_name);
 
         $groups = $this->model->getConfigGroups($app_name);
 
@@ -45,7 +46,7 @@ class ConfigController extends Controller
         }
 
         $this->setVar([
-            'headline' => $this->text('name', $app_name),
+            'headline' => $this->text->get('name', $app_name),
             'icon' => $this->html->create('Elements\Icon')
                 ->useIcon('cog'),
             'groups' => $groups,
@@ -54,7 +55,7 @@ class ConfigController extends Controller
 
         // Add linktreee
         $this->page->breadcrumbs->createItem('Admin', $this->url('admin'));
-        $this->page->breadcrumbs->createActiveItem($this->text('name', $app_name));
+        $this->page->breadcrumbs->createActiveItem($this->text->get('name', $app_name));
 
         $this->setAjaxTarget('#core-admin');
     }
@@ -62,7 +63,7 @@ class ConfigController extends Controller
     public function Group($app_name, $group_name)
     {
         // Camelize app name becaus this parameter comes uncamelized from request handler
-        $app_name = $this->stringCamelize($app_name);
+        $app_name = stringCamelize($app_name);
 
         // check permission
         if (! $this->checkAccess('config', false, $app_name)) {
@@ -118,14 +119,14 @@ class ConfigController extends Controller
 
         $control = $group->addControl('Submit');
         $control->setUnbound();
-        $control->setInner('<i class="fa fa-' . $this->text('action.save.icon') . '"></i> ' . $this->text('action.save.text'));
+        $control->setInner('<i class="fa fa-' . $this->text->get('action.save.icon') . '"></i> ' . $this->text->get('action.save.text'));
         $control->addCss([
             'btn-sm',
             'btn-block'
         ]);
 
         $this->setVar([
-            'headline' => $this->text('config.' . $group_name . '.head'),
+            'headline' => $this->text->get('config.' . $group_name . '.head'),
             'app_name' => $app_name,
             'group_name' => $group_name,
             'form' => $fd,
@@ -184,7 +185,7 @@ class ConfigController extends Controller
                 $cfg = (! empty($prefix) ? $prefix . $glue : '') . $group_name;
 
                 $textkey = 'config.' . $cfg . '.head';
-                $text = $this->text($textkey, $app_name);
+                $text = $this->text->get($textkey, $app_name);
 
                 if ($text == $textkey) {
                     $text = ucfirst($group_name);
@@ -199,7 +200,7 @@ class ConfigController extends Controller
                 ]);
 
                 $textkey = 'config.' . $cfg . '.desc';
-                $text = $this->text($textkey, $app_name);
+                $text = $this->text->get($textkey, $app_name);
 
                 if ($text != $textkey) {
                     $paragraph = $subgroup->addElement('Elements\Paragraph');
@@ -318,7 +319,7 @@ class ConfigController extends Controller
                 // Add 'please select' option
                 if (empty($settings['value'])) {
                     $option = $control->createOption();
-                    $option->setInner($this->text('please.select'));
+                    $option->setInner($this->text->get('please.select'));
                     $option->setValue('');
                     $option->isDisabled(1);
                     $option->isHidden(1);
@@ -363,7 +364,7 @@ class ConfigController extends Controller
             default:
 
                 if (! empty($settings['translate'])) {
-                    $settings['value'] = $this->text($settings['value'], $app_name);
+                    $settings['value'] = $this->text->get($settings['value'], $app_name);
                 }
 
                 $control->setValue($settings['value']);
@@ -377,9 +378,9 @@ class ConfigController extends Controller
         $icon->addData([
             'toggle' => 'popover',
             'trigger' => 'click',
-            'content' => $this->text('config.' . $flat_name . '.desc')
+            'content' => $this->text->get('config.' . $flat_name . '.desc')
         ]);
 
-        $control->setLabel($this->text('config.' . $flat_name . '.label') . ' ' . $icon->build());
+        $control->setLabel($this->text->get('config.' . $flat_name . '.label') . ' ' . $icon->build());
     }
 }

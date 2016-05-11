@@ -35,7 +35,7 @@ class GroupPermissionController extends Controller
     public function PermissionsByGroup($id)
     {
         $this->setVar([
-            'headline' => $this->text('permission.plural'),
+            'headline' => $this->text->get('permission.plural'),
             'permissions' => $this->model->loadPermissionsGroupedByApps([
                 $id
             ])
@@ -45,7 +45,7 @@ class GroupPermissionController extends Controller
     public function Detail($id)
     {
         $this->setVar([
-            'headline' => $this->text('permission.plural'),
+            'headline' => $this->text->get('permission.plural'),
             'permissions' => $this->model->loadPermissions([
                 $id
             ])
@@ -96,7 +96,7 @@ class GroupPermissionController extends Controller
                 continue;
             }
             
-            $text = $this->text('group_permission.field.' . $name);
+            $text = $this->text->get('group_permission.field.' . $name);
             
             $control = $group->addControl($type, $name);
             $control->setLabel($text);
@@ -131,10 +131,10 @@ class GroupPermissionController extends Controller
         $editbox->setForm($fd);
         
         if (! empty($id)) {
-            $caption = $this->text('group_permission.action.edit.text');
+            $caption = $this->text->get('group_permission.action.edit.text');
         }
         else {
-            $caption = $this->text('group_permission.action.new.text');
+            $caption = $this->text->get('group_permission.action.new.text');
         }
         
         $editbox->setCaption($caption);
@@ -143,8 +143,8 @@ class GroupPermissionController extends Controller
             'action' => 'Detail',
             'id' => $id_parent
         ]));
-        $editbox->setSaveText($this->text('action.save.text', 'Core'));
-        $editbox->setCancelText($this->text('action.cancel.text', 'Core'));
+        $editbox->setSaveText($this->text->get('action.save.text', 'Core'));
+        $editbox->setCancelText($this->text->get('action.cancel.text', 'Core'));
         
         $this->setVar('form', $editbox);
     }

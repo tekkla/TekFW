@@ -15,7 +15,7 @@ class LogController extends Controller
     public function Index()
     {
         $this->setVar([
-            'headline' => $this->text('logs.headline'),
+            'headline' => $this->text->get('logs.headline'),
             'logs' => $this->app->getController()
                 ->run('Logs')
         ]);

@@ -2,7 +2,9 @@
 namespace AppsSec\Core\Model;
 
 use Core\Amvc\Model;
-use Core\Data\Validator\Validator;
+use Core\Validator\Validator;
+use function Core\arrayAssignByKeys;
+use function Core\arrayAssignByPath;
 
 /**
  * ConfigModel.php
@@ -172,7 +174,7 @@ final class ConfigModel extends Model
                 if (! $validator->isValid()) {
 
                     // and create error informations
-                    $this->arrayAssignByKeys($this->errors, explode('.', $key), $validator->getResult());
+                    arrayAssignByKeys($this->errors, explode('.', $key), $validator->getResult());
                 }
 
                 // next please!
@@ -188,7 +190,7 @@ final class ConfigModel extends Model
         $configs = $this->di->get('core.cfg')->{$app_name};
 
         foreach ($configs as $path => $value) {
-            $this->arrayAssignByPath($data, $path, $value);
+            arrayAssignByPath($data, $path, $value);
         }
 
         if (! empty($data[$group_name])) {

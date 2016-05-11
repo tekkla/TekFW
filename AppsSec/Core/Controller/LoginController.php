@@ -69,7 +69,7 @@ class LoginController extends Controller
                 // Store failed attempt as flag in session
                 $_SESSION['Core']['login_failed'] = true;
 
-                $this->model->addError('@', $this->text('login.failed'));
+                $this->model->addError('@', $this->text->get('login.failed'));
             }
         }
         else {
@@ -90,7 +90,7 @@ class LoginController extends Controller
             $group = $fd->addGroup();
             $group->addCss('alert alert-info');
             $group->setRole('alert');
-            $group->setInner($this->text('register.activation.notice'));
+            $group->setInner($this->text->get('register.activation.notice'));
         }
 
         // Create element group
@@ -111,7 +111,7 @@ class LoginController extends Controller
             $control = $group->addControl($type, $name);
 
             // Label and placeholder
-            $text = $this->text('login.form.' . $name);
+            $text = $this->text->get('login.form.' . $name);
 
             $methods = [
                 'setPlaceholder'
@@ -130,7 +130,7 @@ class LoginController extends Controller
                     break;
 
                 case 'remember':
-                    $control->setLabel($this->text('login.form.remember'));
+                    $control->setLabel($this->text->get('login.form.remember'));
                     break;
             }
         }
@@ -143,7 +143,7 @@ class LoginController extends Controller
         $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
-        $control->setInner($icon->build() . ' ' . $this->text('login.form.login'));
+        $control->setInner($icon->build() . ' ' . $this->text->get('login.form.login'));
 
         // @TODO Create links for 'Forgot Password?' and 'New user?'
 
@@ -152,11 +152,11 @@ class LoginController extends Controller
         #if ($this->cfg->get('security.login.register')) {}
 
         $this->setVar([
-            'headline' => $this->text('login.text'),
+            'headline' => $this->text->get('login.text'),
             'form' => $fd
         ]);
 
-        $this->page->breadcrumbs->createActiveItem($this->text('user.action.login'));
+        $this->page->breadcrumbs->createActiveItem($this->text->get('user.action.login'));
     }
 
     public function Logout()
@@ -168,6 +168,6 @@ class LoginController extends Controller
 
     public function AlreadyLoggedIn()
     {
-        $this->setVar('loggedin', $this->text('already_loggedin'));
+        $this->setVar('loggedin', $this->text->get('already_loggedin'));
     }
 }
