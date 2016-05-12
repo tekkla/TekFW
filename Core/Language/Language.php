@@ -12,17 +12,28 @@ use function Core\arrayFlatten;
  */
 class Language implements LanguageInterface
 {
+
     /**
      *
-     * @var array
+     * @var LanguageStorage
      */
-    private $data=[];
+    private $storage;
 
     /**
      *
      * @var string
      */
     private $fallback = '';
+
+    /**
+     * Constructor
+     *
+     * Inits the internel storage.
+     */
+    public function __construct()
+    {
+        $this->storage = new LanguageStorage();
+    }
 
     /**
      * Sets the name of the fallback storage
@@ -60,11 +71,11 @@ class Language implements LanguageInterface
 
                 foreach ($lang_array as $key => $val) {
 
-                    if (! array_key_exists($storage_name, $this->data)) {
-                        $this->data[$storage_name] = new LanguageStorage();
+                    if (! isset($this->storage->{$storage_name})) {
+                        $this->storage->{$storage_name} = new LanguageStorage();
                     }
 
-                    $this->data[$storage_name]->{$key} = $val;
+                    $this->storage->{$storage_name}->{$key} = $val;
                 }
             }
         }
@@ -78,10 +89,10 @@ class Language implements LanguageInterface
      * Returns the key when no text is found.
      * Allows linking of keys within a storage and throws an exception when it comes to ininite loops.
      *
-     * @param string $key
-     *            Key of the requested text
      * @param string $storage_name
      *            Name of storage to query for the key belongs to.
+     * @param string $key
+     *            Key of the requested text
      *
      * @throws LanguageException
      *
@@ -97,23 +108,23 @@ class Language implements LanguageInterface
         }
 
         // Return key when key is not found
-        if (empty($this->data[$storage_name]) || ! isset($this->data[$storage_name]->{$key})) {
+        if (! isset($this->storage->{$storage_name}->{$key})) {
 
             // Do we have a fallback storage set to look for?
-            if (! empty($this->fallback) && isset($this->data[$this->fallback]))
+            if (! empty($this->fallback) && isset($this->storage->{$this->fallback}))
 
-                if (isset($this->data[$this->fallback]->{$key})) {
-                    return $this->data[$this->fallback]->{$key};
+                if (isset($this->storage->{$this->fallback}->{$key})) {
+                    return $this->storage->{$this->fallback}->{$key};
                 }
 
             return $key;
         }
 
-        $text = $this->data[$storage_name]->{$key};
+        $text = $this->storage->{$storage_name}->{$key};
 
         // Prevent infinite loops
         if ($text == $key) {
-            Throw new LanguageException(sprintf('There is an infinite loop recursion in language data ins storage "%s" on key "%s"', $storage_name, $key));
+            Throw new LanguageException(sprintf('There is an infinite loop recursion in language data of storage "%s" on key "%s"', $storage_name, $key));
         }
 
         // Return requested text
@@ -132,8 +143,8 @@ class Language implements LanguageInterface
     {
         $return = false;
 
-        if (array_key_exists($storage_name, $this->data)) {
-            $return = $this->data[$storage_name];
+        if (isset($storage_name, $this->storage->{$storage_name})) {
+            $return = $this->storage->{$storage_name};
         }
 
         return $return;
