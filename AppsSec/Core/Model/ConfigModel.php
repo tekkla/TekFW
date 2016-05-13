@@ -45,12 +45,12 @@ final class ConfigModel extends Model
 
     public function getConfigGroups($app_name)
     {
-        return array_keys($this->di->get('core.cfg')->definitions[$app_name]['groups']);
+        return array_keys($this->di->get('core.config')->definitions[$app_name]['groups']);
     }
 
     public function getDefinition($name)
     {
-        return $this->di->get('core.cfg')['definitions'];
+        return $this->di->get('core.config')['definitions'];
     }
 
     /**
@@ -159,7 +159,7 @@ final class ConfigModel extends Model
 
         foreach ($data as $key => $val) {
 
-            $definition = $this->di->get('core.cfg')->structure[$app_name][$key];
+            $definition = $this->di->get('core.config')->structure[$app_name][$key];
 
             // Any validation rules in structur on this level?
             if (! empty($definition['validate'])) {
@@ -187,7 +187,7 @@ final class ConfigModel extends Model
     {
         $data = [];
 
-        $configs = $this->di->get('core.cfg')->{$app_name};
+        $configs = $this->di->get('core.config')->{$app_name};
 
         foreach ($configs as $path => $value) {
             arrayAssignByPath($data, $path, $value);

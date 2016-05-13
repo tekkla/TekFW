@@ -80,7 +80,7 @@ class ConfigController extends Controller
             if (! $this->model->hasErrors()) {
 
                 // Reload config and force a cache refresh!
-                $this->di->get('core.cfg')->load(true);
+                $this->di->get('core.config')->load(true);
 
                 unset($data);
             }
@@ -111,7 +111,7 @@ class ConfigController extends Controller
         $group = $fd->addGroup();
         $group->setName($group_name);
 
-        $definition = $this->di->get('core.cfg')->definitions[$app_name]['groups'][$group_name];
+        $definition = $this->di->get('core.config')->definitions[$app_name]['groups'][$group_name];
 
         $this->createGroups($app_name, $definition, $group, $group_name);
 
@@ -228,7 +228,7 @@ class ConfigController extends Controller
         $parts = explode('.', $settings['name']);
         $settings['name'] = array_pop($parts);
 
-        $cfg = $this->di->get('core.cfg');
+        $cfg = $this->di->get('core.config');
 
         if (! empty($cfg->{$app_name}->{$flat_name})) {
             $settings['value'] = $cfg->{$app_name}->{$flat_name};
