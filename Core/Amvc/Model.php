@@ -6,8 +6,8 @@ use Core\Security\Security;
 use Core\Validator\Validator;
 use Core\Amvc\ModelException;
 use Core\Router\UrlTrait;
-use Core\Cfg\AppCfg;
 use Core\Language\Text;
+use Core\Config\ConfigStorage;
 
 /**
  * Model.php
@@ -41,9 +41,9 @@ class Model extends MvcAbstract
 
     /**
      *
-     * @var AppCfg
+     * @var ConfigStorage
      */
-    protected $cfg;
+    protected $config;
 
     /**
      *
@@ -64,13 +64,13 @@ class Model extends MvcAbstract
      * @param App $app
      * @param Security $security
      */
-    final public function __construct($name, App $app, Security $security, AppCfg $cfg, Text $text)
+    final public function __construct($name, App $app, Security $security, ConfigStorage $config, Text $text)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
         $this->security = $security;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->text = $text;
     }
 

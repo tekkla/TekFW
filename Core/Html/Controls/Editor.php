@@ -81,7 +81,7 @@ class Editor extends FormAbstract
      */
     private $edit_element;
 
-    private $cfg;
+    private $config;
 
     private $js;
 
@@ -98,7 +98,7 @@ class Editor extends FormAbstract
         parent::__construct($factory);
 
         // our editor will be uesd as inline editor
-        $this->edit_element = $this->div->addAttribute('contenteditable', 'true')->addData('url', $this->cfg->get('Core', 'url.tools'));
+        $this->edit_element = $this->div->addAttribute('contenteditable', 'true')->addData('url', $this->config->get('Core', 'url.tools'));
 
         // we need an hidden form field for content to post
         $this->content_element = $this->input->setType('hidden');
@@ -106,7 +106,7 @@ class Editor extends FormAbstract
         $this->addData('control', 'editor');
 
         // Add needed CKE js library
-        $this->js->file($this->cfg->get('Core', 'url.tools') . '/ckeditor/ckeditor.js?' . time());
+        $this->js->file($this->config->get('Core', 'url.tools') . '/ckeditor/ckeditor.js?' . time());
     }
 
     public function getType()

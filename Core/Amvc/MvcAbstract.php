@@ -33,7 +33,7 @@ abstract class MvcAbstract
      *
      * @var \Core\Cfg\AppCfg
      */
-    protected $cfg;
+    protected $config;
 
     /**
      * MVC objects need an app instance

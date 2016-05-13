@@ -1,7 +1,7 @@
 <?php
 namespace Core\Amvc;
 
-use Core\Cfg\AppCfg;
+use Core\Config\ConfigStorage;
 
 /**
  * View.php
@@ -21,6 +21,12 @@ class View extends MvcAbstract
     private $__magic_vars = [];
 
     /**
+     *
+     * @var ConfigStorage
+     */
+    protected $config;
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -28,11 +34,11 @@ class View extends MvcAbstract
      * @param string $app
      *            Related App object
      */
-    public final function __construct($name, App $app, AppCfg $cfg)
+    public final function __construct($name, App $app, ConfigStorage $config)
     {
         $this->name = $name;
         $this->app = $app;
-        $this->cfg = $cfg;
+        $this->config= $config;
     }
 
     /**
@@ -191,7 +197,7 @@ class View extends MvcAbstract
      */
     public function Edit()
     {
-        if (!empty($this->__magic_vars['form'])) {
+        if (! empty($this->__magic_vars['form'])) {
             echo $this->form;
         }
     }

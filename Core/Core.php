@@ -41,9 +41,9 @@ final class Core
 
     /**
      *
-     * @var \Core\Cfg\Cfg
+     * @var \Core\Config\Config
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -123,6 +123,7 @@ final class Core
             $this->initSession();
             $this->initConfig();
             $this->initRouter();
+            $this->initLanguage();
             $this->initCoreApp();
             $this->initSecurity();
 
@@ -260,9 +261,6 @@ final class Core
         // == CORE DI CONTAINER ============================================
         $this->di->mapValue('core.di', $this->di);
 
-        // == CONFIG =======================================================
-        $this->di->mapService('core.cfg', '\Core\Cfg\Cfg', 'db.default');
-
         // == ROUTER =======================================================
         $this->di->mapService('core.router', '\Core\Router\Router');
 
@@ -296,7 +294,7 @@ final class Core
         ]);
         $this->di->mapFactory('core.security.users', '\Core\Security\Users', [
             'db.default',
-            'core.cfg',
+            'core.config',
             'core.security.token',
             'core.log'
         ]);
@@ -313,7 +311,7 @@ final class Core
         ]);
         $this->di->mapService('core.security.login', '\Core\Security\Login', [
             'db.default',
-            'core.cfg',
+            'core.config',
             'core.http.cookie',
             'core.security.token',
             'core.log'
@@ -321,7 +319,7 @@ final class Core
         $this->di->mapService('core.security.permission', '\Core\Security\Permission');
 
         // == AMVC =========================================================
-        $this->di->mapService('core.amvc.creator', '\Core\Amvc\Creator', 'core.cfg');
+        $this->di->mapService('core.amvc.creator', '\Core\Amvc\Creator', 'core.config');
         $this->di->mapFactory('core.amvc.app', '\Core\Amvc\App');
 
         // == IO ===========================================================
@@ -335,18 +333,18 @@ final class Core
         ]);
         $this->di->mapService('core.io.files', '\Core\IO\Files', [
             'core.log',
-            'core.cfg'
+            'core.config'
         ]);
 
         // == LOGGING========================================================
         $this->di->mapService('core.log', '\Core\Log\Log', [
             'db.default',
-            'core.cfg'
+            'core.config'
         ]);
 
         // == MAILER =======================================================
         $this->di->mapService('core.mailer', '\Core\Mailer\Mailer', [
-            'core.cfg',
+            'core.config',
             'core.log',
             'db.default'
         ]);
@@ -354,13 +352,10 @@ final class Core
         // == DATA ==========================================================
         $this->di->mapService('core.data.validator', '\Core\Data\Validator\Validator');
 
-        // == LANGUAGE ======================================================
-        $this->di->mapService('core.language', '\Core\Language\Language');
-
         // == CONTENT =======================================================
         $this->di->mapService('core.page', '\Core\Page\Page', [
             'core.router',
-            'core.cfg',
+            'core.config',
             'core.amvc.creator',
             'core.html.factory',
             'core.page.body.nav',
@@ -369,10 +364,10 @@ final class Core
             'core.message.default'
         ]);
         $this->di->mapFactory('core.page.head.css', '\Core\Page\Head\Css\Css', [
-            'core.cfg'
+            'core.config'
         ]);
         $this->di->mapFactory('core.page.head.js', '\Core\Page\Head\Javascript\Javascript', [
-            'core.cfg',
+            'core.config',
             'core.router'
         ]);
         $this->di->mapService('core.page.body.nav', '\Core\Page\Body\Menu\Menu');
@@ -478,14 +473,20 @@ final class Core
      */
     private function initConfig()
     {
-        /* @var $cfg \Core\Cfg\Cfg */
-        $this->cfg = $this->di->get('core.cfg');
-
         // Admin users can request to load config from db instead out of cache
         $refresh_cache = ! empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
 
-        // load the config
-        $this->cfg->load($refresh_cache);
+        $this->di->mapService('core.config', '\Core\Config\Config');
+
+        /* @var $config \Core\config\Config */
+        $this->config = $this->di->get('core.config');
+
+        $repository = $this->config->createDbRepository();
+        $repository->setPdo($this->di->get('db.default.conn')->getConnection());
+        $repository->setTable('tekfw_core_configs');
+
+        $this->config->setRepository($repository);
+        $this->config->load();
 
         // Set baseurl to config
         if (empty($this->settings['protcol'])) {
@@ -500,47 +501,45 @@ final class Core
         define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
         define('THEMESURL', BASEURL . '/Themes');
 
-        $this->cfg->Core->set('site.protocol', $this->settings['protocol']);
-        $this->cfg->Core->set('site.baseurl', $this->settings['baseurl']);
+        $this->config->Core->set('site.protocol', $this->settings['protocol']);
+        $this->config->Core->set('site.baseurl', $this->settings['baseurl']);
 
         // Check and set basic cookiename to config
         if (empty($this->settings['cookie'])) {
             Throw new Exception('Cookiename not set in Settings.php');
         }
 
-        $this->cfg->Core['cookie.name'] = $this->settings['cookie'];
+        $this->config->Core['cookie.name'] = $this->settings['cookie'];
 
         // Add dirs to config
         $dirs = [
             // Framework directory
-            'fw' => '/Core',
+            'fw' => BASEDIR . '/Core',
 
             // Framwork subdirectories
-            'css' => '/Css',
-            'js' => '/Js',
-            'lib' => '/Core',
-            'html' => '/Core/Html',
-            'cache' => '/Cache',
+            'js' => BASEDIR . '/Js',
+            'lib' => BASEDIR . '/Core',
+            'html' => BASEDIR . '/Core/Html',
+            'cache' => BASEDIR . '/Cache',
 
             // Public application dir
-            'apps' => '/Apps',
+            'apps' => BASEDIR . '/Apps',
 
             // Secure application dir
-            'appssec' => '/Core/AppsSec'
+            'appssec' => BASEDIR . '/AppsSec'
         ];
 
-        $this->cfg->addPaths('Core', $dirs);
+        $this->config->addPaths('Core', $dirs);
 
         // Add urls to config
         $urls = [
-            'apps' => '/Apps',
-            'appssec' => '/AppsSec',
-            'css' => '/Css',
-            'js' => '/Js',
-            'cache' => '/Cache'
+            'apps' => BASEURL . '/Apps',
+            'appssec' => BASEURL . '/AppsSec',
+            'js' => BASEURL . '/Js',
+            'cache' => BASEURL .'/Cache'
         ];
 
-        $this->cfg->addUrls('Core', $urls);
+        $this->config->addUrls('Core', $urls);
     }
 
     /**
@@ -611,6 +610,18 @@ final class Core
         ];
 
         $this->router->addMatchTypes($matchtypes);
+    }
+
+    /**
+     * Creates core.language service and sets the name of the fallback language storage to 'Core'
+     */
+    private function initLanguage()
+    {
+        $this->di->mapService('core.language', '\Core\Language\Language');
+
+        /* @var $language \Core\Language\Language */
+        $language = $this->di->get('core.language');
+        $language->setFallbackStorageName('Core');
     }
 
     private function initErrorHandler()
@@ -813,7 +824,7 @@ final class Core
                     $alert->setDismissable($msg->getDismissable());
 
                     // Fadeout message?
-                    if ($this->cfg->Core->get('js.style.fadeout_time') > 0 && $msg->getFadeout()) {
+                    if ($this->config->Core->get('js.style.fadeout_time') > 0 && $msg->getFadeout()) {
                         $alert->html->addCss('fadeout');
                     }
 

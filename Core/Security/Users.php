@@ -2,7 +2,7 @@
 namespace Core\Security;
 
 use Core\Data\Connectors\Db\Db;
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Log\Log;
 
 /**
@@ -31,7 +31,7 @@ class Users
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -44,17 +44,17 @@ class Users
      *
      * @param Db $db
      *            Db dependency
-     * @param Cfg $cfg
+     * @param Config $config
      *            Cfg service dependency
      * @param Token $token
      *            Token service dependency
      * @param Log $log
      *            Log service dependendy
      */
-    public function __construct(Db $db, Cfg $cfg, Token $token, Log $log)
+    public function __construct(Db $db, Config $config, Token $token, Log $log)
     {
         $this->db = $db;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->token = $token;
         $this->log = $log;
     }
@@ -100,7 +100,7 @@ class Users
         ];
 
         // enhance password with our pepper
-        $password .= $this->cfg->Core['security.encrypt.pepper'];
+        $password .= $this->config->Core['security.encrypt.pepper'];
 
         // Create password hash
         $password = password_hash($password, PASSWORD_DEFAULT);
@@ -225,7 +225,7 @@ class Users
     public function changePassword($id_user, $password)
     {
         // enhance password with our pepper
-        $password .= $this->cfg->Core['security.encrypt.pepper'];
+        $password .= $this->config->Core['security.encrypt.pepper'];
 
         // Check the old password
         $this->db->qb([
@@ -250,7 +250,7 @@ class Users
 
     public function checkBan()
     {
-        $ban_duration = $this->cfg->Core['security.ban.ttl.ban'];
+        $ban_duration = $this->config->Core['security.ban.ttl.ban'];
 
         // No ban without ban time
         if ($ban_duration == 0) {
@@ -266,7 +266,7 @@ class Users
         }
 
         // Get max tries until get banned from config
-        $max_tries = $this->cfg->Core['security.ban.tries'];
+        $max_tries = $this->config->Core['security.ban.tries'];
 
         // Max tries of 0 means no ban check at all
         if ($max_tries == 0) {
@@ -274,7 +274,7 @@ class Users
         }
 
         // Get seconds for how long the ban log entries are relevant for ban check
-        $ban_log_relevance_duration = $this->cfg->Core['security.ban.ttl.log'];
+        $ban_log_relevance_duration = $this->config->Core['security.ban.ttl.log'];
 
         // Zero sconds means that this check is not needed.
         if ($ban_log_relevance_duration == 0) {

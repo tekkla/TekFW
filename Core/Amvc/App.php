@@ -13,6 +13,7 @@ use Core\Router\UrlTrait;
 use Core\Language\Text;
 use function Core\stringUncamelize;
 use function Core\stringCamelize;
+use Core\Config\Config;
 
 /**
  * App.php
@@ -146,7 +147,7 @@ class App
      */
     public $creator;
 
-    final public function __construct($app_name, Cfg $cfg, Router $router, Page $page, Security $security, IO $io, Language $language, Creator $creator, DI $di)
+    final public function __construct($app_name, Config $cfg, Router $router, Page $page, Security $security, IO $io, Language $language, Creator $creator, DI $di)
     {
         // Setting properties
         $this->name = $app_name;

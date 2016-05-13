@@ -1,5 +1,5 @@
 <?php
-namespace Core\Cfg;
+namespace Core\Config;
 
 use Core\Error\CoreException;
 
@@ -10,6 +10,6 @@ use Core\Error\CoreException;
  * @copyright 2016
  * @license MIT
  */
-class CfgException extends CoreException
+class ConfigException extends CoreException
 {
 }

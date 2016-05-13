@@ -1,7 +1,7 @@
 <?php
 namespace Core\Page;
 
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Html\HtmlFactory;
 use Core\Page\PageException;
 
@@ -29,7 +29,7 @@ class Template
      *
      * @var Cfg
      */
-    protected $cfg;
+    protected $config;
 
     /**
      *
@@ -52,16 +52,16 @@ class Template
     /**
      * Constructor
      *
-     * @param Cfg $cfg
+     * @param Config $config
      *            Cfg dependency
      * @param Page $page
      *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
      */
-    public function __construct(Cfg $cfg, Page $page, HtmlFactory $html)
+    public function __construct(Config $config, Page $page, HtmlFactory $html)
     {
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->page = $page;
         $this->html = $html;
     }
@@ -289,7 +289,7 @@ class Template
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
             // Fadeout message?
-            if ($this->cfg->get('Core', 'js.style.fadeout_time') > 0 && $msg->getFadeout()) {
+            if ($this->config->get('Core', 'js.style.fadeout_time') > 0 && $msg->getFadeout()) {
                 echo ' fadeout';
             }
 

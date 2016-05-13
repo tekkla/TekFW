@@ -360,7 +360,7 @@ final class FormDesigner implements HtmlBuildableInterface
         $div = $group->addElement('Elements\Div');
         $div->addCss('alert alert-danger alert-dismissable');
 
-        if ($this->di->get('core.cfg')->get('Core', 'js.style.fadeout_time') > 0) {
+        if ($this->di->get('core.config')->get('Core', 'js.style.fadeout_time') > 0) {
             $div->addCss('fadeout');
         }
 

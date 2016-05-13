@@ -1,7 +1,7 @@
 <?php
 namespace Core\Page\Head\Javascript;
 
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Router\Router;
 use Core\Page\PageException;
 
@@ -67,7 +67,7 @@ class Javascript
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -77,16 +77,16 @@ class Javascript
 
     /**
      *
-     * @param Cfg $cfg
+     * @param Config $config
      * @param Router $router
      */
-    public function __construct(Cfg $cfg, Router $router)
+    public function __construct(Config $config, Router $router)
     {
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->router = $router;
 
-        $this->js_url = $cfg->Core['url.js'];
-        $this->js_dir = $cfg->Core['dir.js'];
+        $this->js_url = $config->Core['url.js'];
+        $this->js_dir = $config->Core['dir.js'];
     }
 
     /**
@@ -97,18 +97,18 @@ class Javascript
         $this->mode = 'core';
 
         // Theme name
-        $theme = $this->cfg->Core['style.theme.name'];
+        $theme = $this->config->Core['style.theme.name'];
 
         // jQuery version
-        $version = $this->cfg->Core['js.jquery.version'];
+        $version = $this->config->Core['js.jquery.version'];
 
         // Add local jQeury file or the one from CDN
         $file = '/' . $theme . '/js/jquery-' . $version . '.js';
 
         // Files to bottom or to top?
-        $defer = $this->cfg->Core['js.general.position'] == 'top' ? false : true;
+        $defer = $this->config->Core['js.general.position'] == 'top' ? false : true;
 
-        if ($this->cfg->Core['js.jquery.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->config->Core['js.jquery.local'] && file_exists(THEMESDIR . $file)) {
             $this->file(THEMESURL . $file, $defer);
         }
         else {
@@ -116,12 +116,12 @@ class Javascript
         }
 
         // Bootstrap Version
-        $version = $this->cfg->Core['style.bootstrap.version'];
+        $version = $this->config->Core['style.bootstrap.version'];
 
         // Add Bootstrap javascript from local or cdn
         $file = '/' . $theme . '/js/bootstrap-' . $version . '.js';
 
-        if ($this->cfg->Core['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
+        if ($this->config->Core['style.bootstrap.local'] && file_exists(THEMESDIR . $file)) {
             $this->file(THEMESURL . $file, $defer);
         }
         else {
@@ -132,7 +132,7 @@ class Javascript
         $this->file($this->js_url . '/plugins.js', $defer);
 
         // Add global fadeout time var set in config
-        $this->variable('fadeout_time', $this->cfg->Core['js.style.fadeout_time'], $defer);
+        $this->variable('fadeout_time', $this->config->Core['js.style.fadeout_time'], $defer);
 
         // Add framework js
         $this->file($this->js_url . '/framework.js', $defer);
@@ -428,10 +428,10 @@ class Javascript
             $key = 'combined_' . $area;
             $extension = 'js';
 
-            $filename = $this->cfg->Core['dir.cache'] . '/' . $key . '.' . $extension;
+            $filename = $this->config->Core['dir.cache'] . '/' . $key . '.' . $extension;
 
             // End of combined file TTL reached?
-            if (!file_exists($filename) || filemtime($filename) + $this->cfg->Core['cache.ttl.' . $extension] < time()) {
+            if (!file_exists($filename) || filemtime($filename) + $this->config->Core['cache.ttl.' . $extension] < time()) {
 
                 // Strat combining all parts
                 $combined = '';
@@ -463,14 +463,14 @@ class Javascript
                 $combined = \JSMin::minify($combined);
 
                 // Make sure we write files only into to cache folder!
-                if (strpos($filename, $this->cfg->Core['dir.cache']) === false) {
+                if (strpos($filename, $this->config->Core['dir.cache']) === false) {
                     Throw new PageException('Writing files outside the cachefolder from Javascript::getFiles() is not permitted.');
                 }
 
                 file_put_contents($filename, $combined);
             }
 
-            $files[] = $this->cfg->Core['url.cache'] . '/' . $key . '.' . $extension;
+            $files[] = $this->config->Core['url.cache'] . '/' . $key . '.' . $extension;
         }
 
         return $files;

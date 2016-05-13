@@ -1,16 +1,16 @@
 <?php
-namespace Core\Cfg;
+namespace Core\Config;
 
 use Core\Storage\Storage;
 
 /**
- * AppCfg.php
+ * ConfigStorage.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
  */
-class AppCfg extends Storage
+class ConfigStorage extends Storage
 {
 
     public function getValue($key)
@@ -19,7 +19,7 @@ class AppCfg extends Storage
             return $this->data[$key];
         }
 
-        Throw new CfgException(sprintf('Config "%s" does not exists.', $key));
+        Throw new ConfigException(sprintf('Config "%s" does not exists.', $key));
     }
 }
 

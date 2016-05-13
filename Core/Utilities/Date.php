@@ -1,7 +1,7 @@
 <?php
 namespace Core\Utilities;
 
-use Core\Language\TextTrait;
+
 
 /**
  * Date.php
@@ -13,7 +13,7 @@ use Core\Language\TextTrait;
 class Date
 {
 
-    use TextTrait;
+    
 
     public static function timeAgo($date)
     {
@@ -49,9 +49,9 @@ class Date
                 break;
         }
 
-        $timestring = $this->text('time.strings', 'Core')[$timestring];
+        $timestring = $this->text->get('time.strings', 'Core')[$timestring];
 
-        return sprintf($this->text('time.text.ago', 'Core'), $when, $timestring);
+        return sprintf($this->text->get('time.text.ago', 'Core'), $when, $timestring);
     }
 }
 

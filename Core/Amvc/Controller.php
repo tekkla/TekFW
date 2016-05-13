@@ -13,8 +13,8 @@ use Core\IO\IO;
 use Core\Ajax\Dom;
 use Core\Message\Message;
 use Core\Message\MessageHandler;
-use Core\Cfg\AppCfg;
 use Core\Language\Text;
+use Core\Config\ConfigStorage;
 use function Core\stringUncamelize;
 use function Core\arrayIsAssoc;
 
@@ -183,9 +183,9 @@ class Controller extends MvcAbstract
      *            Ajax dependency
      * @param IO $io
      *            IO dependency
-     * @param AppCfg $cfg
+     * @param AppConfig $config
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, AppCfg $cfg, Text $text)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, ConfigStorage $config, Text $text)
     {
         // Store name
         $this->name = $name;
@@ -198,7 +198,7 @@ class Controller extends MvcAbstract
         $this->html = $html;
         $this->ajax = $ajax;
         $this->io = $io;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->text = $text;
 
         // Model to bind?
