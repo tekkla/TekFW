@@ -10,4 +10,17 @@ namespace Core\Storage;
  */
 class Storage extends AbstractStorage
 {
+    /**
+     * {@inheritDoc}
+     * @see \Core\Storage\AbstractStorage::getValue()
+     */
+    public function getValue($key)
+    {
+        if (!isset($this->data[$key])) {
+            $this->data[$key] = new self();
+        }
+
+        return $this->data[$key];
+
+    }
 }

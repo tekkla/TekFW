@@ -19,10 +19,7 @@ abstract class AbstractStorage implements StorageInterface, \ArrayAccess, \Itera
      *
      * @see \Core\Storage\StorageInterface::getValue()
      */
-    public function getValue($key)
-    {
-        return $this->data[$key];
-    }
+    abstract public function getValue($key);
 
     /**
      *
