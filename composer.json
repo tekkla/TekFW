@@ -5,7 +5,8 @@
     "mrclay/minify" : ">=2.2.1",
     "firephp/firephp-core" : "=v0.4.0",
     "phpmailer/phpmailer" : ">=v5.2.14",
-    "phpfastcache/phpfastcache" : ">=4.3.13"
+    "phpfastcache/phpfastcache" : ">=4.3.13",
+    "psr/log" : ">=1.0.0"
   },
   "repositories" : [ {
     "type" : "composer",

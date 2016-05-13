@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ee270aae287cab5d29d3c18bf8ed813d",
-    "content-hash": "e6a9ab8dcb7971399b65328685cacf96",
+    "hash": "73257194ba63cf0410dc8fb09176077f",
+    "content-hash": "aac7e7b0af24526385a67cf1194e2f43",
     "packages": [
         {
             "name": "altorouter/altorouter",
@@ -141,16 +141,16 @@
         },
         {
             "name": "phpfastcache/phpfastcache",
-            "version": "4.3.14",
+            "version": "4.3.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPSocialNetwork/phpfastcache.git",
-                "reference": "39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f"
+                "reference": "e28a0152038d2aa4a9feac4cd185df70d8fc27f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f",
-                "reference": "39a25bcf783fdf9b87db2d4ac850bdf4bc22a35f",
+                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/e28a0152038d2aa4a9feac4cd185df70d8fc27f3",
+                "reference": "e28a0152038d2aa4a9feac4cd185df70d8fc27f3",
                 "shasum": ""
             },
             "require": {
@@ -208,7 +208,7 @@
                 "redis",
                 "wincache"
             ],
-            "time": "2016-03-26 20:17:14"
+            "time": "2016-04-12 18:04:15"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -270,6 +270,44 @@
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "time": "2015-11-01 10:15:28"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
+                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Psr\\Log\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "time": "2012-12-21 11:40:51"
         }
     ],
     "packages-dev": [],
