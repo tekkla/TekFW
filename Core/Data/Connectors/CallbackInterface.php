@@ -1,5 +1,5 @@
 <?php
-namespace Core\Data;
+namespace Core\Data\Connectors;
 
 /**
  * CallbackInterface.php

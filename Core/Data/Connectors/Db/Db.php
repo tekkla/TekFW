@@ -43,7 +43,7 @@ class Db extends ConnectorAbstract
      *
      * @var Connection
      */
-    private $conn;
+    private $connection;
 
     /**
      * PDO database handler
@@ -73,18 +73,15 @@ class Db extends ConnectorAbstract
     /**
      * Constructor
      *
-     * @param Connection $conn
+     * @param Connection $connection
      * @param string $prefix
-     *
-     * @throws InvalidArgumentException
      */
-    public function __construct($conn, $prefix)
+    public function __construct(\PDO $pdo, $prefix)
     {
-        $this->conn = $conn;
         $this->prefix = $prefix;
 
         // Connect to db
-        $this->dbh = $this->conn->connect();
+        $this->dbh = $pdo;
 
         // Inject an empty DataAdapter object
         $this->injectAdapter(new DataAdapter());
@@ -176,8 +173,7 @@ class Db extends ConnectorAbstract
 
         if (! empty($this->params)) {
             foreach ($this->params as $parameter => $value) {
-                $data_type = $value === null ? \PDO::PARAM_INT : \PDO::PARAM_STR;
-                $this->stmt->bindValue($parameter, $value, $data_type);
+                $this->stmt->bindValue($parameter, $value);
             }
         }
 
@@ -299,7 +295,8 @@ class Db extends ConnectorAbstract
         }
 
         if (! empty($data)) {
-            $data = $this->adapter->setDataset($data, $scheme)->getData();
+            $this->adapter->setDataset($data, $scheme);
+            $data = $this->adapter->getData();
         }
 
         return $data;

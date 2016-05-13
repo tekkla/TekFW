@@ -393,9 +393,6 @@ final class Core
     private function initDatabase()
     {
         $defaults = [
-            'driver' => 'mysql',
-            'host' => 'localhost',
-            'port' => 3306,
             'user' => 'root',
             'password' => '',
             'prefix' => '',
@@ -423,8 +420,8 @@ final class Core
             $prefix = 'db.' . $name;
 
             // Check for databasename
-            if (empty($settings['dbname'])) {
-                Throw new Exception('Name key of DB setting "dbname" is missing.');
+            if (empty($settings['dsn'])) {
+                Throw new PDOException(sprintf('No DSN specified for "%s" db connection. Please add correct DSN for this connection in Settings.php', $name));
             }
 
             // Check for DB defaults and map values
@@ -452,8 +449,16 @@ final class Core
                 }
             }
 
-            $this->di->mapValue($prefix . '.settings', $settings);
-            $this->di->mapService($prefix . '.conn', '\Core\Data\Connectors\Db\Connection', $prefix . '.settings');
+            foreach ($settings as $key => $value) {
+                $this->di->mapValue($prefix . '.conn.' . $key, $value);
+            }
+
+            $this->di->mapService($prefix . '.conn', '\Core\Data\Connectors\Db\Connection', [
+                $prefix . '.conn.dsn',
+                $prefix . '.conn.user',
+                $prefix . '.conn.password',
+                $prefix . '.conn.options',
+            ]);
             $this->di->mapFactory($prefix, '\Core\Data\Connectors\Db\Db', [
                 $prefix . '.conn',
                 $settings['prefix']
@@ -482,7 +487,7 @@ final class Core
         $this->config = $this->di->get('core.config');
 
         $repository = $this->config->createDbRepository();
-        $repository->setPdo($this->di->get('db.default.conn')->getConnection());
+        $repository->setPdo($this->di->get('db.default.conn'));
         $repository->setTable('tekfw_core_configs');
 
         $this->config->setRepository($repository);

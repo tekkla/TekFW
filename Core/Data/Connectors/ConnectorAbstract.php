@@ -2,7 +2,6 @@
 namespace Core\Data\Connectors;
 
 use Core\Data\DataAdapter;
-use Core\Data\CallbackInterface;
 
 /**
  * AdapterAbstract.php

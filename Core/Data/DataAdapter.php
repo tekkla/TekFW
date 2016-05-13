@@ -1,9 +1,6 @@
 <?php
 namespace Core\Data;
 
-use Core\Traits\ArrayTrait;
-use Core\Data\Connectors\ConnectorAbstract;
-
 /**
  * DataAdapter.php
  *
@@ -13,8 +10,6 @@ use Core\Data\Connectors\ConnectorAbstract;
  */
 class DataAdapter implements \IteratorAggregate
 {
-
-    use ArrayTrait;
 
     /**
      *
@@ -41,9 +36,10 @@ class DataAdapter implements \IteratorAggregate
     private $callbacks = [];
 
     /**
-     * (non-PHPdoc)
      *
-     * @see \Core\Data\Container\Container::getIterator()
+     * {@inheritDoc}
+     *
+     * @see IteratorAggregate::getIterator()
      */
     public function getIterator()
     {
@@ -140,7 +136,7 @@ class DataAdapter implements \IteratorAggregate
             $this->checkType($data, $scheme);
 
             // Use the existing primary field name from scheme when it's available in data
-            if (! empty($scheme['primary']) && !empty($data[$scheme['primary']])) {
+            if (! empty($scheme['primary']) && ! empty($data[$scheme['primary']])) {
                 $this->data[$data[$scheme['primary']]] = $data;
             }
             else {
@@ -177,34 +173,6 @@ class DataAdapter implements \IteratorAggregate
             if (empty($data[$name]) && ! empty($field['default'])) {
                 $data[$name] = $field['default'];
             }
-
-            // TODO Really neccessary? What are the advantages?
-            /*
-            // Ste type to 'string' when no type is set in scheme
-            if (empty($field['type'])) {
-                $field['type'] = 'string';
-            }
-
-            // Explicit type conversion
-            if (! empty($field['type'])) {
-
-                $types = [
-                    'boolean',
-                    'integer',
-                    'float',
-                    'string',
-                    'array',
-                    'object',
-                    'null'
-                ];
-
-                if (! in_array($field['type'], $types)) {
-                    Throw new DataException(sprintf('Type "%s" is not allowed as fieldtype. Allowed types are: %s', $field['type'], implode(', ', $types)));
-                }
-
-                settype($data[$name], $field['type']);
-
-            }*/
         }
     }
 

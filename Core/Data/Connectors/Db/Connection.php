@@ -8,315 +8,59 @@ namespace Core\Data\Connectors\Db;
  * @copyright 2016
  * @license MIT
  */
-class Connection
+class Connection extends \PDO
 {
 
     /**
      *
      * @var string
      */
-    private $db;
+    private $dsn;
 
     /**
      *
-     * @var string
-     */
-    private $driver = 'mysql';
-
-    /**
+     * {@inheritDoc}
      *
-     * @var string
+     * @see PDO::__construct()
      */
-    private $host = 'localhost';
-
-    /**
-     *
-     * @var int
-     */
-    private $port = 3306;
-
-    /**
-     *
-     * @var string
-     */
-    private $user = '';
-
-    /**
-     *
-     * @var string
-     */
-    private $password = '';
-
-    /**
-     *
-     * @var array
-     */
-    private $options = [];
-
-    /**
-     *
-     * @var \PDO
-     */
-    private $dbh = null;
-
-    /**
-     * Constructor
-     *
-     * @param array $properties
-     *            Connection properties
-     */
-    function __construct(array $properties)
+    public function __construct($dsn, $username = null, $passwd = null, $options = null)
     {
+        $this->dsn = $dsn;
 
-        $check = [
-            'name',
-            'host',
-           'user'
-        ];
+        parent::__construct($dsn, $username, $passwd, $options);
+    }
 
-        foreach ($check as $key) {
-            if (empty($properties[$key])) {
-                Throw new DbException(sprintf('Missing DB connection property "%s"'), $key);
-            }
+    /**
+     * Returns the prefix from DSN
+     *
+     * @return string|null
+     */
+    public function getPrefix()
+    {
+        if (isset($this->dsn)) {
+            return explode(':', $this->dsn)[0];
         }
-
-        $this->db = $properties['name'];
-        $this->host = $properties['host'];
-        $this->user = $properties['user'];
-        $this->password = $properties['password'];
-        $this->options = $properties['options'];
-
-        $this->setDriver($properties['driver']);
     }
 
     /**
-     * Connects to database
-     *
-     * @return PDO
-     */
-    public function connect()
-    {
-        if ($this->dbh === null) {
-            $dsn = $this->driver . ':host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->db;
-            $this->dbh = new \PDO($dsn, $this->user, $this->password, $this->options);
-        }
-
-        return $this->dbh;
-    }
-
-    /**
-     * Closes database connection
-     *
-     * @return boolean
-     */
-    public function disconnect()
-    {
-        $this->dbh = null;
-
-        return true;
-    }
-
-    /**
-     * Returns database name
+     * Returns content of PDO::ATTR_SERVER_INFO
      *
      * @return string
      */
-    public function getDb()
+    public function getServerInfo()
     {
-        return $this->db;
+        return $this->getAttribute(self::ATTR_SERVER_INFO);
     }
 
     /**
-     * Sets name of database
+     * Returns set DSN
      *
-     * @param string $db
-     *            Name of the database
-     *
-     * @return \Core\Data\Connectors\Db\Connection
+     * @return string|null
      */
-    public function setDb($db)
+    public function getDSN()
     {
-        $this->db = $db;
-
-        return $this;
-    }
-
-    /**
-     * Returns the PDO driver name
-     *
-     * @return string
-     */
-    public function getDriver()
-    {
-        return $this->driver;
-    }
-
-    /**
-     * Sets PDO driver name
-     *
-     * @param string $driver
-     *            Name of the PDO driver to use
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setDriver($driver)
-    {
-        $this->errorOnActiveConnection();
-
-        if (! in_array($driver, \PDO::getAvailableDrivers())) {
-            Throw new DbException('The PDO driver "' . $driver . '" is not installed.');
-        }
-
-        $this->driver = $driver;
-
-        return $this;
-    }
-
-    /**
-     * Returns set db host
-     *
-     * @return string
-     */
-    public function getHost()
-    {
-        return $this->host;
-    }
-
-    /**
-     * Sets db host
-     *
-     * @param string $host
-     *            Adress of the host the database resides on
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setHost($host)
-    {
-        $this->errorOnActiveConnection();
-
-        $this->host = $host;
-
-        return $this;
-    }
-
-    /**
-     * Returns server port
-     *
-     * @return the int
-     */
-    public function getPort()
-    {
-        return $this->port;
-    }
-
-    /**
-     * Sets port number to use
-     *
-     * @param int $port
-     *            Portnumber to use
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setPort($port)
-    {
-        $this->errorOnActiveConnection();
-
-        $this->port = $port;
-
-        return $this;
-    }
-
-    /**
-     *
-     * @return the string
-     */
-    public function getUser()
-    {
-        return $this->user;
-    }
-
-    /**
-     * Sets the username to use on connection
-     *
-     * @param string $user
-     *            Username
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setUser($user)
-    {
-        $this->errorOnActiveConnection();
-
-        $this->user = $user;
-
-        return $this;
-    }
-
-    /**
-     * Sets passwort to use
-     *
-     * @param string $password
-     *            The password
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setPassword($password)
-    {
-        $this->errorOnActiveConnection();
-
-        $this->password = $password;
-
-        return $this;
-    }
-
-    /**
-     * Returns set connection options
-     *
-     * @return the array
-     */
-    public function getOptions()
-    {
-        return $this->options;
-    }
-
-    /**
-     * Sets connection options
-     *
-     * @param array $options
-     *            Array of connection options
-     *
-     * @throws DbException
-     *
-     * @return \Core\Data\Connectors\Db\Connection
-     */
-    public function setOptions(array $options)
-    {
-        $this->errorOnActiveConnection();
-
-        $this->options = $options;
-
-        return $this;
-    }
-
-    /**
-     * Throws exception on an active databasehandler connection
-     *
-     * @throws DbException
-     */
-    private function errorOnActiveConnection()
-    {
-        if ($this->dbh !== null) {
-            Throw new DbException('You cannot change databse connection properties while the connection is active.');
+        if (isset($this->dsn)) {
+            return $this->dsn;
         }
     }
 }
