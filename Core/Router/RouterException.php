@@ -1,7 +1,7 @@
 <?php
 namespace Core\Router;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * RouterException.php

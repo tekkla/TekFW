@@ -8,12 +8,15 @@ use Core\Page\Page;
 use Core\Html\HtmlFactory;
 use Core\Html\FormDesigner\FormDesigner;
 use Core\Ajax\Ajax;
-use Core\Ajax\AjaxCommandAbstract;
 use Core\Router\UrlTrait;
-use Core\Traits\ArrayTrait;
-use Core\Cfg\CfgTrait;
-use Core\Language\TextTrait;
 use Core\IO\IO;
+use Core\Ajax\Dom;
+use Core\Message\Message;
+use Core\Message\MessageHandler;
+use Core\Language\Text;
+use Core\Config\ConfigStorage;
+use function Core\stringUncamelize;
+use function Core\arrayIsAssoc;
 
 /**
  * Controller.php
@@ -26,9 +29,6 @@ class Controller extends MvcAbstract
 {
 
     use UrlTrait;
-    use TextTrait;
-    use CfgTrait;
-    use ArrayTrait;
 
     /**
      * Type of class
@@ -52,6 +52,8 @@ class Controller extends MvcAbstract
     protected $access = [];
 
     /**
+     * Action to call.
+     * Default: Index
      *
      * @var string
      */
@@ -86,6 +88,13 @@ class Controller extends MvcAbstract
     private $view;
 
     /**
+     * Storage for vars to be sent to view renderer
+     *
+     * @var array
+     */
+    protected $vars = [];
+
+    /**
      * Security Service
      *
      * @var Security
@@ -114,6 +123,13 @@ class Controller extends MvcAbstract
     protected $page;
 
     /**
+     * MessageHandler service
+     *
+     * @var MessageHandler
+     */
+    protected $message;
+
+    /**
      *
      * @var HtmlFactory
      */
@@ -134,17 +150,16 @@ class Controller extends MvcAbstract
     protected $io;
 
     /**
-     * Flag to signal that this controller is in ajax mode
      *
-     * @var bool
+     * @var Text
      */
-    private $ajax_flag = false;
+    protected $text;
 
     /**
      *
-     * @var AjaxCommandAbstract
+     * @var Dom
      */
-    private $ajax_command;
+    private $ajax_cmd;
 
     /**
      * Constructor
@@ -168,8 +183,9 @@ class Controller extends MvcAbstract
      *            Ajax dependency
      * @param IO $io
      *            IO dependency
+     * @param AppConfig $config
      */
-    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, HtmlFactory $html, Ajax $ajax, IO $io)
+    final public function __construct($name, App $app, Router $router, Http $http, Security $security, Page $page, MessageHandler $message, HtmlFactory $html, Ajax $ajax, IO $io, ConfigStorage $config, Text $text)
     {
         // Store name
         $this->name = $name;
@@ -178,18 +194,15 @@ class Controller extends MvcAbstract
         $this->http = $http;
         $this->security = $security;
         $this->page = $page;
+        $this->message = $message;
         $this->html = $html;
         $this->ajax = $ajax;
         $this->io = $io;
+        $this->config= $config;
+        $this->text = $text;
 
         // Model to bind?
         $this->model = $this->app->getModel($name);
-
-        // Controller of an ajax request?
-        if ($this->router->isAjax()) {
-            $this->ajax_flag = true;
-            $this->ajax_command = $this->ajax->createCommand('Dom\Html');
-        }
     }
 
     /**
@@ -213,16 +226,6 @@ class Controller extends MvcAbstract
      */
     final public function run($action, array $params = [])
     {
-        // If accesscheck failed => stop here and return false!
-        if ($this->checkControllerAccess() == false) {
-            $this->page->message->warning($this->text('access.missing_userrights'));
-
-            // @TODO implement logging
-            // $this->page->logSuspicious('Missing permission for ressource ' . $this->app->getName() . '.' .
-            // $this->getName() . '.' . $action . '()');
-            return false;
-        }
-
         // Use givem params
         if (empty($action)) {
             Throw new ControllerException(sprintf('The action name for %s::run() is empty.', $this->name));
@@ -230,8 +233,15 @@ class Controller extends MvcAbstract
 
         $this->action = $action;
 
+        // If accesscheck failed => stop here and return false!
+        if ($this->checkControllerAccess() == false) {
+            $this->page->message->warning($this->text->get('access.missing_userrights'));
+            $this->log->suspicious(sprintf('Missing permission for ressource %s.%s.%s', $this->app->getName(), $this->getName(), $action));
+            return false;
+        }
+
         // Use givem params
-        if (! empty($params) && ! $this->arrayIsAssoc($params)) {
+        if (! empty($params) && ! arrayIsAssoc($params)) {
             Throw new ControllerException('Parameter arguments on Controller::run() methods need to be key based where the key represents the arguments name to be used for in action call.');
         }
 
@@ -305,14 +315,16 @@ class Controller extends MvcAbstract
             }
 
             // Control rendering by requested output format
-            switch ($this->router->getFormat()) {
+            $no_render_format = [
+                'json',
+                'xml',
+                'css',
+                'js',
+                'file'
+            ];
 
-                // Turn rendering off on json and xml format
-                case 'json':
-                case 'xml':
-                case 'file':
-                    $this->render = false;
-                    break;
+            if (in_array($this->router->getFormat(), $no_render_format)) {
+                $this->render = false;
             }
         }
 
@@ -324,14 +336,13 @@ class Controller extends MvcAbstract
                 $this->view = $this->app->getView($this->name);
             }
 
-            // Render into own outputbuffer
-            ob_start();
+            // Check if there still no view object
+            if (empty($this->view)) {
+                Throw new ViewException(sprintf('A result has to be rendered but "%sView" does not exist.', $this->name));
+            }
 
             // Render
-            $this->view->render($this->action, $this->params);
-
-            // Get content from buffer
-            $content = ob_get_clean();
+            $content = $this->view->render($this->action, $this->params, $this->vars);
 
             // Run possible onEmpty event of app on no render result
             if (empty($content) && method_exists($this->app, 'onEmpty')) {
@@ -364,21 +375,21 @@ class Controller extends MvcAbstract
      */
     final public function ajax($action = 'Index', $params = [], $selector = '#content')
     {
+        // Prepare a fresh ajax command object
+        $this->ajax_cmd = $this->ajax->createDomCommand();
+
+        // Get content from Controller::run()
         $content = $this->run($action, $params);
 
         if ($content !== false) {
 
-            $this->ajax_command->setArgs($content);
-            $this->ajax_command->setId(get_called_class() . '::' . $action);
+            $this->ajax_cmd->setArgs($content);
+            $this->ajax_cmd->setId(get_called_class() . '::' . $action);
 
-            if (! $this->ajax_command->getSelector() && $selector) {
-                $this->ajax_command->setSelector($selector);
+            if (empty($this->ajax_cmd->getSelector()) && ! empty($selector)) {
+                $this->ajax_cmd->setSelector($selector);
             }
-
-            $this->ajax_command->send();
         }
-
-        return $this;
     }
 
     /**
@@ -411,7 +422,12 @@ class Controller extends MvcAbstract
     final protected function doRefresh($url)
     {
         if ($this->router->isAjax()) {
-            $this->ajax->refresh($url);
+            $cmd = $this->ajax->createActCommand();
+
+            $cmd->setFunction('refresh');
+            $cmd->setArgs($url);
+
+            $this->ajax->addCommand($cmd);
         }
         else {
             $this->redirectExit($url);
@@ -422,6 +438,7 @@ class Controller extends MvcAbstract
      * Checks the controller access of the user
      *
      * This accesscheck works on serveral levels.
+     *
      * Level 0 - App: Tries to check access on possible app wide access function.
      * Level 1 - Controller: Tries to check access by looking for access setting in the controller itself.
      *
@@ -438,28 +455,26 @@ class Controller extends MvcAbstract
         }
 
         // ACL set?
-        if (isset($this->access)) {
+        if (! empty($this->access)) {
 
             $perm = [];
 
             // Global access for all actions?
-            if (isset($this->access['*'])) {
+            if (array_key_exists('*', $this->access)) {
                 if (! is_array($this->access['*'])) {
-                    $perm[] = $this->access['*'];
+                    $this->access['*'] = (array) $this->access['*'];
                 }
-                else {
-                    $perm += $this->access['*'];
-                }
+
+                $perm += $this->access['*'];
             }
 
             // Actions access set?
             if (isset($this->access[$this->action])) {
                 if (! is_array($this->access[$this->action])) {
-                    $perm[] = $this->access[$this->action];
+                    $this->access[$this->action] = (array) $this->access[$this->action];
                 }
-                else {
-                    $perm += $this->access[$this->action];
-                }
+
+                $perm += $this->access[$this->action];
             }
 
             // Check the permissions against the current user
@@ -486,33 +501,14 @@ class Controller extends MvcAbstract
      */
     final protected function setVar($arg1, $arg2 = null)
     {
-        // On non existing view we do not have to set anything
-        if (property_exists($this, 'has_no_view')) {
-            return;
-        }
-
-        if ($this->view === false || ! $this->view instanceof View) {
-            $this->view = $this->app->getView($this->name);
-        }
-
-        // Some vars are protected and not allowed to be used outside the framework
-        $protected_var_names = [
-            'app',
-            'controller',
-            'action',
-            'view',
-            'model',
-            'cfg'
-        ];
-
         // One argument has to be an assoc array
         if (! isset($arg2) && is_array($arg1)) {
             foreach ($arg1 as $var => $value) {
-                $this->view->setVar($var, $value);
+                $this->vars[$var] = $this->varHandleObject($value);
             }
         }
         elseif (isset($arg2)) {
-            $this->view->setVar($arg1, $arg2);
+            $this->vars[$arg1] = $this->varHandleObject($arg2);
         }
         else {
             Throw new ControllerException('The vars to set are not correct.', 1001);
@@ -521,19 +517,27 @@ class Controller extends MvcAbstract
         return $this;
     }
 
-    /**
-     * Returns value of a set var in view
-     *
-     * When var is not found an ControllerException is thrown by the view.
-     *
-     * @param sting $name
-     *            Name of the var to get value from
-     *
-     * @return mixed
-     */
-    final protected function getVar($name)
+    private function varHandleObject($val)
     {
-        return $this->view->getVar($name);
+
+        // Handle objects
+        if (is_object($val)) {
+
+            switch (true) {
+
+                // Handle buildable objects
+                case method_exists($val, 'build'):
+                    $val = $val->build();
+                    break;
+
+                // Handle all other objects
+                default:
+                    $val = get_object_vars($val);
+                    break;
+            }
+        }
+
+        return $val;
     }
 
     /**
@@ -553,9 +557,9 @@ class Controller extends MvcAbstract
             $dbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
 
             $pieces = [
-                $this->stringUncamelize($this->app->getName()),
-                $this->stringUncamelize($this->name),
-                isset($dbt[1]['function']) ? $this->stringUncamelize($dbt[1]['function']) : null
+                stringUncamelize($this->app->getName()),
+                stringUncamelize($this->name),
+                isset($dbt[1]['function']) ? stringUncamelize($dbt[1]['function']) : null
             ];
 
             $id = implode('-', $pieces);
@@ -582,8 +586,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxTarget($target)
     {
-        if ($this->ajax_flag) {
-            $this->ajax_command->setSelector($target);
+        if (! empty($this->ajax_cmd)) {
+            $this->ajax_cmd->setSelector($target);
         }
 
         return $this;
@@ -598,8 +602,8 @@ class Controller extends MvcAbstract
      */
     final protected function setAjaxFunction($function)
     {
-        if ($this->ajax_flag) {
-            $this->ajax_command->setFunction($function);
+        if (! empty($this->ajax_cmd)) {
+            $this->ajax_cmd->setFunction($function);
         }
 
         return $this;
@@ -628,6 +632,9 @@ class Controller extends MvcAbstract
      */
     final protected function redirectExit($location = '', $permanent = false)
     {
+        // No view rendering!
+        $this->render = false;
+
         if (empty($location)) {
             $location = BASEURL;
         }
@@ -636,11 +643,10 @@ class Controller extends MvcAbstract
             $location = BASEURL . $location;
         }
 
-        // Append session id
-        // $location = preg_replace('/^' . preg_quote(BASEURL, '/') . '(?!\?' . preg_quote(SID, '/') . ')\\??/', BASEURL
-        // . '?' . SID . ';', $location);
-
-        $this->http->header->location($location, $permanent);
+        $_SESSION['Core']['redirect'] = [
+            'location' => $location,
+            'permanent' => $permanent
+        ];
     }
 
     /**

@@ -49,33 +49,33 @@ class GroupModel extends Model
             'User' => [],
             'GroupPermissions' => []
         ];
-        
+
         if ($id_group) {
             $group = $this->security->group->getGroupById($id_group);
             $group['User'] = $this->app->getModel('User')->loadUsersByGroupId($id_group);
         }
-        
+
         return $group;
     }
 
     public function getGroups($skip_guest = false)
     {
         $data = $this->security->group->getGroups(false, $skip_guest);
-        
+
         foreach ($data as &$app_groups) {
-            
+
             foreach ($app_groups as $id_group => &$group) {
-                
-                $group['link'] = $this->url('byid', [
+
+                $group['link'] = $this->url('generic.action', [
                     'controller' => 'Group',
                     'action' => 'Detail',
                     'id' => $group['id_group']
                 ]);
-                
+
                 $group['User'] = $this->app->getModel('User')->loadUsersByGroupId($id_group);
             }
         }
-        
+
         return $data;
     }
 

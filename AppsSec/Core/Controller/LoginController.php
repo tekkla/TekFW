@@ -54,7 +54,12 @@ class LoginController extends Controller
 
                 // Login successful? Redirect to index page
                 if ($logged_in == true) {
-                    $this->redirectExit($this->url('index'));
+
+                    $route = $this->config->get('home.user.route');
+                    $params = parse_ini_string($this->config->get('home.user.params'));
+                    $url = $this->url($route, $params);
+
+                    return $this->redirectExit($url);
                 }
             }
 
@@ -64,7 +69,7 @@ class LoginController extends Controller
                 // Store failed attempt as flag in session
                 $_SESSION['Core']['login_failed'] = true;
 
-                $this->model->addError('@', $this->text('login.failed'));
+                $this->model->addError('@', $this->text->get('login.failed'));
             }
         }
         else {
@@ -74,7 +79,7 @@ class LoginController extends Controller
         }
 
         // Autologin on or off by default?
-        $data['remember'] = $this->cfg('login.autologin.active');
+        $data['remember'] = $this->config->get('security.login.autologin.active');
 
         $fd = $this->getFormDesigner('core-login');
         $fd->setName('core-login');
@@ -85,7 +90,7 @@ class LoginController extends Controller
             $group = $fd->addGroup();
             $group->addCss('alert alert-info');
             $group->setRole('alert');
-            $group->setInner($this->text('register.activation.notice'));
+            $group->setInner($this->text->get('register.activation.notice'));
         }
 
         // Create element group
@@ -96,7 +101,7 @@ class LoginController extends Controller
             'password' => 'password'
         ];
 
-        if ($this->cfg('security.login.autologin')) {
+        if ($data['remember']) {
             $controls['remember'] = 'checkbox';
         }
 
@@ -106,7 +111,7 @@ class LoginController extends Controller
             $control = $group->addControl($type, $name);
 
             // Label and placeholder
-            $text = $this->text('login.form.' . $name);
+            $text = $this->text->get('login.form.' . $name);
 
             $methods = [
                 'setPlaceholder'
@@ -125,7 +130,7 @@ class LoginController extends Controller
                     break;
 
                 case 'remember':
-                    $control->setLabel($this->text('login.form.remember'));
+                    $control->setLabel($this->text->get('login.form.remember'));
                     break;
             }
         }
@@ -138,31 +143,31 @@ class LoginController extends Controller
         $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
-        $control->setInner($icon->build() . ' ' . $this->text('login.form.login'));
+        $control->setInner($icon->build() . ' ' . $this->text->get('login.form.login'));
 
-        // Create links for 'Forgot Password?' and 'New user?'
+        // @TODO Create links for 'Forgot Password?' and 'New user?'
 
-        if ($this->cfg('security.login.reset_password')) {}
+        #if ($this->config->get('security.login.reset_password')) {}
 
-        if ($this->cfg('security.login.register')) {}
+        #if ($this->config->get('security.login.register')) {}
 
         $this->setVar([
-            'headline' => $this->text('login.text'),
+            'headline' => $this->text->get('login.text'),
             'form' => $fd
         ]);
 
-        $this->page->breadcrumbs->createActiveItem($this->text('user.action.login'));
+        $this->page->breadcrumbs->createActiveItem($this->text->get('user.action.login'));
     }
 
     public function Logout()
     {
         $this->security->login->doLogout();
 
-        $this->redirectExit($this->router->url('core.index'));
+        return $this->redirectExit($this->config->get('url.home'));
     }
 
     public function AlreadyLoggedIn()
     {
-        $this->setVar('loggedin', $this->text('already_loggedin'));
+        $this->setVar('loggedin', $this->text->get('already_loggedin'));
     }
 }

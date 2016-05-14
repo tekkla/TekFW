@@ -15,7 +15,7 @@ class LogController extends Controller
     public function Index()
     {
         $this->setVar([
-            'headline' => $this->text('logs.headline'),
+            'headline' => $this->text->get('logs.headline'),
             'logs' => $this->app->getController()
                 ->run('Logs')
         ]);
@@ -26,7 +26,7 @@ class LogController extends Controller
     public function Logs($entries = null)
     {
         if (! $entries) {
-            $entries = $this->cfg('log.display.entries');
+            $entries = $this->config->get('log.display.entries');
             $entries = 20;
         }
         

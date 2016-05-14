@@ -1,7 +1,7 @@
 <?php
 namespace Core\IO;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * IOException.php

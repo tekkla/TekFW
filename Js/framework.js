@@ -11,9 +11,8 @@ var coreFw = {
 
         // Bind error popover
         $('.form-control[data-error]').coreErrorPop();
-        
-     	$('[data-toggle="popover"]').popover();
 
+        $('[data-toggle="popover"]').popover();
 
         // beautifiying xdebug oputput including ajax return values add styling
         // hooks to any XDEBUG output
@@ -26,20 +25,19 @@ var coreFw = {
         $('.fadeout').delay(fadeout_time).slideUp(800, function() {
             $(this).remove();
         });
-   
-        
+
         $(".sortable tbody").sortable({
-            axis: 'y',
-            update: function(event, ui) {
-                
+            axis : 'y',
+            update : function(event, ui) {
+
                 var data = $(this).sortable('serialize');
-                
+
                 if ($(this).data('url') !== undefined) {
                     // POST to server using $.post or $.ajax
                     $.ajax({
-                        data: data,
-                        type: 'POST',
-                        url: $(this).data('url') + '/ajax'
+                        data : data,
+                        type : 'POST',
+                        url : $(this).data('url') + '/ajax'
                     });
                 }
             }
@@ -67,7 +65,8 @@ var coreFw = {
         // indicates that we are going to send a
         // form. Without this, it is a normal link, that we are
         // going to load.
-        if ($(element).data('form') === undefined && $(element).attr('form') === undefined) {
+        if ($(element).data('form') === undefined
+                && $(element).attr('form') === undefined) {
 
             // Ext links will be handled by GET
             ajaxOptions.type = 'GET';
@@ -75,19 +74,16 @@ var coreFw = {
             // Try to get url either from links href attribute or
             if ($(element).attr('href') !== undefined) {
                 var url = $(element).attr('href');
-            }
-            else if ($(element).data('href') !== undefined) {
+            } else if ($(element).data('href') !== undefined) {
                 var url = $(element).data('href');
-            }
-            else if ($(element).data('url') !== undefined) {
+            } else if ($(element).data('url') !== undefined) {
                 var url = $(element).data('url');
-            }
-            else {
-                console.log('CoreFW ajax GET: No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
+            } else {
+                console
+                        .log('CoreFW ajax GET: No URI to query found. Neither as "href", as "data-href" or "data-url". Aborting request.');
                 return false;
             }
-        }
-        else {
+        } else {
 
             // Ext forms will be handled py POST
             ajaxOptions.type = 'POST';
@@ -104,7 +100,8 @@ var coreFw = {
                     var id = $(element).data('form');
                     break;
                 default:
-                    console.log('CoreFW ajax POST: No form id to submit found. Neither as "form" nor as "data-form" attribute. Aborting request.');
+                    console
+                            .log('CoreFW ajax POST: No form id to submit found. Neither as "form" nor as "data-form" attribute. Aborting request.');
                     return false;
             }
 
@@ -137,7 +134,8 @@ var coreFw = {
             // control the hidden form where we put the content
             // before serialization gathers the form data
             // for ajax post.
-            if ($(element).data('inline-id') !== undefined && $(element).data('inline-control') !== undefined) {
+            if ($(element).data('inline-id') !== undefined
+                    && $(element).data('inline-control') !== undefined) {
 
                 var control = $(element).data('inline-control');
                 var content = $('#' + $(element).data('inline-id')).html();
@@ -155,13 +153,15 @@ var coreFw = {
 
         // Add error handler
         ajaxOptions.error = function(XMLHttpRequest, textStatus, errorThrown) {
-            var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText : 'Ajax Request Error: ' + textStatus;
+            var errortext = XMLHttpRequest !== undefined ? XMLHttpRequest.responseText
+                    : 'Ajax Request Error: ' + textStatus;
         };
 
         // Fire ajax request!
         $.ajax(ajaxOptions);
 
-        if (ajaxOptions.type !== 'POST' && $(element).data('nostate') === undefined) {
+        if (ajaxOptions.type !== 'POST'
+                && $(element).data('nostate') === undefined) {
             history.pushState({}, '', url);
         }
 
@@ -176,7 +176,9 @@ var coreFw = {
     // Json parser for Ext ajax response
     // ----------------------------------------------------------------------------
     parseJSON : function(json) {
-        
+
+        console.log(json);
+
         $.each(json, function(type, stack) {
 
             // DOM manipulations
@@ -189,14 +191,13 @@ var coreFw = {
 
                             if (jQuery.isFunction($()[x.f])) {
                                 selector = $(id)[x.f](x.a);
-                            }
-                            else {
-                                console.log('Unknown method/function "' + x.f + '"');
+                            } else {
+                                console.log('Unknown method/function "' + x.f
+                                        + '"');
                             }
                         });
 
-                    }
-                    else {
+                    } else {
                         console.log('Selector "' + id + '" not found.');
                     }
                 });
@@ -207,35 +208,25 @@ var coreFw = {
                 $.each(stack, function(i, cmd) {
 
                     switch (cmd.f) {
-                        case "alert":
-                            bootbox.alert(cmd.a[0]);
-                            break;
                         case "error":
-                            $('#core-message').addClass('fade in').append(cmd.a[0]);
-                            $('#core-message').bind('closed.bs.alert', function() {
-                                $(this).removeClass().html('').unbind('closed.bs.alert');
-                            });
+                            $(cmd.a[0]).addClass('fade in').append(
+                                    '<p>' + cmd.a[1] + '</p>');
+                            $(cmd.a[0]).bind(
+                                    'closed.bs.alert',
+                                    function() {
+                                        $(this).removeClass().html('').unbind(
+                                                'closed.bs.alert');
+                                    });
                             break;
-                        case "dump":
-                        case "log":
-                        case "console":
-                            console.log(cmd.a);
-                            break;
-                        case "modal":
-
-                            // fill dialog with content
-                            $('#core-modal').html(cmd.a).modal({
-                                keyboard : false
-                            });
-                            break;
-
-                        case 'load_script':
+                        case 'getScript':
                             $.getScript(cmd.a);
                             break;
-
                         case 'href':
                             window.location.href = cmd.a;
                             return;
+                        default:
+                            [ cmd.f ](cmd.a);
+                            break;
                     }
                 });
             }
@@ -256,8 +247,7 @@ $(document).ready(function() {
 
         if ($(this).scrollTop() > 100) {
             $('#core-scrolltotop').fadeIn();
-        }
-        else {
+        } else {
             $('#core-scrolltotop').fadeOut();
         }
     });
@@ -317,8 +307,7 @@ $(document).on('click', '#core-scrolltotop', function(event) {
 
     if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {
         window.scrollTo(0, 0);
-    }
-    else {
+    } else {
         $('html,body').animate({
             scrollTop : 0,
             scrollLeft : 0
@@ -338,39 +327,29 @@ $(document).on('click', '.btn-back', function(event) {
 });
 
 // ----------------------------------------------------------------------------
-// ClickHandler for confirms
+// Ajax based click-handler for links with the data attribute 'data-ajax'
 // ----------------------------------------------------------------------------
-$(document).on('click', '*[data-confirm] + *:not([data-ajax])', function(event) {
+$(document).on('click', '*[data-confirm], *[data-ajax]', function(event) {
 
-    // confirmation wanted?
-    if ($(this).data('confirm') !== undefined) {
+    if ($(this).attr('data-confirm') !== undefined) {
 
         if (!confirm($(this).data('confirm'))) {
             event.preventDefault();
             return false;
         }
     }
-});
 
-// ----------------------------------------------------------------------------
-// Ajax based click-handler for links with the data attribute 'data-ajax'
-// ----------------------------------------------------------------------------
-$(document).on('click', '*[data-ajax]', function(event) {
+    if ($(this).attr('data-ajax') !== undefined) {
 
-    if ($(this).data('confirm') !== undefined) {
+        coreFw.loadAjax(this);
 
-        if (!confirm($(this).data('confirm'))) {
-            return false;
+        if ($(this).attr('data-to-top') !== undefined) {
+            window.scrollTo(0, 0);
         }
+
+        event.preventDefault();
     }
 
-    coreFw.loadAjax(this);
-
-    if ($(this).data('to-top') !== undefined) {
-        window.scrollTo(0, 0);
-    }
-
-    event.preventDefault();
 });
 
 // ----------------------------------------------------------------------------

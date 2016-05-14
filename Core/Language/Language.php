@@ -1,7 +1,7 @@
 <?php
 namespace Core\Language;
 
-use Core\Traits\ArrayTrait;
+use function Core\arrayFlatten;
 
 /**
  * Language.php
@@ -10,63 +10,95 @@ use Core\Traits\ArrayTrait;
  * @copyright 2016
  * @license MIT
  */
-class Language
+class Language implements LanguageInterface
 {
 
-    use ArrayTrait;
-
-    private $data = [];
+    /**
+     *
+     * @var LanguageStorage
+     */
+    private $storage;
 
     /**
-     * Loads an app related language file
      *
-     * When text of an app already exists, the loaded texts are merged into the existing array.
+     * @var string
+     */
+    private $fallback = '';
+
+    /**
+     * Constructor
      *
-     * @param string $app_name
-     *            Name of app the file is to load from
-     * @param string $lang_file
-     *            Name of the languagefile to load
+     * Inits the internel storage.
+     */
+    public function __construct()
+    {
+        $this->storage = new LanguageStorage();
+    }
+
+    /**
+     * Sets the name of the fallback storage
+     *
+     * The fallback storage will be queried for a text when the requested storage returns nor result.
+     *
+     * @param string $fallback
+     */
+    public function setFallbackStorageName($fallback)
+    {
+        $this->fallback = $fallback;
+    }
+
+    /**
+     * Loads a language file
+     *
+     * When a text already exists in a storage, the loaded texts overwrites and extends the storage with the new data.
+     *
+     * @param string $storage_name
+     *            Name of storage the loaded language texts will be stored in
+     * @param string $filename
+     *            File path of mthe languagefile to load
      *
      * @throws InvalidArgumentException
      */
-    public function loadLanguageFile($app_name, $lang_file)
+    public function loadLanguageFile($storage_name, $filename)
     {
-        if (file_exists($lang_file)) {
+        if (file_exists($filename)) {
 
-            $lang_array = include ($lang_file);
+            $lang_array = include ($filename);
 
             if (is_array($lang_array)) {
 
-                $lang_array = $this->arrayFlatten($lang_array, '', '.', true);
+                $lang_array = arrayFlatten($lang_array, '', '.', true);
 
-                if (array_key_exists($app_name, $this->data)) {
-                    $this->data[$app_name] = array_merge($this->data[$app_name], $lang_array);
-                }
-                else {
-                    $this->data[$app_name] = $lang_array;
+                foreach ($lang_array as $key => $val) {
+
+                    if (! isset($this->storage->{$storage_name})) {
+                        $this->storage->{$storage_name} = new LanguageStorage();
+                    }
+
+                    $this->storage->{$storage_name}->{$key} = $val;
                 }
             }
         }
     }
 
     /**
-     * Returns translated text
+     * Returns text form by key from a storage
      *
      * Only translates texts that does not contain spaces.
-     * Tries to find core text when either app language or the requested key is found.
-     * Returns the key when no language text is found.
-     * Allows linking of keys and throws an exception when it comes to ininite loops.
+     * Tries to find text in optional set fallback storage when key is not found in the requested one.
+     * Returns the key when no text is found.
+     * Allows linking of keys within a storage and throws an exception when it comes to ininite loops.
      *
+     * @param string $storage_name
+     *            Name of storage to query for the key belongs to.
      * @param string $key
      *            Key of the requested text
-     * @param string $app
-     *            Optional app name the key belongs to. (Default: 'Core')
      *
      * @throws LanguageException
      *
      * @return string
      */
-    public function getText($key, $app = 'Core')
+    public function get($storage_name, $key)
     {
 
         // IMPORTANT! Keys with spaces won't be processed without any further
@@ -76,23 +108,54 @@ class Language
         }
 
         // Return key when key is not found
-        if (! isset($this->data[$app]) || ! isset($this->data[$app][$key])) {
+        if (! isset($this->storage->{$storage_name}->{$key})) {
 
-            if (isset($this->data['Core'][$key])) {
-                return $this->data['Core'][$key];
-            }
+            // Do we have a fallback storage set to look for?
+            if (! empty($this->fallback) && isset($this->storage->{$this->fallback}))
+
+                if (isset($this->storage->{$this->fallback}->{$key})) {
+                    return $this->storage->{$this->fallback}->{$key};
+                }
 
             return $key;
         }
 
-        $text = $this->data[$app][$key];
+        $text = $this->storage->{$storage_name}->{$key};
 
         // Prevent infinite loops
         if ($text == $key) {
-            Throw new LanguageException(sprintf('There is an infinite loop recursion in language data of app "%s" on key "%s"', $app, $key));
+            Throw new LanguageException(sprintf('There is an infinite loop recursion in language data of storage "%s" on key "%s"', $storage_name, $key));
         }
 
         // Return requested text
-        return $this->getText($text, $app);
+        return $this->get($storage_name, $text);
+    }
+
+    /**
+     * Returns a reference to the language string of a specific app
+     *
+     * @param string $storage_name
+     *            Name of the app the language blongs to
+     *
+     * @return AppLanguage
+     */
+    public function &getAppLanguage($storage_name)
+    {
+        $return = false;
+
+        if (isset($storage_name, $this->storage->{$storage_name})) {
+            $return = $this->storage->{$storage_name};
+        }
+
+        return $return;
+    }
+
+    public function createTextAdapter($storage_name)
+    {
+        $adapter = new Text();
+        $adapter->setLanguage($this);
+        $adapter->setStorageName($storage_name);
+
+        return $adapter;
     }
 }

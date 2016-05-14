@@ -2,7 +2,7 @@
 namespace Core\Html\Bootstrap\Panel;
 
 use Core\Html\Elements\Div;
-use Core\Html\HtmlBuildableInterface;
+use Core\Html\Bootstrap\BootstrapContextInterface;
 
 /**
  * Panel.php
@@ -11,9 +11,13 @@ use Core\Html\HtmlBuildableInterface;
  * @copyright 2016
  * @license MIT
  */
-class Panel extends PanelElementAbstract implements HtmlBuildableInterface
+class Panel extends AbstractPanelElement implements BootstrapContextInterface
 {
 
+    /**
+     *
+     * @var string
+     */
     private $context = 'default';
 
     public function __construct()
@@ -21,59 +25,67 @@ class Panel extends PanelElementAbstract implements HtmlBuildableInterface
         // Panels are divs
         $this->html = new Div();
         $this->html->addCss([
-            'panel',
-            'panel-default'
+            'panel'
         ]);
     }
 
-    public function &createHeading()
+    /**
+     * Creates a PanelHeading object, adds it by default to the content stack and returns a reference on it
+     *
+     * @param string $title
+     *            Optional text to use as title (Default: '')
+     * @param string $autoadd
+     *            Optional flag to dis-/enable autoadd of created object to the content stack
+     *            
+     * @return PanelHeading
+     */
+    public function &createHeading($title = '', $autoadd = true)
     {
         $heading = new PanelHeading();
-
-        $this->content[] = $heading;
-
+        
+        if ($autoadd) {
+            $this->content[] = $heading;
+        }
+        
         return $heading;
-
-
     }
 
-    public function &createBody()
+    /**
+     * Creates a PanelBody object, adds it by default to the content stack and returns a reference on it
+     *
+     * @param string $autoadd
+     *            Optional flag to dis-/enable autoadd of created object to the content stack
+     */
+    public function &createBody($autoadd = true)
     {
         $body = new PanelBody();
-
-        $this->content[] = $body;
-
+        
+        if ($autoadd) {
+            $this->content[] = $body;
+        }
         return $body;
     }
 
-    public function &createFooter()
+    /**
+     * Creates a PanelHeading object, adds it by default to the content stack and returns a reference on it
+     *
+     * @param string $autoadd
+     *            Optional flag to dis-/enable autoadd of created object to the content stack
+     */
+    public function &createFooter($autoadd = true)
     {
         $footer = new PanelFooter();
-
-        $this->content[] = $footer;
-
+        if ($autoadd) {
+            $this->content[] = $footer;
+        }
         return $footer;
     }
 
     /**
-     * Sets own panel context.
      *
-     * @param unknown $context
+     * {@inheritDoc}
      *
-     * @return \Core\Html\Controls\Panel
-     */
-    public function setContext($context)
-    {
-        $this->context = $context;
-
-        return $this;
-    }
-
-    /*
-     * +
-     * Returns panel context.
-     *
-     * @return string
+     * @see \Core\Html\Bootstrap\BootstrapContextInterface::getContext()
      */
     public function getContext()
     {
@@ -81,63 +93,27 @@ class Panel extends PanelElementAbstract implements HtmlBuildableInterface
     }
 
     /**
-     * Sets panel context to primary.
      *
-     * @return \Core\Html\Controls\Panel
+     * {@inheritDoc}
+     *
+     * @see \Core\Html\Bootstrap\BootstrapContextInterface::setContext()
      */
-    public function setContextPrimary()
+    public function setContext($context)
     {
-        $this->context = 'primary';
-
-        return $this;
+        $this->context = $context;
     }
 
     /**
-     * Sets panel context to success.
      *
-     * @return \Core\Html\Controls\Panel
-     */
-    public function setContextSuccess()
-    {
-        $this->context = 'success';
-
-        return $this;
-    }
-
-    /**
-     * Sets panel context to info.
+     * {@inheritDoc}
      *
-     * @return \Core\Html\Controls\Panel
+     * @see \Core\Html\Bootstrap\Panel\AbstractPanelElement::build()
      */
-    public function setContextInfo()
+    public function build()
     {
-        $this->context = 'info';
-
-        return $this;
-    }
-
-    /**
-     * Sets panel context to warning.
-     *
-     * @return \Core\Html\Controls\Panel
-     */
-    public function setContextWarning()
-    {
-        $this->context = 'warning';
-
-        return $this;
-    }
-
-    /**
-     * Sets panel context to danger.
-     *
-     * @return \Core\Html\Controls\Panel
-     */
-    public function setContextDanger()
-    {
-        $this->context = 'danger';
-
-        return $this;
+        $this->html->addCss('panel-' . $this->context);
+        
+        return parent::build();
     }
 }
 

@@ -2,7 +2,7 @@
 namespace Core\Log;
 
 use Core\Data\Connectors\Db\Db;
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 
 /**
  * Logging.php
@@ -24,7 +24,7 @@ class Log
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      * Constructor
@@ -32,10 +32,10 @@ class Log
      * @param Db $db
      *            Db dependency
      */
-    public function __construct(Db $db, Cfg $cfg)
+    public function __construct(Db $db, Config $config)
     {
         $this->db = $db;
-        $this->cfg = $cfg;
+        $this->config= $config;
     }
 
     /**

@@ -1,14 +1,14 @@
 <?php
 namespace Core\Ajax;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * ConfigException class
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
- * @copyright 2015
+ * @copyright 2016
  */
 class AjaxException extends CoreException
 {

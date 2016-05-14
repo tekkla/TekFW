@@ -2,7 +2,9 @@
 namespace AppsSec\Core\Model;
 
 use Core\Amvc\Model;
-use Core\Data\Validator\Validator;
+use Core\Validator\Validator;
+use function Core\arrayAssignByKeys;
+use function Core\arrayAssignByPath;
 
 /**
  * ConfigModel.php
@@ -43,12 +45,12 @@ final class ConfigModel extends Model
 
     public function getConfigGroups($app_name)
     {
-        return array_keys($this->di->get('core.cfg')->definitions[$app_name]);
+        return array_keys($this->di->get('core.config')->definitions[$app_name]['groups']);
     }
 
     public function getDefinition($name)
     {
-        return $this->di->get('core.cfg')['definitions'];
+        return $this->di->get('core.config')['definitions'];
     }
 
     /**
@@ -103,13 +105,13 @@ final class ConfigModel extends Model
         $app_name = $data['app'];
         unset($data['app']);
 
-        $this->validateConfig($data, $this->di->get('core.cfg')->definitions[$app_name]);
+        $flat = $this->arrayFlatten($data);
+
+        $this->validateConfig($app_name, $flat);
 
         if ($this->hasErrors()) {
             return $data;
         }
-
-        $flat = $this->arrayFlatten($data);
 
         // Data validated successfully. Go on and store config
         $db = $this->getDbConnector();
@@ -151,42 +153,32 @@ final class ConfigModel extends Model
         return $data;
     }
 
-    private function validateConfig($data, $structure, $keys = [])
+    private function validateConfig($app_name, $data)
     {
         static $validator;
 
         foreach ($data as $key => $val) {
 
+            $definition = $this->di->get('core.config')->structure[$app_name][$key];
+
             // Any validation rules in structur on this level?
-            if (! empty($structure[$key]['validate'])) {
+            if (! empty($definition['validate'])) {
 
                 if (empty($validator)) {
                     $validator = new Validator();
                 }
 
-                $validator->validate($val, $structure[$key]['validate']);
+                $validator->validate($val, $definition['validate']);
 
                 // Any errors?
                 if (! $validator->isValid()) {
 
-                    // Yes! Add current key to a copy of $keys
-                    $final_keys = $keys;
-                    $final_keys[] = $key;
-
                     // and create error informations
-                    $this->arrayAssignByKeys($this->errors, $final_keys, $validator->getResult());
+                    arrayAssignByKeys($this->errors, explode('.', $key), $validator->getResult());
                 }
 
                 // next please!
                 continue;
-            }
-
-            if (is_array($val)) {
-
-                $next_level_keys = $keys;
-                $next_level_keys[] = $key;
-
-                $this->validateConfig($val, $structure[$key], $next_level_keys);
             }
         }
     }
@@ -195,10 +187,10 @@ final class ConfigModel extends Model
     {
         $data = [];
 
-        $configs = $this->di->get('core.cfg')->data[$app_name];
+        $configs = $this->di->get('core.config')->{$app_name};
 
         foreach ($configs as $path => $value) {
-            $this->arrayAssignByPath($data, $path, $value);
+            arrayAssignByPath($data, $path, $value);
         }
 
         if (! empty($data[$group_name])) {

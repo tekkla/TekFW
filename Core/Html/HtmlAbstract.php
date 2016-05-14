@@ -1,8 +1,7 @@
 <?php
 namespace Core\Html;
 
-use Core\Traits\ArrayTrait;
-use Core\Language\TextTrait;
+use function Core\arrayIsAssoc;
 
 /**
  * HtmlAbstract.php
@@ -13,8 +12,6 @@ use Core\Language\TextTrait;
  */
 abstract class HtmlAbstract implements HtmlBuildableInterface
 {
-    use ArrayTrait;
-    use TextTrait;
 
     /**
      * Element type
@@ -592,7 +589,7 @@ abstract class HtmlAbstract implements HtmlBuildableInterface
             else {
                 // Check the arguments for assoc array and add arguments according to the
                 // result of check as key, val or only as val
-                if ($this->arrayIsAssoc($args[0])) {
+                if (arrayIsAssoc($args[0])) {
                     foreach ($args[0] as $key => $val) {
                         $this->{$func}[$key] = $val;
                     }

@@ -1,7 +1,6 @@
 <?php
 namespace Core\Page\Body\Menu;
 
-use Core\Errors\Exceptions\InvalidArgumentException;
 use Core\Page\PageException;
 
 /**

@@ -1,7 +1,7 @@
 <?php
 namespace Core\Page;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * PageException.php

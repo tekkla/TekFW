@@ -2,13 +2,15 @@
 namespace AppsSec\Core\Controller;
 
 use Core\Amvc\Controller;
+use Core\Security\Users;
 
 class UserController extends Controller
 {
+
     protected $access = [
         'Index' => 'admin',
         'Userlist' => 'admin',
-        'Edit' => 'admin',
+        'Edit' => 'admin'
     ];
 
     /**
@@ -28,8 +30,9 @@ class UserController extends Controller
             'userlist' => $this->model->getList('display_name', '%', 100, [
                 [
                     function ($data) {
-                        $data['link'] = $this->url('edit', [
-                            'controller' => 'User',
+                        $data['link'] = $this->url('generic.id', [
+                            'controller' => 'user',
+                            'action' => 'edit',
                             'id' => $data['id_user']
                         ]);
                         return $data;
@@ -38,16 +41,17 @@ class UserController extends Controller
             ]),
             'links' => [
                 'new' => [
-                    'text' => $this->text('user.action.new.text'),
-                    'url' => $this->url('edit', [
-                        'controller' => 'user'
+                    'text' => $this->text->get('user.action.new.text'),
+                    'url' => $this->url('generic.action', [
+                        'controller' => 'user',
+                        'action' => 'edit'
                     ])
                 ]
             ],
             'text' => [
-                'headline' => $this->text('user.list'),
-                'username' => $this->text('user.field.username'),
-                'display_name' => $this->text('user.field.display_name')
+                'headline' => $this->text->get('user.list'),
+                'username' => $this->text->get('user.field.username'),
+                'display_name' => $this->text->get('user.field.display_name')
             ]
         ]);
 
@@ -66,7 +70,7 @@ class UserController extends Controller
 
             $this->model->save($data);
 
-            if (! $data->hasErrors()) {
+            if (! $this->model->hasErrors()) {
                 $this->redirect('Detail', [
                     'id' => $id
                 ]);
@@ -81,7 +85,8 @@ class UserController extends Controller
         // Get FormDesigner object
         $fd = $this->getFormDesigner('core-user-edit');
 
-        $fd->addData($data);
+        $fd->mapData($data);
+        $fd->mapErrors($this->model->getErrors());
 
         // Flag form to be ajax
         $fd->isAjax();
@@ -101,7 +106,7 @@ class UserController extends Controller
         // Usergroups
         $heading = $group->addElement('Elements\Heading');
         $heading->setSize(3);
-        $heading->setInner($this->text('user.field.groups'));
+        $heading->setInner($this->text->get('user.field.groups'));
 
         $groups = $this->security->group->getGroups();
 
@@ -142,10 +147,10 @@ class UserController extends Controller
         $editbox->setForm($fd);
 
         // Editbox caption
-        $editbox->setCaption($this->text('user.action.edit.text'));
+        $editbox->setCaption($this->text->get('user.action.edit.text'));
 
         // Cancel action only when requested
-        $editbox->setCancelAction($this->url('byid', [
+        $editbox->setCancelAction($this->url('generic.id', [
             'controller' => 'User',
             'action' => 'Detail',
             'id' => $id
@@ -165,47 +170,51 @@ class UserController extends Controller
 
         if ($data) {
 
-            $activate = $this->cfg('security.activation.use');
+            // Get activation mode
+            $activate = $this->config->get('user.activation.use');
 
-            $id_user = $this->model->register($data, $activate);
+            // Usercreationprocess which returns the id of the new user
+            $id_user = $this->model->createUser($data, $activate);
 
             if (! $this->model->hasErrors()) {
 
-                if ($activate) {
+                // Activation by mail?
+                if ($activate===1) {
 
                     // Create combined key from activation data of user
-                    $activation = $this->model->getActivationData($id_user);
-                    $key = $activation['selector'] . ':' . $activation['token'];
+                    $key = $this->token->createActivationToken($id_user, $this->config->Core->get('user.mail.activation.ttl'));
 
                     /* @var $mailer \Core\Mailer\Mailer */
                     $mailer = $this->di->get('core.mailer');
 
                     $mail = $mailer->createMail();
                     $mail->isHtml(true);
-                    $mail->setMTA($this->cfg('security.activation.mta'));
+                    $mail->setMTA($this->config->get('user.mail.activation.mta'));
 
                     // Add user as recipient
                     $mail->addRecipient('to', $data['username']);
 
                     // Get from address and name from config as sender informations
-                    $from = $this->cfg('security.activation.from');
-                    $name = $this->cfg('security.activation.name');
+                    $from = $this->config->get('user.mail.activation.from');
+                    $name = $this->config->get('user.mailactivation.name');
 
                     $mail->setFrom($from, $name);
 
                     // Define strings to replace placeholder in mailtexts
                     $strings = [
-                        'brand' => $this->page->getBrand(),
-                        'url.activate' => $this->url('register.activation', [
+                        'brand' => $this->config->get('site.general.name'),
+                        'url.activate' => $this->url('activate', [
+                            'action' => 'activate',
                             'key' => $key
                         ]),
-                        'url.deny' => $this->url('register.deny', [
+                        'url.deny' => $this->url('activate', [
+                            'action' => 'deny',
                             'key' => $key
                         ])
                     ];
 
                     // Create subject by replacing {brand} placeholder strings
-                    $subject = str_replace('{brand}', $strings['brand'], $this->text('register.mail.subject'));
+                    $subject = str_replace('{brand}', $strings['brand'], $this->text->get('register.mail.subject'));
 
                     // Add subject as title string to replace a placeholder+
                     $strings['title'] = $subject;
@@ -219,11 +228,11 @@ class UserController extends Controller
     <title>{title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
-<body>' . $this->text('register.mail.body.html') . '</body>
+<body>' . $this->text->get('register.mail.body.html') . '</body>
 
 </html>';
 
-                    $alt_body = $this->text('register.mail.body.alt');
+                    $alt_body = $this->text->get('register.mail.body.plain');
 
                     // Replace placeholder
                     foreach ($strings as $key => $val) {
@@ -235,17 +244,18 @@ class UserController extends Controller
                     $mail->setBody($body);
                     $mail->setAltbody($alt_body);
 
-                    $state = 0;
+                    $state = 'wait';
                 }
                 else {
-                    $state = 1;
+                    $state = 'done';
                 }
-            }
 
-            $this->redirectExit($this->url('register.done', [
-                'state' => $state
-            ]));
-            return;
+                $this->redirect('AccountState', [
+                    'state' => $state
+                ]);
+
+                return;
+            }
         }
 
         if (empty($data)) {
@@ -260,20 +270,20 @@ class UserController extends Controller
 
         $username = $group->addControl('Text', 'username');
 
-        $text = $this->text('register.form.username');
+        $text = $this->text->get('register.form.username');
         $username->setPlaceholder($text);
         $username->noLabel();
 
         $password = $group->addControl('Password', 'password');
 
-        $text = $this->text('register.form.password');
+        $text = $this->text->get('register.form.password');
         $password->setPlaceholder($text);
         $password->noLabel();
 
-        if ($this->cfg('security.register.use_compare_password')) {
+        if ($this->config->get('user.register.use_compare_password')) {
             $password_compare = $group->addControl('Password', 'password_compare');
 
-            $text = $this->text('register.form.compare');
+            $text = $this->text->get('register.form.compare');
             $password_compare->setPlaceholder($text);
             $password_compare->noLabel();
         }
@@ -290,42 +300,47 @@ class UserController extends Controller
         $icon = $this->html->create('Elements\Icon');
         $icon->useIcon('key');
 
-        $control->setInner($icon->build() . ' ' . $this->text('register.form.button'));
+        $control->setInner($icon->build() . ' ' . $this->text->get('register.form.button'));
 
         $this->setVar([
-            'headline' => $this->text('register.form.headline'),
+            'headline' => $this->text->get('register.form.headline'),
             'form' => $fd,
             'state' => 0
         ]);
     }
 
-    public function Done($state)
+    public function AccountState($state = 'wait')
     {
         $this->setVar([
-            'headline' => $this->text('register.activation.' . $state . '.headline'),
-            'text' => $this->text('register.activation.' . $state . '.text')
+            'headline' => $this->text->get('register.activation.' . $state . '.headline'),
+            'text' => $this->text->get('register.activation.' . $state . '.text')
         ]);
     }
 
     public function Activate($key)
     {
         // $key = $this->router->getParam('key');
-        $id_user = $this->di->get('core.security.users')->activateUser($key);
+        $id_user = $this->security->users->activateUser($key);
 
         // Redirect to RegisterDone on successfull activation
-        if ($id_user) {
-            $this->redirectExit($this->url('register.done', [
-                'state' => 1
+        if (! empty($id_user)) {
+            $this->redirectExit($this->url('generic.action', [
+                'controller' => 'user',
+                'action' => 'done'
             ]));
             return;
         }
 
-        $this->setVar([
-            'headline' => $this->text($key)
+        $this->redirect('AccountState', [
+            'state' => 'fail'
         ]);
     }
 
     Public function Deny($key)
-    {}
+    {
+        $this->redirect('AccountState', [
+            'state' => $this->security->users->denyActivation($key) ? 'deny.ok' : 'deny.nouser'
+        ]);
+    }
 }
 

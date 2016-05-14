@@ -121,7 +121,7 @@ class MtaModel extends Model
         $out = [];
         
         foreach ($mtalist as $mta) {
-            $out[$mta['id_mta']] = $mta['is_default'] == 1 ? $mta['title'] . ' (' . $this->text('default') . ')' : $mta['title'];
+            $out[$mta['id_mta']] = $mta['is_default'] == 1 ? $mta['title'] . ' (' . $this->text->get('default') . ')' : $mta['title'];
         }
         
         return $out;

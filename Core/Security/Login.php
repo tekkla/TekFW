@@ -2,7 +2,7 @@
 namespace Core\Security;
 
 use Core\Data\Connectors\Db\Db;
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Log\Log;
 use Core\Http\Cookie\Cookies;
 
@@ -26,7 +26,7 @@ class Login
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -50,14 +50,14 @@ class Login
      * Constructor
      *
      * @param Db $db
-     * @param Cfg $cfg
+     * @param Config $config
      * @param Security $security
      * @param Log $log
      */
-    public function __construct(Db $db, Cfg $cfg, Cookies $cookies, Token $token, Log $log)
+    public function __construct(Db $db, Config $config, Cookies $cookies, Token $token, Log $log)
     {
         $this->db = $db;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->cookies = $cookies;
         $this->token = $token;
         $this->log = $log;
@@ -124,7 +124,7 @@ class Login
         }
 
         // Append pepper to password
-        $password .= $this->cfg->data['Core']['security.encrypt.pepper'];
+        $password .= $this->config->Core['security.encrypt.pepper'];
 
         // Password ok?
         if (password_verify($password, $login['password'])) {
@@ -144,6 +144,9 @@ class Login
                     ]
                 ], true);
             }
+
+            // Refresh session id and delete old session
+            session_regenerate_id(true);
 
             // Store essential userdata in session
             $_SESSION['Core']['logged_in'] = true;
@@ -184,6 +187,9 @@ class Login
     {
         $id_user = $_SESSION['Core']['user']['id'];
 
+        // Refresh session id and delete old session
+        session_regenerate_id(true);
+
         // Clean up session
         $_SESSION['Core']['autologin_failed'] = true;
         $_SESSION['Core']['user'] = [
@@ -219,7 +225,7 @@ class Login
         $cookie_name = $this->getCookieName();
 
         // Remove all autologin cookies when autlogin is off in config
-        if (empty($this->cfg->data['Core']['login.autologin.active'])) {
+        if (empty($this->config->Core['security.login.autologin.active'])) {
             $this->cookies->remove($cookie_name);
             return false;
         }
@@ -270,6 +276,9 @@ class Login
             // Matches the hash in db with the provided token?
             if (hash_equals($auth_token['token'], $token)) {
 
+                // Refresh session id and delete old session
+                session_regenerate_id(true);
+
                 // Refresh autologin cookie so the user stays logged in
                 // as long as he comes back before his cookie has been expired.
                 $this->setAutoLoginCookies($auth_token['id_user']);
@@ -314,7 +323,7 @@ class Login
     private function setAutoLoginCookies($id_user)
     {
         // Create expire date
-        $expires = time() + 3600 * 24 * $this->cfg->data['Core']['login.autologin.expires_after'];
+        $expires = time() + 3600 * 24 * $this->config->Core['security.login.autologin.expires_after'];
 
         // Create selector
         $selector = bin2hex($this->token->generateRandomToken(6));
@@ -444,6 +453,6 @@ class Login
      */
     private function getCookieName()
     {
-        return $this->cfg->data['Core']['cookie.name'] . 'Token';
+        return $this->config->Core['cookie.name'] . 'Token';
     }
 }

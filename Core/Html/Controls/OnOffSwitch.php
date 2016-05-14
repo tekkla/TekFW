@@ -2,22 +2,65 @@
 namespace Core\Html\Controls;
 
 use Core\Html\Form\Select;
-use Core\Language\TextTrait;
 use Core\Html\HtmlException;
+use Core\Html\HtmlBuildableInterface;
+use Core\Html\FormAbstract;
 
 /**
  * OnOffSwitch.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2015
+ * @copyright 2016
  * @license MIT
  */
-class OnOffSwitch extends Select
+class OnOffSwitch extends FormAbstract implements HtmlBuildableInterface
 {
-    use TextTrait;
+
+    /**
+     *
+     * @var Select
+     */
+    public $html;
+
+    /**
+     *
+     * @var array
+     */
+    private $strings = [
+        'on' => 'on',
+        'off' => 'off'
+    ];
 
     // array with option objects
     private $switch = [];
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->html = new Select();
+    }
+
+    /**
+     * Sets the string for the on state switch
+     *
+     * @param string $on
+     */
+    public function setOnString($on)
+    {
+        $this->strings['on'] = $on;
+    }
+
+    /**
+     * Sets the string for the off state switch
+     *
+     * @param string $off
+     */
+    public function setOffString($off)
+    {
+        $this->strings['off'] = $off;
+    }
 
     private function createSwitches()
     {
@@ -29,7 +72,7 @@ class OnOffSwitch extends Select
         $option = $this->factory->create('Form\Option');
 
         $option->setValue(0);
-        $option->setInner($this->text('states.off'));
+        $option->setInner($this->strings['off']);
 
         $this->switch['off'] = $option;
 
@@ -37,7 +80,7 @@ class OnOffSwitch extends Select
         $option = $this->factory->create('Form\Option');
 
         $option->setValue(1);
-        $option->setInner($this->text('states.on'));
+        $option->setInner($this->strings['on']);
 
         $this->switch['on'] = $option;
     }
@@ -52,7 +95,7 @@ class OnOffSwitch extends Select
         $this->switch['on']->isSelected();
         $this->switch['off']->notSelected();
 
-        $this->setValue(1);
+        $this->html->setValue(1);
     }
 
     /**
@@ -65,7 +108,7 @@ class OnOffSwitch extends Select
         $this->switch['on']->notSelected();
         $this->switch['off']->isSelected();
 
-        $this->setValue(0);
+        $this->html->setValue(0);
     }
 
     /**
@@ -121,7 +164,8 @@ class OnOffSwitch extends Select
     }
 
     /**
-     * (non-PHPdoc)
+     *
+     * {@inheritDoc}
      *
      * @see \Core\Html\Form\Select::build()
      */
@@ -142,9 +186,20 @@ class OnOffSwitch extends Select
                 $option->isSelected();
             }
 
-            $this->addOption($option);
+            $this->html->addOption($option);
         }
 
-        return parent::build();
+        return $this->html->build();
+    }
+
+    /**
+     * Send all html object related method calls directly to the internal html object
+     *
+     * @param string $method
+     * @param unknown $arguments
+     */
+    public function __call($method, $arguments)
+    {
+        return $this->html->{$method}($arguments);
     }
 }

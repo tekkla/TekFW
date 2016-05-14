@@ -1,7 +1,7 @@
 <?php
 namespace Core\Html;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * HtmlException.php

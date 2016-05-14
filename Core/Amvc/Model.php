@@ -3,12 +3,11 @@ namespace Core\Amvc;
 
 use Core\Data\Connectors\Db\Db;
 use Core\Security\Security;
-use Core\Data\Validator\Validator;
+use Core\Validator\Validator;
 use Core\Amvc\ModelException;
-use Core\Traits\ArrayTrait;
 use Core\Router\UrlTrait;
-use Core\Cfg\CfgTrait;
-use Core\Language\TextTrait;
+use Core\Language\Text;
+use Core\Config\ConfigStorage;
 
 /**
  * Model.php
@@ -21,9 +20,6 @@ class Model extends MvcAbstract
 {
 
     use UrlTrait;
-    use TextTrait;
-    use CfgTrait;
-    use ArrayTrait;
 
     /**
      *
@@ -45,6 +41,18 @@ class Model extends MvcAbstract
 
     /**
      *
+     * @var ConfigStorage
+     */
+    protected $config;
+
+    /**
+     *
+     * @var Text
+     */
+    protected $text;
+
+    /**
+     *
      * @var array
      */
     protected $errors = [];
@@ -56,12 +64,14 @@ class Model extends MvcAbstract
      * @param App $app
      * @param Security $security
      */
-    final public function __construct($name, App $app, Security $security)
+    final public function __construct($name, App $app, Security $security, ConfigStorage $config, Text $text)
     {
         // Set Properties
         $this->name = $name;
         $this->app = $app;
         $this->security = $security;
+        $this->config= $config;
+        $this->text = $text;
     }
 
     /**
@@ -105,6 +115,10 @@ class Model extends MvcAbstract
 
         if ($prefix) {
             $db->setPrefix($prefix);
+        }
+
+        if (!empty($this->scheme)) {
+            $db->setScheme($this->scheme);
         }
 
         return $db;
@@ -202,7 +216,7 @@ class Model extends MvcAbstract
                     $result = filter_var($val, $filter, $options);
 
                     if ($result === false) {
-                        $this->addError($key, sprintf($this->text('validator.filter'), $filter));
+                        $this->addError($key, sprintf($this->text->get('validator.filter'), $filter));
                     }
                     else {
                         $data[$key] = $result;
@@ -217,6 +231,8 @@ class Model extends MvcAbstract
             if (empty($validator)) {
                 $validator = new Validator();
             }
+
+            $validator->injectTextAdapter($this->text);
 
             if (! is_array($fields[$key]['validate'])) {
                 $fields[$key]['validate'] = (array) $fields[$key]['validate'];

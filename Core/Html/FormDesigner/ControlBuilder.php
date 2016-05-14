@@ -6,8 +6,6 @@ use Core\Html\Controls\UiButton;
 use Core\Html\Form\Button;
 use Core\Html\Form\Checkbox;
 use Core\Html\Form\Input;
-use Core\Traits\StringTrait;
-use Core\Language\TextTrait;
 
 /**
  * ControlBuilder.php
@@ -18,9 +16,6 @@ use Core\Language\TextTrait;
  */
 class ControlBuilder
 {
-
-    use StringTrait;
-    use TextTrait;
 
     private $control;
 
@@ -88,10 +83,10 @@ class ControlBuilder
             $this->control->setForm($this->getId());
 
             if (isset($this->route)) {
-                $this->control->urlsetNamedRoute($this->route);
+                $this->control->url->setNamedRoute($this->route);
             }
             else {
-                $this->control->urlsetAction($this->getAttribute('action'));
+                $this->control->url->setAction($this->getAttribute('action'));
             }
         }
 
@@ -103,7 +98,7 @@ class ControlBuilder
         // What type of control do we have to handle?
         $type = $this->control->getData('control');
 
-        //( Get control name
+        // ( Get control name
         $name = $this->control->getName();
 
         // Set BS group class

@@ -1,7 +1,7 @@
 <?php
 namespace Core\Utilities;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * Timer.php

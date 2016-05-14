@@ -7,7 +7,7 @@
  * @license MIT
  */
 return [
-    
+
     'name' => 'Core Framework',
 
     /*
@@ -30,18 +30,18 @@ return [
         '403' => 'Access denied',
         '500' => 'A server error occured.'
     ],
-    
+
     'default' => 'Default',
     'none' => 'None',
-    
+
     'please' => [
         'select' => 'Bitte auswählen...',
         'confirm' => 'Bitte bestätigen...'
     ],
-    
+
     // Basics
     'noscript' => '<span style="color: #FF0000, font-size: 16px, border: 1px solid #FF0000, padding: 3px, width: 100%, text-align: center,DIESE SEITE BENÖTIGT JAVASCRIPT.<br BITTE AKTIVIERE ES IN DEINEN BRWOSEREINSTELLUNGEN.</spa',
-    
+
     'action' => [
         'next' => [
             'text' => 'Next',
@@ -86,7 +86,7 @@ return [
             'icon' => 'pencil-square-o'
         ]
     ],
-    
+
     'menu' => [
         'login' => 'Login',
         'logout' => 'Logout',
@@ -94,7 +94,7 @@ return [
         'reset' => 'Reset password',
         'admin' => 'Administration'
     ],
-    
+
     // USER
     'login' => [
         'text' => 'Login',
@@ -110,7 +110,7 @@ return [
             'success' => 'Login was successful.'
         ]
     ],
-    
+
     'register' => [
         'form' => [
             'headline' => 'Create Account',
@@ -145,7 +145,7 @@ The team of %s'
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * CONFIG
@@ -154,7 +154,7 @@ The team of %s'
     'config' => [
         'headline' => 'Core Framework Settings',
         'desc' => '',
-        
+
         'site' => [
             'general' => [
                 'head' => 'Seite',
@@ -172,7 +172,7 @@ The team of %s'
                     'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
                 ]
             ],
-            
+
             'language' => [
                 'default' => [
                     'label' => 'Default language',
@@ -180,9 +180,9 @@ The team of %s'
                 ]
             ]
         ],
-        
+
         // Execute
-        
+
         'execute' => [
             'head' => 'Runtime Execute',
             'desc' => '',
@@ -254,24 +254,26 @@ The team of %s'
             'activation' => [
                 'head' => 'Activation Settings',
                 'use' => [
-                    'label' => 'Activate by mail?',
-                    'desc' => 'Switch to de-/activate activation by clicking on activationling send by mail to the user. Turn to off to activte users directly after registration.'
+                    'label' => 'Activate via',
+                    'desc' => 'Defines how useraccounts get activated.'
                 ],
-                'ttl' => [
-                    'label' => 'TTL of activation token',
-                    'desc' => 'Time (in seconds) how long the activation token sent bei activationmal stays valid until a new token needs to be requested.'
-                ],
-                'mta' => [
-                    'label' => 'MTA to use',
-                    'desc' => 'Name of the Mail Transfer Agent to send the activation mail. <strong>Important:</strong> MTA must be registered!'
-                ],
-                'sender' => [
-                    'label' => 'Sender address',
-                    'desc' => 'The emailaddress to use when sending activationmail to the user'
-                ],
-                'from' => [
-                    'label' => 'From name',
-                    'desc' => 'Optional FromName to use when sending activationmail toi the user'
+                'mail' => [
+                    'ttl' => [
+                        'label' => 'TTL of activation token',
+                        'desc' => 'Time (in seconds) how long the activation token sent bei activationmal stays valid until a new token needs to be requested.'
+                    ],
+                    'mta' => [
+                        'label' => 'MTA to use',
+                        'desc' => 'Name of the Mail Transfer Agent to send the activation mail. <strong>Important:</strong> MTA must be registered!'
+                    ],
+                    'sender' => [
+                        'label' => 'Sender address',
+                        'desc' => 'The emailaddress to use when sending activationmail to the user'
+                    ],
+                    'from' => [
+                        'label' => 'From name',
+                        'desc' => 'Optional FromName to use when sending activationmail toi the user'
+                    ]
                 ]
             ],
             'login' => [
@@ -370,9 +372,9 @@ The team of %s'
                 ]
             ]
         ],
-        
+
         // Error
-        
+
         'error' => [
             'head' => 'Error Handling',
             'desc' => '',
@@ -506,7 +508,7 @@ The team of %s'
             ]
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * USER
@@ -532,7 +534,7 @@ The team of %s'
             'groups' => 'Usergroups'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * GROUP
@@ -558,7 +560,7 @@ The team of %s'
             'display_name' => 'Display name'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Group Permissions
@@ -578,7 +580,7 @@ The team of %s'
             'notes' => 'Notes'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * Permissions
@@ -596,7 +598,7 @@ The team of %s'
             'desc' => 'Grants access for all (!) configareas of the site (including all apps).'
         ]
     ],
-    
+
     /**
      * **************************************************************************
      * VALIDATORS
@@ -622,18 +624,18 @@ The team of %s'
         // Email
         'email' => 'This is not a valid mailadress.',
         'email_dnscheck' => 'The email host "%s" is unknown eg does not exist.',
-        
+
         // Url
         'url' => 'This is no valid url.'
     ],
-    
+
     /**
      * **************************************************************************
      * Models
      * ****************************************************************************
      */
     'model_error_field_not_exist' => 'Column [%s does not exist in model [%s].',
-    
+
     /**
      * **************************************************************************
      * TIMESTRINGS

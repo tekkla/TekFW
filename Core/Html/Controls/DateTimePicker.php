@@ -2,7 +2,7 @@
 namespace Core\Html\Controls;
 
 use Core\Html\Form\Input;
-use Core\Language\TextTrait;
+
 use Core\Html\HtmlException;
 
 /**
@@ -14,7 +14,7 @@ use Core\Html\HtmlException;
  */
 class DateTimePicker extends Input
 {
-    use TextTrait;
+    
 
     protected $css = [
         'form-datepicker'
@@ -153,7 +153,7 @@ class DateTimePicker extends Input
      */
     protected static $translation_requested = false;
 
-    private $cfg;
+    private $config;
 
     /**
      * Returns set default date.
@@ -508,11 +508,11 @@ class DateTimePicker extends Input
         }
 
         // Get config service refece from DI container
-        $cfg = $this->di->get('core.cfg');
+        $config = $this->di->get('core.config');
 
         // Set the controls locale option to the value set as sites default language
         // TODO Change this when system works with user selected languages
-        $this->option_locale = $cfg->data['Core']['site.language.default'];
+        $this->option_locale = $config->Core['site.language.default'];
 
         // $this->option_language = $this->txt('lang_dictionary');
         $this->set_options['locale'] = 'locale';
@@ -522,7 +522,7 @@ class DateTimePicker extends Input
 
             // Say to Js service to load the needed locale file
             $js = $this->di->get('core.page.head.js');
-            $js->file($cfg->data['Core']['url.js'] . '/locale/moment/' . $this->option_locale . '.js');
+            $js->file($config->Core['url.js'] . '/locale/moment/' . $this->option_locale . '.js');
         }
 
         // Set flag for loaded translation

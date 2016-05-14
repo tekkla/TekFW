@@ -4,13 +4,11 @@ namespace Core\Security;
 use Core\Data\Connectors\Db\Db;
 
 /**
- * Wrapper class to access SMF user information from one point
+ * User.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
- * @copyright 2014
+ * @copyright 2016
  * @license MIT
- * @package TekFW
- * @subpackage Lib
  */
 class User
 {
@@ -280,24 +278,6 @@ class User
 
         // You aren't allowed, by default.
         return false;
-    }
-
-    /**
-     * Security method to log suspisious actions and start banning process.
-     *
-     * @param string $msg
-     *            Message to log
-     * @param boolean|int $ban
-     *            Set this to the number of tries the user is allowed to do other suspicious things until he gets
-     *            banned.
-     *
-     * @return Security
-     */
-    public function logSuspicious($msg, $ban = false)
-    {
-        $this->logging->suspicious($msg);
-
-        return $this;
     }
 
     /**

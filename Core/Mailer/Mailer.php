@@ -1,7 +1,7 @@
 <?php
 namespace Core\Mailer;
 
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Log\Log;
 use Core\Data\Connectors\Db\Db;
 
@@ -34,7 +34,7 @@ class Mailer
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      * Log service
@@ -60,16 +60,16 @@ class Mailer
     /**
      * Constructor
      *
-     * @param Cfg $cfg
+     * @param Config $config
      *            Config dependency
      * @param Log $log
      *            Log dependeny
      * @param Db $db
      *            Db dependeny
      */
-    public function __construct(Cfg $cfg, Log $log, Db $db)
+    public function __construct(Config $config, Log $log, Db $db)
     {
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->log = $log;
         $this->db = $db;
     }
@@ -130,7 +130,7 @@ class Mailer
                 $mailer = new \PHPMailer();
 
                 // Get smtp debug level from config
-                $mailer->SMTPDebug = $this->cfg->data['Core']['mail.general.smtpdebug'];
+                $mailer->SMTPDebug = $this->config->Core['mail.general.smtpdebug'];
 
                 if (!empty($mailer->SMTPDebug)) {
 

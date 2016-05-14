@@ -1,7 +1,7 @@
 <?php
 namespace Core;
 
-use Core\Errors\CoreException;
+use Core\Error\CoreException;
 
 /**
  * DI.php
@@ -105,7 +105,7 @@ class DI implements \ArrayAccess
                 }
 
                 // Skip strings without di container typical dot
-                if (($arg instanceof \Core\Amvc\App) || strpos($arg, '.') === false) {
+                if (is_object($arg) || strpos($arg, '.') === false) {
                     continue;
                 }
 
@@ -203,7 +203,7 @@ class DI implements \ArrayAccess
 
         // Look for the method in object. Throw error when missing.
         if (! method_exists($obj, $method)) {
-            Throw new CoreException(sprintf('Method "%s" not found.', $method), 5000);
+            Throw new CoreException(sprintf('Method "%s" not found in "%s".', $method, get_class($obj)), 5000);
         }
 
         // Get reflection method

@@ -83,8 +83,8 @@ class GroupPermissionModel extends Model
                     $data['icon'] = empty($data['deny']) ? 'check' : 'times';
                     $data['context'] = empty($data['deny']) ? 'default' : 'warning';
                     
-                    $data['display_name'] = $this->text('permission.' . $data['permission'] . '.text', $data['app']);
-                    $data['description'] = $this->text('permission.' . $data['permission'] . '.desc', $data['app']);
+                    $data['display_name'] = $this->text->get('permission.' . $data['permission'] . '.text', $data['app']);
+                    $data['description'] = $this->text->get('permission.' . $data['permission'] . '.desc', $data['app']);
                     
                     return $data;
                 }

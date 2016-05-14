@@ -2,13 +2,14 @@
 namespace Core\Html\FormDesigner;
 
 use Core\Data\Container\Container;
-use Core\Language\TextTrait;
+
 use Core\Html\Form\Form;
 use Core\Html\Form\Checkbox;
 use Core\Html\Form\Select;
 use Core\Html\Form\Button;
 use Core\Router\UrlTrait;
 use Core\Html\FormAbstract;
+use Core\Html\HtmlBuildableInterface;
 
 /**
  * FormDesigner.php
@@ -17,9 +18,9 @@ use Core\Html\FormAbstract;
  * @copyright 2016
  * @license MIT
  */
-final class FormDesigner
+final class FormDesigner implements HtmlBuildableInterface
 {
-    use TextTrait;
+
     use UrlTrait;
 
     /**
@@ -359,7 +360,7 @@ final class FormDesigner
         $div = $group->addElement('Elements\Div');
         $div->addCss('alert alert-danger alert-dismissable');
 
-        if ($this->di->get('core.cfg')->get('Core', 'js.style.fadeout_time') > 0) {
+        if ($this->di->get('core.config')->get('Core', 'js.style.fadeout_time') > 0) {
             $div->addCss('fadeout');
         }
 
@@ -430,7 +431,7 @@ final class FormDesigner
      *
      * @return string
      */
-    private function buildGroup(FormGroup $group, array $names = [], array $data = [], array $errors = [])
+    private function buildGroup(FormGroup $group, array $names = [], $data = [], array $errors = [])
     {
         $html = '';
 

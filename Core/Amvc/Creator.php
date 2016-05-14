@@ -1,8 +1,8 @@
 <?php
 namespace Core\Amvc;
 
-use Core\Cfg\Cfg;
-use Core\Traits\StringTrait;
+use Core\Config\Config;
+use function Core\stringCamelize;
 
 /**
  * Creator.php
@@ -13,8 +13,6 @@ use Core\Traits\StringTrait;
  */
 class Creator
 {
-
-    use StringTrait;
 
     /**
      *
@@ -42,17 +40,17 @@ class Creator
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      * Constructor
      *
-     * @param Cfg $cfg
+     * @param Config $config
      *            Cfg dependency
      */
-    public function __construct(Cfg $cfg)
+    public function __construct(Config $config)
     {
-        $this->cfg = $cfg;
+        $this->config= $config;
     }
 
     /**
@@ -69,7 +67,7 @@ class Creator
             Throw new AmvcException('Amvc creators getAppInstance() method needs an app name.');
         }
 
-        $name = $this->stringCamelize($name);
+        $name = stringCamelize($name);
 
         // App instances are singletons!
         if (array_key_exists($name, $this->instances)) {
@@ -88,7 +86,7 @@ class Creator
         // Default arguments for each app instance
         $args = [
             $name,
-            'core.cfg',
+            'core.config',
             'core.router',
             'core.page',
             'core.security',

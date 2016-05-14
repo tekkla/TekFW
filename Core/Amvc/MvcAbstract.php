@@ -3,7 +3,6 @@ namespace Core\Amvc;
 
 // Traits
 use Core\Security\AccessTrait;
-use Core\Traits\StringTrait;
 
 /**
  * MvcAbstract.php
@@ -14,7 +13,6 @@ use Core\Traits\StringTrait;
  */
 abstract class MvcAbstract
 {
-    use StringTrait;
     use AccessTrait;
 
     /**
@@ -30,6 +28,12 @@ abstract class MvcAbstract
      * @var App
      */
     public $app;
+
+    /**
+     *
+     * @var \Core\Config\ConfigStorage
+     */
+    protected $config;
 
     /**
      * MVC objects need an app instance

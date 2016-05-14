@@ -1,23 +1,19 @@
 <?php
 namespace Core\Page;
 
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Router\Router;
 use Core\Html\HtmlFactory;
 use Core\Amvc\Creator;
-use Core\Language\TextTrait;
-use Core\Amvc\Controller;
 
-// Page Head Libs
+use Core\Amvc\Controller;
 use Core\Page\Head\Meta;
 use Core\Page\Head\OpenGraph;
 use Core\Page\Head\Link;
 use Core\Page\Head\Css\Css;
-
-// Page Body Libs
 use Core\Page\Head\Javascript\Javascript;
 use Core\Page\Body\Menu\Menu;
-use Core\Page\Body\Message\Message;
+use Core\Message\MessageHandler;
 
 /**
  * Page.php
@@ -29,13 +25,13 @@ use Core\Page\Body\Message\Message;
 class Page
 {
 
-    use TextTrait;
+    
 
     /**
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -118,7 +114,7 @@ class Page
     /**
      * Message Sservice
      *
-     * @var Message
+     * @var MessageHandler
      */
     public $message;
 
@@ -140,7 +136,7 @@ class Page
      * Constructor
      *
      * @param Router $router
-     * @param Cfg $cfg
+     * @param Config $config
      * @param Creator $app_creator
      * @param HtmlFactory $html
      * @param Menu $menu
@@ -148,10 +144,10 @@ class Page
      * @param Javascript $js
      * @param Message $message
      */
-    public function __construct(Router $router, Cfg $cfg, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, Message $message)
+    public function __construct(Router $router, Config $config, Creator $app_creator, HtmlFactory $html, Menu $menu, Css $css, Javascript $js, MessageHandler $message)
     {
         $this->router = $router;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->app_creator = $app_creator;
         $this->html = $html;
         $this->menu = $menu;
@@ -215,7 +211,7 @@ class Page
      */
     public function hasContentHandler()
     {
-        return $this->cfg->exists('Core', 'execute.content_handler');
+        return $this->config->exists('Core', 'execute.content_handler');
     }
 
     /**
@@ -225,7 +221,7 @@ class Page
      */
     public function getContenHandler()
     {
-        return $this->cfg->get('Core', 'execute.content_handler');
+        return $this->config->get('Core', 'execute.content_handler');
     }
 
     /**
@@ -242,10 +238,10 @@ class Page
         try {
 
             // Try to run set content handler on non ajax request
-            if ($this->cfg->exists('Core', 'execute.content_handler')) {
+            if ($this->config->exists('Core', 'execute.content_handler')) {
 
                 // We need the name of the ContentCover app
-                $app_name = $this->cfg->get('Core', 'execute.content_handler');
+                $app_name = $this->config->get('Core', 'execute.content_handler');
 
                 // Get instance of this app
                 $app = $this->app_creator->getAppInstance($app_name);
@@ -284,16 +280,16 @@ class Page
     {
         // Add missing title
         if (empty($this->title)) {
-            $this->title = $this->cfg->get('Core', 'site.general.name');
+            $this->title = $this->config->get('Core', 'site.general.name');
         }
 
-        if ($theme == 'Core' && $this->cfg->exists('Core', 'style.theme')) {
-            $theme = $this->cfg->get('Core', 'style.theme');
+        if ($theme == 'Core' && $this->config->exists('Core', 'style.theme')) {
+            $theme = $this->config->get('Core', 'style.theme');
         }
 
         $class = '\Themes\\' . $theme . '\\' . $template . 'Template';
 
-        $template = new $class($this->cfg, $this, $this->html);
+        $template = new $class($this->config, $this, $this->html);
 
         return $template->render();
     }
@@ -330,7 +326,7 @@ class Page
      */
     public function getBrand()
     {
-        return $this->cfg->get('Core', 'site.general.name');
+        return $this->config->get('Core', 'site.general.name');
     }
 
     /**

@@ -1,11 +1,11 @@
 <?php
 namespace Core\Html\FormDesigner;
 
-use Core\Traits\StringTrait;
 use Core\Html\FormAbstract;
 use Core\Html\HtmlAbstract;
 use Core\Html\Elements\Div;
 use Core\Html\Form\Button;
+use function Core\stringCamelize;
 
 /**
  * FormGroup.php
@@ -16,8 +16,6 @@ use Core\Html\Form\Button;
  */
 class FormGroup
 {
-
-    use StringTrait;
 
     private $name = '';
 
@@ -112,7 +110,7 @@ class FormGroup
      */
     public function &addControl($control, $name='', $label = '', $value = '', $description = '', $unbound = false)
     {
-        $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . $this->stringCamelize($control) . 'Control');
+        $control = $this->di->instance(__NAMESPACE__ . '\Controls\\' . stringCamelize($control) . 'Control');
 
         // Inject DI container
         $control->di = $this->di;

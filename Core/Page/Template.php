@@ -1,7 +1,7 @@
 <?php
 namespace Core\Page;
 
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Html\HtmlFactory;
 use Core\Page\PageException;
 
@@ -29,7 +29,7 @@ class Template
      *
      * @var Cfg
      */
-    protected $cfg;
+    protected $config;
 
     /**
      *
@@ -52,16 +52,16 @@ class Template
     /**
      * Constructor
      *
-     * @param Cfg $cfg
+     * @param Config $config
      *            Cfg dependency
      * @param Page $page
      *            Page dependency
      * @param HtmlFactory $html
      *            HtmlFactory dependency
      */
-    public function __construct(Cfg $cfg, Page $page, HtmlFactory $html)
+    public function __construct(Config $config, Page $page, HtmlFactory $html)
     {
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->page = $page;
         $this->html = $html;
     }
@@ -274,23 +274,22 @@ class Template
      */
     final protected function getMessages($data_only = false, $container = 'container')
     {
-        $messages = $this->page->message->getMessages();
-
         if ($data_only) {
-            return $messages;
+            return $this->page->message->getAll();
         }
 
         ob_start();
 
         echo '<div id="core-message"', ($container ? ' class="' . $container . '"' : ''), '>';
 
-        foreach ($messages as $msg) {
+        /* @var $msg \Core\Message\Message */
+        foreach ($this->page->message as $msg) {
 
             echo PHP_EOL, '
             <div class="alert alert-', $msg->getType(), $msg->getDismissable() ? ' alert-dismissable' : '';
 
             // Fadeout message?
-            if ($this->cfg->get('Core', 'js.style.fadeout_time') > 0 && $msg->getFadeout()) {
+            if ($this->config->get('Core', 'js.style.fadeout_time') > 0 && $msg->getFadeout()) {
                 echo ' fadeout';
             }
 

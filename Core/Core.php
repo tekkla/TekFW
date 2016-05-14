@@ -1,8 +1,6 @@
 <?php
 // Include StringTrait file
-require_once (BASEDIR . '/Core/Traits/StringTrait.php');
-
-use Core\Traits\StringTrait;
+require_once (BASEDIR . '/Core/Functions.php');
 
 /**
  * Core.php
@@ -21,7 +19,7 @@ ini_set('display_errors', 0);
 
 // Define path constants to the common framwork dirs
 define('COREDIR', BASEDIR . '/Core');
-define('LOGDIR', BASEDIR . '/logs');
+define('LOGDIR', BASEDIR . '/Logs');
 define('APPSDIR', BASEDIR . '/Apps');
 define('THEMESDIR', BASEDIR . '/Themes');
 define('CACHEDIR', BASEDIR . '/Cache');
@@ -29,9 +27,6 @@ define('APPSSECDIR', BASEDIR . '/AppsSec');
 
 final class Core
 {
-    
-    use StringTrait;
-
     /**
      *
      * @var array
@@ -46,9 +41,9 @@ final class Core
 
     /**
      *
-     * @var \Core\Cfg\Cfg
+     * @var \Core\Config\Config
      */
-    private $cfg;
+    private $config;
 
     /**
      *
@@ -80,100 +75,127 @@ final class Core
      */
     private $creator;
 
+    /**
+     *
+     * @var \Core\Error\ErrorHandler
+     */
+    private $error;
+
     public function run()
     {
+
+        // Start the rudimental system
         try {
-            
+
             // Load settingsfile
             $this->loadSettings();
-            
+
             // From here starts output buffering
             ob_start();
-            
+
             // Registe PSR classloader
             $this->registerClassloader();
-            
+
             // Create core DI container instance!
             $this->di = \Core\DI::getInstance();
-            
+
+            $this->initLogger('core');
+
+            // Init error handling system
+            $this->initErrorHandler();
+        }
+        catch (Throwable $t) {
+            error_log($t->getMessage() . ' (File: ' . $t->getFile() . ':' . $t->getLine());
+            http_response_code(500);
+            die('An error occured. The admin is informed. Sorry for this. :/');
+        }
+
+        // Init result var
+        $result = '';
+
+        // Run lowlevel system
+        try {
+
             // Run inits
             $this->initDatabase();
+            $this->initMessageHandler();
             $this->initDependencies();
             $this->initSession();
             $this->initConfig();
             $this->initRouter();
+            $this->initLanguage();
             $this->initCoreApp();
             $this->initSecurity();
-            
+
+            // Run highlevel system
             try {
-                
+
                 // Create references to Router and Http service
                 $this->http = $this->di->get('core.http');
-                
+
                 $this->creator->autodiscover([
                     APPSSECDIR,
                     APPSDIR
                 ]);
-                
+
                 // Get result
                 $result = $this->dispatch();
             }
             catch (Throwable $t) {
-                
-                // Get result from exception handler
-                $result = $this->di->get('core.error')->handleException($t, true);
+                $result = $this->error->handle('Core', 1, $t);
             }
             finally {
-                
+
                 // Send mails
-                $mailer = $this->di->get('core.mailer');
-                $mailer->send();
-                
+                $this->di->get('core.mailer')->send();
+
                 // Send cookies
                 $this->http->cookies->send();
-                
+
+                // Redirect requested?
+                if (! empty($_SESSION['Core']['redirect'])) {
+
+                    $this->http->header->location($_SESSION['Core']['redirect']['location'], $_SESSION['Core']['redirect']['permanent']);
+                    $this->http->header->send();
+
+                    // Important: Clear redirect from session!
+                    unset($_SESSION['Core']['redirect']);
+
+                    return;
+                }
+
                 switch ($this->router->getFormat()) {
-                    
+
                     case 'file':
                         /* @var $download \Core\IO\Download */
                         $download = $this->di->get('core.io.download');
                         $download->sendFile($result);
-                        
+
                         break;
-                    
+
                     case 'html':
-                        
+
                         $this->http->header->contentType('text/html', 'utf-8');
-                        
+
                         /* @var $page \Core\Page\Page */
                         $page = $this->di->get('core.page');
                         $page->setContent($result);
                         $result = $page->render();
-                        
+
                         break;
                 }
-                
+
                 // Send headers so far
                 $this->http->header->send();
-                
-                if (! empty($result)) {
-                    echo $result;
-                }
-                
-                ob_end_flush();
             }
         }
         catch (Throwable $t) {
-            
-            if (ini_get('display_errors') == 1) {
-                echo '
-                <h1>Error</h1>
-                <p><strong>' . $t->getMessage() . '</strong></p>
-                <p>in ', $t->getFile() . ' (Line: ', $t->getLine(), ')</p>';
-            }
-            
-            error_log($t->getMessage() . ' >> ' . $t->getFile() . ':' . $t->getLine());
+            $result = $this->error->handle('Core', 0, $t);
         }
+
+        echo $result;
+
+        ob_end_flush();
     }
 
     private function loadSettings()
@@ -183,10 +205,10 @@ final class Core
             error_log('Settings file could not be loaded.');
             die('An error occured. Sorry for that! :(');
         }
-        
+
         // Load basic config from Settings.php
         $this->settings = include (BASEDIR . '/Settings.php');
-        
+
         if (! empty($this->settings['display_errors'])) {
             ini_set('display_errors', 1);
         }
@@ -196,7 +218,7 @@ final class Core
     {
         // Register core classloader
         require_once (COREDIR . '/SplClassLoader.php');
-        
+
         // Classloader to register
         $register = [
             'Core' => BASEDIR,
@@ -204,15 +226,30 @@ final class Core
             'AppsSec' => BASEDIR,
             'Themes' => BASEDIR
         ];
-        
+
         // Register classloader
         foreach ($register as $key => $path) {
             $loader = new \SplClassLoader($key, $path);
             $loader->register();
         }
-        
+
         // Register composer classloader
         require_once (BASEDIR . '/vendor/autoload.php');
+    }
+
+    private function initLogger($type)
+    {
+        $this->di->mapFactory('core.logger', '\Core\Logger\Logger');
+
+        /* @var $logger \Core\Logger\Logger */
+        $logger = $this->di->get('core.logger');
+
+        $logger->createStream('File', [
+            'filename' => LOGDIR . DIRECTORY_SEPARATOR . 'core.log'
+        ]);
+        $logger->createStream('FirePhp');
+
+        $this->di->mapValue('core.logger.default', $logger);
     }
 
     /**
@@ -220,16 +257,13 @@ final class Core
      */
     private function initDependencies()
     {
-        
+
         // == CORE DI CONTAINER ============================================
         $this->di->mapValue('core.di', $this->di);
-        
-        // == CONFIG =======================================================
-        $this->di->mapService('core.cfg', '\Core\Cfg\Cfg', 'db.default');
-        
+
         // == ROUTER =======================================================
         $this->di->mapService('core.router', '\Core\Router\Router');
-        
+
         // == HTTP =========================================================
         $this->di->mapService('core.http.session', '\Core\Http\Session', 'db.default');
         $this->di->mapService('core.http', '\Core\Http\Http', [
@@ -240,7 +274,7 @@ final class Core
         $this->di->mapService('core.http.cookie', '\Core\Http\Cookie\Cookies');
         $this->di->mapService('core.http.post', '\Core\Http\Post');
         $this->di->mapService('core.http.header', '\Core\Http\Header');
-        
+
         // == UTILITIES ====================================================
         $this->di->mapFactory('core.util.timer', '\Core\Utilities\Timer');
         $this->di->mapFactory('core.util.time', '\Core\Utilities\Time');
@@ -248,7 +282,7 @@ final class Core
         $this->di->mapFactory('core.util.date', '\Core\Utilities\Date');
         $this->di->mapFactory('core.util.debug', '\Core\Utilities\Debug');
         $this->di->mapService('core.util.fire', '\FB');
-        
+
         // == SECURITY =====================================================
         $this->di->mapService('core.security', '\Core\Security\Security', [
             'core.security.user.current',
@@ -260,7 +294,7 @@ final class Core
         ]);
         $this->di->mapFactory('core.security.users', '\Core\Security\Users', [
             'db.default',
-            'core.cfg',
+            'core.config',
             'core.security.token',
             'core.log'
         ]);
@@ -277,17 +311,17 @@ final class Core
         ]);
         $this->di->mapService('core.security.login', '\Core\Security\Login', [
             'db.default',
-            'core.cfg',
+            'core.config',
             'core.http.cookie',
             'core.security.token',
             'core.log'
         ]);
         $this->di->mapService('core.security.permission', '\Core\Security\Permission');
-        
+
         // == AMVC =========================================================
-        $this->di->mapService('core.amvc.creator', '\Core\Amvc\Creator', 'core.cfg');
+        $this->di->mapService('core.amvc.creator', '\Core\Amvc\Creator', 'core.config');
         $this->di->mapFactory('core.amvc.app', '\Core\Amvc\App');
-        
+
         // == IO ===========================================================
         $this->di->mapService('core.io', '\Core\IO\IO', [
             'core.io.files',
@@ -299,69 +333,51 @@ final class Core
         ]);
         $this->di->mapService('core.io.files', '\Core\IO\Files', [
             'core.log',
-            'core.cfg'
+            'core.config'
         ]);
-        
+
         // == LOGGING========================================================
         $this->di->mapService('core.log', '\Core\Log\Log', [
             'db.default',
-            'core.cfg'
+            'core.config'
         ]);
-        
+
         // == MAILER =======================================================
         $this->di->mapService('core.mailer', '\Core\Mailer\Mailer', [
-            'core.cfg',
+            'core.config',
             'core.log',
             'db.default'
         ]);
-        
+
         // == DATA ==========================================================
         $this->di->mapService('core.data.validator', '\Core\Data\Validator\Validator');
-        
-        // == LANGUAGE ======================================================
-        $this->di->mapService('core.language', '\Core\Language\Language');
-        
+
         // == CONTENT =======================================================
         $this->di->mapService('core.page', '\Core\Page\Page', [
             'core.router',
-            'core.cfg',
+            'core.config',
             'core.amvc.creator',
             'core.html.factory',
             'core.page.body.nav',
             'core.page.head.css',
             'core.page.head.js',
-            'core.page.body.message'
+            'core.message.default'
         ]);
         $this->di->mapFactory('core.page.head.css', '\Core\Page\Head\Css\Css', [
-            'core.cfg'
+            'core.config'
         ]);
         $this->di->mapFactory('core.page.head.js', '\Core\Page\Head\Javascript\Javascript', [
-            'core.cfg',
+            'core.config',
             'core.router'
         ]);
-        $this->di->mapService('core.page.body.message', '\Core\Page\Body\Message\Message');
         $this->di->mapService('core.page.body.nav', '\Core\Page\Body\Menu\Menu');
         $this->di->mapFactory('core.page.body.menu', '\Core\Page\Body\Menu\Menu');
-        
+
         // == HTML ==========================================================
         $this->di->mapService('core.html.factory', '\Core\Html\HtmlFactory');
-        
+
         // == AJAX ==========================================================
-        $this->di->mapService('core.ajax', '\Core\Ajax\Ajax', [
-            'core.page.body.message',
-            'core.io.files',
-            'core.cfg'
-        ]);
-        
-        // == ERROR =========================================================
-        $this->di->mapService('core.error', '\Core\Errors\ExceptionHandler', [
-            'core.router',
-            'core.security.user.current',
-            'core.ajax',
-            'core.page.body.message',
-            'db.default',
-            'core.cfg'
-        ]);
+        $this->di->mapService('core.ajax', '\Core\Ajax\Ajax');
     }
 
     /**
@@ -377,69 +393,72 @@ final class Core
     private function initDatabase()
     {
         $defaults = [
-            'driver' => 'mysql',
-            'host' => 'localhost',
-            'port' => 3306,
             'user' => 'root',
             'password' => '',
             'prefix' => '',
             'options' => [
-                \PDO::ATTR_PERSISTENT => false,
+                \PDO::ATTR_PERSISTENT => true,
                 \PDO::ATTR_ERRMODE => 2,
                 \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
                 \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 1,
                 \PDO::ATTR_EMULATE_PREPARES => false
             ]
         ];
-        
+
         if (empty($this->settings['db'])) {
             error_log('No DB data set in Settings.php');
             Throw new Exception('Error on DB access');
         }
-        
+
         if (empty($this->settings['db']['default'])) {
             error_log('No DB "default" data set in Settings.php');
             Throw new Exception('Error on DB access');
         }
-        
+
         foreach ($this->settings['db'] as $name => &$settings) {
-            
+
             $prefix = 'db.' . $name;
-            
+
             // Check for databasename
-            if (empty($settings['name'])) {
-                Throw new Exception(sprintf('Name key of DB setting "%s" is missing.'), $name);
+            if (empty($settings['dsn'])) {
+                Throw new PDOException(sprintf('No DSN specified for "%s" db connection. Please add correct DSN for this connection in Settings.php', $name));
             }
-            
-            $this->di->mapValue($prefix . '.name', $settings['name']);
-            
+
             // Check for DB defaults and map values
             foreach ($defaults as $key => $default) {
-                
+
                 // Append default options to settings
                 if ($key == 'options') {
-                    
+
                     if (empty($settings['options'])) {
                         $settings['options'] = [];
                     }
-                    
+
                     foreach ($defaults['options'] as $option => $value) {
-                        
+
                         if (array_key_exists($option, $settings['options'])) {
                             continue;
                         }
-                        
+
                         $settings[$key][$option] = $value;
                     }
                 }
-                
+
                 if (empty($settings[$key])) {
                     $settings[$key] = $default;
                 }
             }
-            
-            $this->di->mapValue($prefix . '.settings', $settings);
-            $this->di->mapService($prefix . '.conn', '\Core\Data\Connectors\Db\Connection', $prefix . '.settings');
+
+            foreach ($settings as $key => $value) {
+                $this->di->mapValue($prefix . '.conn.' . $key, $value);
+            }
+
+            $this->di->mapService($prefix . '.conn', '\Core\Data\Connectors\Db\Connection', [
+                $prefix . '.conn.dsn',
+                $prefix . '.conn.user',
+                $prefix . '.conn.password',
+                $prefix . '.conn.options',
+            ]);
             $this->di->mapFactory($prefix, '\Core\Data\Connectors\Db\Db', [
                 $prefix . '.conn',
                 $settings['prefix']
@@ -459,69 +478,73 @@ final class Core
      */
     private function initConfig()
     {
-        /* @var $cfg \Core\Cfg\Cfg */
-        $this->cfg = $this->di->get('core.cfg');
-        
         // Admin users can request to load config from db instead out of cache
         $refresh_cache = ! empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
-        
-        // load the config
-        $this->cfg->load($refresh_cache);
-        
+
+        $this->di->mapService('core.config', '\Core\Config\Config');
+
+        /* @var $config \Core\config\Config */
+        $this->config = $this->di->get('core.config');
+
+        $repository = $this->config->createDbRepository();
+        $repository->setPdo($this->di->get('db.default.conn'));
+        $repository->setTable('tekfw_core_configs');
+
+        $this->config->setRepository($repository);
+        $this->config->load();
+
         // Set baseurl to config
         if (empty($this->settings['protcol'])) {
             $this->settings['protocol'] = 'http';
         }
-        
+
         if (empty($this->settings['baseurl'])) {
             Throw new Exception('Baseurl not set in Settings.php');
         }
-        
+
         // Define some basic url constants
         define('BASEURL', $this->settings['protocol'] . '://' . $this->settings['baseurl']);
         define('THEMESURL', BASEURL . '/Themes');
-        
-        $this->cfg->data['Core']['site.protocol'] = $this->settings['protocol'];
-        $this->cfg->data['Core']['site.baseurl'] = $this->settings['baseurl'];
-        
+
+        $this->config->Core->set('site.protocol', $this->settings['protocol']);
+        $this->config->Core->set('site.baseurl', $this->settings['baseurl']);
+
         // Check and set basic cookiename to config
         if (empty($this->settings['cookie'])) {
             Throw new Exception('Cookiename not set in Settings.php');
         }
-        
-        $this->cfg->data['Core']['cookie.name'] = $this->settings['cookie'];
-        
+
+        $this->config->Core['cookie.name'] = $this->settings['cookie'];
+
         // Add dirs to config
         $dirs = [
             // Framework directory
-            'fw' => '/Core',
-            
+            'fw' => BASEDIR . '/Core',
+
             // Framwork subdirectories
-            'css' => '/Css',
-            'js' => '/Js',
-            'lib' => '/Core',
-            'html' => '/Core/Html',
-            'cache' => '/Cache',
-            
+            'js' => BASEDIR . '/Js',
+            'lib' => BASEDIR . '/Core',
+            'html' => BASEDIR . '/Core/Html',
+            'cache' => BASEDIR . '/Cache',
+
             // Public application dir
-            'apps' => '/Apps',
-            
+            'apps' => BASEDIR . '/Apps',
+
             // Secure application dir
-            'appssec' => '/Core/AppsSec'
+            'appssec' => BASEDIR . '/AppsSec'
         ];
-        
-        $this->cfg->addPaths('Core', $dirs);
-        
+
+        $this->config->addPaths('Core', $dirs);
+
         // Add urls to config
         $urls = [
-            'apps' => '/Apps',
-            'appssec' => '/AppsSec',
-            'css' => '/Css',
-            'js' => '/Js',
-            'cache' => '/Cache'
+            'apps' => BASEURL . '/Apps',
+            'appssec' => BASEURL . '/AppsSec',
+            'js' => BASEURL . '/Js',
+            'cache' => BASEURL .'/Cache'
         ];
-        
-        $this->cfg->addUrls('Core', $urls);
+
+        $this->config->addUrls('Core', $urls);
     }
 
     /**
@@ -537,7 +560,7 @@ final class Core
     {
         // Start the session
         session_start();
-        
+
         if (empty($_SESSION['Core']['user'])) {
             $_SESSION['Core'] = [
                 'logged_in' => false,
@@ -546,7 +569,7 @@ final class Core
                 ]
             ];
         }
-        
+
         // Create session id constant
         define('SID', session_id());
     }
@@ -562,7 +585,7 @@ final class Core
     private function initRouter()
     {
         $this->router = $this->di->get('core.router');
-        
+
         // Generic routes
         $routes = [
             'index' => [
@@ -583,15 +606,74 @@ final class Core
                 'route' => '/[mvc:app]/[mvc:controller]/[i:id]?/[mvc:action]/of/[i:id_parent]'
             ]
         ];
-        
+
         $this->router->mapAppRoutes('generic', $routes);
-        
+
         // Custom matchtype patterns
         $matchtypes = [
             'mvc' => '[A-Za-z0-9_]++'
         ];
-        
+
         $this->router->addMatchTypes($matchtypes);
+    }
+
+    /**
+     * Creates core.language service and sets the name of the fallback language storage to 'Core'
+     */
+    private function initLanguage()
+    {
+        $this->di->mapService('core.language', '\Core\Language\Language');
+
+        /* @var $language \Core\Language\Language */
+        $language = $this->di->get('core.language');
+        $language->setFallbackStorageName('Core');
+    }
+
+    private function initErrorHandler()
+    {
+        $this->di->mapService('core.error', '\Core\Error\ErrorHandler');
+
+        $this->error = $this->di->get('core.error');
+
+        $core_handler = [
+            0 => [
+                'ns' => '\Core\Error',
+                'class' => 'LowLevelHandler'
+            ],
+            1 => [
+                'ns' => '\Core\Error',
+                'class' => 'HighLevelHandler'
+            ]
+        ];
+
+        foreach ($core_handler as $id => $handler) {
+            $this->error->registerHandler('Core', $id, $handler['ns'], $handler['class']);
+        }
+    }
+
+    private function initMessageHandler()
+    {
+        $this->di->mapFactory('core.message.message_handler', '\Core\Message\MessageHandler');
+        $this->di->mapFactory('core.message.message_storage', '\Core\Message\MessageStorage');
+        $this->di->mapFactory('core.message.message', '\Core\Message\Message');
+
+        /* @var $message_handler \Core\Message\MessageHandler */
+        $message_handler = $this->di->get('core.message.message_handler');
+
+        // Map the handler as frameworks default messagehandler
+        $this->di->mapValue('core.message.default', $message_handler);
+
+        // Init a message session array if not exists until now
+        if (empty($_SESSION['Core']['messages'])) {
+            $_SESSION['Core']['messages'] = [];
+        }
+
+        // Create the message storage
+        /* @var $message_storage \Core\Message\MessageStorage */
+        $message_storage = $this->di->get('core.message.message_storage');
+        $message_storage->setStorage($_SESSION['Core']['messages']);
+
+        $message_handler->setStorage($message_storage);
     }
 
     /**
@@ -622,14 +704,14 @@ final class Core
     {
         /* @var $security \Core\Security\Security */
         $this->security = $this->di->get('core.security');
-        
+
         $this->security->users->checkBan();
         $this->security->login->doAutoLogin();
-        
+
         if ($this->security->login->loggedIn()) {
             $this->security->user->load($_SESSION['Core']['user']['id']);
         }
-        
+
         $this->security->token->generateRandomSessionToken();
     }
 
@@ -647,27 +729,27 @@ final class Core
         if ($match_url == true) {
             $this->router->match();
         }
-        
+
         // Handle possible posted data
         $this->managePost();
-        
+
         $app_name = $this->router->getApp();
-        
+
         // Handle default settings when we have a default
         if (empty($app_name)) {
             return $this->send404('app.name');
         }
-        
+
         /* @var $app \Core\Amvc\App */
         $app = $this->creator->getAppInstance($app_name);
-        
+
         if (empty($app)) {
             return $this->send404('app.object');
         }
-        
+
         // Call maybe existing global app methods
         $app_methods = [
-            
+
             /**
              * Each app can have it's own Run() procedure.
              *
@@ -677,64 +759,103 @@ final class Core
              */
             'Run'
         ];
-        
+
         foreach ($app_methods as $method) {
-            
+
             if (method_exists($app, $method)) {
-                
+
                 call_user_func([
                     $app,
                     $method
                 ]);
-                
+
                 // Check for redirect by changes in router after
                 if ($app_name != $this->router->getApp()) {
                     return $this->dispatch(false);
                 }
             }
         }
-        
+
         $controller_name = $this->router->getController();
-        
+
         if (empty($controller_name)) {
             return $this->send404('controller.name');
         }
-        
+
         // Load controller object
         $controller = $app->getController($controller_name);
-        
+
         if ($controller == false) {
             return $this->send404('controller.object');
         }
-        
+
         // Which controller action has to be run?
         $action = $this->router->getAction();
-        
+
         if (empty($action)) {
             $action = 'Index';
         }
-        
+
         if (! method_exists($controller, $action)) {
             return $this->send404('controller.action');
         }
-        
+
         if ($this->router->isAjax()) {
-            
+
             $this->router->setFormat('json');
-            
+
             $this->http->header->contentType('application/json', 'utf-8');
             $this->http->header->noCache();
-            
+
             // Result will be processed as ajax command list
             $controller->ajax($action, $this->router->getParam());
-            
+
+            /* @var $ajax \Core\Ajax\Ajax */
+            $ajax = $this->di->get('core.ajax');
+
+            // Handle messages
+            $messages = $this->di->get('core.message.default')->getAll();
+
+            if ($messages) {
+
+                /* @var $msg \Core\Message\Message */
+                foreach ($messages as $msg) {
+
+                    // Each message gets its own alert
+
+                    /* @var $alert \Core\Html\Bootstrap\Alert\Alert */
+                    $alert = $this->di->get('core.html.factory')->create('Bootstrap\Alert\Alert');
+                    $alert->setContext($msg->getType());
+                    $alert->setDismissable($msg->getDismissable());
+
+                    // Fadeout message?
+                    if ($this->config->Core->get('js.style.fadeout_time') > 0 && $msg->getFadeout()) {
+                        $alert->html->addCss('fadeout');
+                    }
+
+                    // Has this message an id which we can use as id for the alerts html element?
+                    if (! empty($msg->getId())) {
+                        $alert->html->setId($msg->getId());
+                    }
+
+                    // At least append the message content
+                    $alert->setContent($msg->getMessage());
+
+                    /* @var $cmd \Core\Ajax\DomCommand */
+                    $cmd = $ajax->createDomCommand();
+                    $cmd->setSelector($msg->getTarget());
+                    $cmd->setArgs($alert->build());
+                    $cmd->setFunction($msg->getDisplayFunction());
+                }
+            }
+
             // Run ajax processor
-            $result = $this->di->get('core.ajax')->process();
+            $result = $ajax->process();
         }
         else {
             $result = $controller->run($action, $this->router->getParam());
         }
-        
+
         return $result;
     }
 
@@ -744,12 +865,12 @@ final class Core
         if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST)) {
             return;
         }
-        
+
         // Validate posted token with session token
         if (! $this->security->token->validatePostToken()) {
             return;
         }
-        
+
         // Trim data
         array_walk_recursive($_POST, function (&$data) {
             $data = trim($data);
@@ -759,7 +880,7 @@ final class Core
     private function send404($stage = 'not set')
     {
         $this->http->header->sendHttpError(404);
-        
+
         return 'Page not found';
     }
 }

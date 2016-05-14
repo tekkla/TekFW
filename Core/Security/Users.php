@@ -2,7 +2,7 @@
 namespace Core\Security;
 
 use Core\Data\Connectors\Db\Db;
-use Core\Cfg\Cfg;
+use Core\Config\Config;
 use Core\Log\Log;
 
 /**
@@ -31,11 +31,11 @@ class Users
      *
      * @var Cfg
      */
-    private $cfg;
+    private $config;
 
     /**
      *
-     * @var Logging
+     * @var Log
      */
     private $log;
 
@@ -44,17 +44,17 @@ class Users
      *
      * @param Db $db
      *            Db dependency
-     * @param Cfg $cfg
+     * @param Config $config
      *            Cfg service dependency
      * @param Token $token
      *            Token service dependency
      * @param Log $log
      *            Log service dependendy
      */
-    public function __construct(Db $db, Cfg $cfg, Token $token, Log $log)
+    public function __construct(Db $db, Config $config, Token $token, Log $log)
     {
         $this->db = $db;
-        $this->cfg = $cfg;
+        $this->config= $config;
         $this->token = $token;
         $this->log = $log;
     }
@@ -78,12 +78,21 @@ class Users
      */
     public function createUser($username, $password, $activate)
     {
-        if (! $username) {
-            Throw new SecurityException('Cannot create user without username.');
+        if (empty($username)) {
+            Throw new SecurityException('Cannot create user without username.', 'user.username.empty');
         }
 
-        if (! $password) {
-            Throw new SecurityException('Cannot create user without password.');
+        // Check for already existing username
+        $exists = $this->db->count('core_users', 'username=:username', [
+           ':username' => $username
+        ]);
+
+        if ($exists > 0) {
+            Throw new SecurityException(sprintf('The username "%s" is already in use.', $username), 'user.username.exists');
+        }
+
+        if (empty($password)) {
+            Throw new SecurityException('Cannot create user without password.', 'user.password.empty');
         }
 
         $data = [
@@ -91,7 +100,7 @@ class Users
         ];
 
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.pepper'];
+        $password .= $this->config->Core['security.encrypt.pepper'];
 
         // Create password hash
         $password = password_hash($password, PASSWORD_DEFAULT);
@@ -105,18 +114,12 @@ class Users
         $this->db->beginTransaction();
 
         $this->db->qb([
-            'table' => 'users',
+            'table' => 'core_users',
             'data' => $data
         ], true);
 
         // Get our new user id
         $id_user = $this->db->lastInsertId();
-
-        if ($autoactive == 1) {
-            return $id_user;
-        }
-
-        $this->createActivationToken($id_user);
 
         $this->db->endTransaction();
 
@@ -124,111 +127,89 @@ class Users
     }
 
     /**
-     * Creates an activation token for a user in db and returns selector:token string
+     * Returns user id for an activation key
      *
-     * @param int $id_user
-     *            Id of user
-     *
-     * @return string
+     * @param unknown $token
+     * @return boolean
      */
-    public function createActivationToken($id_user)
+    private function getUserIdByActivationKey($key)
     {
-        // Delete all existing tokens of this user
-        $this->db->delete('activation_tokens', 'id_user=:id_user', [
-            'id_user' => $id_user
-        ]);
+        // Lets try to find the user id in our activation token table
+        $result = $this->token->getActivationTokenDataFromKey($key);
 
-        // Activation process has it's own table. We need a seperate container for it.
-        $data = [];
+        if (empty($result)) {
+            return false;
+        }
 
-        // Generate random selector and token
-        $selector = bin2hex($this->token->generateRandomToken(6));
-        $token = $this->token->generateRandomToken(32);
+        // Do not trust any result that has more then one entry!!!
+        if (count($result) > 1) {
 
-        $hash = hash('sha256', $token);
+            $this->log->suspicious('There is more than one user with identical activationkey!');
 
-        $data['id_user'] = $id_user;
-        $data['selector'] = $selector;
-        $data['token'] = $hash;
-        $data['expires'] = time() + $this->cfg->data['Core']['security.activation.ttl'];
+            Throw new SecurityException('There is more than one user with identical activationkey!');
+        }
 
-        $this->db->qb([
-            'table' => 'core_activation_tokens',
-            'data' => $data
-        ], true);
+        return $result[0]['id_user'];
+    }
 
-        return $selector . ':' . $hash;
+    public function denyActivation($key)
+    {
+        // Get tokendate from db
+        $id_user = $this->getUserIdByActivationKey($key);
+
+        // Nothings to do when already removed
+        if (empty($id_user)) {
+            return false;
+        }
+
+        // Remove the user and the token
+        $this->deleteUser($id_user);
+        $this->token->deleteActivationTokenByUserId($id_user);
+
+        return true;
     }
 
     /**
-     * Actives user by
+     * Actives user by using a key
      *
      * @param string $key
      *            Key to use for activation
      */
     public function activateUser($key)
     {
-        $selector = '';
-        $token = '';
 
-        list ($selector, $token) = explode(':', $key);
+        // Get tokendate from db
+        $activation_token_data = $this->token->getActivationTokenDataFromKey($key);
 
-        // Without selector or token no activation!!!
-        if (empty($selector) || empty($token)) {
+        if (empty($activation_token_data)) {
             return false;
         }
 
-        // Lets try to find the user id in our activation token table
-        $this->db->qb([
-            'table' => 'core_activation_tokens',
-            'fields' => [
-                'id_user',
-                'token',
-                'expires'
-            ],
-            'filter' => 'selector=:selector',
-            'params' => [
-                ':selector' => $selector
-            ]
-        ]);
+        // We need the seperated token stored as part in the key
+        $token = $this->token->getTokenFromKey($key);
 
-        $activations = $this->db->all();
-
-        foreach ($activations as $activation) {
-
-            // Matches hash?
-            if (! hash_equals($activation['token'], $token)) {
-                continue;
-            }
-
-            // Activation token expired?
-            if ($activation['expires'] < time()) {
-                continue;
-            }
-
-            // Reaching this point means we have a valid activation. Flag user as active.
-            $this->db->qb([
-                'table' => 'core_users',
-                'method' => 'UPDATE',
-                'fields' => 'state',
-                'filter' => 'id_user=:id_user',
-                'params' => [
-                    ':state' => 1,
-                    ':id_user' => $activation['id_user']
-                ]
-            ], true);
-
-            // Delete activation token
-            $this->db->delete('activation_tokens', 'id_user=:id_user', [
-                ':id_user' => $activation['id_user']
-            ]);
-
-            // And finally return user id
-            return $activation['id_user'];
+        // Matching hashes?
+        if (! hash_equals($activation_token_data['token'], $token)) {
+            return false;
         }
 
-        // Falling through here means activation failed
-        return false;
+        // Activate user
+        $this->db->qb([
+            'table' => 'core_users',
+            'method' => 'UPDATE',
+            'fields' => 'state',
+            'filter' => 'id_user=:id_user',
+            'params' => [
+                ':state' => 1,
+                ':id_user' => $activation_token_data['id_user']
+            ]
+        ], true);
+
+        // and delete the token of this user
+        $this->token->deleteActivationTokenByUserId($activation_token_data['id_user']);
+
+        // And finally return user id
+        return $activation_token_data['id_user'];
     }
 
     /**
@@ -244,7 +225,7 @@ class Users
     public function changePassword($id_user, $password)
     {
         // enhance password with our pepper
-        $password .= $this->cfg->data['Core']['security.pepper'];
+        $password .= $this->config->Core['security.encrypt.pepper'];
 
         // Check the old password
         $this->db->qb([
@@ -262,14 +243,14 @@ class Users
     public function deleteUser($id_user)
     {
         // Check the old password
-        $this->db->delete('users', 'id_user=:id_user', [
+        $this->db->delete('core_users', 'id_user=:id_user', [
             ':id_user' => $id_user
         ]);
     }
 
     public function checkBan()
     {
-        $ban_duration = $this->cfg->data['Core']['security.ban.ttl.ban'];
+        $ban_duration = $this->config->Core['security.ban.ttl.ban'];
 
         // No ban without ban time
         if ($ban_duration == 0) {
@@ -285,7 +266,7 @@ class Users
         }
 
         // Get max tries until get banned from config
-        $max_tries = $this->cfg->data['Core']['security.ban.tries'];
+        $max_tries = $this->config->Core['security.ban.tries'];
 
         // Max tries of 0 means no ban check at all
         if ($max_tries == 0) {
@@ -293,7 +274,7 @@ class Users
         }
 
         // Get seconds for how long the ban log entries are relevant for ban check
-        $ban_log_relevance_duration = $this->cfg->data['Core']['security.ban.ttl.log'];
+        $ban_log_relevance_duration = $this->config->Core['security.ban.ttl.log'];
 
         // Zero sconds means that this check is not needed.
         if ($ban_log_relevance_duration == 0) {
