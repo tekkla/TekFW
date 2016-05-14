@@ -31,7 +31,7 @@ abstract class MvcAbstract
 
     /**
      *
-     * @var \Core\Cfg\AppCfg
+     * @var \Core\Config\ConfigStorage
      */
     protected $config;
 
