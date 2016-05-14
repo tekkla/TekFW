@@ -2,13 +2,13 @@
 namespace Core\Data\Connectors\Db;
 
 /**
- * TableInfoAbstract.php
+ * AbstractTableInfo.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2015
  * @license MIT
  */
-abstract class TableInfoAbstract
+abstract class AbstractTableInfo
 {
 
     /**

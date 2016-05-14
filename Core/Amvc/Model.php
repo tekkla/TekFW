@@ -117,6 +117,10 @@ class Model extends MvcAbstract
             $db->setPrefix($prefix);
         }
 
+        if (!empty($this->scheme)) {
+            $db->setScheme($this->scheme);
+        }
+
         return $db;
     }
 

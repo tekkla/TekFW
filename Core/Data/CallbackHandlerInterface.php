@@ -1,15 +1,22 @@
 <?php
-namespace Core\Data\Connectors;
+namespace Core\Data;
 
 /**
- * CallbackInterface.php
+ * CallbackHandlerInterface.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
  * @license MIT
  */
-interface CallbackInterface
+interface CallbackHandlerInterface extends \Countable
 {
+
+    /**
+     * Executes registered callbacks on given DataObject
+     *
+     * @param DataObjectInterface $data
+     */
+    public function execute(DataObjectInterface $data);
 
     /**
      * Sets one or more callback functions
@@ -39,5 +46,6 @@ interface CallbackInterface
      * Removes all callback functions
      */
     public function clearCallbacks();
+
 }
 

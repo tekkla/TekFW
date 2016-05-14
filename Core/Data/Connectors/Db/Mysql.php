@@ -8,7 +8,7 @@ namespace Core\Data\Connectors\Db;
  * @copyright 2015
  * @license MIT
  */
-class Mysql extends TableInfoAbstract
+class Mysql extends AbstractTableInfo
 {
 
     /**

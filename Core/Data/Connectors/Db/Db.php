@@ -2,10 +2,11 @@
 namespace Core\Data\Connectors\Db;
 
 // Data Libs
-use Core\Data\DataAdapter;
 use Core\Data\Connectors\ConnectorAbstract;
 use Core\Data\Connectors\Db\Connection;
 use Core\Data\Connectors\Db\QueryBuilder\QueryBuilder;
+use Core\Data\CallbackHandler;
+use Core\Data\SchemeHandler;
 
 /**
  * Database connector
@@ -18,56 +19,45 @@ class Db extends ConnectorAbstract
 {
 
     /**
-     * Sql string
      *
      * @var string
      */
     private $sql = '';
 
     /**
-     * Used parameters
      *
      * @var array
      */
     private $params = [];
 
     /**
-     * Table name
-     *
-     * @var string
-     */
-    private $tbl = '';
-
-    /**
-     * Connection object
-     *
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * PDO database handler
      *
      * @var \PDO
      */
     private $dbh = false;
 
     /**
-     * PDO statement object
      *
      * @var \PDOStatement
      */
     private $stmt = '';
 
     /**
-     * Table prefix to use
      *
      * @var string
      */
     private $prefix;
 
+    /**
+     *
+     * @var array
+     */
     private static $queries = [];
 
+    /**
+     *
+     * @var int
+     */
     private static $query_count = 0;
 
     /**
@@ -84,7 +74,7 @@ class Db extends ConnectorAbstract
         $this->dbh = $pdo;
 
         // Inject an empty DataAdapter object
-        $this->injectAdapter(new DataAdapter());
+        $this->injectCallbackHandler(new CallbackHandler());
     }
 
     /**
@@ -194,8 +184,6 @@ class Db extends ConnectorAbstract
      *            Parameter value
      * @param string $type
      *            Optional parameter datatype
-     *
-     * @return \PDOStatement
      */
     public function bindValue($param, $value, $type = null)
     {
@@ -220,8 +208,6 @@ class Db extends ConnectorAbstract
         }
 
         $this->stmt->bindValue($param, $value, $type);
-
-        return $this->stmt;
     }
 
     /**
@@ -233,8 +219,6 @@ class Db extends ConnectorAbstract
      *            Parameter value
      * @param string $type
      *            Optional parameter datatype
-     *
-     * @return \PDOStatement
      */
     public function bindParam($param, &$value, $type = null)
     {
@@ -256,8 +240,6 @@ class Db extends ConnectorAbstract
         }
 
         $this->stmt->bindParam($param, $value, $type);
-
-        return $this->stmt;
     }
 
     /**
@@ -267,6 +249,9 @@ class Db extends ConnectorAbstract
      */
     public function execute()
     {
+        self::$queries[] = $this->sql;
+        self::$query_count++;
+
         return $this->stmt->execute();
     }
 
@@ -278,25 +263,14 @@ class Db extends ConnectorAbstract
      *
      * @return array
      */
-    public function all(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
+    public function all()
     {
         $this->stmt->execute();
 
-        if (empty($fetch_argument)) {
-            $data = $this->stmt->fetchAll($fetch_style);
-        }
-        else {
-            if (empty($ctor_args)) {
-                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument);
-            }
-            else {
-                $data = $this->stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
-            }
-        }
+        $data = $this->stmt->fetchAll(\PDO::FETCH_CLASS, '\Core\Data\DataObject');
 
         if (! empty($data)) {
-            $this->adapter->setDataset($data, $scheme);
-            $data = $this->adapter->getData();
+            $data = $this->executeCallbackAndSchemeHandler($data);
         }
 
         return $data;
@@ -338,24 +312,14 @@ class Db extends ConnectorAbstract
      *
      * @return mixed
      */
-    public function single(array $scheme = [], $fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
+    public function single()
     {
         $this->stmt->execute();
 
-        if (empty($fetch_argument)) {
-            $data = $this->stmt->fetch($fetch_style);
-        }
-        else {
-            if (empty($ctor_args)) {
-                $data = $this->stmt->fetch($fetch_style, $fetch_argument);
-            }
-            else {
-                $data = $this->stmt->fetch($fetch_style, $fetch_argument, $ctor_args);
-            }
-        }
+        $data = $this->stmt->fetchObject('\Core\Data\DataObject');
 
         if (! empty($data)) {
-            $data = $this->adapter->setData($data, $scheme)->getData();
+            $data = $this->executeCallbackAndSchemeHandler($data);
         }
 
         return $data;
@@ -684,5 +648,17 @@ class Db extends ConnectorAbstract
             'sql' => $this->sql,
             'params' => $this->params
         ];
+    }
+
+    /**
+     *
+     * @param unknown $scheme
+     */
+    public function setScheme($scheme)
+    {
+        $scheme_handler = new SchemeHandler();
+        $scheme_handler->setScheme($scheme);
+
+        $this->injectSchemeHandler($scheme_handler);
     }
 }

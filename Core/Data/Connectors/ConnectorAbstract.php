@@ -1,7 +1,9 @@
 <?php
 namespace Core\Data\Connectors;
 
-use Core\Data\DataAdapter;
+use Core\Data\CallbackHandlerInterface;
+use Core\Data\SchemeHandlerInterface;
+use Core\Data\DataObjectInterface;
 
 /**
  * AdapterAbstract.php
@@ -10,23 +12,37 @@ use Core\Data\DataAdapter;
  * @copyright 2016
  * @license MIT
  */
-abstract class ConnectorAbstract implements CallbackInterface
+abstract class ConnectorAbstract
 {
 
     /**
      *
-     * @var DataAdapter
+     * @var CallbackHandlerInterface
      */
-    public $adapter;
+    private $callback_handler;
 
     /**
-     * Injects DataAdapter into adapter class
      *
-     * @param DataAdapter $adapter
+     * @var SchemeHandlerInterface
      */
-    final public function injectAdapter(DataAdapter $adapter)
+    private $scheme_handler;
+
+    /**
+     *
+     * @param CallbackInterface $callback_handler
+     */
+    final public function injectCallbackHandler(CallbackHandlerInterface $callback_handler)
     {
-        $this->adapter = $adapter;
+        $this->callback_handler = $callback_handler;
+    }
+
+    /**
+     *
+     * @param SchemeHandlerInterface $scheme_handler
+     */
+    final public function injectSchemeHandler(SchemeHandlerInterface $scheme_handler)
+    {
+        $this->scheme_handler = $scheme_handler;
     }
 
     /*
@@ -35,7 +51,11 @@ abstract class ConnectorAbstract implements CallbackInterface
      */
     public function addCallback($call, array $args = [], $clear_callbacks_stack = true)
     {
-        $this->adapter->addCallback($call, $args, $clear_callbacks_stack);
+        if (! isset($this->callback_handler)) {
+            Throw new ConnectorException('Adding callbacks to a connector that has no set CallbackHandler is not possible.');
+        }
+
+        $this->callback_handler->addCallback($call, $args, $clear_callbacks_stack);
     }
 
     /*
@@ -44,7 +64,11 @@ abstract class ConnectorAbstract implements CallbackInterface
      */
     public function addCallbacks(array $callbacks = [], $clear_callbacks_stack = true)
     {
-        $this->adapter->addCallbacks($callbacks, $clear_callbacks_stack);
+        if (! isset($this->callback_handler)) {
+            Throw new ConnectorException('Adding callbacks to a connector that has no set CallbackHandler is not possible.');
+        }
+
+        $this->callback_handler->addCallbacks($callbacks, $clear_callbacks_stack);
     }
 
     /*
@@ -53,6 +77,64 @@ abstract class ConnectorAbstract implements CallbackInterface
      */
     public function clearCallbacks()
     {
-        $this->adapter->clearCallbacks();
+        if (! isset($this->callback_handler)) {
+            Throw new ConnectorException('Clearing callbacks of a connector that has no set CallbackHandler is not possible.');
+        }
+
+        $this->callback_handler->clearCallbacks();
+    }
+
+    public function executeCallbackAndSchemeHandler($data)
+    {
+
+        // Do nothing when there is no handler at all!
+        if (empty(count($this->callback_handler)) && ! isset($this->scheme_handler)) {
+            return $data;
+        }
+
+        if ($data instanceof DataObjectInterface) {
+
+            $result = false;
+
+            if (isset($this->callback_handler)) {
+                $result = $this->callback_handler->execute($data);
+            }
+
+            if ($result instanceof DataObjectInterface && isset($this->scheme_handler)) {
+                $this->scheme_handler->excecute($data);
+            }
+
+            $result = $data;
+        }
+        elseif (is_array($data)) {
+
+            $result = [];
+
+            foreach ($data as $data_object) {
+
+                if (isset($this->callback_handler)) {
+                    $callback_result = $this->callback_handler->execute($data_object);
+                }
+
+                if ($callback_result === false) {
+                    continue;
+                }
+
+                if (isset($this->scheme_handler)) {
+                    $this->scheme_handler->excecute($data_object);
+                    $primary = $this->scheme_handler->getPrimary();
+                }
+
+                // Use the existing primary field name from scheme when it's available in data
+                if (! empty($primary) && ! empty($data_object->{$primary})) {
+                    $result[$data_object->{$primary}] = $data_object;
+                }
+                else {
+                    $result[] = $data_object;
+                }
+            }
+        }
+
+        return $result;
     }
 }
