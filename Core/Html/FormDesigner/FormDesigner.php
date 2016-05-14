@@ -20,7 +20,7 @@ use Core\Html\HtmlBuildableInterface;
  */
 final class FormDesigner implements HtmlBuildableInterface
 {
-    
+
     use UrlTrait;
 
     /**
@@ -94,7 +94,7 @@ final class FormDesigner implements HtmlBuildableInterface
         $this->html = new Form();
     }
 
-    public function mapData(array $data)
+    public function mapData($data)
     {
         $this->data = $data;
 
@@ -106,7 +106,7 @@ final class FormDesigner implements HtmlBuildableInterface
         return $this->data;
     }
 
-    public function mapErrors(array $errors)
+    public function mapErrors($errors)
     {
         $this->errors = $errors;
 
@@ -431,7 +431,7 @@ final class FormDesigner implements HtmlBuildableInterface
      *
      * @return string
      */
-    private function buildGroup(FormGroup $group, array $names = [], array $data = [], array $errors = [])
+    private function buildGroup(FormGroup $group, array $names = [], $data = [], array $errors = [])
     {
         $html = '';
 
