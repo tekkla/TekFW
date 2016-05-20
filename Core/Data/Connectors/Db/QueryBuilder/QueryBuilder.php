@@ -483,8 +483,12 @@ class QueryBuilder
                 break;
         }
 
+        array_walk_recursive($pieces, function(&$data, $index) {
+            $data = trim($data);
+        });
+
         // Build sql string from pieces
-        $this->sql = implode(' ', $pieces);
+        $this->sql = trim(implode(' ', $pieces));
 
         // Finally cleanup parameters by removing parameter not needed in query and parse array parameter into sql string.
         foreach ($this->params as $key => $val) {
@@ -765,7 +769,7 @@ class QueryBuilder
         if ($this->method == 'SELECT') {
 
             // Try to get name of primary field from provided scheme. A scheme always is preferred to qb definitions
-            $primary = ! empty($this->scheme) && ! empty($this->scheme['primary']) ? $this->scheme['primary'] : false;
+            $primary = ! empty($this->scheme['primary']) ? $this->scheme['primary'] : false;
 
             // No primary from scheme? Check for a primary set in definition.
             if ($primary == false && ! empty($this->definition['primary'])) {
