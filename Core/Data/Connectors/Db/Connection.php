@@ -19,6 +19,12 @@ class Connection extends \PDO
 
     /**
      *
+     * @var array
+     */
+    private $queries = [];
+
+    /**
+     *
      * {@inheritDoc}
      *
      * @see PDO::__construct()
@@ -62,6 +68,29 @@ class Connection extends \PDO
         if (isset($this->dsn)) {
             return $this->dsn;
         }
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @see \PDO::prepare()
+     */
+    public function prepare($statement, $options = [])
+    {
+        $this->queries[] = $statement;
+
+        return parent::prepare($statement, $options);
+    }
+
+    /**
+     * Returns all prepared queries
+     *
+     * @return array
+     */
+    public function getQueries()
+    {
+        return $this->queries;
     }
 }
 

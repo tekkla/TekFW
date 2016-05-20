@@ -7,6 +7,7 @@ use Core\Data\Connectors\Db\Connection;
 use Core\Data\Connectors\Db\QueryBuilder\QueryBuilder;
 use Core\Data\CallbackHandler;
 use Core\Data\SchemeHandler;
+use Core\Data\DataObject;
 
 /**
  * Database connector
@@ -17,6 +18,18 @@ use Core\Data\SchemeHandler;
  */
 class Db extends ConnectorAbstract
 {
+
+    /**
+     *
+     * @var \PDO
+     */
+    public $dbh = false;
+
+    /**
+     *
+     * @var \PDOStatement
+     */
+    public $stmt = '';
 
     /**
      *
@@ -32,21 +45,9 @@ class Db extends ConnectorAbstract
 
     /**
      *
-     * @var \PDO
-     */
-    private $dbh = false;
-
-    /**
-     *
-     * @var \PDOStatement
-     */
-    private $stmt = '';
-
-    /**
-     *
      * @var string
      */
-    private $prefix;
+    private $prefix = '';
 
     /**
      *
@@ -55,15 +56,9 @@ class Db extends ConnectorAbstract
     private static $queries = [];
 
     /**
-     *
-     * @var int
-     */
-    private static $query_count = 0;
-
-    /**
      * Constructor
      *
-     * @param Connection $connection
+     * @param \PDO $pdo
      * @param string $prefix
      */
     public function __construct(\PDO $pdo, $prefix)
@@ -92,14 +87,10 @@ class Db extends ConnectorAbstract
      *
      * @param string $prefix
      *            Table prefix
-     *
-     * @return \Core\Data\Connectors\Db\Db
      */
     public function setPrefix($prefix)
     {
         $this->prefix = $prefix;
-
-        return $this;
     }
 
     /**
@@ -168,7 +159,7 @@ class Db extends ConnectorAbstract
         }
 
         if ($autoexec === true) {
-            return $this->stmt->execute();
+            return $this->execute();
         }
         else {
             return $this->stmt;
@@ -249,23 +240,17 @@ class Db extends ConnectorAbstract
      */
     public function execute()
     {
-        self::$queries[] = $this->sql;
-        self::$query_count++;
-
         return $this->stmt->execute();
     }
 
     /**
-     * Returns all queried data
-     *
-     * @param int $fetch_mode
-     *            Optional PDO fetch mode (Default: \PDO::FETCH_ASSOC)
+     * Executes statement and returns result as an array of DataObjects
      *
      * @return array
      */
     public function all()
     {
-        $this->stmt->execute();
+        $this->execute();
 
         $data = $this->stmt->fetchAll(\PDO::FETCH_CLASS, '\Core\Data\DataObject');
 
@@ -286,7 +271,7 @@ class Db extends ConnectorAbstract
      */
     public function fetchAll($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
-        $this->stmt->execute();
+        $this->execute();
 
         if (empty($fetch_argument)) {
             $data = $this->stmt->fetchAll($fetch_style);
@@ -301,20 +286,16 @@ class Db extends ConnectorAbstract
         }
 
         return $data;
-        ;
     }
 
     /**
-     * Executes statement and returns result of PDO fetch()
+     * Executes statement and returns result as DataObject
      *
-     * @param int $fetch_mode
-     *            Optional PDO fetch mode (Default: \PDO::FETCH_ASSOC)
-     *
-     * @return mixed
+     * @return DataObject
      */
     public function single()
     {
-        $this->stmt->execute();
+        $this->execute();
 
         $data = $this->stmt->fetchObject('\Core\Data\DataObject');
 
@@ -326,7 +307,7 @@ class Db extends ConnectorAbstract
     }
 
     /**
-     * PDO fetch.
+     * PDO fetch
      *
      * @param PDO $fetch_mode
      *            Optional PDO fetchmode constant (Default: \PDO::FETCH_ASSOC)
@@ -335,7 +316,7 @@ class Db extends ConnectorAbstract
      */
     public function fetch($fetch_style = \PDO::FETCH_ASSOC, $fetch_argument = null, array $ctor_args = null)
     {
-        $this->stmt->execute();
+        $this->execute();
 
         if (empty($fetch_argument)) {
             $data = $this->stmt->fetch($fetch_style);
@@ -362,7 +343,7 @@ class Db extends ConnectorAbstract
      */
     public function column($column = 0)
     {
-        $this->stmt->execute();
+        $this->execute();
 
         return $this->stmt->fetchAll(\PDO::FETCH_COLUMN, $column);
     }
@@ -374,7 +355,7 @@ class Db extends ConnectorAbstract
      */
     public function value()
     {
-        $this->stmt->execute();
+        $this->execute();
 
         return $this->stmt->fetchColumn();
     }
@@ -472,7 +453,7 @@ class Db extends ConnectorAbstract
      */
     public function rowCount()
     {
-        $this->stmt->execute();
+        $this->execute();
 
         return $this->stmt->rowCount();
     }
@@ -484,7 +465,7 @@ class Db extends ConnectorAbstract
      */
     public function columnCount()
     {
-        $this->stmt->execute();
+        $this->execute();
 
         return $this->stmt->columnCount();
     }
@@ -651,8 +632,10 @@ class Db extends ConnectorAbstract
     }
 
     /**
+     * Adds a scheme array based SchemeHandler ojbect to the connector
      *
-     * @param unknown $scheme
+     * @param array $scheme
+     *            The scheme array
      */
     public function setScheme($scheme)
     {
@@ -660,5 +643,13 @@ class Db extends ConnectorAbstract
         $scheme_handler->setScheme($scheme);
 
         $this->injectSchemeHandler($scheme_handler);
+    }
+
+    /**
+     * Returns all queries done so far
+     */
+    public function getQueries()
+    {
+        return self::$queries;
     }
 }
