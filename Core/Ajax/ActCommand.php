@@ -2,7 +2,7 @@
 namespace Core\Ajax;
 
 /**
- * Act.php
+ * ActCommand.php
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @copyright 2016
@@ -47,6 +47,14 @@ class ActCommand extends AbstractAjaxCommand
 
     protected $type = 'act';
 
+    /**
+     * Helper method to set command properties
+     * 
+     * @param string $function
+     * @param mixed $args
+     *
+     * @throws AjaxCommandException
+     */
     private function init($function, $args)
     {
         if (empty($function)) {
