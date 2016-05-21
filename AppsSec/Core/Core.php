@@ -15,7 +15,7 @@ final class Core extends App
     // Flag as secured app
     protected $flags = [
         self::SECURE,
-        self::LANGUAGE
+        self::LANGUAGE,
     ];
 
     protected $permissions = [
@@ -214,7 +214,7 @@ final class Core extends App
                                     'index' => 0
                                 ],
                                 'default' => 0
-                            ],
+                            ]
                         ],
                         'groups' => [
                             'mail' => [
@@ -611,7 +611,7 @@ final class Core extends App
         }
 
         // or add login and register buttons. But not when current user is currently on banlist
-        elseif (! $this->security->users->checkBan()) {
+        elseif (!$this->security->users->checkBan()) {
 
             $type = 'guest';
 
@@ -627,5 +627,121 @@ final class Core extends App
 
         $this->page->setHome($url);
         $this->cfg->Core->set('url.home', $url);
+    }
+
+    protected function Init()
+    {
+        $this->initJsAssets();
+
+        $this->initCssAssets();
+    }
+
+    private function initJsAssets()
+    {
+
+        if (!$this->router->isAjax()) {
+
+        /* @var $ah \Core\Asset\Javascript\JavascriptHandler */
+        $ah = $this->di->get('core.asset')->getAssetHandler('js');
+
+        // Theme name
+        $theme = $this->cfg->Core->get('style.theme.name');
+
+        // jQuery version
+        $version = $this->cfg->Core->get('js.jquery.version');
+
+        // Add local jQeury file or the one from CDN
+        $file = '/' . $theme . '/js/jquery-' . $version . '.js';
+
+        // Files to bottom or to top?
+        $defer = $this->cfg->Core->get('js.general.position') == 'top' ? false : true;
+
+
+        if ($this->cfg->Core->get('js.jquery.local') && file_exists(THEMESDIR . $file)) {
+            $ao = $ah->createFile(THEMESURL . $file, $defer);
+        }
+        else {
+            $ao = $ah->createFile('https://code.jquery.com/jquery-' . $version . '.min.js', $defer, false, false);
+        }
+
+        $ao->setId('jquery-' . $version);
+
+        // Bootstrap Version
+        $version = $this->cfg->Core->get('style.bootstrap.version');
+
+        // Add Bootstrap javascript from local or cdn
+        $file = '/' . $theme . '/js/bootstrap-' . $version . '.js';
+
+        if ($this->cfg->Core->get('style.bootstrap.local') && file_exists(THEMESDIR . $file)) {
+            $ao = $ah->createFile(THEMESURL . $file, $defer);
+        }
+        else {
+            $ao = $ah->createFile('https://maxcdn.bootstrapcdn.com/bootstrap/' . $version . '/js/bootstrap.min.js', $defer, false, false);
+        }
+
+        $ao->setId('bootstrap-' . $version);
+
+        // Add plugins file
+        $ao = $ah->createFile($this->cfg->Core->get('url.js') . '/plugins.js', $defer);
+        $ao->setId('core-plugins');
+
+        // Add global fadeout time var set in config
+        $ah->createVariable('fadeout_time', $this->cfg->Core->get('js.style.fadeout_time'), false, $defer);
+
+        // Add framework js
+        $ao = $ah->createFile($this->cfg->Core->get('url.js') . '/framework.js', $defer);
+        $ao->setId('core-framework');
+
+        }
+    }
+
+    private function initCssAssets()
+    {
+
+
+
+        /* @var $ah \Core\Asset\Css\CssHandler */
+        $ah = $this->di->get('core.asset')->getAssetHandler('css');
+
+        // Theme name
+        $theme = $this->cfg->Core->get('style.theme.name');
+
+        // Bootstrap version from config
+        $version = $this->cfg->Core->get('style.bootstrap.version');
+
+        // Core and theme file
+        $file = '/' . $theme . '/css/bootstrap-' . $version . '.css';
+
+        // Add existing local user/theme related bootstrap file or load it from cdn
+        if ($this->cfg->Core->get('style.bootstrap.local') && file_exists(THEMESDIR . $file)) {
+            $ao = $ah->createLink(THEMESURL . $file);
+        }
+        else {
+            // Add bootstrap main css file from cdn
+            $ao = $ah->createLink('https://maxcdn.bootstrapcdn.com/bootstrap/' . $version . '/css/bootstrap.min.css');
+        }
+
+        $ao->setId('bootstrap-' . $version);
+
+        // Fontawesome version
+        $version = $this->cfg->Core->get('style.fontawesome.version');
+
+        // Fontawesome file
+        $file = '/' . $theme . '/css/font-awesome-' . $version . '.css';
+
+        // Add existing font-awesome font icon css file or load it from cdn
+        if ($this->cfg->Core->get('style.fontawesome.local') && file_exists(THEMESDIR . $file)) {
+            $ao = $ah->createLink(THEMESURL . $file);
+        }
+        else {
+            $ao = $ah->createLink('https://maxcdn.bootstrapcdn.com/font-awesome/' . $version . '/css/font-awesome.min.css');
+        }
+        $ao->setId('font-awesome-' . $version);
+
+        // Add general TekFW css file
+        $file = '/' . $theme . '/css/Core.css';
+
+        $ao = $ah->createLink(THEMESURL . $file);
+        $ao->setId('core-css');
     }
 }

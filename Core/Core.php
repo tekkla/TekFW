@@ -27,6 +27,7 @@ define('APPSSECDIR', BASEDIR . '/AppsSec');
 
 final class Core
 {
+
     /**
      *
      * @var array
@@ -81,6 +82,12 @@ final class Core
      */
     private $error;
 
+    /**
+     *
+     * @var \Core\Asset\AssetManager
+     */
+    private $assetmanager;
+
     public function run()
     {
 
@@ -124,6 +131,7 @@ final class Core
             $this->initConfig();
             $this->initRouter();
             $this->initLanguage();
+            $this->initAssetManager();
             $this->initCoreApp();
             $this->initSecurity();
 
@@ -149,11 +157,35 @@ final class Core
                 // Send mails
                 $this->di->get('core.mailer')->send();
 
+                $ah = $this->assetmanager->getAssetHandler('js');
+
+                $afm = new \Core\Asset\AssetFileHandler();
+                $afm->setFilename($this->config->get('Core', 'dir.cache') . DIRECTORY_SEPARATOR . 'script.js');
+                $afm->setTTL($this->config->get('Core', 'cache.ttl.js'));
+
+                $ah->setFileHandler($afm);
+
+                $ah = $this->assetmanager->getAssetHandler('css');
+
+                $theme = $this->config->get('Core', 'style.theme.name');
+
+                $ah->addProcessor(new \Core\Asset\Processor\ReplaceProcessor('../fonts/', '../Themes/' . $theme . '/fonts/'));
+                $ah->addProcessor(new \Core\Asset\Processor\ReplaceProcessor('../img/', '../Themes/' . $theme . '/img/'));
+
+                $afm = new \Core\Asset\AssetFileHandler();
+                $afm->setFilename($this->config->get('Core', 'dir.cache') . DIRECTORY_SEPARATOR . 'style.css');
+                $afm->setTTL($this->config->get('Core', 'cache.ttl.css'));
+
+                $ah->setFileHandler($afm);
+
+                // Process assets
+                $this->assetmanager->process();
+
                 // Send cookies
                 $this->http->cookies->send();
 
                 // Redirect requested?
-                if (! empty($_SESSION['Core']['redirect'])) {
+                if (!empty($_SESSION['Core']['redirect'])) {
 
                     $this->http->header->location($_SESSION['Core']['redirect']['location'], $_SESSION['Core']['redirect']['permanent']);
                     $this->http->header->send();
@@ -181,8 +213,6 @@ final class Core
                         $page = $this->di->get('core.page');
                         $page->setContent($result);
                         $result = $page->render();
-
-                        break;
                 }
 
                 // Send headers so far
@@ -201,7 +231,7 @@ final class Core
     private function loadSettings()
     {
         // Check for settings file
-        if (! file_exists(BASEDIR . '/Settings.php') || ! is_readable(BASEDIR . '/Settings.php')) {
+        if (!file_exists(BASEDIR . '/Settings.php') || !is_readable(BASEDIR . '/Settings.php')) {
             error_log('Settings file could not be loaded.');
             die('An error occured. Sorry for that! :(');
         }
@@ -209,7 +239,7 @@ final class Core
         // Load basic config from Settings.php
         $this->settings = include (BASEDIR . '/Settings.php');
 
-        if (! empty($this->settings['display_errors'])) {
+        if (!empty($this->settings['display_errors'])) {
             ini_set('display_errors', 1);
         }
     }
@@ -457,7 +487,7 @@ final class Core
                 $prefix . '.conn.dsn',
                 $prefix . '.conn.user',
                 $prefix . '.conn.password',
-                $prefix . '.conn.options',
+                $prefix . '.conn.options'
             ]);
             $this->di->mapFactory($prefix, '\Core\Data\Connectors\Db\Db', [
                 $prefix . '.conn',
@@ -479,7 +509,7 @@ final class Core
     private function initConfig()
     {
         // Admin users can request to load config from db instead out of cache
-        $refresh_cache = ! empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
+        $refresh_cache = !empty($_SESSION['Core']['user']['is_admin']) && isset($_REQUEST['refresh_config_cache']);
 
         $this->di->mapService('core.config', '\Core\Config\Config');
 
@@ -541,7 +571,7 @@ final class Core
             'apps' => BASEURL . '/Apps',
             'appssec' => BASEURL . '/AppsSec',
             'js' => BASEURL . '/Js',
-            'cache' => BASEURL .'/Cache'
+            'cache' => BASEURL . '/Cache'
         ];
 
         $this->config->addUrls('Core', $urls);
@@ -627,6 +657,19 @@ final class Core
         /* @var $language \Core\Language\Language */
         $language = $this->di->get('core.language');
         $language->setFallbackStorageName('Core');
+    }
+
+    private function initAssetManager()
+    {
+        $this->di->mapService('core.asset', '\Core\Asset\AssetManager');
+
+        $this->assetmanager = $this->di->get('core.asset');
+
+        $ah = $this->assetmanager->createAssetHandler('js', 'js');
+        $ah->addProcessor(new \Core\Asset\Processor\JShrinkProcessor());
+
+        $ah = $this->assetmanager->createAssetHandler('css', 'css');
+        $ah->addProcessor(new \Core\Asset\Processor\CssMinProcessor());
     }
 
     private function initErrorHandler()
@@ -796,7 +839,7 @@ final class Core
             $action = 'Index';
         }
 
-        if (! method_exists($controller, $action)) {
+        if (!method_exists($controller, $action)) {
             return $this->send404('controller.action');
         }
 
@@ -816,7 +859,7 @@ final class Core
             // Handle messages
             $messages = $this->di->get('core.message.default')->getAll();
 
-            if ($messages) {
+            if (!empty($messages)) {
 
                 /* @var $msg \Core\Message\Message */
                 foreach ($messages as $msg) {
@@ -834,7 +877,7 @@ final class Core
                     }
 
                     // Has this message an id which we can use as id for the alerts html element?
-                    if (! empty($msg->getId())) {
+                    if (!empty($msg->getId())) {
                         $alert->html->setId($msg->getId());
                     }
 
@@ -846,6 +889,18 @@ final class Core
                     $cmd->setSelector($msg->getTarget());
                     $cmd->setArgs($alert->build());
                     $cmd->setFunction($msg->getDisplayFunction());
+                }
+            }
+
+            // @TODO Process possible asset js files to load!
+            $js_objects = $this->di->get('core.asset')->getAssetHandler('js')->getObjects();
+
+            if (!empty($js_objects)) {
+                foreach ($js_objects as $js) {
+                    if ($js->getType() == 'file') {
+                        $cmd = $ajax->createActCommand();
+                        $cmd->getScript($js->getContent());
+                    }
                 }
             }
 
@@ -867,7 +922,7 @@ final class Core
         }
 
         // Validate posted token with session token
-        if (! $this->security->token->validatePostToken()) {
+        if (!$this->security->token->validatePostToken()) {
             return;
         }
 

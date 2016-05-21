@@ -1,10 +1,17 @@
 <?php
 namespace AppsSec\Core\Model;
 
-use Core\Amvc\Model;
-use Core\Validator\Validator;
-use function Core\arrayAssignByKeys;
-use function Core\arrayAssignByPath;
+use Core\{
+    Amvc\Model,
+    Validator\Validator
+};
+
+use function Core\{
+    arrayAssignByKeys,
+    arrayAssignByPath,
+    arrayFlatten
+};
+
 
 /**
  * ConfigModel.php
@@ -105,7 +112,7 @@ final class ConfigModel extends Model
         $app_name = $data['app'];
         unset($data['app']);
 
-        $flat = $this->arrayFlatten($data);
+        $flat = arrayFlatten($data);
 
         $this->validateConfig($app_name, $flat);
 
