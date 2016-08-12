@@ -1,7 +1,7 @@
 <?php
 namespace Themes\Core;
 
-use Core\Page\Template;
+use Core\Framework\Page\Template;
 
 /**
  * IndexTemplate.php
@@ -34,9 +34,10 @@ class IndexTemplate extends Template
         <head>';
 
         echo $this->getTitle();
-        echo $this->getCss();
+
+        echo '<link rel="stylesheet" type="text/css" href="/Cache/style.css">';
+
         echo $this->getMeta();
-        echo $this->getScript('top');
 
         echo '
         </head>';
@@ -56,7 +57,7 @@ class IndexTemplate extends Template
         // Main content
         echo $this->getContent();
 
-        echo $this->getScript('below');
+        echo '<script src="/Cache/script.js"></script>';
 
         echo '
         </body>';
@@ -79,7 +80,7 @@ class IndexTemplate extends Template
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="', $this->page->getHome(), '">', $this->page->getBrand(), '</a>
+            <a class="navbar-brand" href="', $this->page->getHome(), '">', $this->page->getTitle(), '</a>
         </div>
         <div class="collapse navbar-collapse" id="navbar">';
 

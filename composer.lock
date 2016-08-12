@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "73257194ba63cf0410dc8fb09176077f",
-    "content-hash": "aac7e7b0af24526385a67cf1194e2f43",
+    "hash": "a07fc0f9a8a8d01c4533fe9d24309986",
+    "content-hash": "e5d0842c86cea9ab70d77fa76438872b",
     "packages": [
         {
             "name": "altorouter/altorouter",
@@ -144,88 +144,17 @@
             "time": "2016-03-08 11:49:57"
         },
         {
-            "name": "phpfastcache/phpfastcache",
-            "version": "4.3.16",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/PHPSocialNetwork/phpfastcache.git",
-                "reference": "29b1fa5a4d74010dd254f892b26e6a3a43acbffd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/29b1fa5a4d74010dd254f892b26e6a3a43acbffd",
-                "reference": "29b1fa5a4d74010dd254f892b26e6a3a43acbffd",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "suggest": {
-                "ext-apc": "*",
-                "ext-mbstring": "*",
-                "ext-memcache": "*",
-                "ext-memcached": "*",
-                "ext-predis": "*",
-                "ext-redis": "*",
-                "ext-sqlite": "*"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/phpFastCache/phpFastCache.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Khoa Bui",
-                    "email": "khoaofgod@gmail.com",
-                    "homepage": "http://www.phpfastcache.com",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Georges.L",
-                    "email": "contact@geolim4.com",
-                    "homepage": "https://github.com/Geolim4",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP Cache Class - Supported Redis, Cookie, Predis, APC, MemCached, WinCache, Files, PDO, Reduce mySQL Call by Caching",
-            "homepage": "http://www.phpfastcache.com",
-            "keywords": [
-                "APC Cache",
-                "apc",
-                "cache",
-                "cache class",
-                "caching",
-                "cookie",
-                "files cache",
-                "memcache",
-                "memcached",
-                "mysql cache",
-                "pdo cache",
-                "php cache",
-                "predis",
-                "redis",
-                "wincache"
-            ],
-            "time": "2016-04-14 00:52:34"
-        },
-        {
             "name": "phpmailer/phpmailer",
-            "version": "v5.2.15",
+            "version": "v5.2.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "d0186171b28af4f06ac2ad8a84a8f3d6cbc3ba6c"
+                "reference": "1d85f9ef3ecfc42bbc4f3c70d5e37ca9a65f629a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/d0186171b28af4f06ac2ad8a84a8f3d6cbc3ba6c",
-                "reference": "d0186171b28af4f06ac2ad8a84a8f3d6cbc3ba6c",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/1d85f9ef3ecfc42bbc4f3c70d5e37ca9a65f629a",
+                "reference": "1d85f9ef3ecfc42bbc4f3c70d5e37ca9a65f629a",
                 "shasum": ""
             },
             "require": {
@@ -272,7 +201,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2016-05-10 18:39:36"
+            "time": "2016-06-06 09:09:37"
         },
         {
             "name": "psr/log",
@@ -311,6 +240,833 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "tedivm/jshrink",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tedious/JShrink.git",
+                "reference": "688527a2e854d7935f24f24c7d5eb1b604742bf9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tedious/JShrink/zipball/688527a2e854d7935f24f24c7d5eb1b604742bf9",
+                "reference": "688527a2e854d7935f24f24c7d5eb1b604742bf9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "fabpot/php-cs-fixer": "0.4.0",
+                "phpunit/phpunit": "4.0.*",
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "JShrink": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Robert Hafner",
+                    "email": "tedivm@tedivm.com"
+                }
+            ],
+            "description": "Javascript Minifier built in PHP",
+            "homepage": "http://github.com/tedious/JShrink",
+            "keywords": [
+                "javascript",
+                "minifier"
+            ],
+            "time": "2015-07-04 07:35:09"
+        },
+        {
+            "name": "tekkla/core-ajax",
+            "version": "0.1.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-ajax.git",
+                "reference": "f1aed505cae855856f84a381e78699696c1bffa5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-ajax/zipball/f1aed505cae855856f84a381e78699696c1bffa5",
+                "reference": "f1aed505cae855856f84a381e78699696c1bffa5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Ajax": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple lib to call jQuery and js functions from php as result of an ajax request.",
+            "homepage": "https://github.com/Tekkla/core-ajax",
+            "keywords": [
+                "ajax",
+                "jquery"
+            ],
+            "time": "2016-08-11 20:57:21"
+        },
+        {
+            "name": "tekkla/core-asset",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-asset.git",
+                "reference": "e9c3f3ffc10fd3f30678bb5e0659b334a07c8a53"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-asset/zipball/e9c3f3ffc10fd3f30678bb5e0659b334a07c8a53",
+                "reference": "e9c3f3ffc10fd3f30678bb5e0659b334a07c8a53",
+                "shasum": ""
+            },
+            "require": {
+                "mrclay/minify": "2.3.0",
+                "php": ">=7.0.0",
+                "tedivm/jshrink": "v1.1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Asset": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple assetmanager with asset processor support.",
+            "homepage": "https://github.com/Tekkla/core-asset",
+            "keywords": [
+                "asset",
+                "manager",
+                "process"
+            ],
+            "time": "2016-08-07 14:50:30"
+        },
+        {
+            "name": "tekkla/core-config",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-config.git",
+                "reference": "0be61665d80a4019bbd2360cbe7798d23d9156e3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-config/zipball/0be61665d80a4019bbd2360cbe7798d23d9156e3",
+                "reference": "0be61665d80a4019bbd2360cbe7798d23d9156e3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-storage": ">=1.0.0",
+                "tekkla/core-toolbox": ">=0.0.7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Config": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple and flexible configmanager with default file and db (PDO) repository support.",
+            "homepage": "https://github.com/Tekkla/core-config",
+            "keywords": [
+                "OOP",
+                "config",
+                "file",
+                "manager",
+                "pdo"
+            ],
+            "time": "2016-08-07 16:26:46"
+        },
+        {
+            "name": "tekkla/core-data",
+            "version": "0.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-data.git",
+                "reference": "5957036a824ce6388ce0a90671c9cef413c23765"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-data/zipball/5957036a824ce6388ce0a90671c9cef413c23765",
+                "reference": "5957036a824ce6388ce0a90671c9cef413c23765",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-toolbox": ">=0.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Data": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Abstraction layer to query databases via PDO.",
+            "homepage": "https://github.com/tekkla/core-data",
+            "keywords": [
+                "OOP",
+                "abstraction",
+                "pdo"
+            ],
+            "time": "2016-06-27 00:05:31"
+        },
+        {
+            "name": "tekkla/core-di",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-di.git",
+                "reference": "ffabadd73ee8c9e0817d2a35ad80c6486ab9ae9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-di/zipball/ffabadd73ee8c9e0817d2a35ad80c6486ab9ae9b",
+                "reference": "ffabadd73ee8c9e0817d2a35ad80c6486ab9ae9b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\DI": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "DI manager for services, factories and values.",
+            "homepage": "https://github.com/Tekkla/core-di",
+            "keywords": [
+                "dependency injection",
+                "di",
+                "factory",
+                "service",
+                "value"
+            ],
+            "time": "2016-06-24 23:31:55"
+        },
+        {
+            "name": "tekkla/core-framework",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-framework.git",
+                "reference": "ef8772a9c4a3fd85321bd826c829377d6316ec29"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-framework/zipball/ef8772a9c4a3fd85321bd826c829377d6316ec29",
+                "reference": "ef8772a9c4a3fd85321bd826c829377d6316ec29",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-ajax": ">=0.1.9",
+                "tekkla/core-asset": "1.1.0",
+                "tekkla/core-config": ">=1.1.0",
+                "tekkla/core-data": ">=0.0.2",
+                "tekkla/core-di": ">=0.0.1",
+                "tekkla/core-html": ">=0.1.0",
+                "tekkla/core-http": ">=0.0.1",
+                "tekkla/core-language": ">=1.1.1.2",
+                "tekkla/core-logger": ">=1.0.0",
+                "tekkla/core-mailer": ">=0.0.2",
+                "tekkla/core-message": ">=0.0.2",
+                "tekkla/core-router": ">=1.1.0",
+                "tekkla/core-security": ">=0.0.2.1",
+                "tekkla/core-toolbox": ">=0.0.7.0",
+                "tekkla/core-validator": ">=0.2.1"
+            },
+            "type": "framework",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Framework": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Combining component for my core libraries. Note: This is currently not working alone. Some quite important core-libs are still missing!",
+            "homepage": "https://github.com/tekkla/core-framework",
+            "keywords": [
+                "alpha",
+                "core",
+                "framework"
+            ],
+            "time": "2016-08-12 01:30:00"
+        },
+        {
+            "name": "tekkla/core-html",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-html.git",
+                "reference": "cc1ce33f6aa1b8553ca072364031773d711448cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-html/zipball/cc1ce33f6aa1b8553ca072364031773d711448cc",
+                "reference": "cc1ce33f6aa1b8553ca072364031773d711448cc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-toolbox": ">=0.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Html": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Library to create simple and even complex html elements out of php objects. No all elements are present. Feel free to contribute html elements or controls.",
+            "homepage": "https://github.com/tekkla/core-html",
+            "keywords": [
+                "FontAwesome",
+                "Forms",
+                "OOP",
+                "bootstrap",
+                "html"
+            ],
+            "time": "2016-08-07 18:07:25"
+        },
+        {
+            "name": "tekkla/core-http",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-http.git",
+                "reference": "d6c2993d9b6afe0580da9b42d7b4d3d062f4a835"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-http/zipball/d6c2993d9b6afe0580da9b42d7b4d3d062f4a835",
+                "reference": "d6c2993d9b6afe0580da9b42d7b4d3d062f4a835",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "psr/log": "1.0.0",
+                "tekkla/core-data": ">=0.0.2",
+                "tekkla/core-toolbox": ">=0.0.6.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Http": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Small set of libs for session, header, cookie and post handling.",
+            "homepage": "https://github.com/tekkla/core-http",
+            "keywords": [
+                "cookie",
+                "core",
+                "header",
+                "http",
+                "post",
+                "session"
+            ],
+            "time": "2016-08-07 14:18:10"
+        },
+        {
+            "name": "tekkla/core-language",
+            "version": "1.1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-language.git",
+                "reference": "42d4a2e9fd5f9a01bfc9427bbcdfaf9fc869ab58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-language/zipball/42d4a2e9fd5f9a01bfc9427bbcdfaf9fc869ab58",
+                "reference": "42d4a2e9fd5f9a01bfc9427bbcdfaf9fc869ab58",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-storage": ">=1.0.0",
+                "tekkla/core-toolbox": ">=0.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Language": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple lib for multilanguage support.",
+            "homepage": "https://github.com/Tekkla/core-language",
+            "keywords": [
+                "language"
+            ],
+            "time": "2016-06-18 23:54:37"
+        },
+        {
+            "name": "tekkla/core-logger",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-logger.git",
+                "reference": "2263b5f6c24ef593087fd2aef8ef9aa7a81243b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-logger/zipball/2263b5f6c24ef593087fd2aef8ef9aa7a81243b8",
+                "reference": "2263b5f6c24ef593087fd2aef8ef9aa7a81243b8",
+                "shasum": ""
+            },
+            "require": {
+                "firephp/firephp-core": "v0.4.0",
+                "php": ">=7.0.0",
+                "psr/log": ">=1.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Logger": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple Psr\\Log compatible logger with stream support.",
+            "homepage": "https://github.com/Tekkla/core-logger",
+            "keywords": [
+                "Streams",
+                "logger",
+                "psr"
+            ],
+            "time": "2016-08-11 22:36:43"
+        },
+        {
+            "name": "tekkla/core-mailer",
+            "version": "0.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-mailer.git",
+                "reference": "fb538ed1c87718279b8f54e0dfbcd69a1f80b114"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-mailer/zipball/fb538ed1c87718279b8f54e0dfbcd69a1f80b114",
+                "reference": "fb538ed1c87718279b8f54e0dfbcd69a1f80b114",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "phpmailer/phpmailer": ">=v5.2.16",
+                "psr/log": "1.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Mailer": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Multi MTA mailhandler based on phpMailer with psr logging support",
+            "homepage": "https://github.com/tekkla/core-mailer",
+            "keywords": [
+                "MTA",
+                "mail",
+                "phpmailer",
+                "psr logger"
+            ],
+            "time": "2016-08-08 21:08:04"
+        },
+        {
+            "name": "tekkla/core-message",
+            "version": "0.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-message.git",
+                "reference": "587d8c6d64b3fc4b84b7d6ebb33c5b3a16375ba6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-message/zipball/587d8c6d64b3fc4b84b7d6ebb33c5b3a16375ba6",
+                "reference": "587d8c6d64b3fc4b84b7d6ebb33c5b3a16375ba6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Message": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple messagehandler to store and retrieve messages stored in varios places like $_SESSION",
+            "homepage": "https://github.com/Tekkla/core-message",
+            "keywords": [
+                "bootstrap",
+                "manager",
+                "message",
+                "session"
+            ],
+            "time": "2016-08-07 23:42:57"
+        },
+        {
+            "name": "tekkla/core-router",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-router.git",
+                "reference": "124c3cd7c6e5620aff9dc5ce8b07677a0f7f12f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-router/zipball/124c3cd7c6e5620aff9dc5ce8b07677a0f7f12f5",
+                "reference": "124c3cd7c6e5620aff9dc5ce8b07677a0f7f12f5",
+                "shasum": ""
+            },
+            "require": {
+                "altorouter/altorouter": "v1.2.0",
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Router": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Extension of the lightweight Altorouter. This version adds some methods to retrieve and/or alter data from matches.",
+            "homepage": "https://github.com/Tekkla/core-router",
+            "keywords": [
+                "lightweight",
+                "router"
+            ],
+            "time": "2016-08-07 01:08:37"
+        },
+        {
+            "name": "tekkla/core-security",
+            "version": "0.0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-security.git",
+                "reference": "22614ced789a49d4c908597a0e2fc269a8515540"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-security/zipball/22614ced789a49d4c908597a0e2fc269a8515540",
+                "reference": "22614ced789a49d4c908597a0e2fc269a8515540",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "psr/log": "1.0.0",
+                "tekkla/core-data": ">=0.0.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Security": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "WIP Small suite of security reletated libs for userhandling, hashgeneration, banchecks, token generators and some other more or less usefull things.",
+            "homepage": "https://github.com/tekkla/core-security",
+            "keywords": [
+                "activation",
+                "ban",
+                "core",
+                "hash",
+                "login",
+                "password",
+                "security",
+                "user"
+            ],
+            "time": "2016-08-07 15:05:42"
+        },
+        {
+            "name": "tekkla/core-storage",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-storage.git",
+                "reference": "f76382ab8eb5dedbc9b2a389b139f1fd57d46074"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-storage/zipball/f76382ab8eb5dedbc9b2a389b139f1fd57d46074",
+                "reference": "f76382ab8eb5dedbc9b2a389b139f1fd57d46074",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Storage": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developder"
+                }
+            ],
+            "description": "A simple OOP storage library with iteration and array access.",
+            "homepage": "https://github.com/Tekkla/core-storage",
+            "keywords": [
+                "array",
+                "iteration",
+                "storage"
+            ],
+            "time": "2016-05-24 18:54:45"
+        },
+        {
+            "name": "tekkla/core-toolbox",
+            "version": "0.0.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-toolbox.git",
+                "reference": "bb84435dd5c40d9916e8a47838a13f3f12511c61"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-toolbox/zipball/bb84435dd5c40d9916e8a47838a13f3f12511c61",
+                "reference": "bb84435dd5c40d9916e8a47838a13f3f12511c61",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "psr/log": "1.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Toolbox": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Toolbox of classes and function to check variables, manipulate arrays, do file actions and much more. It's a collection of tools that get used in some of my core libs.",
+            "homepage": "https://github.com/Tekkla/core-toolbox",
+            "keywords": [
+                "Toolbox",
+                "core",
+                "functions"
+            ],
+            "time": "2016-08-07 14:45:49"
+        },
+        {
+            "name": "tekkla/core-validator",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tekkla/core-validator.git",
+                "reference": "a0d02eb1f6db8a45cdba89d583c967b839ae6b78"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tekkla/core-validator/zipball/a0d02eb1f6db8a45cdba89d583c967b839ae6b78",
+                "reference": "a0d02eb1f6db8a45cdba89d583c967b839ae6b78",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "tekkla/core-language": ">=1.1.1.2",
+                "tekkla/core-toolbox": ">=0.0.6.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core\\Validator": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Zorn",
+                    "email": "tekkla@tekkla.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Validator engine to validate values against one or a set of rules.",
+            "homepage": "https://github.com/tekkla/core-validator",
+            "keywords": [
+                "core",
+                "rule",
+                "ruleset",
+                "translation",
+                "validator"
+            ],
+            "time": "2016-08-07 13:57:19"
         }
     ],
     "packages-dev": [],
