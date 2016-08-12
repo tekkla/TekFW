@@ -1,20 +1,19 @@
 <?php
+use Core\Framework\Core;
+
 /**
- * Entry file for Core framework.
+ * Entry file for Core framework
  *
  * @author Michael "Tekkla" Zorn <tekkla@tekkla.de>
  * @license MIT
- * @copyright 2015 by author
+ * @copyright 2016
  */
 
-// Absolute path to site
-define('BASEDIR', __DIR__);
-
-// Include Core classfile
-require_once (BASEDIR . '/Core/Core.php');
+// Register composer classloader
+require_once (__DIR__ . '/vendor/autoload.php');
 
 // Create new Core instance
-$core = new Core();
+$core = new Core(__DIR__);
 
 // Run it, baby!
-$core->run();
+$core->bootstrap();
