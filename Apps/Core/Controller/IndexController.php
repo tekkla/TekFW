@@ -14,7 +14,7 @@ final class IndexController extends Controller
 {
     public function Index()
     {
-        $this->redirectExit($this->app->config->get('url.home'), true);
+       $this->redirectExit($this->app->config->get('url.home'), true);
     }
 }
 

@@ -39,6 +39,8 @@ class ConfigController extends Controller
 
         $groups = $this->model->getConfigGroups($app_name);
 
+        $language = $this->app->core->apps->getAppInstance($app_name)->language;
+
         foreach ($groups as $group_name) {
 
             $controller = $this->app->getController();
@@ -52,7 +54,7 @@ class ConfigController extends Controller
         }
 
         $this->setVar([
-            'headline' => $this->app->language->get('name'),
+            'headline' => $language->get('name'),
             'icon' => $this->html->create('Fontawesome\Icon')
                 ->setIcon('cog'),
             'groups' => $groups,
@@ -60,8 +62,8 @@ class ConfigController extends Controller
         ]);
 
         // Add linktreee
-        #$this->app->core->page->breadcrumbs->createItem('Admin', $this->app->url('core.admin'));
-        #$this->app->core->page->breadcrumbs->createActiveItem($this->app->language->get('name'));
+        // $this->app->core->page->breadcrumbs->createItem('Admin', $this->app->url('core.admin'));
+        // $this->app->core->page->breadcrumbs->createActiveItem($language->get('name'));
 
         $this->setAjaxTarget('#core-admin');
     }
@@ -125,9 +127,11 @@ class ConfigController extends Controller
 
         $group = $fd->addGroup();
 
+        $language = $this->app->core->apps->getAppInstance($app_name)->language;
+
         $control = $group->addControl('Submit');
         $control->setUnbound();
-        $control->setInner('<i class="fa fa-' . $this->app->language->get('action.save.icon') . '"></i> ' . $this->app->language->get('action.save.text'));
+        $control->setInner('<i class="fa fa-' . $language->get('action.save.icon') . '"></i> ' . $language->get('action.save.text'));
         $control->addCss([
             'btn-sm',
             'btn-block',
@@ -136,7 +140,7 @@ class ConfigController extends Controller
         ]);
 
         $this->setVar([
-            'headline' => $this->app->language->get('config.' . $group_name . '.head'),
+            'headline' => $language->get('config.' . $group_name . '.head'),
             'app_name' => $app_name,
             'group_name' => $group_name,
             'form' => $fd,
@@ -160,6 +164,8 @@ class ConfigController extends Controller
                 $this->createControl($app_name, $form_group, $control);
             }
         }
+
+        $language = $this->app->core->apps->getAppInstance($app_name)->language;
 
         // Do we have subgroups in this definition?
         if (!empty($definition['groups'])) {
@@ -195,7 +201,7 @@ class ConfigController extends Controller
                 $cfg = (!empty($prefix) ? $prefix . $glue : '') . $group_name;
 
                 $textkey = 'config.' . $cfg . '.head';
-                $text = $this->app->language->get($textkey);
+                $text = $language->get($textkey);
 
                 if ($text == $textkey) {
                     $text = ucfirst($group_name);
@@ -210,7 +216,7 @@ class ConfigController extends Controller
                 ]);
 
                 $textkey = 'config.' . $cfg . '.desc';
-                $text = $this->app->language->get($textkey);
+                $text = $language->get($textkey);
 
                 if ($text != $textkey) {
                     $paragraph = $subgroup->addElement('Elements\Paragraph');
@@ -238,10 +244,11 @@ class ConfigController extends Controller
         $parts = explode('.', $settings['name']);
         $settings['name'] = array_pop($parts);
 
-        $cfg = $this->di->get('core.config');
+        $config = $this->app->core->apps->getAppInstance($app_name)->config;
+        $config_value = $config->get($flat_name);
 
-        if (!empty($cfg->{$app_name}->{$flat_name})) {
-            $settings['value'] = $cfg->{$app_name}->{$flat_name};
+        if (!empty($config_value)) {
+            $settings['value'] = $config_value;
         }
 
         // Is this a control with more settings or only the controltype
@@ -263,6 +270,9 @@ class ConfigController extends Controller
                 $control->addAttribute($attr, $val);
             }
         }
+
+        // Get apps language file
+        $language = $this->app->core->apps->getAppInstance($app_name)->language;
 
         // Create controls
         switch ($control_type) {
@@ -299,7 +309,7 @@ class ConfigController extends Controller
                             }
                         }
 
-                        $app = $this->app->core->getAppInstance($settings['data']['source']['app']);
+                        $app = $this->app->core->apps->getAppInstance($settings['data']['source']['app']);
                         $model = $app->getModel($settings['data']['source']['model']);
                         $action = $settings['data']['source']['action'];
 
@@ -327,7 +337,7 @@ class ConfigController extends Controller
                 // Add 'please select' option
                 if (empty($settings['value'])) {
                     $option = $control->createOption();
-                    $option->setInner($this->app->language->get('please.select'));
+                    $option->setInner($language->get('please.select'));
                     $option->setValue('');
                     $option->isDisabled(1);
                     $option->isHidden(1);
@@ -367,12 +377,16 @@ class ConfigController extends Controller
                 if ($settings['value'] == 1) {
                     $control->switchOn();
                 }
+
+                $control->setOnString($language->get('state.on'));
+                $control->setOffString($language->get('state.off'));
+
                 break;
 
             default:
 
                 if (!empty($settings['translate'])) {
-                    $settings['value'] = $this->app->language->get($settings['value']);
+                    $settings['value'] = $language->get($settings['value']);
                 }
 
                 $control->setValue($settings['value']);
@@ -380,15 +394,26 @@ class ConfigController extends Controller
                 break;
         }
 
-        /* @var $icon \Core\Html\Fontawesome\Icon */
-        $icon = $this->html->create('Fontawesome\Icon');
-        $icon->setIcon('question-circle');
-        $icon->addData([
-            'toggle' => 'popover',
-            'trigger' => 'click',
-            'content' => $this->app->language->get('config.' . $flat_name . '.desc')
-        ]);
+        // Create description ? icon when description exists
+        $icon = '';
 
-        $control->setLabel($this->app->language->get('config.' . $flat_name . '.label') . ' ' . $icon->build());
+        $desc_key = 'config.' . $flat_name . '.desc';
+        $desc = $language->get('config.' . $flat_name . '.desc');
+
+        if ($desc != $desc_key) {
+
+            /* @var $icon \Core\Html\Fontawesome\Icon */
+            $icon = $this->html->create('Fontawesome\Icon');
+            $icon->setIcon('question-circle');
+            $icon->addData([
+                'toggle' => 'popover',
+                'trigger' => 'click',
+                'content' => $desc
+            ]);
+
+            $icon = ' ' . $icon->build();
+        }
+
+        $control->setLabel($language->get('config.' . $flat_name . '.label') . $icon);
     }
 }

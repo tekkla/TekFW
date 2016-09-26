@@ -183,11 +183,17 @@ class UserModel extends Model
         }
         catch (\Throwable $t) {
 
-            switch ($t->getCode()) {
-                case 'user.username.exists':
-                    $this->addError('username', $this->app->language->get('register.error.name_in_use'));
-                    return;
+            $message = $t->getMessage();
+
+            if (strpos($message, '::') === false) {
+                $field = '@';
             }
+            else {
+                list ($field, $text) = explode('::', $message);
+                $message = $this->app->language->get($text);
+            }
+
+            $this->addError($field, $message);
         }
     }
 
@@ -198,7 +204,8 @@ class UserModel extends Model
      *
      * @return bool
      */
-    public function activateUser(string $key): bool {
+    public function activateUser(string $key): bool
+    {
 
         /* @var $handler \Core\Security\User\UserHandler */
         $handler = $this->di->get('core.security.user.handler');
@@ -213,7 +220,8 @@ class UserModel extends Model
      *
      * @return bool
      */
-    public function denyActivation(string $key): bool {
+    public function denyActivation(string $key): bool
+    {
 
         /* @var $handler \Core\Security\User\UserHandler */
         $handler = $this->di->get('core.security.user.handler');

@@ -15,7 +15,7 @@ return [
      * BASICS
      * ****************************************************************************
      */
-    'states' => [
+    'state' => [
         'on' => 'an',
         'off' => 'aus',
         'yes' => 'ja',
@@ -201,7 +201,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ],
                 'webmaster_email' => [
                     'label' => 'Webmaster (Admin) emailaddress',
-                    'desc' => 'E-Mailaddress for all Webmaster/Admin realted communication'
+                    'desc' => 'E-Mailaddresse des Webmasters'
                 ]
             ],
             'language' => [
@@ -214,42 +214,19 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
             ]
         ],
 
-        // Execute
-
-        'execute' => [
-            'head' => 'Runtime Execute',
-            'desc' => '',
-            'default' => [
-                'head' => 'Default Settings',
-                'desc' => '',
-                'action' => [
-                    'label' => 'Default action',
-                    'desc' => 'Name of default action to use.'
-                ],
-                'app' => [
-                    'label' => 'Default app',
-                    'desc' => 'Name of app which is used for pagecontrol'
-                ],
-                'controller' => [
-                    'label' => 'Default Controller',
-                    'desc' => 'Name of controller to call in default app.'
-                ]
-            ],
-            'content' => [
-                'head' => 'Content Settings',
-                'desc' => '',
-                'handler' => [
-                    'label' => 'Contenthandler app',
-                    'desc' => 'Name of app which handles the content output.'
-                ]
-            ]
-        ],
         // Security
         'security' => [
-            'head' => 'Security',
+            'head' => 'Sicherheit',
             'desc' => '',
+            'encrypt' => [
+                'head' => 'Verschlüsselung',
+                'salt' => [
+                    'label' => 'Salt',
+                    'desc' => 'Zeichenkette, mit der Hashwerte generiert werden.'
+                ]
+            ],
             'login' => [
-                'head' => 'Login Settings',
+                'head' => 'Anmeldung',
                 'autologin' => [
                     'active' => [
                         'label' => 'Automatische Anmeldung aktiv',
@@ -262,62 +239,73 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ],
             'ban' => [
-                'head' => 'Ban Settings',
+                'head' => 'Bann',
+                'active' => [
+                    'label' => 'Aktiv',
+                    'desc' => 'Schlatet das Bannsystem ein oder aus.'
+                ],
                 'tries' => [
-                    'label' => 'Tries before ban',
+                    'label' => 'Versuche vor Bann',
                     'desc' => 'When set >0 a ban counter is startet on a ban enabled request. Example: Failed logins. (Default: 0 = no Bans)'
                 ],
                 'ttl' => [
                     'head' => 'TTL',
                     'log' => [
-                        'label' => 'Log relevance (in seconds)',
-                        'desc' => 'Time for how '
+                        'label' => 'TTL Logeintrag',
+                        'desc' => 'Zeit in Sekunden, die ein Bannlogeintrag als relevant angesehen werden soll.'
                     ],
                     'ban' => [
-                        'label' => 'Bantime (in Seconds)',
-                        'desc' => 'Time how long a ban is active'
+                        'label' => 'TTL Banndauer',
+                        'desc' => 'Zeit in Sekunden, die ein Bann dauern soll.'
                     ]
+                ]
+            ],
+            'form' => [
+                'head' => 'Formulare',
+                'token' => [
+                    'label' => 'Tokenname',
+                    'desc' => 'Name des Tokens, dass mit jedem Formular mitgesendet werden muss.'
                 ]
             ]
         ],
 
         // User
         'user' => [
-            'head' => 'User Settings',
+            'head' => 'Benutzer',
             'username' => [
-                'head' => 'Username rules',
+                'head' => 'Benutzername',
                 'min_length' => [
-                    'label' => 'Minimum lenght (chars)',
-                    'desc' => 'The minimum number of chars the username has to contain.'
+                    'label' => 'Minimallänge',
+                    'desc' => 'Minimale Anzahl an Zeichen für den Benutznamen.'
                 ],
                 'regexp' => [
-                    'label' => 'Username regexpcheck',
-                    'desc' => 'Regex to check a username against on user creation.'
+                    'label' => 'RegExp',
+                    'desc' => 'Regulärer Ausdruck der zur Prüfung auf den Benutzernamen angewendet werden soll.'
                 ]
             ],
             'password' => [
-                'head' => 'Password rules',
+                'head' => 'Passwort',
                 'min_length' => [
-                    'label' => 'Minimum password length',
-                    'desc' => 'The minimum number of chars needed to create a password.'
+                    'label' => 'Minimallänge',
+                    'desc' => 'Minimale Anzahl an Zeichen für das Passwort.'
                 ],
                 'max_length' => [
-                    'label' => 'Maximum password length',
-                    'desc' => 'The maximum number of chars allowed to create a password.'
+                    'label' => 'Maximallänge',
+                    'desc' => 'Maximale Anzahl an Zeichen für das Passwort.'
                 ],
                 'regexp' => [
-                    'label' => 'Password regex check',
-                    'desc' => 'Regex to check a password against on user creation.'
+                    'label' => 'RegExp',
+                    'desc' => 'Regulärer Ausdruck der zur Prüfung auf das Passwort angewendet werden soll.'
                 ],
                 'reactivate_after_password_change' => [
                     'label' => 'Kontoreaktivierung nach Passworwechsel',
-                    'desc' => 'Erzwing eine erneute Aktivierung des Benutzkontois nachdem das Passwort vom Benutzer geändert wurde. Dazu wird dem Benutzer an die hinterlegte E-mailadresse eine Aktivierungsmail geschickt.'
+                    'desc' => 'Erzwing eine erneute Aktivierung des Benutzkontos nachdem das Passwort vom Benutzer geändert wurde. Dazu wird dem Benutzer an die hinterlegte E-mailadresse eine Aktivierungsmail geschickt.'
                 ]
             ],
             'register' => [
-                'head' => 'Registration Settings',
+                'head' => 'Registrierung',
                 'use_compare_password' => [
-                    'label' => 'Password compare field',
+                    'label' => 'Password Vergleichsfeld',
                     'desc' => 'Switch to control the display and use of a senconde password field to compare passwords before sending it to DB.'
                 ]
             ],
@@ -347,6 +335,17 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
+
+        // Startseite
+        'home' => [
+            'head' => 'Startseite',
+        ],
+
+        // Startseite
+        'asset' => [
+            'head' => 'Assets',
+        ],
+
 
         // Javascript
         'js' => [
@@ -418,6 +417,7 @@ Das tut uns selbstverständlich leid. Wenn sie nicht aktiv werden, dann wird der
                 ]
             ]
         ],
+
 
         // Error
 

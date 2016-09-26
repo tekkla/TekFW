@@ -45,12 +45,12 @@ final class ConfigModel extends Model
 
     public function getConfigGroups($app_name)
     {
-        return array_keys($this->app->core->getAppInstance($app_name)->config->getDefinition()['groups']);
+        return array_keys($this->app->core->apps->getAppInstance($app_name)->config->getDefinition()['groups']);
     }
 
     public function getDefinition($app_name)
     {
-        return $this->app->core->getAppInstance($app_name)->config->getDefinition();
+        return $this->app->core->apps->getAppInstance($app_name)->config->getDefinition();
     }
 
     /**
@@ -158,7 +158,7 @@ final class ConfigModel extends Model
     {
         static $validator;
 
-        $app_config_structure = $this->app->core->getAppInstance($app_name)->config->getStructure();
+        $app_config_structure = $this->app->core->apps->getAppInstance($app_name)->config->getStructure();
 
         foreach ($data as $key => $val) {
 
@@ -200,7 +200,7 @@ final class ConfigModel extends Model
     {
         $data = [];
 
-        $configs = $this->app->core->getAppInstance($app_name)->config;
+        $configs = $this->app->core->apps->getAppInstance($app_name)->config;
 
         foreach ($configs as $path => $value) {
             try {

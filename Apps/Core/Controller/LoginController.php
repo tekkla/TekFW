@@ -22,7 +22,7 @@ class LoginController extends Controller
         $login = $this->di->get('core.security.login');
 
         if ($login->loggedIn()) {
-            $this->redirect('AlreadyLoggedIn');
+            $this->redirect(null, null, 'AlreadyLoggedIn');
             return;
         }
 
@@ -155,10 +155,18 @@ class LoginController extends Controller
 
     public function Logout()
     {
-       $login = $this->di->get('core.security.login');
-       $login->doLogout();
+        $login = $this->di->get('core.security.login');
 
-       return $this->redirectExit($this->app->config->get('url.home'));
+        if ($login->loggedIn()) {
+            $login->doLogout();
+            $this->app->core->message->success('loggedout');
+            $this->app->config->set('url.home', BASEURL);
+        }
+        else {
+            $this->app->core->message->info('not logged in');
+        }
+
+        $this->redirectExit($this->app->config->get('url.home'));
     }
 
     public function AlreadyLoggedIn()

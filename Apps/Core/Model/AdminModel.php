@@ -17,7 +17,7 @@ class AdminModel extends Model
     public function getApplist()
     {
         // Get list of loaded apps
-        $applist = $this->app->core->getLoadedApps();
+        $applist = $this->app->core->apps->getLoadedApps(true);
 
         // Sort he list alphabetically
         sort($applist);
@@ -28,7 +28,7 @@ class AdminModel extends Model
         foreach ($applist as $app_name) {
 
             // Check app for existing config
-            $app = $this->app->core->getAppInstance($app_name);
+            $app = $this->app->core->apps->getAppInstance($app_name);
 
             if (empty($app->config)) {
                 continue;
