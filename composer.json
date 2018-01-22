@@ -1,10 +1,16 @@
 {
-  "name" : "TekFW",
-  "require" : {
-    "tekkla/core-framework" : ">=0.2.0"
-  },
-  "repositories" : [ {
-    "type" : "composer",
-    "url" : "https://packagist.org/"
-  } ]
+	"name" : "y",
+	"require" : {
+		"tekkla/core-framework" : "dev-dev"
+	},
+	"repositories" : [{
+			"type" : "git",
+			"url" : "https://github.com/tekkla/core-framework.git",
+			"name" : "Framework"
+		}
+	],
+	"scripts" : {
+		"post-update-cmd" : "Core\\Framework\\Install\\Cache::cleanCacheFolder"
+	},
+	"minimum-stability" : "dev"
 }
