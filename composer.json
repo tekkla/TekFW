@@ -4,9 +4,8 @@
 		"tekkla/core-framework" : "dev-dev"
 	},
 	"repositories" : [{
-			"type" : "git",
-			"url" : "https://github.com/tekkla/core-framework.git",
-			"name" : "Framework"
+			"type" : "vcs",
+			"url" : "github.com/tekkla/core-framework.git"
 		}
 	],
 	"scripts" : {
